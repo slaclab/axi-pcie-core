@@ -1,33 +1,33 @@
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+# SVN files
+.svn*
 
-# Precompiled Headers
-*.gch
-*.pch
+# EMACS temp files
+*~
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
+# Compiled source files
+*.com
+*.class
 *.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
 *.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+*.o
+*.so
+*.pyc
+*.bin
+*.ld
 
-# Debug files
-*.dSYM/
-*.su
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumps.db
+build.info
+
+# Vivado Build
+build*
+
+# Only .bit.gz and .mcs.gz should be committed to git
+*.bit
+*.mcs

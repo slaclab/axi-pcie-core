@@ -70,7 +70,7 @@ architecture mapping of AxiPciePgpCardG3IpCoreWrapper is
          MSI_enable        : out std_logic;
          MSI_Vector_Num    : in  std_logic_vector(4 downto 0);
          MSI_Vector_Width  : out std_logic_vector(2 downto 0);
-         s_axi_awid        : in  std_logic_vector(3 downto 0);
+         s_axi_awid        : in  std_logic_vector(4 downto 0);
          s_axi_awaddr      : in  std_logic_vector(31 downto 0);
          s_axi_awregion    : in  std_logic_vector(3 downto 0);
          s_axi_awlen       : in  std_logic_vector(7 downto 0);
@@ -83,11 +83,11 @@ architecture mapping of AxiPciePgpCardG3IpCoreWrapper is
          s_axi_wlast       : in  std_logic;
          s_axi_wvalid      : in  std_logic;
          s_axi_wready      : out std_logic;
-         s_axi_bid         : out std_logic_vector(3 downto 0);
+         s_axi_bid         : out std_logic_vector(4 downto 0);
          s_axi_bresp       : out std_logic_vector(1 downto 0);
          s_axi_bvalid      : out std_logic;
          s_axi_bready      : in  std_logic;
-         s_axi_arid        : in  std_logic_vector(3 downto 0);
+         s_axi_arid        : in  std_logic_vector(4 downto 0);
          s_axi_araddr      : in  std_logic_vector(31 downto 0);
          s_axi_arregion    : in  std_logic_vector(3 downto 0);
          s_axi_arlen       : in  std_logic_vector(7 downto 0);
@@ -95,7 +95,7 @@ architecture mapping of AxiPciePgpCardG3IpCoreWrapper is
          s_axi_arburst     : in  std_logic_vector(1 downto 0);
          s_axi_arvalid     : in  std_logic;
          s_axi_arready     : out std_logic;
-         s_axi_rid         : out std_logic_vector(3 downto 0);
+         s_axi_rid         : out std_logic_vector(4 downto 0);
          s_axi_rdata       : out std_logic_vector(127 downto 0);
          s_axi_rresp       : out std_logic_vector(1 downto 0);
          s_axi_rlast       : out std_logic;
@@ -255,7 +255,7 @@ begin
          MSI_Vector_Num    => (others => '0'),
          MSI_Vector_Width  => open,
          -- Slave AXI4 Interface
-         s_axi_awid        => dmaWriteMaster.awid(3 downto 0),
+         s_axi_awid        => dmaWriteMaster.awid(4 downto 0),
          s_axi_awaddr      => dmaWriteMaster.awaddr(31 downto 0),
          s_axi_awregion    => dmaWriteMaster.awregion,
          s_axi_awlen       => dmaWriteMaster.awlen(7 downto 0),
@@ -268,11 +268,11 @@ begin
          s_axi_wlast       => dmaWriteMaster.wlast,
          s_axi_wvalid      => dmaWriteMaster.wvalid,
          s_axi_wready      => dmaWriteSlave.wready,
-         s_axi_bid         => dmaWriteSlave.bid(3 downto 0),
+         s_axi_bid         => dmaWriteSlave.bid(4 downto 0),
          s_axi_bresp       => dmaWriteSlave.bresp(1 downto 0),
          s_axi_bvalid      => dmaWriteSlave.bvalid,
          s_axi_bready      => dmaWriteMaster.bready,
-         s_axi_arid        => dmaReadMaster.arid(3 downto 0),
+         s_axi_arid        => dmaReadMaster.arid(4 downto 0),
          s_axi_araddr      => dmaReadMaster.araddr(31 downto 0),
          s_axi_arregion    => dmaReadMaster.arregion,
          s_axi_arlen       => dmaReadMaster.arlen(7 downto 0),
@@ -280,7 +280,7 @@ begin
          s_axi_arburst     => dmaReadMaster.arburst(1 downto 0),
          s_axi_arvalid     => dmaReadMaster.arvalid,
          s_axi_arready     => dmaReadSlave.arready,
-         s_axi_rid         => dmaReadSlave.rid(3 downto 0),
+         s_axi_rid         => dmaReadSlave.rid(4 downto 0),
          s_axi_rdata       => dmaReadSlave.rdata(127 downto 0),
          s_axi_rresp       => dmaReadSlave.rresp(1 downto 0),
          s_axi_rlast       => dmaReadSlave.rlast,

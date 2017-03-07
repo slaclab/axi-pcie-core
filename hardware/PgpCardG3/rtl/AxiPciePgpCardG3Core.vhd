@@ -93,7 +93,6 @@ architecture mapping of AxiPciePgpCardG3Core is
    signal phyWriteMaster : AxiLiteWriteMasterType;
    signal phyWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal interrupt : slv(DMA_SIZE_G-1 downto 0);
    signal flashDin  : slv(15 downto 0);
    signal flashDout : slv(15 downto 0);
    signal flashTri  : sl;
@@ -106,7 +105,6 @@ begin
 
    sysClk <= axiClk;
    sysRst <= axiRst;
-   dmaIrq <= uOr(interrupt);
 
    ---------------
    -- AXI PCIe PHY
@@ -177,8 +175,6 @@ begin
          appReadSlave       => appReadSlave,
          appWriteMaster     => appWriteMaster,
          appWriteSlave      => appWriteSlave,
-         -- Interrupts
-         interrupt          => interrupt,
          -- Boot Memory Ports 
          flashAddr          => flashAddr,
          flashCe            => flashCe,
@@ -223,7 +219,7 @@ begin
          axilWriteMaster => dmaCtrlWriteMaster,
          axilWriteSlave  => dmaCtrlWriteSlave,
          -- Interrupts
-         interrupt       => interrupt,
+         dmaIrq          => dmaIrq,
          -- DMA Interfaces
          dmaClk          => dmaClk,
          dmaRst          => dmaRst,

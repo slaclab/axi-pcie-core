@@ -56,8 +56,6 @@ entity AxiPcieReg is
       appReadSlave       : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
       appWriteMaster     : out AxiLiteWriteMasterType;
       appWriteSlave      : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
-      -- Interrupts
-      interrupt          : in  slv(DMA_SIZE_G-1 downto 0);
       -- Boot Memory Ports 
       flashAddr          : out slv(28 downto 0);
       flashCe            : out sl;
@@ -83,7 +81,7 @@ architecture mapping of AxiPcieReg is
    constant DMA_ADDR_C     : slv(31 downto 0) := x"00020000";
    constant PHY_ADDR_C     : slv(31 downto 0) := x"00030000";
    constant APP_ADDR_C     : slv(31 downto 0) := x"00080000";
-   
+
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       VERSION_INDEX_C => (
          baseAddr     => VERSION_ADDR_C,
@@ -104,7 +102,7 @@ architecture mapping of AxiPcieReg is
       APP_INDEX_C     => (
          baseAddr     => APP_ADDR_C,
          addrBits     => 19,
-         connectivity => x"FFFF"));          
+         connectivity => x"FFFF"));
 
    signal axilReadMaster  : AxiLiteReadMasterType;
    signal maskReadMaster  : AxiLiteReadMasterType;
@@ -120,18 +118,17 @@ architecture mapping of AxiPcieReg is
 
    signal userValues   : Slv32Array(63 downto 0) := (others => x"00000000");
    signal flashAddress : slv(30 downto 0);
-   
+
 begin
 
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
    ---------------------------------------------------------------------------------------------
-   userValues(0)(DMA_SIZE_G-1 downto 0) <= interrupt;
-   userValues(1)                        <= toSlv(DMA_SIZE_G, 32);
-   userValues(2)                        <= x"00000001" when(AXI_APP_BUS_EN_G)         else x"00000000";
-   userValues(3)                        <= DRIVER_TYPE_ID_G;
-   userValues(62)                       <= x"00000001" when(XIL_DEVICE_G = "7SERIES") else x"00000000";
-   userValues(63)                       <= toSlv(getTimeRatio(AXI_CLK_FREQ_G, 1.0), 32);
+   userValues(0) <= toSlv(DMA_SIZE_G, 32);
+   userValues(1) <= x"00000001" when(AXI_APP_BUS_EN_G)         else x"00000000";
+   userValues(2) <= DRIVER_TYPE_ID_G;
+   userValues(3) <= x"00000001" when(XIL_DEVICE_G = "7SERIES") else x"00000000";
+   userValues(4) <= toSlv(getTimeRatio(AXI_CLK_FREQ_G, 1.0), 32);
 
    -------------------------          
    -- AXI-to-AXI-Lite Bridge
@@ -149,7 +146,7 @@ begin
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave,
          axilWriteMaster => axilWriteMaster,
-         axilWriteSlave  => axilWriteSlave); 
+         axilWriteSlave  => axilWriteSlave);
 
    ---------------------------------------
    -- Mask off upper address for 1 MB BAR0
@@ -186,7 +183,7 @@ begin
          mAxiWriteMasters    => axilWriteMasters,
          mAxiWriteSlaves     => axilWriteSlaves,
          mAxiReadMasters     => axilReadMasters,
-         mAxiReadSlaves      => axilReadSlaves);         
+         mAxiReadSlaves      => axilReadSlaves);
 
    --------------------------
    -- AXI-Lite Version Module
@@ -233,7 +230,7 @@ begin
          axiWriteSlave  => axilWriteSlaves(BOOT_INDEX_C),
          -- Clocks and Resets
          axiClk         => axiClk,
-         axiRst         => axiRst);  
+         axiRst         => axiRst);
 
    flashAddr <= flashAddress(28 downto 0);
 
@@ -257,7 +254,7 @@ begin
    -- Map the AXI-Lite to Application
    ----------------------------------   
    BYPASS_APP : if (AXI_APP_BUS_EN_G = false) generate
-      
+
       appReadMaster  <= AXI_LITE_READ_MASTER_INIT_C;
       appWriteMaster <= AXI_LITE_WRITE_MASTER_INIT_C;
 
@@ -272,7 +269,7 @@ begin
             axiReadMaster  => axilReadMasters(APP_INDEX_C),
             axiReadSlave   => axilReadSlaves(APP_INDEX_C),
             axiWriteMaster => axilWriteMasters(APP_INDEX_C),
-            axiWriteSlave  => axilWriteSlaves(APP_INDEX_C));   
+            axiWriteSlave  => axilWriteSlaves(APP_INDEX_C));
    end generate;
 
    GEN_APP : if (AXI_APP_BUS_EN_G = true) generate
@@ -281,5 +278,5 @@ begin
       appReadMaster                <= axilReadMasters(APP_INDEX_C);
       axilReadSlaves(APP_INDEX_C)  <= appReadSlave;
    end generate;
-   
+
 end mapping;

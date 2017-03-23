@@ -70,23 +70,19 @@ architecture mapping of AxiPcieReg is
 
    constant NUM_AXI_MASTERS_C : natural := 5;
 
-   constant VERSION_INDEX_C : natural := 0;
-   constant BOOT_INDEX_C    : natural := 1;
-   constant DMA_INDEX_C     : natural := 2;
-   constant PHY_INDEX_C     : natural := 3;
+   constant BOOT_INDEX_C    : natural := 0;
+   constant DMA_INDEX_C     : natural := 1;
+   constant PHY_INDEX_C     : natural := 2;
+   constant VERSION_INDEX_C : natural := 3;
    constant APP_INDEX_C     : natural := 4;
 
-   constant VERSION_ADDR_C : slv(31 downto 0) := x"00000000";
-   constant BOOT_ADDR_C    : slv(31 downto 0) := x"00010000";
-   constant DMA_ADDR_C     : slv(31 downto 0) := x"00020000";
-   constant PHY_ADDR_C     : slv(31 downto 0) := x"00030000";
+   constant BOOT_ADDR_C    : slv(31 downto 0) := x"00000000";
+   constant DMA_ADDR_C     : slv(31 downto 0) := x"00010000";
+   constant PHY_ADDR_C     : slv(31 downto 0) := x"00020000";
+   constant VERSION_ADDR_C : slv(31 downto 0) := x"00030000";
    constant APP_ADDR_C     : slv(31 downto 0) := x"00080000";
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
-      VERSION_INDEX_C => (
-         baseAddr     => VERSION_ADDR_C,
-         addrBits     => 16,
-         connectivity => x"FFFF"),
       BOOT_INDEX_C    => (
          baseAddr     => BOOT_ADDR_C,
          addrBits     => 16,
@@ -97,6 +93,10 @@ architecture mapping of AxiPcieReg is
          connectivity => x"FFFF"),
       PHY_INDEX_C     => (
          baseAddr     => PHY_ADDR_C,
+         addrBits     => 16,
+         connectivity => x"FFFF"),
+      VERSION_INDEX_C => (
+         baseAddr     => VERSION_ADDR_C,
          addrBits     => 16,
          connectivity => x"FFFF"),
       APP_INDEX_C     => (

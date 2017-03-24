@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-03-06
+-- Last update: 2017-03-24
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -58,9 +58,12 @@ entity AxiPcieReg is
       appWriteSlave      : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
       -- Boot Memory Ports 
       flashAddr          : out slv(28 downto 0);
-      flashCe            : out sl;
-      flashOe            : out sl;
-      flashWe            : out sl;
+      flashAdv           : out sl;
+      flashClk           : out sl;
+      flashRstL          : out sl;
+      flashCeL           : out sl;
+      flashOeL           : out sl;
+      flashWeL           : out sl;
       flashTri           : out sl;
       flashDin           : out slv(15 downto 0);
       flashDout          : in  slv(15 downto 0));
@@ -193,6 +196,7 @@ begin
          TPD_G            => TPD_G,
          BUILD_INFO_G     => BUILD_INFO_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
+         CLK_PERIOD_G     => (1.0/AXI_CLK_FREQ_G),
          EN_DEVICE_DNA_G  => true,
          XIL_DEVICE_G     => XIL_DEVICE_G)
       port map (
@@ -217,9 +221,12 @@ begin
       port map (
          -- FLASH Interface 
          flashAddr      => flashAddress,
-         flashCeL       => flashCe,
-         flashOeL       => flashOe,
-         flashWeL       => flashWe,
+         flashAdv       => flashAdv,
+         flashClk       => flashClk,
+         flashRstL      => flashRstL,
+         flashCeL       => flashCeL,
+         flashOeL       => flashOeL,
+         flashWeL       => flashWeL,
          flashDin       => flashDin,
          flashDout      => flashDout,
          flashTri       => flashTri,

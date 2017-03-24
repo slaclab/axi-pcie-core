@@ -18,12 +18,6 @@ set_property CONFIG_MODE BPI16 [current_design]
 set_property CFGBVS VCCO [current_design]
 set_property CONFIG_VOLTAGE 2.5 [current_design]
 
-##############################
-# StdLib: Custom Constraints #
-##############################
-
-set_property ASYNC_REG TRUE [get_cells -hierarchical *crossDomainSyncReg_reg*]
-
 ######################
 # FLASH: Constraints #
 ######################
@@ -75,9 +69,10 @@ set_property -dict { PACKAGE_PIN V34 IOSTANDARD LVCMOS25 PULLUP true} [get_ports
 set_property -dict { PACKAGE_PIN Y32 IOSTANDARD LVCMOS25 PULLUP true} [get_ports { flashData[14] }]
 set_property -dict { PACKAGE_PIN Y33 IOSTANDARD LVCMOS25 PULLUP true} [get_ports { flashData[15] }]
 
-set_property -dict { PACKAGE_PIN Y27 IOSTANDARD LVCMOS25 } [get_ports { flashCe }]
-set_property -dict { PACKAGE_PIN U34 IOSTANDARD LVCMOS25 } [get_ports { flashOe }]
-set_property -dict { PACKAGE_PIN T34 IOSTANDARD LVCMOS25 } [get_ports { flashWe }]
+set_property -dict { PACKAGE_PIN M31 IOSTANDARD LVCMOS25 } [get_ports { flashAdv }]
+set_property -dict { PACKAGE_PIN Y27 IOSTANDARD LVCMOS25 } [get_ports { flashCeL }]
+set_property -dict { PACKAGE_PIN U34 IOSTANDARD LVCMOS25 } [get_ports { flashOeL }]
+set_property -dict { PACKAGE_PIN T34 IOSTANDARD LVCMOS25 } [get_ports { flashWeL }]
 
 ####################
 # PCIe Constraints #

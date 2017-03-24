@@ -2,7 +2,7 @@
 -- File       : AxiPciePgpCardG3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-03-06
+-- Last update: 2017-03-24
 -------------------------------------------------------------------------------
 -- Description: PgpCardG3 Wrapper for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -56,9 +56,12 @@ entity AxiPciePgpCardG3Core is
       -- Boot Memory Ports 
       flashAddr      : out   slv(28 downto 0);
       flashData      : inout slv(15 downto 0);
-      flashCe        : out   sl;
-      flashOe        : out   sl;
-      flashWe        : out   sl;
+      flashAdv       : out   sl;
+      flashClk       : out   sl;
+      flashRstL      : out   sl;
+      flashCeL       : out   sl;
+      flashOeL       : out   sl;
+      flashWeL       : out   sl;
       -- PCIe Ports 
       pciRstL        : in    sl;
       pciRefClkP     : in    sl;
@@ -66,7 +69,7 @@ entity AxiPciePgpCardG3Core is
       pciRxP         : in    slv(3 downto 0);
       pciRxN         : in    slv(3 downto 0);
       pciTxP         : out   slv(3 downto 0);
-      pciTxN         : out   slv(3 downto 0));        
+      pciTxN         : out   slv(3 downto 0));
 end AxiPciePgpCardG3Core;
 
 architecture mapping of AxiPciePgpCardG3Core is
@@ -100,7 +103,7 @@ architecture mapping of AxiPciePgpCardG3Core is
    signal axiClk : sl;
    signal axiRst : sl;
    signal dmaIrq : sl;
-   
+
 begin
 
    sysClk <= axiClk;
@@ -111,7 +114,7 @@ begin
    ---------------   
    U_AxiPciePhy : entity work.AxiPciePgpCardG3IpCoreWrapper
       generic map (
-         TPD_G => TPD_G)   
+         TPD_G => TPD_G)
       port map (
          -- AXI4 Interfaces
          axiClk         => axiClk,
@@ -177,21 +180,24 @@ begin
          appWriteSlave      => appWriteSlave,
          -- Boot Memory Ports 
          flashAddr          => flashAddr,
-         flashCe            => flashCe,
-         flashOe            => flashOe,
-         flashWe            => flashWe,
+         flashAdv           => flashAdv,
+         flashClk           => flashClk,
+         flashRstL          => flashRstL,
+         flashCeL           => flashCeL,
+         flashOeL           => flashOeL,
+         flashWeL           => flashWeL,
          flashDin           => flashDin,
          flashDout          => flashDout,
-         flashTri           => flashTri);       
+         flashTri           => flashTri);
 
    GEN_IOBUF :
    for i in 15 downto 0 generate
       IOBUF_inst : IOBUF
          port map (
             O  => flashDout(i),         -- Buffer output
-            IO => flashData(i),         -- Buffer inout port (connect directly to top-level port)
+            IO => flashData(i),  -- Buffer inout port (connect directly to top-level port)
             I  => flashDin(i),          -- Buffer input
-            T  => flashTri);            -- 3-state enable input, high=input, low=output     
+            T  => flashTri);  -- 3-state enable input, high=input, low=output     
    end generate GEN_IOBUF;
 
    ---------------
@@ -226,6 +232,6 @@ begin
          dmaObMasters    => dmaObMasters,
          dmaObSlaves     => dmaObSlaves,
          dmaIbMasters    => dmaIbMasters,
-         dmaIbSlaves     => dmaIbSlaves);          
+         dmaIbSlaves     => dmaIbSlaves);
 
 end mapping;

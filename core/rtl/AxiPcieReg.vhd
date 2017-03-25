@@ -4,7 +4,7 @@
 -- Created    : 2017-03-06
 -- Last update: 2017-03-24
 -------------------------------------------------------------------------------
--- Description: 
+-- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the 
@@ -213,7 +213,8 @@ begin
    -----------------------------         
    -- AXI-Lite Boot Flash Module
    -----------------------------         
-   U_AxiMicronP30 : entity work.AxiMicronP30Reg
+   U_AxiMicronP30 : entity work.AxiPcieBpi
+   -- U_AxiMicronP30 : entity work.AxiMicronP30Reg
       generic map (
          TPD_G            => TPD_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,

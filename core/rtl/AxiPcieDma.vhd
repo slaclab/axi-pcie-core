@@ -4,7 +4,7 @@
 -- Created    : 2017-03-06
 -- Last update: 2017-03-06
 -------------------------------------------------------------------------------
--- Description: 
+-- Description: Wrapper for AXIS DMA Engine
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the 

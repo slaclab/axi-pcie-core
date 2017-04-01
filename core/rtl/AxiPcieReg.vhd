@@ -213,8 +213,7 @@ begin
    -----------------------------         
    -- AXI-Lite Boot Flash Module
    -----------------------------         
-   U_AxiMicronP30 : entity work.AxiPcieBpi
-   -- U_AxiMicronP30 : entity work.AxiMicronP30Reg
+   U_AxiMicronP30 : entity work.AxiMicronP30Reg
       generic map (
          TPD_G            => TPD_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,

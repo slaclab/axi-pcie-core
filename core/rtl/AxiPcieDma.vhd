@@ -86,27 +86,27 @@ architecture mapping of AxiPcieDma is
 
 begin
 
-   GEN_IP_CORE : if (USE_IP_CORE_G = true) generate
-      U_AxiCrossbar : entity work.AxiPcieCrossbarIpCoreWrapper
-         generic map (
-            TPD_G => TPD_G)
-         port map (
-            -- Clock and reset
-            axiClk           => axiClk,
-            axiRst           => axiRst,
-            -- Slaves
-            sAxiWriteMasters => axiWriteMasters,
-            sAxiWriteSlaves  => axiWriteSlaves,
-            sAxiReadMasters  => axiReadMasters,
-            sAxiReadSlaves   => axiReadSlaves,
-            -- Master
-            mAxiWriteMaster  => axiWriteMaster,
-            mAxiWriteSlave   => axiWriteSlave,
-            mAxiReadMaster   => axiReadMaster,
-            mAxiReadSlave    => axiReadSlave);
-   end generate;
+--   GEN_IP_CORE : if (USE_IP_CORE_G = true) generate
+--      U_AxiCrossbar : entity work.AxiPcieCrossbarIpCoreWrapper
+--         generic map (
+--            TPD_G => TPD_G)
+--         port map (
+--            -- Clock and reset
+--            axiClk           => axiClk,
+--            axiRst           => axiRst,
+--            -- Slaves
+--            sAxiWriteMasters => axiWriteMasters,
+--            sAxiWriteSlaves  => axiWriteSlaves,
+--            sAxiReadMasters  => axiReadMasters,
+--            sAxiReadSlaves   => axiReadSlaves,
+--            -- Master
+--            mAxiWriteMaster  => axiWriteMaster,
+--            mAxiWriteSlave   => axiWriteSlave,
+--            mAxiReadMaster   => axiReadMaster,
+--            mAxiReadSlave    => axiReadSlave);
+--   end generate;
 
-   GEN_RTL : if (USE_IP_CORE_G = false) generate
+   -- GEN_RTL : if (USE_IP_CORE_G = false) generate
       --------------------
       -- AXI Read Path MUX
       --------------------
@@ -142,7 +142,7 @@ begin
             -- Master
             mAxiWriteMaster  => axiWriteMaster,
             mAxiWriteSlave   => axiWriteSlave);
-   end generate;
+   -- end generate;
 
    -----------
    -- DMA Core

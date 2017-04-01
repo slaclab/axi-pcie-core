@@ -2,7 +2,7 @@
 -- File       : AxiPciePkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-03-06
+-- Last update: 2017-03-31
 -------------------------------------------------------------------------------
 -- Description: Package file for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -23,14 +23,14 @@ use work.AxiStreamPkg.all;
 use work.SsiPkg.all;
 
 package AxiPciePkg is
-   
+
    constant PCIE_AXIS_CONFIG_C : AxiStreamConfigType := (
       TSTRB_EN_C    => false,
       TDATA_BYTES_C => 16,
-      TDEST_BITS_C  => 16,
+      TDEST_BITS_C  => 8,
       TID_BITS_C    => 0,
       TKEEP_MODE_C  => TKEEP_COMP_C,
       TUSER_BITS_C  => 4,
-      TUSER_MODE_C  => TUSER_FIRST_LAST_C);      
+      TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
 end package AxiPciePkg;

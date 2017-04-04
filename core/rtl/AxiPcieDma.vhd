@@ -160,6 +160,7 @@ begin
          AXI_DMA_CONFIG_G  => AXI_CONFIG_C,
          CHAN_COUNT_G      => DMA_SIZE_G,
          RD_PIPE_STAGES_G  => 1,
+         BURST_BYTES_G     => 256,
          --RD_PEND_THRESH_G  => 512)
          RD_PEND_THRESH_G  => 0)
       port map (

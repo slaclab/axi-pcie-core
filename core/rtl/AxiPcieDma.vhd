@@ -130,7 +130,7 @@ begin
          AXI_ERROR_RESP_G  => AXI_ERROR_RESP_G,
          AXI_READY_EN_G    => false,
          AXIS_READY_EN_G   => false,
-         AXIS_CONFIG_G     => PCIE_AXIS_CONFIG_C,
+         AXIS_CONFIG_G     => DMA_AXIS_CONFIG_C,
          AXI_DESC_CONFIG_G => AXI_CONFIG_C,
          AXI_DMA_CONFIG_G  => AXI_CONFIG_C,
          CHAN_COUNT_G      => DMA_SIZE_G,

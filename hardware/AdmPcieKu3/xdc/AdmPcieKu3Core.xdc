@@ -644,15 +644,13 @@ set_property PACKAGE_PIN AP1 [get_ports pciRxN[7]]; # AP1   PCIE_RX7_N        MG
 # Y2   PCIE_RX15_P         MGT
 # Y1   PCIE_RX15_N         MGT
 
-# AB6   PCIE_REFCLK1_PIN_P   MGT_REFCLK
-# AB5   PCIE_REFCLK1_PIN_N   MGT_REFCLK
-# K22   PERST1_L             1.8
-# N23   PERST0_L             1.8
+set_property PACKAGE_PIN AB6  [get_ports pciRefClkP];  # AB6   PCIE_REFCLK1_PIN_P   MGT_REFCLK
+set_property PACKAGE_PIN AB5  [get_ports pciRefClkN];  # AB5   PCIE_REFCLK1_PIN_N   MGT_REFCLK
+# set_property PACKAGE_PIN P6  [get_ports pciRefClkP]; # P6   PCIE_REFCLK0_PIN_P   MGT_REFCLK
+# set_property PACKAGE_PIN P5  [get_ports pciRefClkN]; # P5   PCIE_REFCLK0_PIN_N   MGT_REFCLK
 
-set_property PACKAGE_PIN P6  [get_ports pciRefClkP]; # P6   PCIE_REFCLK0_PIN_P   MGT_REFCLK
-set_property PACKAGE_PIN P5  [get_ports pciRefClkN]; # P5   PCIE_REFCLK0_PIN_N   MGT_REFCLK
-
-set_property IOSTANDARD LVCMOS18 [get_ports [list pciRstL]]
+set_property -dict { PACKAGE_PIN K22 IOSTANDARD LVCMOS18 } [get_ports {pciRstL}];   # K22   PERST1_L             1.8
+# set_property -dict { PACKAGE_PIN N23 IOSTANDARD LVCMOS18 } [get_ports {pciRstL}]; # N23   PERST0_L             1.8
 
 set_false_path -from [get_ports {pciRstL}]
 set_false_path -through [get_pins {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/pcie3_uscale_top_inst/pcie3_uscale_wrapper_inst/PCIE_3_1_inst/CFGMAX*}]

@@ -2,7 +2,7 @@
 -- File       : AxiPciePkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-04-06
+-- Last update: 2017-04-08
 -------------------------------------------------------------------------------
 -- Description: Package file for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -38,5 +38,15 @@ package AxiPciePkg is
       TKEEP_MODE_C  => TKEEP_COMP_C,
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
+
+   -- DMA AXI Configuration   
+   constant DMA_AXI_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => 32,               -- 32-bit address interface
+      DATA_BYTES_C => DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- Match the AXIS stream
+      ID_BITS_C    => 5,                -- Up to 32 DMA IDS
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface      
+
+   -- PCIE PHY AXI Configuration   
+   constant PCIE_AXI_CONFIG_C : AxiConfigType := DMA_AXI_CONFIG_C;
 
 end package AxiPciePkg;

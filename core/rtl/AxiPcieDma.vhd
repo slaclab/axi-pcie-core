@@ -2,7 +2,7 @@
 -- File       : AxiPcieDma.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-03-06
+-- Last update: 2017-04-08
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXIS DMA Engine
 -------------------------------------------------------------------------------
@@ -56,12 +56,6 @@ end AxiPcieDma;
 
 architecture mapping of AxiPcieDma is
 
-   constant AXI_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => 32,               -- 32-bit address interface
-      DATA_BYTES_C => 16,               -- 16 bytes (128-bit interface)
-      ID_BITS_C    => 5,                -- Up to 32 DMA IDS
-      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface
-
    signal locReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
    signal locReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
    signal locWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
@@ -82,42 +76,27 @@ architecture mapping of AxiPcieDma is
 
 begin
 
-
-   --------------------
-   -- AXI Read Path MUX
-   --------------------
-   U_AxiReadPathMux : entity work.AxiReadPathMux
+   ----------------
+   -- AXI PCIe XBAR
+   -----------------
+   U_XBAR : entity work.AxiPcieCrossbar
       generic map (
-         TPD_G        => TPD_G,
-         NUM_SLAVES_G => (DMA_SIZE_G+1))
+         TPD_G      => TPD_G,
+         DMA_SIZE_G => DMA_SIZE_G)
       port map (
-         -- Clock and reset
-         axiClk          => axiClk,
-         axiRst          => axiRst,
-         -- Slaves
-         sAxiReadMasters => axiReadMasters(DMA_SIZE_G downto 0),
-         sAxiReadSlaves  => axiReadSlaves(DMA_SIZE_G downto 0),
-         -- Master
-         mAxiReadMaster  => axiReadMaster,
-         mAxiReadSlave   => axiReadSlave);
-
-   -----------------------
-   -- AXI Write Path DEMUX
-   -----------------------
-   U_AxiWritePathMux : entity work.AxiWritePathMux
-      generic map (
-         TPD_G        => TPD_G,
-         NUM_SLAVES_G => (DMA_SIZE_G+1))
-      port map (
-         -- Clock and reset
+         -- Clock and Reset
          axiClk           => axiClk,
          axiRst           => axiRst,
          -- Slaves
-         sAxiWriteMasters => axiWriteMasters(DMA_SIZE_G downto 0),
-         sAxiWriteSlaves  => axiWriteSlaves(DMA_SIZE_G downto 0),
+         sAxiWriteMasters => axiWriteMasters,
+         sAxiWriteSlaves  => axiWriteSlaves,
+         sAxiReadMasters  => axiReadMasters,
+         sAxiReadSlaves   => axiReadSlaves,
          -- Master
          mAxiWriteMaster  => axiWriteMaster,
-         mAxiWriteSlave   => axiWriteSlave);
+         mAxiWriteSlave   => axiWriteSlave,
+         mAxiReadMaster   => axiReadMaster,
+         mAxiReadSlave    => axiReadSlave);
 
    -----------
    -- DMA Core
@@ -131,8 +110,8 @@ begin
          AXI_READY_EN_G    => false,
          AXIS_READY_EN_G   => false,
          AXIS_CONFIG_G     => DMA_AXIS_CONFIG_C,
-         AXI_DESC_CONFIG_G => AXI_CONFIG_C,
-         AXI_DMA_CONFIG_G  => AXI_CONFIG_C,
+         AXI_DESC_CONFIG_G => DMA_AXI_CONFIG_C,
+         AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
          CHAN_COUNT_G      => DMA_SIZE_G,
          RD_PIPE_STAGES_G  => 1,
          --RD_PEND_THRESH_G  => 512)
@@ -259,7 +238,7 @@ begin
             DATA_BRAM_EN_G         => false,
             DATA_CASCADE_SIZE_G    => 1,
             DATA_FIFO_ADDR_WIDTH_G => 4,
-            AXI_CONFIG_G           => AXI_CONFIG_C)
+            AXI_CONFIG_G           => DMA_AXI_CONFIG_C)
          port map (
             sAxiClk        => axiClk,
             sAxiRst        => axiRst,
@@ -299,7 +278,7 @@ begin
             RESP_BRAM_EN_G           => false,
             RESP_CASCADE_SIZE_G      => 1,
             RESP_FIFO_ADDR_WIDTH_G   => 4,
-            AXI_CONFIG_G             => AXI_CONFIG_C)
+            AXI_CONFIG_G             => DMA_AXI_CONFIG_C)
          port map (
             sAxiClk         => axiClk,
             sAxiRst         => axiRst,

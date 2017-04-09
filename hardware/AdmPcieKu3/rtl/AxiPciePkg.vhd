@@ -2,7 +2,7 @@
 -- File       : AxiPciePkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-04-06
+-- Last update: 2017-04-08
 -------------------------------------------------------------------------------
 -- Description: Package file for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -33,7 +33,6 @@ package AxiPciePkg is
    -- DMA AXI Stream Configuration
    constant DMA_AXIS_CONFIG_C : AxiStreamConfigType := (
       TSTRB_EN_C    => false,
-      -- TDATA_BYTES_C => 32,
       TDATA_BYTES_C => 16,
       TDEST_BITS_C  => 8,
       TID_BITS_C    => 0,
@@ -41,11 +40,25 @@ package AxiPciePkg is
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
+   -- DMA AXI Configuration   
+   constant DMA_AXI_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => 32,               -- 32-bit address interface
+      DATA_BYTES_C => DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- Match the AXIS stream
+      ID_BITS_C    => 5,                -- Up to 32 DMA IDS
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface         
+
+   -- PCIE PHY AXI Configuration   
+   constant PCIE_AXI_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => 32,               -- 32-bit address interface
+      DATA_BYTES_C => 32,               -- 256-bit data interface
+      ID_BITS_C    => 5,                -- Up to 32 DMA IDS
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface      
+
    -- DDR MEM AXI Configuration
    constant MEM_AXI_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 33,               -- 8GB per SODIMM
-      DATA_BYTES_C => 64,
-      ID_BITS_C    => 4,
-      LEN_BITS_C   => 8);
+      DATA_BYTES_C => 64,               -- 512-bit data interface
+      ID_BITS_C    => 4,                -- Up to 16 IDS
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface  
 
 end package AxiPciePkg;

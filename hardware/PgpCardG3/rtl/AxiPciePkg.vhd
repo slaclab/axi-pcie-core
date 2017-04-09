@@ -20,6 +20,7 @@ use ieee.std_logic_1164.all;
 
 use work.StdRtlPkg.all;
 use work.AxiStreamPkg.all;
+use work.AxiPkg.all;
 
 package AxiPciePkg is
 

@@ -8,7 +8,7 @@
 	<spirit:version>1.0</spirit:version>
 	<spirit:componentInstances>
 		<spirit:componentInstance>
-			<spirit:instanceName>AxiPciePgpCardG3IpCore</spirit:instanceName>
+			<spirit:instanceName>AxiPgpCardG3PciePhy</spirit:instanceName>
 			<spirit:componentRef spirit:vendor="xilinx.com"
 					spirit:library="ip"
 					spirit:name="axi_pcie"
@@ -56,7 +56,7 @@
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_HIGHADDR">0x00001FFF</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_INCLUDE_BAROFFSET_REG">0</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_INCLUDE_RC">0</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_INSTANCE">AxiPciePgpCardG3IpCore</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_INSTANCE">AxiPgpCardG3PciePhy</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_INTERRUPT_PIN">1</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_MAX_LINK_SPEED">1</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_MSI_DECODE_ENABLE">TRUE</spirit:configurableElementValue>
@@ -140,7 +140,7 @@
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.BASE_CLASS_MENU">Device_was_built_before_Class_Code_definitions_were_finalized</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.CLASS_CODE">0x118000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.COMP_TIMEOUT">50us</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.Component_Name">AxiPciePgpCardG3IpCore</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.Component_Name">AxiPgpCardG3PciePhy</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.DEVICE_ID">0x2030</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.ENABLE_CLASS_CODE">true</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.HIGHADDR">0x00001FFF</spirit:configurableElementValue>

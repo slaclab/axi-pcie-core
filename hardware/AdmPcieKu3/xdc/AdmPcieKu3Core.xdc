@@ -139,16 +139,12 @@ set_property PACKAGE_PIN A25 [get_ports {ddrA[0][12]}]; # A25   DDR3_0_A12      
 set_property PACKAGE_PIN A29 [get_ports {ddrA[0][13]}]; # A29   DDR3_0_A13      1.5
 set_property PACKAGE_PIN D24 [get_ports {ddrA[0][14]}]; # D24   DDR3_0_A14      1.5
 set_property PACKAGE_PIN E23 [get_ports {ddrA[0][15]}]; # E23   DDR3_0_A15      1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrA[0][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrA[0][*]}]
-set_property SLEW FAST                    [get_ports {ddrA[0][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrA[0][*]}]
 
 set_property PACKAGE_PIN E28 [get_ports {ddrBa[0][0]}]; # E28   DDR3_0_BA0      1.5
 set_property PACKAGE_PIN D26 [get_ports {ddrBa[0][1]}]; # D26   DDR3_0_BA1      1.5
 set_property PACKAGE_PIN B22 [get_ports {ddrBa[0][2]}]; # B22   DDR3_0_BA2      1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrBa[0][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrBa[0][*]}]
-set_property SLEW FAST                    [get_ports {ddrBa[0][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrBa[0][*]}]
 
 set_property PACKAGE_PIN B24 [get_ports {ddrCkP[0][0]}]; # B24   DDR3_0_CK0_P    1.5
 set_property PACKAGE_PIN A24 [get_ports {ddrCkN[0][0]}]; # A24   DDR3_0_CK0_N    1.5
@@ -156,21 +152,15 @@ set_property PACKAGE_PIN A24 [get_ports {ddrCkN[0][0]}]; # A24   DDR3_0_CK0_N   
 set_property PACKAGE_PIN C21 [get_ports {ddrCkP[0][1]}]; # C21   DDR3_0_CK1_P    1.5
 set_property PACKAGE_PIN C22 [get_ports {ddrCkN[0][1]}]; # C22   DDR3_0_CK1_N    1.5
 
-set_property IOSTANDARD DIFF_SSTL15_DCI   [get_ports {ddrCkP[0][*] ddrCkN[0][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrCkP[0][*] ddrCkN[0][*]}]
-set_property SLEW FAST                    [get_ports {ddrCkP[0][*] ddrCkN[0][*]}]
+set_property IOSTANDARD LVCMOS15   [get_ports {ddrCkP[0][*] ddrCkN[0][*]}]
 
 set_property PACKAGE_PIN C26 [get_ports {ddrCke[0][0]}]; # C26   DDR3_0_CKE0     1.5
 set_property PACKAGE_PIN B26 [get_ports {ddrCke[0][1]}]; # B26   DDR3_0_CKE1     1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrCke[1][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrCke[1][*]}]
-set_property SLEW FAST                    [get_ports {ddrCke[1][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrCke[0][*]}]
 
 set_property PACKAGE_PIN B27 [get_ports {ddrCsL[0][0]}]; # B27   DDR3_0_CS0_L    1.5
 set_property PACKAGE_PIN A28 [get_ports {ddrCsL[0][1]}]; # A28   DDR3_0_CS1_L    1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrCsL[0][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrCsL[0][*]}]
-set_property SLEW FAST                    [get_ports {ddrCsL[0][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrCsL[0][*]}]
 
 set_property PACKAGE_PIN C8  [get_ports {ddrDq[0][0]}];  # C8    DDR3_0_DQ0      1.5
 set_property PACKAGE_PIN D8  [get_ports {ddrDq[0][1]}];  # D8    DDR3_0_DQ1      1.5
@@ -244,11 +234,7 @@ set_property PACKAGE_PIN C17 [get_ports {ddrDq[0][68]}]; # C17   DDR3_0_CB4     
 set_property PACKAGE_PIN B15 [get_ports {ddrDq[0][69]}]; # B15   DDR3_0_CB5      1.5
 set_property PACKAGE_PIN A15 [get_ports {ddrDq[0][70]}]; # A15   DDR3_0_CB6      1.5
 set_property PACKAGE_PIN A19 [get_ports {ddrDq[0][71]}]; # A19   DDR3_0_CB7      1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrDq[0][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrDq[0][*]}]
-set_property SLEW          FAST           [get_ports {ddrDq[0][*]}]
-set_property IBUF_LOW_PWR  FALSE          [get_ports {ddrDq[0][*]}]
-set_property ODT           RTT_40         [get_ports {ddrDq[0][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrDq[0][*]}]
 
 # set_property PACKAGE_PIN F8  [get_ports {ddrDm[0][0]}]; # F8    DDR3_0_DM0      1.5
 # set_property PACKAGE_PIN L8  [get_ports {ddrDm[0][1]}]; # L8    DDR3_0_DM1      1.5
@@ -259,9 +245,7 @@ set_property ODT           RTT_40         [get_ports {ddrDq[0][*]}]
 # set_property PACKAGE_PIN G17 [get_ports {ddrDm[0][6]}]; # G17   DDR3_0_DM6      1.5
 # set_property PACKAGE_PIN J15 [get_ports {ddrDm[0][7]}]; # J15   DDR3_0_DM7      1.5
 # set_property PACKAGE_PIN B14 [get_ports {ddrDm[0][8]}]; # B14   DDR3_0_DM8      1.5
-# set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrDm[0][*]}]
-# set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrDm[0][*]}]
-# set_property SLEW FAST                    [get_ports {ddrDm[0][*]}]
+# set_property IOSTANDARD LVCMOS15        [get_ports {ddrDm[0][*]}]
 
 set_property PACKAGE_PIN B10 [get_ports {ddrDqsP[0][0]}]; # B10   DDR3_0_DQS0_P   1.5
 set_property PACKAGE_PIN A10 [get_ports {ddrDqsN[0][0]}]; # A10   DDR3_0_DQS0_N   1.5
@@ -290,28 +274,20 @@ set_property PACKAGE_PIN J18 [get_ports {ddrDqsN[0][7]}]; # J18   DDR3_0_DQS7_N 
 set_property PACKAGE_PIN C19 [get_ports {ddrDqsP[0][8]}]; # C19   DDR3_0_DQS8_P   1.5
 set_property PACKAGE_PIN B19 [get_ports {ddrDqsN[0][8]}]; # B19   DDR3_0_DQS8_N   1.5
 
-set_property IOSTANDARD DIFF_SSTL15_DCI   [get_ports {ddrDqsP[0][*] ddrDqsN[0][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrDqsP[0][*] ddrDqsN[0][*]}]
-set_property SLEW          FAST           [get_ports {ddrDqsP[0][*] ddrDqsN[0][*]}]
-set_property IBUF_LOW_PWR  FALSE          [get_ports {ddrDqsP[0][*] ddrDqsN[0][*]}]
-set_property ODT           RTT_40         [get_ports {ddrDqsP[0][*] ddrDqsN[0][*]}]
+set_property IOSTANDARD LVCMOS15   [get_ports {ddrDqsP[0][*] ddrDqsN[0][*]}]
 
 set_property PACKAGE_PIN C28 [get_ports {ddrOdt[0][0]}]; # C28   DDR3_0_ODT0     1.5
 set_property PACKAGE_PIN B29 [get_ports {ddrOdt[0][1]}]; # B29   DDR3_0_ODT1     1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrOdt[0][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrOdt[0][*]}]
-set_property SLEW FAST                    [get_ports {ddrOdt[0][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrOdt[0][*]}]
 
-set_property -dict { PACKAGE_PIN C27 IOSTANDARD SSTL15_DCI OUTPUT_IMPEDANCE RDRV_40_40 SLEW FAST } [get_ports {ddrCasL[0]}]; # C27   DDR3_0_CAS_L    1.5
-set_property -dict { PACKAGE_PIN D28 IOSTANDARD SSTL15_DCI OUTPUT_IMPEDANCE RDRV_40_40 SLEW FAST } [get_ports {ddrRasL[0]}]; # D28   DDR3_0_RAS_L    1.5
-set_property -dict { PACKAGE_PIN D29 IOSTANDARD SSTL15_DCI OUTPUT_IMPEDANCE RDRV_40_40 SLEW FAST } [get_ports {ddrWeL[0]}];  # D29   DDR3_0_WE_L     1.5
-set_property -dict { PACKAGE_PIN B25 IOSTANDARD SSTL15     OUTPUT_IMPEDANCE RDRV_48_48 SLEW SLOW } [get_ports {ddrRstL[0]}]; # B25   DDR3_0_RESET_L  1.5
+set_property -dict { PACKAGE_PIN C27 IOSTANDARD LVCMOS15 } [get_ports {ddrCasL[0]}]; # C27   DDR3_0_CAS_L    1.5
+set_property -dict { PACKAGE_PIN D28 IOSTANDARD LVCMOS15 } [get_ports {ddrRasL[0]}]; # D28   DDR3_0_RAS_L    1.5
+set_property -dict { PACKAGE_PIN D29 IOSTANDARD LVCMOS15 } [get_ports {ddrWeL[0]}];  # D29   DDR3_0_WE_L     1.5
+set_property -dict { PACKAGE_PIN B25 IOSTANDARD LVCMOS15 } [get_ports {ddrRstL[0]}]; # B25   DDR3_0_RESET_L  1.5
 
 set_property PACKAGE_PIN D23          [get_ports {ddrClkP[0]}]; # D23   REFCLK400M_HSTL_0_P   1.5 (HSTL externally terminated)
 set_property PACKAGE_PIN C23          [get_ports {ddrClkN[0]}]; # C23   REFCLK400M_HSTL_0_N   1.5 (HSTL externally terminated)
-set_property IOSTANDARD   DIFF_HSTL_I [get_ports {ddrClkP[0] ddrClkN[0]}]
-set_property IBUF_LOW_PWR FALSE       [get_ports {ddrClkP[0] ddrClkN[0]}]
-set_property PULLTYPE     KEEPER      [get_ports {ddrClkP[0] ddrClkN[0]}]
+set_property IOSTANDARD   LVCMOS15 [get_ports {ddrClkP[0] ddrClkN[0]}]
 
 ##########################
 # SODIMM[1]: Constraints #
@@ -333,16 +309,12 @@ set_property PACKAGE_PIN AM17 [get_ports {ddrA[1][12]}]; # AM17   DDR3_1_A12    
 set_property PACKAGE_PIN AH14 [get_ports {ddrA[1][13]}]; # AH14   DDR3_1_A13     1.5
 set_property PACKAGE_PIN AL19 [get_ports {ddrA[1][14]}]; # AL19   DDR3_1_A14     1.5
 set_property PACKAGE_PIN AM19 [get_ports {ddrA[1][15]}]; # AM19   DDR3_1_A15     1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrA[1][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrA[1][*]}]
-set_property SLEW FAST                    [get_ports {ddrA[1][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrA[1][*]}]
 
 set_property PACKAGE_PIN AK16 [get_ports {ddrBa[1][0]}]; # AK16   DDR3_1_BA0     1.5
 set_property PACKAGE_PIN AH16 [get_ports {ddrBa[1][1]}]; # AH16   DDR3_1_BA1     1.5
 set_property PACKAGE_PIN AP16 [get_ports {ddrBa[1][2]}]; # AP16   DDR3_1_BA2     1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrBa[1][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrBa[1][*]}]
-set_property SLEW FAST                    [get_ports {ddrBa[1][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrBa[1][*]}]
 
 set_property PACKAGE_PIN AL18 [get_ports {ddrCkP[1][0]}]; # AL18   DDR3_1_CK0_P   1.5
 set_property PACKAGE_PIN AL17 [get_ports {ddrCkN[1][0]}]; # AL17   DDR3_1_CK0_N   1.5
@@ -350,21 +322,15 @@ set_property PACKAGE_PIN AL17 [get_ports {ddrCkN[1][0]}]; # AL17   DDR3_1_CK0_N 
 set_property PACKAGE_PIN AJ15 [get_ports {ddrCkP[1][1]}]; # AJ15   DDR3_1_CK1_P   1.5
 set_property PACKAGE_PIN AJ14 [get_ports {ddrCkN[1][1]}]; # AJ14   DDR3_1_CK1_N   1.5
 
-set_property IOSTANDARD DIFF_SSTL15_DCI   [get_ports {ddrCkP[1][*] ddrCkN[1][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrCkP[1][*] ddrCkN[1][*]}]
-set_property SLEW FAST                    [get_ports {ddrCkP[1][*] ddrCkN[1][*]}]
+set_property IOSTANDARD LVCMOS15   [get_ports {ddrCkP[1][*] ddrCkN[1][*]}]
 
 set_property PACKAGE_PIN AN17 [get_ports {ddrCke[1][0]}]; # AN17   DDR3_1_CKE0    1.5
 set_property PACKAGE_PIN AP14 [get_ports {ddrCke[1][1]}]; # AP14   DDR3_1_CKE1    1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrCke[1][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrCke[1][*]}]
-set_property SLEW FAST                    [get_ports {ddrCke[1][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrCke[1][*]}]
 
 set_property PACKAGE_PIN AK15 [get_ports {ddrCsL[1][0]}]; # AK15   DDR3_1_CS0_L   1.5
 set_property PACKAGE_PIN AJ16 [get_ports {ddrCsL[1][1]}]; # AJ16   DDR3_1_CS1_L   1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrCsL[1][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrCsL[1][*]}]
-set_property SLEW FAST                    [get_ports {ddrCsL[1][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrCsL[1][*]}]
 
 set_property PACKAGE_PIN AF20 [get_ports {ddrDq[1][0]}];  # AF20   DDR3_1_DQ0     1.5
 set_property PACKAGE_PIN AD20 [get_ports {ddrDq[1][1]}];  # AD20   DDR3_1_DQ1     1.5
@@ -438,11 +404,7 @@ set_property PACKAGE_PIN AE17 [get_ports {ddrDq[1][68]}]; # AE17   DDR3_1_CB4   
 set_property PACKAGE_PIN AF17 [get_ports {ddrDq[1][69]}]; # AF17   DDR3_1_CB5     1.5
 set_property PACKAGE_PIN AE18 [get_ports {ddrDq[1][70]}]; # AE18   DDR3_1_CB6     1.5
 set_property PACKAGE_PIN AF18 [get_ports {ddrDq[1][71]}]; # AF18   DDR3_1_CB7     1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrDq[1][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrDq[1][*]}]
-set_property SLEW          FAST           [get_ports {ddrDq[1][*]}]
-set_property IBUF_LOW_PWR  FALSE          [get_ports {ddrDq[1][*]}]
-set_property ODT           RTT_40         [get_ports {ddrDq[1][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrDq[1][*]}]
 
 # set_property PACKAGE_PIN AD21 [get_ports {ddrDm[1][0]}]; # AD21   DDR3_1_DM0     1.5
 # set_property PACKAGE_PIN AE25 [get_ports {ddrDm[1][1]}]; # AE25   DDR3_1_DM1     1.5
@@ -453,9 +415,7 @@ set_property ODT           RTT_40         [get_ports {ddrDq[1][*]}]
 # set_property PACKAGE_PIN AJ29 [get_ports {ddrDm[1][6]}]; # AJ29   DDR3_1_DM6     1.5
 # set_property PACKAGE_PIN AL32 [get_ports {ddrDm[1][7]}]; # AL32   DDR3_1_DM7     1.5
 # set_property PACKAGE_PIN AD19 [get_ports {ddrDm[1][8]}]; # AD19   DDR3_1_DM8     1.5
-# set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrDm[1][*]}]
-# set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrDm[1][*]}]
-# set_property SLEW FAST                    [get_ports {ddrDm[1][*]}]
+# set_property IOSTANDARD LVCMOS15        [get_ports {ddrDm[1][*]}]
 
 set_property PACKAGE_PIN AG21 [get_ports {ddrDqsP[1][0]}]; # AG21   DDR3_1_DQS0_P  1.5
 set_property PACKAGE_PIN AH21 [get_ports {ddrDqsN[1][0]}]; # AH21   DDR3_1_DQS0_N  1.5
@@ -484,28 +444,20 @@ set_property PACKAGE_PIN AP34 [get_ports {ddrDqsN[1][7]}]; # AP34   DDR3_1_DQS7_
 set_property PACKAGE_PIN AE16 [get_ports {ddrDqsP[1][8]}]; # AE16   DDR3_1_DQS8_P  1.5
 set_property PACKAGE_PIN AE15 [get_ports {ddrDqsN[1][8]}]; # AE15   DDR3_1_DQS8_N  1.5
 
-set_property IOSTANDARD DIFF_SSTL15_DCI   [get_ports {ddrDqsP[1][*] ddrDqsN[1][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrDqsP[1][*] ddrDqsN[1][*]}]
-set_property SLEW          FAST           [get_ports {ddrDqsP[1][*] ddrDqsN[1][*]}]
-set_property IBUF_LOW_PWR  FALSE          [get_ports {ddrDqsP[1][*] ddrDqsN[1][*]}]
-set_property ODT           RTT_40         [get_ports {ddrDqsP[1][*] ddrDqsN[1][*]}]
+set_property IOSTANDARD LVCMOS15   [get_ports {ddrDqsP[1][*] ddrDqsN[1][*]}]
 
 set_property PACKAGE_PIN AN18 [get_ports {ddrOdt[1][0]}]; # AN18   DDR3_1_ODT0    1.5
 set_property PACKAGE_PIN AP18 [get_ports {ddrOdt[1][1]}]; # AP18   DDR3_1_ODT1    1.5
-set_property IOSTANDARD SSTL15_DCI        [get_ports {ddrOdt[1][*]}]
-set_property OUTPUT_IMPEDANCE RDRV_40_40  [get_ports {ddrOdt[1][*]}]
-set_property SLEW FAST                    [get_ports {ddrOdt[1][*]}]
+set_property IOSTANDARD LVCMOS15        [get_ports {ddrOdt[1][*]}]
 
-set_property -dict { PACKAGE_PIN AM14  IOSTANDARD SSTL15_DCI OUTPUT_IMPEDANCE RDRV_40_40 SLEW FAST } [get_ports {ddrCasL[1]}]; # AM14   DDR3_1_CAS_L   1.5
-set_property -dict { PACKAGE_PIN AG16  IOSTANDARD SSTL15_DCI OUTPUT_IMPEDANCE RDRV_40_40 SLEW FAST } [get_ports {ddrRasL[1]}]; # AG16   DDR3_1_RAS_L   1.5
-set_property -dict { PACKAGE_PIN AL14  IOSTANDARD SSTL15_DCI OUTPUT_IMPEDANCE RDRV_40_40 SLEW FAST } [get_ports {ddrWeL[1]}];  # AL14   DDR3_1_WE_L    1.5
-set_property -dict { PACKAGE_PIN AN19  IOSTANDARD SSTL15     OUTPUT_IMPEDANCE RDRV_48_48 SLEW SLOW } [get_ports {ddrRstL[1]}]; # AN19   DDR3_1_RESET_L 1.5
+set_property -dict { PACKAGE_PIN AM14 IOSTANDARD LVCMOS15 } [get_ports {ddrCasL[1]}]; # AM14   DDR3_1_CAS_L   1.5
+set_property -dict { PACKAGE_PIN AG16 IOSTANDARD LVCMOS15 } [get_ports {ddrRasL[1]}]; # AG16   DDR3_1_RAS_L   1.5
+set_property -dict { PACKAGE_PIN AL14 IOSTANDARD LVCMOS15 } [get_ports {ddrWeL[1]}];  # AL14   DDR3_1_WE_L    1.5
+set_property -dict { PACKAGE_PIN AN19 IOSTANDARD LVCMOS15 } [get_ports {ddrRstL[1]}]; # AN19   DDR3_1_RESET_L 1.5
 
 set_property PACKAGE_PIN AH18         [get_ports {ddrClkP[1]}]; # AH18   REFCLK400M_HSTL_1_P   1.5 (HSTL externally terminated)
 set_property PACKAGE_PIN AH17         [get_ports {ddrClkN[1]}]; # AH17   REFCLK400M_HSTL_1_N   1.5 (HSTL externally terminated)
-set_property IOSTANDARD   DIFF_HSTL_I [get_ports {ddrClkP[1] ddrClkN[1]}]
-set_property IBUF_LOW_PWR FALSE       [get_ports {ddrClkP[1] ddrClkN[1]}]
-set_property PULLTYPE     KEEPER      [get_ports {ddrClkP[1] ddrClkN[1]}]
+set_property IOSTANDARD   LVCMOS15 [get_ports {ddrClkP[1] ddrClkN[1]}]
 
 ######################
 # FLASH: Constraints #
@@ -659,14 +611,6 @@ set_false_path -through [get_nets {U_Core/U_AxiPciePhy/U_AxiPcie/inst/inst/cfg_m
 create_clock -name pciRefClkP -period 10.000 [get_ports {pciRefClkP}]
 create_clock -name ddrClkP0   -period  2.500 [get_ports {ddrClkP[0]}]
 create_clock -name ddrClkP1   -period  2.500 [get_ports {ddrClkP[1]}]
-
-create_generated_clock -name ddrClk0     [get_pins {U_Core/GEN_VEC[0].U_DDR/U_MIG/inst/u_ddr3_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT0}]
-create_generated_clock -name ddrIntClk00 [get_pins {U_Core/GEN_VEC[0].U_DDR/U_MIG/inst/u_ddr3_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT0}]
-create_generated_clock -name ddrIntClk01 [get_pins {U_Core/GEN_VEC[0].U_DDR/U_MIG/inst/u_ddr3_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT6}]
-
-create_generated_clock -name ddrClk1     [get_pins {U_Core/GEN_VEC[1].U_DDR/U_MIG/inst/u_ddr3_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT0}]
-create_generated_clock -name ddrIntClk10 [get_pins {U_Core/GEN_VEC[1].U_DDR/U_MIG/inst/u_ddr3_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT0}]
-create_generated_clock -name ddrIntClk11 [get_pins {U_Core/GEN_VEC[1].U_DDR/U_MIG/inst/u_ddr3_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT6}]
 
 create_generated_clock -name dnaClk  [get_pins {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 create_generated_clock -name sysClk  [get_pins {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/gt_top_i/phy_clk_i/bufg_gt_userclk/O}]

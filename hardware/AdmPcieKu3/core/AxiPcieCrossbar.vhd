@@ -671,46 +671,7 @@ architecture mapping of AxiPcieCrossbar is
          S15_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S15_AXI_RLAST        : out std_logic;
          S15_AXI_RVALID       : out std_logic;
-         S15_AXI_RREADY       : in  std_logic;
-         S16_AXI_ARESET_OUT_N : out std_logic;
-         S16_AXI_ACLK         : in  std_logic;
-         S16_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S16_AXI_AWADDR       : in  std_logic_vector(31 downto 0);
-         S16_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
-         S16_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
-         S16_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
-         S16_AXI_AWLOCK       : in  std_logic;
-         S16_AXI_AWCACHE      : in  std_logic_vector(3 downto 0);
-         S16_AXI_AWPROT       : in  std_logic_vector(2 downto 0);
-         S16_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
-         S16_AXI_AWVALID      : in  std_logic;
-         S16_AXI_AWREADY      : out std_logic;
-         S16_AXI_WDATA        : in  std_logic_vector(127 downto 0);
-         S16_AXI_WSTRB        : in  std_logic_vector(15 downto 0);
-         S16_AXI_WLAST        : in  std_logic;
-         S16_AXI_WVALID       : in  std_logic;
-         S16_AXI_WREADY       : out std_logic;
-         S16_AXI_BID          : out std_logic_vector(0 downto 0);
-         S16_AXI_BRESP        : out std_logic_vector(1 downto 0);
-         S16_AXI_BVALID       : out std_logic;
-         S16_AXI_BREADY       : in  std_logic;
-         S16_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S16_AXI_ARADDR       : in  std_logic_vector(31 downto 0);
-         S16_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
-         S16_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
-         S16_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
-         S16_AXI_ARLOCK       : in  std_logic;
-         S16_AXI_ARCACHE      : in  std_logic_vector(3 downto 0);
-         S16_AXI_ARPROT       : in  std_logic_vector(2 downto 0);
-         S16_AXI_ARQOS        : in  std_logic_vector(3 downto 0);
-         S16_AXI_ARVALID      : in  std_logic;
-         S16_AXI_ARREADY      : out std_logic;
-         S16_AXI_RID          : out std_logic_vector(0 downto 0);
-         S16_AXI_RDATA        : out std_logic_vector(127 downto 0);
-         S16_AXI_RRESP        : out std_logic_vector(1 downto 0);
-         S16_AXI_RLAST        : out std_logic;
-         S16_AXI_RVALID       : out std_logic;
-         S16_AXI_RREADY       : in  std_logic;         
+         S15_AXI_RREADY       : in  std_logic;         
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -755,7 +716,11 @@ architecture mapping of AxiPcieCrossbar is
    signal axiRstL : sl;
 
 begin
-
+   
+   -- Up to 15 because of Xilinx AXI XBAR only support up to 16 slaves (1 DESC + 15 DMA channels)
+   sAxiWriteSlaves(16) <= AXI_WRITE_SLAVE_FORCE_C;
+   sAxiReadSlaves(16)  <= AXI_READ_SLAVE_FORCE_C; 
+   
    axiRstL <= not(axiRst);
 
    -------------------
@@ -1404,47 +1369,7 @@ begin
          S15_AXI_RRESP        => sAxiReadSlaves(15).rresp,
          S15_AXI_RLAST        => sAxiReadSlaves(15).rlast,
          S15_AXI_RVALID       => sAxiReadSlaves(15).rvalid,
-         S15_AXI_RREADY       => sAxiReadMasters(15).rready,
-         -- SLAVE[16]
-         S15_AXI_ARESET_OUT_N => open,
-         S15_AXI_ACLK         => axiClk,
-         S15_AXI_AWID(0)      => '0',
-         S15_AXI_AWADDR       => sAxiWriteMasters(16).awaddr(31 downto 0),
-         S15_AXI_AWLEN        => sAxiWriteMasters(16).awlen,
-         S15_AXI_AWSIZE       => sAxiWriteMasters(16).awsize,
-         S15_AXI_AWBURST      => sAxiWriteMasters(16).awburst,
-         S15_AXI_AWLOCK       => sAxiWriteMasters(16).awlock(0),
-         S15_AXI_AWCACHE      => sAxiWriteMasters(16).awcache,
-         S15_AXI_AWPROT       => sAxiWriteMasters(16).awprot,
-         S15_AXI_AWQOS        => sAxiWriteMasters(16).awqos,
-         S15_AXI_AWVALID      => sAxiWriteMasters(16).awvalid,
-         S15_AXI_AWREADY      => sAxiWriteSlaves(16).awready,
-         S15_AXI_WDATA        => sAxiWriteMasters(16).wdata(127 downto 0),
-         S15_AXI_WSTRB        => sAxiWriteMasters(16).wstrb(15 downto 0),
-         S15_AXI_WLAST        => sAxiWriteMasters(16).wlast,
-         S15_AXI_WVALID       => sAxiWriteMasters(16).wvalid,
-         S15_AXI_WREADY       => sAxiWriteSlaves(16).wready,
-         S15_AXI_BID          => sAxiWriteSlaves(16).bid(0 downto 0),
-         S15_AXI_BRESP        => sAxiWriteSlaves(16).bresp,
-         S15_AXI_BVALID       => sAxiWriteSlaves(16).bvalid,
-         S15_AXI_BREADY       => sAxiWriteMasters(16).bready,
-         S15_AXI_ARID(0)      => '0',
-         S15_AXI_ARADDR       => sAxiReadMasters(16).araddr(31 downto 0),
-         S15_AXI_ARLEN        => sAxiReadMasters(16).arlen,
-         S15_AXI_ARSIZE       => sAxiReadMasters(16).arsize,
-         S15_AXI_ARBURST      => sAxiReadMasters(16).arburst,
-         S15_AXI_ARLOCK       => sAxiReadMasters(16).arlock(0),
-         S15_AXI_ARCACHE      => sAxiReadMasters(16).arcache,
-         S15_AXI_ARPROT       => sAxiReadMasters(16).arprot,
-         S15_AXI_ARQOS        => sAxiReadMasters(16).arqos,
-         S15_AXI_ARVALID      => sAxiReadMasters(16).arvalid,
-         S15_AXI_ARREADY      => sAxiReadSlaves(16).arready,
-         S15_AXI_RID          => sAxiReadSlaves(16).rid(0 downto 0),
-         S15_AXI_RDATA        => sAxiReadSlaves(16).rdata(127 downto 0),
-         S15_AXI_RRESP        => sAxiReadSlaves(16).rresp,
-         S15_AXI_RLAST        => sAxiReadSlaves(16).rlast,
-         S15_AXI_RVALID       => sAxiReadSlaves(16).rvalid,
-         S15_AXI_RREADY       => sAxiReadMasters(16).rready,         
+         S15_AXI_RREADY       => sAxiReadMasters(15).rready,       
          -- MASTER         
          M00_AXI_ARESET_OUT_N => open,
          M00_AXI_ACLK         => axiClk,

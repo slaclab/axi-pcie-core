@@ -64,11 +64,11 @@ begin
          axiClk          => axiClk,
          axiRst          => axiRst,
          -- Slaves
-         sAxiReadMasters => axiReadMasters(DMA_SIZE_G downto 0),
-         sAxiReadSlaves  => axiReadSlaves(DMA_SIZE_G downto 0),
+         sAxiReadMasters => sAxiReadMasters(DMA_SIZE_G downto 0),
+         sAxiReadSlaves  => sAxiReadSlaves(DMA_SIZE_G downto 0),
          -- Master
-         mAxiReadMaster  => axiReadMaster,
-         mAxiReadSlave   => axiReadSlave);
+         mAxiReadMaster  => mAxiReadMaster,
+         mAxiReadSlave   => mAxiReadSlave);
 
    -----------------------
    -- AXI Write Path DEMUX
@@ -82,10 +82,10 @@ begin
          axiClk           => axiClk,
          axiRst           => axiRst,
          -- Slaves
-         sAxiWriteMasters => axiWriteMasters(DMA_SIZE_G downto 0),
-         sAxiWriteSlaves  => axiWriteSlaves(DMA_SIZE_G downto 0),
+         sAxiWriteMasters => sAxiWriteMasters(DMA_SIZE_G downto 0),
+         sAxiWriteSlaves  => sAxiWriteSlaves(DMA_SIZE_G downto 0),
          -- Master
-         mAxiWriteMaster  => axiWriteMaster,
-         mAxiWriteSlave   => axiWriteSlave);
+         mAxiWriteMaster  => mAxiWriteMaster,
+         mAxiWriteSlave   => mAxiWriteSlave);
 
 end mapping;

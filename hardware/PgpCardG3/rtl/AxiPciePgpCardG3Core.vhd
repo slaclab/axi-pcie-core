@@ -116,7 +116,7 @@ begin
    ---------------
    -- AXI PCIe PHY
    ---------------   
-   U_AxiPciePhy : entity work.AxiPciePgpCardG3IpCoreWrapper
+   U_AxiPciePhy : entity work.AxiPgpCardG3PciePhyWrapper
       generic map (
          TPD_G => TPD_G)
       port map (

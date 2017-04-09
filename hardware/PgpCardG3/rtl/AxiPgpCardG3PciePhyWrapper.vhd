@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- File       : AxiPciePgpCardG3IpCoreWrapper.vhd
+-- File       : AxiPgpCardG3PciePhyWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
 -- Last update: 2017-03-06
@@ -25,7 +25,7 @@ use work.AxiLitePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity AxiPciePgpCardG3IpCoreWrapper is
+entity AxiPgpCardG3PciePhyWrapper is
    generic (
       TPD_G : time := 1 ns);
    port (
@@ -54,11 +54,11 @@ entity AxiPciePgpCardG3IpCoreWrapper is
       pciRxN         : in  slv(3 downto 0);
       pciTxP         : out slv(3 downto 0);
       pciTxN         : out slv(3 downto 0));  
-end AxiPciePgpCardG3IpCoreWrapper;
+end AxiPgpCardG3PciePhyWrapper;
 
-architecture mapping of AxiPciePgpCardG3IpCoreWrapper is
+architecture mapping of AxiPgpCardG3PciePhyWrapper is
 
-   component AxiPciePgpCardG3IpCore
+   component AxiPgpCardG3PciePhy
       port (
          axi_aresetn       : in  std_logic;
          axi_aclk_out      : out std_logic;
@@ -240,7 +240,7 @@ begin
    -------------------
    -- AXI PCIe IP Core
    -------------------
-   U_AxiPcie : AxiPciePgpCardG3IpCore
+   U_AxiPcie : AxiPgpCardG3PciePhy
       port map (
          -- Clocks and Resets
          axi_aresetn       => rstL,

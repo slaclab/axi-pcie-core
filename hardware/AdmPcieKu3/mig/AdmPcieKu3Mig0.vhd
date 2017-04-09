@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- File       : AdmPcieKu3MigPhyWrapper.vhd
+-- File       : AdmPcieKu3Mig0.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
 -- Last update: 2017-04-06
@@ -25,7 +25,7 @@ use work.AxiPkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity AdmPcieKu3MigPhyWrapper is
+entity AdmPcieKu3Mig0 is
    generic (
       TPD_G           : time    := 1 ns);
    port (
@@ -61,9 +61,9 @@ entity AdmPcieKu3MigPhyWrapper is
       ddrRasL         : out   sl;
       ddrCasL         : out   sl;
       ddrRstL         : out   sl);
-end AdmPcieKu3MigPhyWrapper;
+end AdmPcieKu3Mig0;
 
-architecture mapping of AdmPcieKu3MigPhyWrapper is
+architecture mapping of AdmPcieKu3Mig0 is
 
    component AdmPcieKu3MigPhy
       port (

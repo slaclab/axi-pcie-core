@@ -7,11 +7,6 @@ if { [VersionCheck 2016.4] < 0 } {
    exit -1
 }
 
-# Check if required variables exist
-if { [info exists ::env(PCIE_HW_TYPE)] != 1 } {
-   puts "\n\nERROR: PCIE_HW_TYPE is not defined in $::env(PROJ_DIR)/Makefile\n\n"; exit -1
-}
-
 # Load ruckus files
 loadRuckusTcl "$::DIR_PATH/core"
 loadRuckusTcl "$::DIR_PATH/hardware"

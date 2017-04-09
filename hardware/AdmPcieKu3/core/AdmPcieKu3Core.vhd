@@ -2,7 +2,7 @@
 -- File       : AdmPcieKu3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-04-06
+-- Last update: 2017-04-08
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for ADM-PCIE-KU3 board 
 -- http://www.alpha-data.com/dcp/products.php?product=adm-pcie-ku3
@@ -32,11 +32,11 @@ use unisim.vcomponents.all;
 
 entity AdmPcieKu3Core is
    generic (
-      TPD_G            : time                     := 1 ns;
+      TPD_G            : time                   := 1 ns;
       BUILD_INFO_G     : BuildInfoType;
-      DRIVER_TYPE_ID_G : slv(31 downto 0)         := x"00000000";
-      AXI_APP_BUS_EN_G : boolean                  := false;
-      DMA_SIZE_G       : positive range 1 to 16   := 1);
+      DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
+      AXI_APP_BUS_EN_G : boolean                := false;
+      DMA_SIZE_G       : positive range 1 to 15 := 1);  -- Up to 15 because of Xilinx AXI XBAR only support up to 16 slaves (1 DESC + 15 DMA channels)
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -278,42 +278,74 @@ begin
          dmaIbMasters    => dmaIbMasters,
          dmaIbSlaves     => dmaIbSlaves);
 
-   ---------------
-   -- AXI DDR MIG
-   ---------------   
-   GEN_VEC :
-   for i in 1 downto 0 generate
-      U_DDR : entity work.AdmPcieKu3MigPhyWrapper
-         generic map (
-            TPD_G           => TPD_G)
-         port map (
-            -- System Clock and reset
-            sysClk         => sysClock,
-            sysRst         => sysReset,
-            -- AXI MEM Interface  (axiClk domain)
-            axiClk         => memClk(i),
-            axiRst         => memRst(i),
-            axiWriteMaster => memWriteMaster(i),
-            axiWriteSlave  => memWriteSlave(i),
-            axiReadMaster  => memReadMaster(i),
-            axiReadSlave   => memReadSlave(i),
-            -- DDR3 SO-DIMM Ports
-            ddrClkP        => ddrClkP(i),
-            ddrClkN        => ddrClkN(i),
-            ddrDqsP        => ddrDqsP(i),
-            ddrDqsN        => ddrDqsN(i),
-            ddrDq          => ddrDq(i),
-            ddrA           => ddrA(i),
-            ddrBa          => ddrBa(i),
-            ddrCsL         => ddrCsL(i),
-            ddrOdt         => ddrOdt(i),
-            ddrCke         => ddrCke(i),
-            ddrCkP         => ddrCkP(i),
-            ddrCkN         => ddrCkN(i),
-            ddrWeL         => ddrWeL(i),
-            ddrRasL        => ddrRasL(i),
-            ddrCasL        => ddrCasL(i),
-            ddrRstL        => ddrRstL(i));
-   end generate GEN_VEC;
+   ----------------- 
+   -- AXI DDR MIG[0]
+   ----------------- 
+   U_Mig0 : entity work.AdmPcieKu3Mig0
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- System Clock and reset
+         sysClk         => sysClock,
+         sysRst         => sysReset,
+         -- AXI MEM Interface  (axiClk domain)
+         axiClk         => memClk(0),
+         axiRst         => memRst(0),
+         axiWriteMaster => memWriteMaster(0),
+         axiWriteSlave  => memWriteSlave(0),
+         axiReadMaster  => memReadMaster(0),
+         axiReadSlave   => memReadSlave(0),
+         -- DDR3 SO-DIMM Ports
+         ddrClkP        => ddrClkP(0),
+         ddrClkN        => ddrClkN(0),
+         ddrDqsP        => ddrDqsP(0),
+         ddrDqsN        => ddrDqsN(0),
+         ddrDq          => ddrDq(0),
+         ddrA           => ddrA(0),
+         ddrBa          => ddrBa(0),
+         ddrCsL         => ddrCsL(0),
+         ddrOdt         => ddrOdt(0),
+         ddrCke         => ddrCke(0),
+         ddrCkP         => ddrCkP(0),
+         ddrCkN         => ddrCkN(0),
+         ddrWeL         => ddrWeL(0),
+         ddrRasL        => ddrRasL(0),
+         ddrCasL        => ddrCasL(0),
+         ddrRstL        => ddrRstL(0));
+
+   ----------------- 
+   -- AXI DDR MIG[0]
+   -----------------          
+   U_Mig1 : entity work.AdmPcieKu3Mig1
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- System Clock and reset
+         sysClk         => sysClock,
+         sysRst         => sysReset,
+         -- AXI MEM Interface  (axiClk domain)
+         axiClk         => memClk(1),
+         axiRst         => memRst(1),
+         axiWriteMaster => memWriteMaster(1),
+         axiWriteSlave  => memWriteSlave(1),
+         axiReadMaster  => memReadMaster(1),
+         axiReadSlave   => memReadSlave(1),
+         -- DDR3 SO-DIMM Ports
+         ddrClkP        => ddrClkP(1),
+         ddrClkN        => ddrClkN(1),
+         ddrDqsP        => ddrDqsP(1),
+         ddrDqsN        => ddrDqsN(1),
+         ddrDq          => ddrDq(1),
+         ddrA           => ddrA(1),
+         ddrBa          => ddrBa(1),
+         ddrCsL         => ddrCsL(1),
+         ddrOdt         => ddrOdt(1),
+         ddrCke         => ddrCke(1),
+         ddrCkP         => ddrCkP(1),
+         ddrCkN         => ddrCkN(1),
+         ddrWeL         => ddrWeL(1),
+         ddrRasL        => ddrRasL(1),
+         ddrCasL        => ddrCasL(1),
+         ddrRstL        => ddrRstL(1));
 
 end mapping;

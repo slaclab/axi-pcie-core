@@ -39,7 +39,8 @@ if {  $::env(BUILD_DDR1_MIG)  == 1 } {
 }
 
 # Check if either DDR memory interface is used
-if { $::env(BUILD_DDR0_MIG)  == 1  || $::env(BUILD_DDR1_MIG)  == 1 } {
+if { $::env(BUILD_DDR0_MIG)  == 1  || 
+     $::env(BUILD_DDR1_MIG)  == 1 } {
    
    # MIG IP core
    loadSource -path "$::DIR_PATH/ip/AdmPcieKu3MigPhy.dcp"

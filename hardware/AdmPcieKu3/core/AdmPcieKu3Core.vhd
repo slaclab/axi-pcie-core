@@ -18,6 +18,9 @@
 -- # ADM-PCIE-KU3 User Manual
 -- http://www.alpha-data.com/pdfs/adm-pcie-ku3%20user%20manual.pdf
 --
+-- # ADM-PCIE-KU3 Factory Default image
+-- https://support.alpha-data.com/portals/0/downloads/adm-pcie-ku3_default_images/adm-pcie-ku3_default_images.zip
+--
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the 

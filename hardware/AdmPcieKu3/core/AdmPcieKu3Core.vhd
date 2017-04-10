@@ -5,7 +5,19 @@
 -- Last update: 2017-04-08
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for ADM-PCIE-KU3 board 
+--
+-- # ADM-PCIE-KU3 Product Page
 -- http://www.alpha-data.com/dcp/products.php?product=adm-pcie-ku3
+--
+-- # ADM-PCIE-KU3 Pinout
+-- http://www.alpha-data.com/dcp/otherproductdatafiles/adm-pcie-ku3_pinout.csv
+--
+-- # ADM-PCIE-KU3 Datasheet
+-- http://www.alpha-data.com/pdfs/adm-pcie-ku3.pdf
+--
+-- # ADM-PCIE-KU3 User Manual
+-- http://www.alpha-data.com/pdfs/adm-pcie-ku3%20user%20manual.pdf
+--
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the 

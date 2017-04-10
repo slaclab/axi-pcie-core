@@ -625,7 +625,7 @@ set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {
 # BITSTREAM: .bit file Configuration #
 ######################################
 
-# set_property BITSTREAM.GENERAL.COMPRESS {TRUE} [ current_design ]
+set_property BITSTREAM.GENERAL.COMPRESS {TRUE} [ current_design ]
 set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN {DIV-1} [current_design]
 set_property BITSTREAM.CONFIG.BPI_SYNC_MODE {TYPE1} [current_design]
 set_property BITSTREAM.CONFIG.UNUSEDPIN {Pullnone} [current_design]

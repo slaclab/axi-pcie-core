@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<spirit:design xmlns:xilinx="http://www.xilinx.com"
-		xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009"
-		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<spirit:design xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<spirit:vendor>xilinx.com</spirit:vendor>
 	<spirit:library>xci</spirit:library>
 	<spirit:name>unknown</spirit:name>
@@ -9,10 +7,7 @@
 	<spirit:componentInstances>
 		<spirit:componentInstance>
 			<spirit:instanceName>AxiPgpCardG3PciePhy</spirit:instanceName>
-			<spirit:componentRef spirit:vendor="xilinx.com"
-					spirit:library="ip"
-					spirit:name="axi_pcie"
-					spirit:version="2.8"/>
+      <spirit:componentRef spirit:vendor="xilinx.com" spirit:library="ip" spirit:name="axi_pcie" spirit:version="2.8"/>
 			<spirit:configurableElementValues>
 				<spirit:configurableElementValue spirit:referenceId="ADDRBLOCK_RANGE.S_AXI.BAR0">4G</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="ADDRBLOCK_RANGE.S_AXI.BAR1">4G</spirit:configurableElementValue>
@@ -22,13 +17,13 @@
 				<spirit:configurableElementValue spirit:referenceId="ADDRBLOCK_RANGE.S_AXI.BAR5">4G</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="ADDRBLOCK_RANGE.S_AXI_CTL.CTL0">256M</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.AXI_ACLK_LOOPBACK">FALSE</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR2PCIEBAR_0">0x40000000</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR2PCIEBAR_0">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR2PCIEBAR_1">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR2PCIEBAR_2">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR2PCIEBAR_3">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR2PCIEBAR_4">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR2PCIEBAR_5">0x00000000</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_0">0x40000000</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_0">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_1">0xFFFFFFFF</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_2">0xFFFFFFFF</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_3">0xFFFFFFFF</spirit:configurableElementValue>
@@ -40,7 +35,7 @@
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_AS_3">0</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_AS_4">0</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_AS_5">0</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_HIGHADDR_0">0x4FFFFFFF</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_HIGHADDR_0">0x7FFFFFFF</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_HIGHADDR_1">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_HIGHADDR_2">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR_HIGHADDR_3">0x00000000</spirit:configurableElementValue>
@@ -98,13 +93,13 @@
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PCIE_EXT_GT_COMMON">FALSE</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.SHARED_LOGIC_IN_CORE">FALSE</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.TRANSCEIVER_CTRL_STATUS_PORTS">FALSE</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR2PCIEBAR_0">0x40000000</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR2PCIEBAR_0">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR2PCIEBAR_1">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR2PCIEBAR_2">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR2PCIEBAR_3">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR2PCIEBAR_4">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR2PCIEBAR_5">0x00000000</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_0">0x40000000</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_0">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_1">0xFFFFFFFF</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_2">0xFFFFFFFF</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_3">0xFFFFFFFF</spirit:configurableElementValue>
@@ -116,7 +111,7 @@
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_AS_3">false</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_AS_4">false</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_AS_5">false</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_HIGHADDR_0">0x4FFFFFFF</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_HIGHADDR_0">0x7FFFFFFF</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_HIGHADDR_1">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_HIGHADDR_2">0x00000000</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.AXIBAR_HIGHADDR_3">0x00000000</spirit:configurableElementValue>
@@ -205,44 +200,28 @@
 			<spirit:vendorExtensions>
 				<xilinx:componentInstanceExtensions>
 					<xilinx:configElementInfos>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.BAR0_SCALE"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.BAR0_SIZE"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.BASE_CLASS_MENU"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.CLASS_CODE"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.COMP_TIMEOUT"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.DEVICE_ID"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.ENABLE_CLASS_CODE"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.INCLUDE_BAROFFSET_REG"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.INTERRUPT_PIN"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.MAX_LINK_SPEED"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.M_AXI_DATA_WIDTH"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.NO_OF_LANES"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.SUBSYSTEM_ID"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.SUBSYSTEM_VENDOR_ID"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.SUB_CLASS_INTERFACE_MENU"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.S_AXI_DATA_WIDTH"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.S_AXI_ID_WIDTH"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.VENDOR_ID"
-								xilinx:valueSource="user"/>
-						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.shared_logic_in_core"
-								xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.AXIBAR2PCIEBAR_0" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.AXIBAR_0" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.AXIBAR_HIGHADDR_0" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.BAR0_SCALE" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.BAR0_SIZE" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.BASE_CLASS_MENU" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.CLASS_CODE" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.COMP_TIMEOUT" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.DEVICE_ID" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.ENABLE_CLASS_CODE" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.INCLUDE_BAROFFSET_REG" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.INTERRUPT_PIN" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.MAX_LINK_SPEED" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.M_AXI_DATA_WIDTH" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.NO_OF_LANES" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.SUBSYSTEM_ID" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.SUBSYSTEM_VENDOR_ID" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.SUB_CLASS_INTERFACE_MENU" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.S_AXI_DATA_WIDTH" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.S_AXI_ID_WIDTH" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.VENDOR_ID" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.shared_logic_in_core" xilinx:valueSource="user"/>
 					</xilinx:configElementInfos>
 				</xilinx:componentInstanceExtensions>
 			</spirit:vendorExtensions>

@@ -21,6 +21,7 @@ use ieee.std_logic_1164.all;
 use work.StdRtlPkg.all;
 use work.AxiPkg.all;
 use work.AxiLitePkg.all;
+use work.AxiPciePkg.all;
 use work.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
@@ -29,9 +30,7 @@ entity AxiPcieReg is
       BUILD_INFO_G     : BuildInfoType;
       DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
       AXI_APP_BUS_EN_G : boolean                := false;
-      AXI_CLK_FREQ_G   : real                   := 125.0E+6;   -- units of Hz
       AXI_ERROR_RESP_G : slv(1 downto 0)        := AXI_RESP_OK_C;
-      XIL_DEVICE_G     : string                 := "7SERIES";  -- Either "7SERIES" or "ULTRASCALE"
       DMA_SIZE_G       : positive range 1 to 16 := 1);
    port (
       -- AXI4 Interfaces
@@ -130,8 +129,8 @@ begin
    userValues(0) <= toSlv(DMA_SIZE_G, 32);
    userValues(1) <= x"00000001" when(AXI_APP_BUS_EN_G)         else x"00000000";
    userValues(2) <= DRIVER_TYPE_ID_G;
-   userValues(3) <= x"00000001" when(XIL_DEVICE_G = "7SERIES") else x"00000000";
-   userValues(4) <= toSlv(getTimeRatio(AXI_CLK_FREQ_G, 1.0), 32);
+   userValues(3) <= x"00000001" when(XIL_DEVICE_C = "7SERIES") else x"00000000";
+   userValues(4) <= toSlv(getTimeRatio(SYS_CLK_FREQ_C, 1.0), 32);
 
    -------------------------          
    -- AXI-to-AXI-Lite Bridge
@@ -196,9 +195,9 @@ begin
          TPD_G            => TPD_G,
          BUILD_INFO_G     => BUILD_INFO_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
-         CLK_PERIOD_G     => (1.0/AXI_CLK_FREQ_G),
+         CLK_PERIOD_G     => (1.0/SYS_CLK_FREQ_C),
          EN_DEVICE_DNA_G  => true,
-         XIL_DEVICE_G     => XIL_DEVICE_G)
+         XIL_DEVICE_G     => XIL_DEVICE_C)
       port map (
          -- AXI-Lite Interface
          axiClk         => axiClk,
@@ -217,7 +216,7 @@ begin
       generic map (
          TPD_G            => TPD_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
-         AXI_CLK_FREQ_G   => AXI_CLK_FREQ_G)
+         AXI_CLK_FREQ_G   => SYS_CLK_FREQ_C)
       port map (
          -- FLASH Interface 
          flashAddr      => flashAddress,

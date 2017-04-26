@@ -6,5 +6,5 @@ loadSource      -dir "$::DIR_PATH/rtl/"
 loadConstraints -dir "$::DIR_PATH/xdc/"
 
 # IP cores
-loadSource -path "$::DIR_PATH/ip/AxiPciePgpCardG3IpCore.dcp"
-# loadIpCore -path "$::DIR_PATH/ip/AxiPciePgpCardG3IpCore.xci"
+loadSource -path "$::DIR_PATH/ip/AxiPgpCardG3PciePhy.dcp"
+# loadIpCore -path "$::DIR_PATH/ip/AxiPgpCardG3PciePhy.xci"

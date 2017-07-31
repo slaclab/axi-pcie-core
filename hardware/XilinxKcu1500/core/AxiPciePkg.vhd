@@ -25,11 +25,11 @@ use work.AxiPkg.all;
 package AxiPciePkg is
 
    -- System Clock Frequency
-   constant SYS_CLK_FREQ_C : real := 125.0E+6;  -- units of Hz
+   constant SYS_CLK_FREQ_C : real := 250.0E+6;  -- units of Hz
 
    -- Type of Xilinx Device
-   constant XIL_DEVICE_C : string := "7SERIES";
-   constant BOOT_PROM_C  : string := "BPI";   
+   constant XIL_DEVICE_C : string := "ULTRASCALE";
+   constant BOOT_PROM_C  : string := "SPI";
 
    -- DMA AXI Stream Configuration
    constant DMA_AXIS_CONFIG_C : AxiStreamConfigType := (
@@ -46,9 +46,20 @@ package AxiPciePkg is
       ADDR_WIDTH_C => 32,               -- 32-bit address interface
       DATA_BYTES_C => DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- Match the AXIS stream
       ID_BITS_C    => 5,                -- Up to 32 DMA IDS
-      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface      
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface         
 
    -- PCIE PHY AXI Configuration   
-   constant PCIE_AXI_CONFIG_C : AxiConfigType := DMA_AXI_CONFIG_C;
+   constant PCIE_AXI_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => 32,               -- 32-bit address interface
+      DATA_BYTES_C => 32,               -- 256-bit data interface
+      ID_BITS_C    => 5,                -- Up to 32 DMA IDS
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface      
+
+   -- DDR MEM AXI Configuration
+   constant MEM_AXI_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => 33,               -- 8GB per SODIMM
+      DATA_BYTES_C => 64,               -- 512-bit data interface
+      ID_BITS_C    => 4,                -- Up to 16 IDS
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface  
 
 end package AxiPciePkg;

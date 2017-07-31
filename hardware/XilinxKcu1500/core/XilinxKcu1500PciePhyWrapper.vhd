@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- File       : AdmPcieKu3PciePhyWrapper.vhd
+-- File       : XilinxKcu1500PciePhyWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2016-02-12
 -- Last update: 2016-02-16
@@ -25,7 +25,7 @@ use work.AxiLitePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity AdmPcieKu3PciePhyWrapper is
+entity XilinxKcu1500PciePhyWrapper is
    generic (
       TPD_G : time := 1 ns);
    port (
@@ -54,11 +54,11 @@ entity AdmPcieKu3PciePhyWrapper is
       pciRxN         : in  slv(7 downto 0);
       pciTxP         : out slv(7 downto 0);
       pciTxN         : out slv(7 downto 0));  
-end AdmPcieKu3PciePhyWrapper;
+end XilinxKcu1500PciePhyWrapper;
 
-architecture mapping of AdmPcieKu3PciePhyWrapper is
+architecture mapping of XilinxKcu1500PciePhyWrapper is
 
-   component AdmPcieKu3PciePhy
+   component XilinxKcu1500PciePhy
       port (
          sys_rst_n              : in  std_logic;
          cfg_ltssm_state        : out std_logic_vector(5 downto 0);
@@ -202,7 +202,7 @@ begin
    -------------------
    -- AXI PCIe IP Core
    -------------------
-   U_AxiPcie : AdmPcieKu3PciePhy
+   U_AxiPcie : XilinxKcu1500PciePhy
       port map (
          -- Clocks and Resets
          sys_clk_gt             => refClkGt,

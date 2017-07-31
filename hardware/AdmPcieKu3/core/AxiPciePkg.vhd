@@ -29,6 +29,7 @@ package AxiPciePkg is
 
    -- Type of Xilinx Device
    constant XIL_DEVICE_C : string := "ULTRASCALE";
+   constant BOOT_PROM_C  : string := "BPI";    
 
    -- DMA AXI Stream Configuration
    constant DMA_AXIS_CONFIG_C : AxiStreamConfigType := (

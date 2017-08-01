@@ -6,7 +6,7 @@ if { [SubmoduleCheck {ruckus} {1.3.4} ] < 0 } {exit -1}
 if { [SubmoduleCheck {surf}   {1.3.6} ] < 0 } {exit -1}
 
 ## Check for version 2016.4 of Vivado
-if { [VersionCheck 2016.4] < 0 } } {exit -1}
+if { [VersionCheck 2016.4] < 0 } {exit -1}
 
 # Load ruckus files
 loadRuckusTcl "$::DIR_PATH/core"

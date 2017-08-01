@@ -12,3 +12,9 @@ loadSource -path "$::DIR_PATH/ip/XilinxKcu1500PciePhy.dcp"
 # AXI XBAR IP core
 loadSource -path "$::DIR_PATH/ip/AxiPcieCrossbarIpCore.dcp"
 # loadIpCore -path "$::DIR_PATH/ip/AxiPcieCrossbarIpCore.xci"
+
+# Check for version 2017.1 of Vivado (or later
+if { [expr { $::env(VIVADO_VERSION) >= 2017.1 }] } {
+   set projBoardPart "xilinx.com:kcu1500:part0:1.0"
+   set_property board_part $projBoardPart [current_project]
+}

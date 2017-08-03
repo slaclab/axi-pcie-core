@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500PciePhyWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2016-02-12
--- Last update: 2016-02-16
+-- Last update: 2017-08-03
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ entity XilinxKcu1500PciePhyWrapper is
       pciRxP         : in  slv(7 downto 0);
       pciRxN         : in  slv(7 downto 0);
       pciTxP         : out slv(7 downto 0);
-      pciTxN         : out slv(7 downto 0));  
+      pciTxN         : out slv(7 downto 0));
 end XilinxKcu1500PciePhyWrapper;
 
 architecture mapping of XilinxKcu1500PciePhyWrapper is
@@ -113,6 +113,7 @@ architecture mapping of XilinxKcu1500PciePhyWrapper is
          s_axi_ctl_rready       : in  std_logic;
          axi_aclk               : out std_logic;
          axi_aresetn            : out std_logic;
+         axi_ctl_aresetn        : out std_logic;
          interrupt_out          : out std_logic;
          intx_msi_grant         : out std_logic;
          s_axi_awready          : out std_logic;
@@ -164,25 +165,29 @@ architecture mapping of XilinxKcu1500PciePhyWrapper is
          s_axi_ctl_rvalid       : out std_logic;
          int_qpll1lock_out      : out std_logic_vector(1 downto 0);
          int_qpll1outrefclk_out : out std_logic_vector(1 downto 0);
-         int_qpll1outclk_out    : out std_logic_vector(1 downto 0));
+         int_qpll1outclk_out    : out std_logic_vector(1 downto 0);
+         mcap_design_switch     : out std_logic;
+         cap_req                : out std_logic;
+         cap_gnt                : in  std_logic;
+         cap_rel                : in  std_logic);
    end component;
 
    signal refClk   : sl;
    signal refClkGt : sl;
    signal clk      : sl;
    signal rstL     : sl;
-   signal rst      : sl;
-
 begin
 
    axiClk <= clk;
-   process(clk)
-   begin
-      if rising_edge(clk) then
-         rst    <= not(rstL) after TPD_G;  -- Register to help with timing
-         axiRst <= rst       after TPD_G;  -- Register to help with timing
-      end if;
-   end process;
+
+   U_Rst : entity work.RstPipeline
+      generic map (
+         TPD_G     => TPD_G,
+         INV_RST_G => true)
+      port map (
+         clk    => clk,
+         rstIn  => rstL,
+         rstOut => axiRst);
 
    ------------------
    -- Clock and Reset
@@ -197,7 +202,7 @@ begin
          IB    => pciRefClkN,
          CEB   => '0',
          ODIV2 => refClk,
-         O     => refClkGt);       
+         O     => refClkGt);
 
    -------------------
    -- AXI PCIe IP Core
@@ -211,6 +216,7 @@ begin
          axi_aclk               => clk,
          axi_aresetn            => rstL,
          axi_ctl_aclk           => clk,
+         axi_ctl_aresetn        => open,
          user_link_up           => open,
          cfg_ltssm_state        => open,
          -- Interrupt Interface
@@ -313,6 +319,11 @@ begin
          -- QPLL Interface
          int_qpll1lock_out      => open,
          int_qpll1outrefclk_out => open,
-         int_qpll1outclk_out    => open);
+         int_qpll1outclk_out    => open,
+         -- CAP Interface
+         mcap_design_switch     => open,
+         cap_req                => open,
+         cap_gnt                => '1',
+         cap_rel                => '0');
 
 end mapping;

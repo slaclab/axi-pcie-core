@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-07-31
+-- Last update: 2017-08-02
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -39,48 +39,51 @@ entity XilinxKcu1500Core is
       BUILD_INFO_G     : BuildInfoType;
       DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
       AXI_APP_BUS_EN_G : boolean                := false;
-      DMA_SIZE_G       : positive range 1 to 15 := 1);  -- Up to 15 because of Xilinx AXI XBAR only support up to 16 slaves (1 DESC + 15 DMA channels)
+      DMA_SIZE_G       : positive range 1 to 15 := 9);  -- Up to 15 because of Xilinx AXI XBAR only support up to 16 slaves (1 DESC + 15 DMA channels)
    port (
       ------------------------      
       --  Top Level Interfaces
       ------------------------    
       -- System Clock and Reset
-      sysClk         : out sl;          -- 250 MHz
-      sysRst         : out sl;
+      sysClk          : out   sl;       -- 250 MHz
+      sysRst          : out   sl;
       -- DMA Interfaces  (sysClk domain)
-      dmaObMasters   : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- (Optional) Application AXI-Lite Interface [0x00080000:0x000FFFFF] (sysClk domain)
-      appReadMaster  : out AxiLiteReadMasterType;
-      appReadSlave   : in  AxiLiteReadSlaveType            := AXI_LITE_READ_SLAVE_INIT_C;
-      appWriteMaster : out AxiLiteWriteMasterType;
-      appWriteSlave  : in  AxiLiteWriteSlaveType           := AXI_LITE_WRITE_SLAVE_INIT_C;
-      -- -- (Optional) Application AXI Interface [0x000000000:0x1FFFFFFFF] (axiClk domain)
-      -- memClk         : out slv(1 downto 0);
-      -- memRst         : out slv(1 downto 0);
-      -- memWriteMaster : in  AxiWriteMasterArray(1 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
-      -- memWriteSlave  : out AxiWriteSlaveArray(1 downto 0);
-      -- memReadMaster  : in  AxiReadMasterArray(1 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
-      -- memReadSlave   : out AxiReadSlaveArray(1 downto 0);
+      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      -- Application AXI-Lite Interface [0x00080000:0x000FFFFF] (sysClk domain)
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType            := AXI_LITE_READ_SLAVE_INIT_C;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType           := AXI_LITE_WRITE_SLAVE_INIT_C;
+      -- Application AXI Interface [0x000000000:0xFFFFFFFF] (sysClk domain)
+      memWriteMasters : in    AxiWriteMasterArray(3 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
+      memWriteSlaves  : out   AxiWriteSlaveArray(3 downto 0);
+      memReadMasters  : in    AxiReadMasterArray(3 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
+      memReadSlaves   : out   AxiReadSlaveArray(3 downto 0);
       -------------------
       --  Top Level Ports
       -------------------      
       -- Boot Memory Ports 
-      flashCsL       : out sl;
-      flashMosi      : out sl;
-      flashMiso      : in  sl;
-      flashHoldL     : out sl;
-      flashWp        : out sl;
+      flashCsL        : out   sl;
+      flashMosi       : out   sl;
+      flashMiso       : in    sl;
+      flashHoldL      : out   sl;
+      flashWp         : out   sl;
+      -- DDR Ports
+      ddrClkP         : in    slv(3 downto 0);
+      ddrClkN         : in    slv(3 downto 0);
+      ddrOut          : out   DdrOutArray(3 downto 0);
+      ddrInOut        : inout DdrInOutArray(3 downto 0);
       -- PCIe Ports 
-      pciRstL        : in  sl;
-      pciRefClkP     : in  sl;
-      pciRefClkN     : in  sl;
-      pciRxP         : in  slv(7 downto 0);
-      pciRxN         : in  slv(7 downto 0);
-      pciTxP         : out slv(7 downto 0);
-      pciTxN         : out slv(7 downto 0));
+      pciRstL         : in    sl;
+      pciRefClkP      : in    sl;
+      pciRefClkN      : in    sl;
+      pciRxP          : in    slv(7 downto 0);
+      pciRxN          : in    slv(7 downto 0);
+      pciTxP          : out   slv(7 downto 0);
+      pciTxN          : out   slv(7 downto 0));
 end XilinxKcu1500Core;
 
 architecture mapping of XilinxKcu1500Core is
@@ -123,7 +126,14 @@ architecture mapping of XilinxKcu1500Core is
 begin
 
    sysClk <= sysClock;
-   sysRst <= sysReset;
+   
+   U_Rst : entity work.RstPipeline
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk    => sysClock,
+         rstIn  => sysReset,
+         rstOut => sysRst);   
 
    ---------------
    -- AXI PCIe PHY
@@ -222,7 +232,7 @@ begin
          GTS       => '0',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
          KEYCLEARB => '0',  -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
          PACK      => '0',  -- 1-bit input: PROGRAM acknowledge input
-         USRCCLKO  => sck,       -- 1-bit input: User CCLK input
+         USRCCLKO  => sck,              -- 1-bit input: User CCLK input
          USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
          USRDONEO  => '1',  -- 1-bit input: User DONE pin output control
          USRDONETS => '0');  -- 1-bit input: User DONE 3-state enable output
@@ -230,7 +240,7 @@ begin
    do          <= "111" & bootMosi(0);
    bootMiso(0) <= di(1);
    sck         <= uOr(bootSck);
-   
+
    ---------------
    -- AXI PCIe DMA
    ---------------   
@@ -260,5 +270,89 @@ begin
          dmaObSlaves     => dmaObSlaves,
          dmaIbMasters    => dmaIbMasters,
          dmaIbSlaves     => dmaIbSlaves);
+
+   ----------------- 
+   -- AXI DDR MIG[0]
+   ----------------- 
+   U_Mig0 : entity work.MigWithEcc
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- System Clock and reset
+         sysClk         => sysClock,
+         sysRst         => sysReset,
+         -- AXI MEM Interface (sysClk domain)
+         axiWriteMaster => memWriteMasters(0),
+         axiWriteSlave  => memWriteSlaves(0),
+         axiReadMaster  => memReadMasters(0),
+         axiReadSlave   => memReadSlaves(0),
+         -- DDR Ports
+         ddrClkP        => ddrClkP(0),
+         ddrClkN        => ddrClkN(0),
+         ddrOut         => ddrOut(0),
+         ddrInOut       => ddrInOut(0));
+
+   ----------------- 
+   -- AXI DDR MIG[1]
+   -----------------          
+   U_Mig1 : entity work.MigWithoutEcc
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- System Clock and reset
+         sysClk         => sysClock,
+         sysRst         => sysReset,
+         -- AXI MEM Interface (sysClk domain)
+         axiWriteMaster => memWriteMasters(1),
+         axiWriteSlave  => memWriteSlaves(1),
+         axiReadMaster  => memReadMasters(1),
+         axiReadSlave   => memReadSlaves(1),
+         -- DDR Ports
+         ddrClkP        => ddrClkP(1),
+         ddrClkN        => ddrClkN(1),
+         ddrOut         => ddrOut(1),
+         ddrInOut       => ddrInOut(1));
+
+   ----------------- 
+   -- AXI DDR MIG[2]
+   ----------------- 
+   U_Mig2 : entity work.MigWithEcc
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- System Clock and reset
+         sysClk         => sysClock,
+         sysRst         => sysReset,
+         -- AXI MEM Interface (sysClk domain)
+         axiWriteMaster => memWriteMasters(2),
+         axiWriteSlave  => memWriteSlaves(2),
+         axiReadMaster  => memReadMasters(2),
+         axiReadSlave   => memReadSlaves(2),
+         -- DDR Ports
+         ddrClkP        => ddrClkP(2),
+         ddrClkN        => ddrClkN(2),
+         ddrOut         => ddrOut(2),
+         ddrInOut       => ddrInOut(2));
+
+   ----------------- 
+   -- AXI DDR MIG[3]
+   ----------------- 
+   U_Mig3 : entity work.MigWithEcc
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- System Clock and reset
+         sysClk         => sysClock,
+         sysRst         => sysReset,
+         -- AXI MEM Interface (sysClk domain)
+         axiWriteMaster => memWriteMasters(3),
+         axiWriteSlave  => memWriteSlaves(3),
+         axiReadMaster  => memReadMasters(3),
+         axiReadSlave   => memReadSlaves(3),
+         -- DDR Ports
+         ddrClkP        => ddrClkP(3),
+         ddrClkN        => ddrClkN(3),
+         ddrOut         => ddrOut(3),
+         ddrInOut       => ddrInOut(3));
 
 end mapping;

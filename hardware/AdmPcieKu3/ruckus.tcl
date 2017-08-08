@@ -1,6 +1,11 @@
 # Load RUCKUS environment and library
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
+# Check for valid FPGA part number
+if { $::env(PRJ_PART) != "XCKU060-FFVA1156-2-E" } {
+   puts "\n\nERROR: PRJ_PART was not defined as XCKU060-FFVA1156-2-E in the Makefile\n\n"; exit -1
+}
+
 # Check if required variables exist
 if { [info exists ::env(BUILD_DDR0_MIG)] != 1 } {
    puts "\n\nERROR: BUILD_DDR0_MIG is not defined in $::env(PROJ_DIR)/Makefile\n\n"; exit -1

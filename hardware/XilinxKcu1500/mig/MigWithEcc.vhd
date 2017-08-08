@@ -34,10 +34,11 @@ entity MigWithEcc is
       sysClk         : in    sl;
       sysRst         : in    sl;
       -- AXI MEM Interface (sysClk domain)
-      axiWriteMaster : in    AxiWriteMasterType;
-      axiWriteSlave  : out   AxiWriteSlaveType;
-      axiReadMaster  : in    AxiReadMasterType;
-      axiReadSlave   : out   AxiReadSlaveType;
+      axiReady       : out   sl;
+      axiWriteMasters : in    AxiWriteMasterArray(3 downto 0);
+      axiWriteSlaves  : out   AxiWriteSlaveArray(3 downto 0);
+      axiReadMasters  : in    AxiReadMasterArray(3 downto 0);
+      axiReadSlaves   : out   AxiReadSlaveArray(3 downto 0);
       -- DDR Ports
       ddrClkP        : in    sl;
       ddrClkN        : in    sl;
@@ -128,6 +129,11 @@ architecture mapping of MigWithEcc is
          sys_rst                    : in    std_logic);
    end component;
 
+   signal axiWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+   signal axiWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
+   signal axiReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
+   signal axiReadSlave   : AxiReadSlaveType   := AXI_READ_SLAVE_INIT_C;   
+   
    signal ddrWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal ddrWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
    signal ddrReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
@@ -148,6 +154,14 @@ architecture mapping of MigWithEcc is
 begin
 
    sysRstL <= not(sysRst);
+
+   U_axiReady : entity work.Synchronizer
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk     => sysClk,
+         dataIn  => ddrCalDone,
+         dataOut => axiReady);
 
    U_MIG : Ddr4WithEcc
       port map (
@@ -239,41 +253,23 @@ begin
          rstIn  => coreRst,
          rstOut => ddrRst);
 
-   U_ClkCross : entity work.MigClkCross
+   U_Xbar : entity work.MigXbar
       generic map (
          TPD_G => TPD_G)
       port map (
-         -- Slave Interface
-         sAxiClk         => sysClk,
-         sAxiRst         => sysRst,
-         sAxiWriteMaster => axiWriteMaster,
-         sAxiWriteSlave  => axiWriteSlave,
-         sAxiReadMaster  => axiReadMaster,
-         sAxiReadSlave   => axiReadSlave,
+         -- Slave Interfaces
+         sAxiClk          => sysClk,
+         sAxiRst          => sysRst,
+         sAxiWriteMasters => axiWriteMasters,
+         sAxiWriteSlaves  => axiWriteSlaves,
+         sAxiReadMasters  => axiReadMasters,
+         sAxiReadSlaves   => axiReadSlaves,
          -- Master Interface
-         mAxiClk         => ddrClk,
-         mAxiRst         => ddrRst,
-         mAxiWriteMaster => memWriteMaster,
-         mAxiWriteSlave  => memWriteSlave,
-         mAxiReadMaster  => memReadMaster,
-         mAxiReadSlave   => memReadSlave);
-
-   U_Fifo : entity work.MigDataFifo
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- Clock and Reset
-         axiClk          => ddrClk,
-         axiRst          => ddrRst,
-         -- Slave Interface
-         sAxiWriteMaster => memWriteMaster,
-         sAxiWriteSlave  => memWriteSlave,
-         sAxiReadMaster  => memReadMaster,
-         sAxiReadSlave   => memReadSlave,
-         -- Master Interface
-         mAxiWriteMaster => ddrWriteMaster,
-         mAxiWriteSlave  => ddrWriteSlave,
-         mAxiReadMaster  => ddrReadMaster,
-         mAxiReadSlave   => ddrReadSlave);
+         mAxiClk          => ddrClk,
+         mAxiRst          => ddrRst,         
+         mAxiWriteMaster  => ddrWriteMaster,
+         mAxiWriteSlave   => ddrWriteSlave,
+         mAxiReadMaster   => ddrReadMaster,
+         mAxiReadSlave    => ddrReadSlave);         
 
 end mapping;

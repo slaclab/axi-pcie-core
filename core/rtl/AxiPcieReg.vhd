@@ -55,6 +55,8 @@ entity AxiPcieReg is
       appReadSlave       : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
       appWriteMaster     : out AxiLiteWriteMasterType;
       appWriteSlave      : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
+      -- Application Force reset
+      cardReset          : out  sl;
       -- BPI Boot Memory Ports 
       bpiAddr            : out slv(28 downto 0);
       bpiAdv             : out sl;
@@ -226,6 +228,8 @@ begin
          axiReadSlave   => axilReadSlaves(VERSION_INDEX_C),
          axiWriteMaster => axilWriteMasters(VERSION_INDEX_C),
          axiWriteSlave  => axilWriteSlaves(VERSION_INDEX_C),
+         -- Optional: User Reset
+         userReset      => cardReset,      
          -- Optional: user values
          userValues     => userValues);
 

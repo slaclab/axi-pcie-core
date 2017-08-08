@@ -173,7 +173,7 @@ set_property -dict { PACKAGE_PIN BF35 IOSTANDARD SSTL12_DCI       } [get_ports {
 set_property -dict { PACKAGE_PIN BD34 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[0][odt][0] }]
 set_property -dict { PACKAGE_PIN BB38 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[0][csL][0] }]; # TOP
 set_property -dict { PACKAGE_PIN BC38 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[0][csL][1] }]; # BOT
-set_property -dict { PACKAGE_PIN AJ34 IOSTANDARD LVCMOS12         } [get_ports { ddrOut[0][rstL]   }]
+set_property -dict { PACKAGE_PIN AJ34 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { ddrOut[0][rstL]   }]
 
 #######################
 # DDR[1]: Constraints #
@@ -328,7 +328,7 @@ set_property -dict { PACKAGE_PIN AT14 IOSTANDARD SSTL12_DCI       } [get_ports {
 set_property -dict { PACKAGE_PIN BB16 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[1][odt][0] }]
 set_property -dict { PACKAGE_PIN BB12 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[1][csL][0] }]; # TOP
 set_property -dict { PACKAGE_PIN BF13 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[1][csL][1] }]; # BOT
-set_property -dict { PACKAGE_PIN AU19 IOSTANDARD LVCMOS12         } [get_ports { ddrOut[1][rstL]   }]
+set_property -dict { PACKAGE_PIN AU19 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { ddrOut[1][rstL]   }]
 
 #######################
 # DDR[2]: Constraints #
@@ -483,7 +483,7 @@ set_property -dict { PACKAGE_PIN F38 IOSTANDARD SSTL12_DCI       } [get_ports { 
 set_property -dict { PACKAGE_PIN D40 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[2][odt][0] }]
 set_property -dict { PACKAGE_PIN F34 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[2][csL][0] }]; # TOP
 set_property -dict { PACKAGE_PIN F35 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[2][csL][1] }]; # BOT
-set_property -dict { PACKAGE_PIN L29 IOSTANDARD LVCMOS12         } [get_ports { ddrOut[2][rstL]   }]
+set_property -dict { PACKAGE_PIN L29 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { ddrOut[2][rstL]   }]
 
 #######################
 # DDR[3]: Constraints #
@@ -638,7 +638,7 @@ set_property -dict { PACKAGE_PIN K21 IOSTANDARD SSTL12_DCI       } [get_ports { 
 set_property -dict { PACKAGE_PIN K17 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[3][odt][0] }]
 set_property -dict { PACKAGE_PIN N21 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[3][csL][0] }]; # TOP
 set_property -dict { PACKAGE_PIN M21 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[3][csL][1] }]; # BOT
-set_property -dict { PACKAGE_PIN L24 IOSTANDARD LVCMOS12         } [get_ports { ddrOut[3][rstL]   }]
+set_property -dict { PACKAGE_PIN L24 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { ddrOut[3][rstL]   }]
 
 ####################
 # PCIe Constraints #
@@ -685,8 +685,49 @@ set_property PACKAGE_PIN AT10    [get_ports {pciRefClkN}]
 set_property -dict { PACKAGE_PIN AR26 IOSTANDARD LVCMOS18 } [get_ports {pciRstL}]
 
 ##########
+# System #
+##########
+
+set_property -dict { PACKAGE_PIN AW25  IOSTANDARD LVCMOS18 } [get_ports { led[0] }]
+set_property -dict { PACKAGE_PIN AY25  IOSTANDARD LVCMOS18 } [get_ports { led[1] }]
+set_property -dict { PACKAGE_PIN BA27  IOSTANDARD LVCMOS18 } [get_ports { led[2] }]
+set_property -dict { PACKAGE_PIN BA28  IOSTANDARD LVCMOS18 } [get_ports { led[3] }]
+set_property -dict { PACKAGE_PIN BB26  IOSTANDARD LVCMOS18 } [get_ports { led[4] }]
+set_property -dict { PACKAGE_PIN BB27  IOSTANDARD LVCMOS18 } [get_ports { led[5] }]
+set_property -dict { PACKAGE_PIN BA25  IOSTANDARD LVCMOS18 } [get_ports { led[6] }]
+set_property -dict { PACKAGE_PIN BB25  IOSTANDARD LVCMOS18 } [get_ports { led[7] }]
+
+set_property -dict { PACKAGE_PIN BC26  IOSTANDARD LVCMOS18 } [get_ports { swDip[0] }]
+set_property -dict { PACKAGE_PIN BC27  IOSTANDARD LVCMOS18 } [get_ports { swDip[1] }]
+set_property -dict { PACKAGE_PIN BE25  IOSTANDARD LVCMOS18 } [get_ports { swDip[2] }]
+set_property -dict { PACKAGE_PIN BF25  IOSTANDARD LVCMOS18 } [get_ports { swDip[3] }]
+
+set_property -dict { PACKAGE_PIN AV24  IOSTANDARD LVDS_25 } [get_ports { userClkP }]; # 156.25 MHz
+set_property -dict { PACKAGE_PIN AW24  IOSTANDARD LVDS_25 } [get_ports { userClkN }]; # 156.25 MHz
+
+###########
+# QSFP[0] #
+###########
+
+set_property -dict { PACKAGE_PIN AM21  IOSTANDARD LVCMOS18 } [get_ports { qsfp0RstL }];
+set_property -dict { PACKAGE_PIN AM22  IOSTANDARD LVCMOS18 } [get_ports { qsfp0LpMode }];
+set_property -dict { PACKAGE_PIN AP21  IOSTANDARD LVCMOS18 } [get_ports { qsfp0ModPrsL }];
+set_property -dict { PACKAGE_PIN AL21  IOSTANDARD LVCMOS18 } [get_ports { qsfp0ModSelL }];
+
+###########
+# QSFP[1] #
+###########
+
+set_property -dict { PACKAGE_PIN AU24  IOSTANDARD LVCMOS18 } [get_ports { qsfp1RstL }];
+set_property -dict { PACKAGE_PIN AR22  IOSTANDARD LVCMOS18 } [get_ports { qsfp1LpMode }];
+set_property -dict { PACKAGE_PIN AR23  IOSTANDARD LVCMOS18 } [get_ports { qsfp1ModPrsL }];
+set_property -dict { PACKAGE_PIN AT24  IOSTANDARD LVCMOS18 } [get_ports { qsfp1ModSelL }];
+
+##########
 # Clocks #
 ##########
+
+create_clock -period  6.400 -name userClkP   [get_ports {userClkP}]
 create_clock -period 10.000 -name pciRefClkP [get_ports {pciRefClkP}]
 create_clock -period  3.333 -name ddrClkP0   [get_ports {ddrClkP[0]}]
 create_clock -period  3.333 -name ddrClkP1   [get_ports {ddrClkP[1]}]
@@ -695,6 +736,7 @@ create_clock -period  3.333 -name ddrClkP3   [get_ports {ddrClkP[3]}]
 
 create_generated_clock -name dnaClk  [get_pins {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 create_generated_clock -name sysClk  [get_pins {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/U0/gt_top_i/phy_clk_i/bufg_gt_userclk/O}]
+# create_generated_clock -name sysClk  [get_pins {U_Core/U_AxiPciePhy/U_PLL/PllGen.U_Pll/CLKOUT0}]
 
 create_generated_clock -name ddrIntClk00  [get_pins {U_Core/U_Mig0/U_MIG/inst/u_ddr4_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT0}]
 create_generated_clock -name ddrIntClk01  [get_pins {U_Core/U_Mig1/U_MIG/inst/u_ddr4_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT0}]
@@ -711,12 +753,15 @@ set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {ddrClkP1}]
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {ddrClkP2}]
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {ddrClkP3}]
+set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {userClkP}]
 
 set_false_path -from [get_ports {pciRstL}]
 set_false_path -through [get_pins {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/U0/pcie3_uscale_top_inst/pcie3_uscale_wrapper_inst/PCIE_3_1_inst/CFGMAX*}]
 set_false_path -through [get_nets {U_Core/U_AxiPciePhy/U_AxiPcie/inst/inst/cfg_max*}]
 
 set_property HIGH_PRIORITY true [get_nets {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/gt_top_i/phy_clk_i/CLK_USERCLK}]
+set_property HIGH_PRIORITY true [get_nets {sysClk}]
+set_property HIGH_PRIORITY true [get_nets {userClk}]
 
 ######################################
 # BITSTREAM: .bit file Configuration #
@@ -731,23 +776,3 @@ set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN div-1 [current_design]
 set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES      [current_design]
 set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup       [current_design]
 set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR Yes     [current_design]
-
-########################
-# Physical Constraints #
-########################
-
-# create_pblock DDR_MEM0_GRP
-# add_cells_to_pblock [get_pblocks DDR_MEM0_GRP] [get_cells {U_Core/U_Mig0/U_MIG}]
-# resize_pblock [get_pblocks DDR_MEM0_GRP] -add {CLOCKREGION_X2Y0:CLOCKREGION_X2Y3}
-
-# create_pblock DDR_MEM1_GRP
-# add_cells_to_pblock [get_pblocks DDR_MEM1_GRP] [get_cells {U_Core/U_Mig1/U_MIG}]
-# resize_pblock [get_pblocks DDR_MEM1_GRP] -add {CLOCKREGION_X4Y2:CLOCKREGION_X4Y4}
-
-# create_pblock DDR_MEM2_GRP
-# add_cells_to_pblock [get_pblocks DDR_MEM2_GRP] [get_cells {U_Core/U_Mig2/U_MIG}]
-# resize_pblock [get_pblocks DDR_MEM2_GRP] -add {CLOCKREGION_X2Y6:CLOCKREGION_X2Y9}
-
-# create_pblock DDR_MEM3_GRP
-# add_cells_to_pblock [get_pblocks DDR_MEM3_GRP] [get_cells {U_Core/U_Mig2/U_MIG}]
-# resize_pblock [get_pblocks DDR_MEM3_GRP] -add {CLOCKREGION_X4Y6:CLOCKREGION_X4Y9}

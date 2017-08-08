@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
--- File       : AdmPcieKu3PciePhyWrapper.vhd
+-- File       : XilinxKcu1500PciePhyWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2016-02-12
--- Last update: 2016-02-16
+-- Last update: 2017-08-05
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ use work.AxiLitePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity AdmPcieKu3PciePhyWrapper is
+entity XilinxKcu1500PciePhyWrapper is
    generic (
       TPD_G : time := 1 ns);
    port (
@@ -53,12 +53,12 @@ entity AdmPcieKu3PciePhyWrapper is
       pciRxP         : in  slv(7 downto 0);
       pciRxN         : in  slv(7 downto 0);
       pciTxP         : out slv(7 downto 0);
-      pciTxN         : out slv(7 downto 0));  
-end AdmPcieKu3PciePhyWrapper;
+      pciTxN         : out slv(7 downto 0));
+end XilinxKcu1500PciePhyWrapper;
 
-architecture mapping of AdmPcieKu3PciePhyWrapper is
+architecture mapping of XilinxKcu1500PciePhyWrapper is
 
-   component AdmPcieKu3PciePhy
+   component XilinxKcu1500PciePhy
       port (
          sys_rst_n              : in  std_logic;
          cfg_ltssm_state        : out std_logic_vector(5 downto 0);
@@ -113,6 +113,7 @@ architecture mapping of AdmPcieKu3PciePhyWrapper is
          s_axi_ctl_rready       : in  std_logic;
          axi_aclk               : out std_logic;
          axi_aresetn            : out std_logic;
+         axi_ctl_aresetn        : out std_logic;
          interrupt_out          : out std_logic;
          intx_msi_grant         : out std_logic;
          s_axi_awready          : out std_logic;
@@ -164,25 +165,68 @@ architecture mapping of AdmPcieKu3PciePhyWrapper is
          s_axi_ctl_rvalid       : out std_logic;
          int_qpll1lock_out      : out std_logic_vector(1 downto 0);
          int_qpll1outrefclk_out : out std_logic_vector(1 downto 0);
-         int_qpll1outclk_out    : out std_logic_vector(1 downto 0));
+         int_qpll1outclk_out    : out std_logic_vector(1 downto 0);
+         mcap_design_switch     : out std_logic;
+         cap_req                : out std_logic;
+         cap_gnt                : in  std_logic;
+         cap_rel                : in  std_logic);
    end component;
 
    signal refClk   : sl;
    signal refClkGt : sl;
    signal clk      : sl;
-   signal rstL     : sl;
    signal rst      : sl;
-
+   signal rstL     : sl;
+   signal axiClock : sl;
+   signal axiReset : sl;
 begin
 
    axiClk <= clk;
-   process(clk)
-   begin
-      if rising_edge(clk) then
-         rst    <= not(rstL) after TPD_G;  -- Register to help with timing
-         axiRst <= rst       after TPD_G;  -- Register to help with timing
-      end if;
-   end process;
+   U_Rst : entity work.RstPipeline
+      generic map (
+         TPD_G     => TPD_G,
+         INV_RST_G => true)
+      port map (
+         clk    => clk,
+         rstIn  => rstL,
+         rstOut => axiRst);
+
+   -- U_PLL : entity work.ClockManagerUltraScale
+      -- generic map(
+         -- TPD_G             => TPD_G,
+         -- TYPE_G            => "PLL",
+         -- INPUT_BUFG_G      => false,
+         -- FB_BUFG_G         => true,
+         -- RST_IN_POLARITY_G => '1',
+         -- NUM_CLOCKS_G      => 1,
+         -- -- GEN2 PCIe configuration
+         -- BANDWIDTH_G       => "OPTIMIZED",
+         -- CLKIN_PERIOD_G    => 8.0,
+         -- DIVCLK_DIVIDE_G   => 1,
+         -- CLKFBOUT_MULT_G   => 8,
+         -- CLKOUT0_DIVIDE_G  => 8)
+      -- -- -- GEN3 PCIe configuration
+      -- -- CLKIN_PERIOD_G     => 4.0,
+      -- -- DIVCLK_DIVIDE_G    => 1,
+      -- -- CLKFBOUT_MULT_G  => 4,
+      -- -- CLKOUT0_DIVIDE_G => 4)                  
+      -- port map(
+         -- clkIn     => clk,
+         -- rstIn     => rst,
+         -- clkOut(0) => axiClock,
+         -- rstOut(0) => axiReset);
+
+   -- rst    <= not(rstL);
+   -- axiClk <= axiClock;
+
+   -- U_Rst : entity work.RstPipeline
+      -- generic map (
+         -- TPD_G     => TPD_G,
+         -- INV_RST_G => false)
+      -- port map (
+         -- clk    => axiClock,
+         -- rstIn  => axiReset,
+         -- rstOut => axiRst);
 
    ------------------
    -- Clock and Reset
@@ -197,12 +241,12 @@ begin
          IB    => pciRefClkN,
          CEB   => '0',
          ODIV2 => refClk,
-         O     => refClkGt);       
+         O     => refClkGt);
 
    -------------------
    -- AXI PCIe IP Core
    -------------------
-   U_AxiPcie : AdmPcieKu3PciePhy
+   U_AxiPcie : XilinxKcu1500PciePhy
       port map (
          -- Clocks and Resets
          sys_clk_gt             => refClkGt,
@@ -211,6 +255,7 @@ begin
          axi_aclk               => clk,
          axi_aresetn            => rstL,
          axi_ctl_aclk           => clk,
+         axi_ctl_aresetn        => open,
          user_link_up           => open,
          cfg_ltssm_state        => open,
          -- Interrupt Interface
@@ -313,6 +358,11 @@ begin
          -- QPLL Interface
          int_qpll1lock_out      => open,
          int_qpll1outrefclk_out => open,
-         int_qpll1outclk_out    => open);
+         int_qpll1outclk_out    => open,
+         -- CAP Interface
+         mcap_design_switch     => open,
+         cap_req                => open,
+         cap_gnt                => '1',
+         cap_rel                => '0');
 
 end mapping;

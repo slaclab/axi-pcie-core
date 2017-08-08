@@ -2,7 +2,7 @@
 -- File       : AdmPcieKu3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-04-08
+-- Last update: 2017-07-31
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for ADM-PCIE-KU3 board 
 --
@@ -219,14 +219,14 @@ begin
          appWriteMaster     => appWriteMaster,
          appWriteSlave      => appWriteSlave,
          -- Boot Memory Ports 
-         flashAddr          => flashAddress,
-         flashAdv           => flashAdv,
-         flashCeL           => flashCeL,
-         flashOeL           => flashOeL,
-         flashWeL           => flashWeL,
-         flashDin           => flashDin,
-         flashDout          => flashDout,
-         flashTri           => flashTri);
+         bpiAddr            => flashAddress,
+         bpiAdv             => flashAdv,
+         bpiCeL             => flashCeL,
+         bpiOeL             => flashOeL,
+         bpiWeL             => flashWeL,
+         bpiDin             => flashDin,
+         bpiDout            => flashDout,
+         bpiTri             => flashTri);
 
    flashAddr <= flashAddress(25 downto 0);
 

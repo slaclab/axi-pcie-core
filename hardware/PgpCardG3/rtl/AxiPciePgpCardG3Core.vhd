@@ -2,7 +2,7 @@
 -- File       : AxiPciePgpCardG3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-04-06
+-- Last update: 2017-07-31
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for the PgpCardG3 board
 -- https://confluence.slac.stanford.edu/display/AIRTRACK/PC_260_101_03_C03
@@ -181,16 +181,16 @@ begin
          appWriteMaster     => appWriteMaster,
          appWriteSlave      => appWriteSlave,
          -- Boot Memory Ports 
-         flashAddr          => flashAddr,
-         flashAdv           => flashAdv,
-         flashClk           => flashClk,
-         flashRstL          => flashRstL,
-         flashCeL           => flashCeL,
-         flashOeL           => flashOeL,
-         flashWeL           => flashWeL,
-         flashDin           => flashDin,
-         flashDout          => flashDout,
-         flashTri           => flashTri);
+         bpiAddr            => flashAddr,
+         bpiAdv             => flashAdv,
+         bpiClk             => flashClk,
+         bpiRstL            => flashRstL,
+         bpiCeL             => flashCeL,
+         bpiOeL             => flashOeL,
+         bpiWeL             => flashWeL,
+         bpiDin             => flashDin,
+         bpiDout            => flashDout,
+         bpiTri             => flashTri);
 
    GEN_IOBUF :
    for i in 15 downto 0 generate

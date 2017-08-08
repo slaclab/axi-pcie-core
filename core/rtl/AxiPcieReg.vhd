@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-03-24
+-- Last update: 2017-07-31
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -55,39 +55,58 @@ entity AxiPcieReg is
       appReadSlave       : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
       appWriteMaster     : out AxiLiteWriteMasterType;
       appWriteSlave      : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
-      -- Boot Memory Ports 
-      flashAddr          : out slv(28 downto 0);
-      flashAdv           : out sl;
-      flashClk           : out sl;
-      flashRstL          : out sl;
-      flashCeL           : out sl;
-      flashOeL           : out sl;
-      flashWeL           : out sl;
-      flashTri           : out sl;
-      flashDin           : out slv(15 downto 0);
-      flashDout          : in  slv(15 downto 0));
+      -- Application Force reset
+      cardReset          : out  sl;
+      -- BPI Boot Memory Ports 
+      bpiAddr            : out slv(28 downto 0);
+      bpiAdv             : out sl;
+      bpiClk             : out sl;
+      bpiRstL            : out sl;
+      bpiCeL             : out sl;
+      bpiOeL             : out sl;
+      bpiWeL             : out sl;
+      bpiTri             : out sl;
+      bpiDin             : out slv(15 downto 0);
+      bpiDout            : in  slv(15 downto 0)      := x"FFFF";
+      -- SPI Boot Memory Ports 
+      spiCsL             : out slv(1 downto 0);
+      spiSck             : out slv(1 downto 0);
+      spiMosi            : out slv(1 downto 0);
+      spiMiso            : in  slv(1 downto 0)       := "11");
 end AxiPcieReg;
 
 architecture mapping of AxiPcieReg is
 
-   constant NUM_AXI_MASTERS_C : natural := 5;
+   constant NUM_AXI_MASTERS_C : natural := 7;
 
-   constant BOOT_INDEX_C    : natural := 0;
-   constant DMA_INDEX_C     : natural := 1;
-   constant PHY_INDEX_C     : natural := 2;
-   constant VERSION_INDEX_C : natural := 3;
-   constant APP_INDEX_C     : natural := 4;
+   constant BPI_INDEX_C     : natural := 0;
+   constant SPI0_INDEX_C    : natural := 1;
+   constant SPI1_INDEX_C    : natural := 2;
+   constant DMA_INDEX_C     : natural := 3;
+   constant PHY_INDEX_C     : natural := 4;
+   constant VERSION_INDEX_C : natural := 5;
+   constant APP_INDEX_C     : natural := 6;
 
-   constant BOOT_ADDR_C    : slv(31 downto 0) := x"00000000";
+   constant BPI_ADDR_C     : slv(31 downto 0) := x"00000000";
+   constant SPI0_ADDR_C    : slv(31 downto 0) := x"00001000";
+   constant SPI1_ADDR_C    : slv(31 downto 0) := x"00002000";
    constant DMA_ADDR_C     : slv(31 downto 0) := x"00010000";
    constant PHY_ADDR_C     : slv(31 downto 0) := x"00020000";
    constant VERSION_ADDR_C : slv(31 downto 0) := x"00030000";
    constant APP_ADDR_C     : slv(31 downto 0) := x"00080000";
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
-      BOOT_INDEX_C    => (
-         baseAddr     => BOOT_ADDR_C,
-         addrBits     => 16,
+      BPI_INDEX_C     => (
+         baseAddr     => BPI_ADDR_C,
+         addrBits     => 12,
+         connectivity => x"FFFF"),
+      SPI0_INDEX_C    => (
+         baseAddr     => SPI0_ADDR_C,
+         addrBits     => 12,
+         connectivity => x"FFFF"),
+      SPI1_INDEX_C    => (
+         baseAddr     => SPI1_ADDR_C,
+         addrBits     => 12,
          connectivity => x"FFFF"),
       DMA_INDEX_C     => (
          baseAddr     => DMA_ADDR_C,
@@ -118,8 +137,10 @@ architecture mapping of AxiPcieReg is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXI_MASTERS_C-1 downto 0);
 
-   signal userValues   : Slv32Array(63 downto 0) := (others => x"00000000");
-   signal flashAddress : slv(30 downto 0);
+   signal userValues : Slv32Array(63 downto 0) := (others => x"00000000");
+   signal bpiAddress : slv(30 downto 0);
+   signal spiBusyIn  : slv(1 downto 0);
+   signal spiBusyOut : slv(1 downto 0);
 
 begin
 
@@ -131,6 +152,7 @@ begin
    userValues(2) <= DRIVER_TYPE_ID_G;
    userValues(3) <= x"00000001" when(XIL_DEVICE_C = "7SERIES") else x"00000000";
    userValues(4) <= toSlv(getTimeRatio(SYS_CLK_FREQ_C, 1.0), 32);
+   userValues(5) <= x"00000001" when(BOOT_PROM_C = "SPI")      else x"00000000";
 
    -------------------------          
    -- AXI-to-AXI-Lite Bridge
@@ -206,39 +228,122 @@ begin
          axiReadSlave   => axilReadSlaves(VERSION_INDEX_C),
          axiWriteMaster => axilWriteMasters(VERSION_INDEX_C),
          axiWriteSlave  => axilWriteSlaves(VERSION_INDEX_C),
+         -- Optional: User Reset
+         userReset      => cardReset,      
          -- Optional: user values
          userValues     => userValues);
 
    -----------------------------         
    -- AXI-Lite Boot Flash Module
-   -----------------------------         
-   U_AxiMicronP30 : entity work.AxiMicronP30Reg
-      generic map (
-         TPD_G            => TPD_G,
-         AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
-         AXI_CLK_FREQ_G   => SYS_CLK_FREQ_C)
-      port map (
-         -- FLASH Interface 
-         flashAddr      => flashAddress,
-         flashAdv       => flashAdv,
-         flashClk       => flashClk,
-         flashRstL      => flashRstL,
-         flashCeL       => flashCeL,
-         flashOeL       => flashOeL,
-         flashWeL       => flashWeL,
-         flashDin       => flashDin,
-         flashDout      => flashDout,
-         flashTri       => flashTri,
-         -- AXI-Lite Register Interface
-         axiReadMaster  => axilReadMasters(BOOT_INDEX_C),
-         axiReadSlave   => axilReadSlaves(BOOT_INDEX_C),
-         axiWriteMaster => axilWriteMasters(BOOT_INDEX_C),
-         axiWriteSlave  => axilWriteSlaves(BOOT_INDEX_C),
-         -- Clocks and Resets
-         axiClk         => axiClk,
-         axiRst         => axiRst);
+   -----------------------------        
+   GEN_BPI : if (BOOT_PROM_C = "BPI") generate
 
-   flashAddr <= flashAddress(28 downto 0);
+      U_BootProm : entity work.AxiMicronP30Reg
+         generic map (
+            TPD_G            => TPD_G,
+            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
+            AXI_CLK_FREQ_G   => SYS_CLK_FREQ_C)
+         port map (
+            -- FLASH Interface 
+            flashAddr      => bpiAddress,
+            flashAdv       => bpiAdv,
+            flashClk       => bpiClk,
+            flashRstL      => bpiRstL,
+            flashCeL       => bpiCeL,
+            flashOeL       => bpiOeL,
+            flashWeL       => bpiWeL,
+            flashDin       => bpiDin,
+            flashDout      => bpiDout,
+            flashTri       => bpiTri,
+            -- AXI-Lite Register Interface
+            axiReadMaster  => axilReadMasters(BPI_INDEX_C),
+            axiReadSlave   => axilReadSlaves(BPI_INDEX_C),
+            axiWriteMaster => axilWriteMasters(BPI_INDEX_C),
+            axiWriteSlave  => axilWriteSlaves(BPI_INDEX_C),
+            -- Clocks and Resets
+            axiClk         => axiClk,
+            axiRst         => axiRst);
+
+      bpiAddr <= bpiAddress(28 downto 0);
+
+      GEN_VEC : for i in 1 downto 0 generate
+
+         spiCsL  <= (others => '1');
+         spiSck  <= (others => '1');
+         spiMosi <= (others => '1');
+
+         U_AxiLiteEmpty : entity work.AxiLiteEmpty
+            generic map (
+               TPD_G            => TPD_G,
+               AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
+            port map (
+               axiClk         => axiClk,
+               axiClkRst      => axiRst,
+               axiReadMaster  => axilReadMasters(SPI0_INDEX_C+i),
+               axiReadSlave   => axilReadSlaves(SPI0_INDEX_C+i),
+               axiWriteMaster => axilWriteMasters(SPI0_INDEX_C+i),
+               axiWriteSlave  => axilWriteSlaves(SPI0_INDEX_C+i));
+
+      end generate GEN_VEC;
+
+   end generate;
+
+   GEN_SPI : if (BOOT_PROM_C = "SPI") generate
+
+      bpiAddr <= (others => '1');
+      bpiAdv  <= '1';
+      bpiClk  <= '1';
+      bpiRstL <= '1';
+      bpiCeL  <= '1';
+      bpiOeL  <= '1';
+      bpiWeL  <= '1';
+      bpiTri  <= '1';
+      bpiDin  <= (others => '1');
+
+      U_AxiLiteEmpty : entity work.AxiLiteEmpty
+         generic map (
+            TPD_G            => TPD_G,
+            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
+         port map (
+            axiClk         => axiClk,
+            axiClkRst      => axiRst,
+            axiReadMaster  => axilReadMasters(BPI_INDEX_C),
+            axiReadSlave   => axilReadSlaves(BPI_INDEX_C),
+            axiWriteMaster => axilWriteMasters(BPI_INDEX_C),
+            axiWriteSlave  => axilWriteSlaves(BPI_INDEX_C));
+
+      spiBusyIn(0) <= spiBusyOut(1);
+      spiBusyIn(1) <= spiBusyOut(0);
+
+      GEN_VEC : for i in 1 downto 0 generate
+
+         U_BootProm : entity work.AxiMicronN25QCore
+            generic map (
+               TPD_G            => TPD_G,
+               AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
+               AXI_CLK_FREQ_G   => SYS_CLK_FREQ_C,        -- units of Hz
+               SPI_CLK_FREQ_G   => (SYS_CLK_FREQ_C/8.0))  -- units of Hz
+            port map (
+               -- FLASH Memory Ports
+               csL            => spiCsL(i),
+               sck            => spiSck(i),
+               mosi           => spiMosi(i),
+               miso           => spiMiso(i),
+               -- Shared SPI Interface 
+               busyIn         => spiBusyIn(i),
+               busyOut        => spiBusyOut(i),
+               -- AXI-Lite Register Interface
+               axiReadMaster  => axilReadMasters(SPI0_INDEX_C+i),
+               axiReadSlave   => axilReadSlaves(SPI0_INDEX_C+i),
+               axiWriteMaster => axilWriteMasters(SPI0_INDEX_C+i),
+               axiWriteSlave  => axilWriteSlaves(SPI0_INDEX_C+i),
+               -- Clocks and Resets
+               axiClk         => axiClk,
+               axiRst         => axiRst);
+
+      end generate GEN_VEC;
+
+   end generate;
 
    ---------------------------------
    -- Map the AXI-Lite to DMA Engine

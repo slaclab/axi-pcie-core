@@ -2,7 +2,7 @@
 -- File       : AxiPciePkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-08-07
+-- Last update: 2017-08-10
 -------------------------------------------------------------------------------
 -- Description: Package file for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -88,6 +88,17 @@ package AxiPciePkg is
       ckT  : slv(0 downto 0);
    end record DdrOutType;
    type DdrOutArray is array (natural range<>) of DdrOutType;
+   constant DDR_OUT_INIT_C : DdrOutType := (
+      addr => (others => '1'),
+      ba   => (others => '1'),
+      cke  => (others => '1'),
+      csL  => (others => '1'),
+      odt  => (others => '1'),
+      bg   => (others => '1'),
+      rstL => '1',
+      actL => '1',
+      ckC  => (others => '1'),
+      ckT  => (others => '1'));
 
    type DdrInOutType is record
       dm   : slv(8 downto 0);

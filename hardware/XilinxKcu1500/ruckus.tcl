@@ -17,6 +17,9 @@ if { [info exists ::env(PCIE_GEN_NUM)] != 1 } {
    puts "\n\nERROR: PCIE_GEN_SEL is not defined in $::env(PROJ_DIR)/Makefile\n\n"; exit -1
 }
 
+# Place and Route strategies 
+set_property STRATEGY Performance_ExplorePostRoutePhysOpt [get_runs impl_1]
+
 # Set the board part
 set projBoardPart "xilinx.com:kcu1500:part0:1.0"
 set_property board_part $projBoardPart [current_project]

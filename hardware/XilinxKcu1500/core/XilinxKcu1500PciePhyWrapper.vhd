@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500PciePhyWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2016-02-12
--- Last update: 2017-08-05
+-- Last update: 2017-08-12
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -190,43 +190,6 @@ begin
          clk    => clk,
          rstIn  => rstL,
          rstOut => axiRst);
-
-   -- U_PLL : entity work.ClockManagerUltraScale
-      -- generic map(
-         -- TPD_G             => TPD_G,
-         -- TYPE_G            => "PLL",
-         -- INPUT_BUFG_G      => false,
-         -- FB_BUFG_G         => true,
-         -- RST_IN_POLARITY_G => '1',
-         -- NUM_CLOCKS_G      => 1,
-         -- -- GEN2 PCIe configuration
-         -- BANDWIDTH_G       => "OPTIMIZED",
-         -- CLKIN_PERIOD_G    => 8.0,
-         -- DIVCLK_DIVIDE_G   => 1,
-         -- CLKFBOUT_MULT_G   => 8,
-         -- CLKOUT0_DIVIDE_G  => 8)
-      -- -- -- GEN3 PCIe configuration
-      -- -- CLKIN_PERIOD_G     => 4.0,
-      -- -- DIVCLK_DIVIDE_G    => 1,
-      -- -- CLKFBOUT_MULT_G  => 4,
-      -- -- CLKOUT0_DIVIDE_G => 4)                  
-      -- port map(
-         -- clkIn     => clk,
-         -- rstIn     => rst,
-         -- clkOut(0) => axiClock,
-         -- rstOut(0) => axiReset);
-
-   -- rst    <= not(rstL);
-   -- axiClk <= axiClock;
-
-   -- U_Rst : entity work.RstPipeline
-      -- generic map (
-         -- TPD_G     => TPD_G,
-         -- INV_RST_G => false)
-      -- port map (
-         -- clk    => axiClock,
-         -- rstIn  => axiReset,
-         -- rstOut => axiRst);
 
    ------------------
    -- Clock and Reset

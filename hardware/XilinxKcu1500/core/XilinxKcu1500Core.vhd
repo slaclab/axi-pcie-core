@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-08-07
+-- Last update: 2017-08-11
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -63,6 +63,7 @@ entity XilinxKcu1500Core is
       --  Top Level Ports
       -------------------      
       -- System Ports
+      emcClk          : in    sl;
       userClkP        : in    sl;
       userClkN        : in    sl;
       swDip           : in    slv(3 downto 0);
@@ -129,13 +130,17 @@ architecture mapping of XilinxKcu1500Core is
    signal userClock   : sl;
    signal dmaIrq      : sl;
 
-   signal bootCsL  : slv(1 downto 0);
-   signal bootSck  : slv(1 downto 0);
-   signal bootMosi : slv(1 downto 0);
-   signal bootMiso : slv(1 downto 0);
-   signal di       : slv(3 downto 0);
-   signal do       : slv(3 downto 0);
-   signal sck      : sl;
+   signal bootCsL   : slv(1 downto 0);
+   signal bootSck   : slv(1 downto 0);
+   signal bootMosi  : slv(1 downto 0);
+   signal bootMiso  : slv(1 downto 0);
+   signal di        : slv(3 downto 0);
+   signal do        : slv(3 downto 0);
+   signal sck       : sl;
+   signal unusedClk : sl;
+
+   attribute dont_touch              : string;
+   attribute dont_touch of unusedClk : signal is "TRUE";
 
 begin
 
@@ -184,6 +189,11 @@ begin
    qsfp1LpMode  <= '0';
    qsfp0ModSelL <= '1';
    qsfp1ModSelL <= '1';
+
+   U_emcClk : IBUF
+      port map (
+         I => emcClk,
+         O => unusedClk);
 
    ---------------
    -- AXI PCIe PHY
@@ -321,7 +331,7 @@ begin
    ----------------- 
    -- AXI DDR MIG[0]
    ----------------- 
-   U_Mig0 : entity work.MigWithEcc
+   U_Mig0 : entity work.Mig0
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -329,11 +339,11 @@ begin
          sysClk          => sysClock,
          sysRst          => sysReset,
          -- AXI MEM Interface (sysClk domain)
-         axiReady        => memReady(0),
-         axiWriteMasters => memWriteMasters(3 downto 0),
-         axiWriteSlaves  => memWriteSlaves(3 downto 0),
-         axiReadMasters  => memReadMasters(3 downto 0),
-         axiReadSlaves   => memReadSlaves(3 downto 0),
+         axiReady        => memReady(3),  -- $::env(NUM_MIG_CORES)  == 4
+         axiWriteMasters => memWriteMasters(15 downto 12),
+         axiWriteSlaves  => memWriteSlaves(15 downto 12),
+         axiReadMasters  => memReadMasters(15 downto 12),
+         axiReadSlaves   => memReadSlaves(15 downto 12),
          -- DDR Ports
          ddrClkP         => ddrClkP(0),
          ddrClkN         => ddrClkN(0),
@@ -343,7 +353,7 @@ begin
    ----------------- 
    -- AXI DDR MIG[1]
    -----------------          
-   U_Mig1 : entity work.MigWithoutEcc
+   U_Mig1 : entity work.Mig1
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -351,11 +361,11 @@ begin
          sysClk          => sysClock,
          sysRst          => sysReset,
          -- AXI MEM Interface (sysClk domain)
-         axiReady        => memReady(1),
-         axiWriteMasters => memWriteMasters(7 downto 4),
-         axiWriteSlaves  => memWriteSlaves(7 downto 4),
-         axiReadMasters  => memReadMasters(7 downto 4),
-         axiReadSlaves   => memReadSlaves(7 downto 4),
+         axiReady        => memReady(2),  -- $::env(NUM_MIG_CORES)  == 3
+         axiWriteMasters => memWriteMasters(11 downto 8),
+         axiWriteSlaves  => memWriteSlaves(11 downto 8),
+         axiReadMasters  => memReadMasters(11 downto 8),
+         axiReadSlaves   => memReadSlaves(11 downto 8),
          -- DDR Ports
          ddrClkP         => ddrClkP(1),
          ddrClkN         => ddrClkN(1),
@@ -365,7 +375,7 @@ begin
    ----------------- 
    -- AXI DDR MIG[2]
    ----------------- 
-   U_Mig2 : entity work.MigWithEcc
+   U_Mig2 : entity work.Mig2
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -373,11 +383,11 @@ begin
          sysClk          => sysClock,
          sysRst          => sysReset,
          -- AXI MEM Interface (sysClk domain)
-         axiReady        => memReady(2),
-         axiWriteMasters => memWriteMasters(11 downto 8),
-         axiWriteSlaves  => memWriteSlaves(11 downto 8),
-         axiReadMasters  => memReadMasters(11 downto 8),
-         axiReadSlaves   => memReadSlaves(11 downto 8),
+         axiReady        => memReady(1),  -- $::env(NUM_MIG_CORES)  == 2
+         axiWriteMasters => memWriteMasters(7 downto 4),
+         axiWriteSlaves  => memWriteSlaves(7 downto 4),
+         axiReadMasters  => memReadMasters(7 downto 4),
+         axiReadSlaves   => memReadSlaves(7 downto 4),
          -- DDR Ports
          ddrClkP         => ddrClkP(2),
          ddrClkN         => ddrClkN(2),
@@ -387,7 +397,7 @@ begin
    ----------------- 
    -- AXI DDR MIG[3]
    ----------------- 
-   U_Mig3 : entity work.MigWithEcc
+   U_Mig3 : entity work.Mig3
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -395,11 +405,11 @@ begin
          sysClk          => sysClock,
          sysRst          => sysReset,
          -- AXI MEM Interface (sysClk domain)
-         axiReady        => memReady(3),
-         axiWriteMasters => memWriteMasters(15 downto 12),
-         axiWriteSlaves  => memWriteSlaves(15 downto 12),
-         axiReadMasters  => memReadMasters(15 downto 12),
-         axiReadSlaves   => memReadSlaves(15 downto 12),
+         axiReady        => memReady(0),  -- $::env(NUM_MIG_CORES)  == 1
+         axiWriteMasters => memWriteMasters(3 downto 0),
+         axiWriteSlaves  => memWriteSlaves(3 downto 0),
+         axiReadMasters  => memReadMasters(3 downto 0),
+         axiReadSlaves   => memReadSlaves(3 downto 0),
          -- DDR Ports
          ddrClkP         => ddrClkP(3),
          ddrClkN         => ddrClkN(3),

@@ -12,19 +12,51 @@
 # QSFP[0] #
 ###########
 
-set_property -dict { PACKAGE_PIN AM21  IOSTANDARD LVCMOS18 } [get_ports { qsfp0RstL }];
-set_property -dict { PACKAGE_PIN AM22  IOSTANDARD LVCMOS18 } [get_ports { qsfp0LpMode }];
-set_property -dict { PACKAGE_PIN AP21  IOSTANDARD LVCMOS18 } [get_ports { qsfp0ModPrsL }];
-set_property -dict { PACKAGE_PIN AL21  IOSTANDARD LVCMOS18 } [get_ports { qsfp0ModSelL }];
+set_property PACKAGE_PIN AV38 [get_ports { qsfp0RefClkP[0] }] ;# 156.25 MHz
+set_property PACKAGE_PIN AV39 [get_ports { qsfp0RefClkN[0] }] ;# 156.25 MHz
+set_property PACKAGE_PIN AU36 [get_ports { qsfp0RefClkP[1] }] ;# 125 MHz
+set_property PACKAGE_PIN AU37 [get_ports { qsfp0RefClkN[1] }] ;# 125 MHz
+set_property PACKAGE_PIN AP38 [get_ports { qsfp0TxP[3] }]
+set_property PACKAGE_PIN AP43 [get_ports { qsfp0RxP[3] }]
+set_property PACKAGE_PIN AP44 [get_ports { qsfp0RxN[3] }]
+set_property PACKAGE_PIN AP39 [get_ports { qsfp0TxN[3] }]
+set_property PACKAGE_PIN AR40 [get_ports { qsfp0TxP[2] }]
+set_property PACKAGE_PIN AR45 [get_ports { qsfp0RxP[2] }]
+set_property PACKAGE_PIN AR46 [get_ports { qsfp0RxN[2] }]
+set_property PACKAGE_PIN AR41 [get_ports { qsfp0TxN[2] }]
+set_property PACKAGE_PIN AT38 [get_ports { qsfp0TxP[1] }]
+set_property PACKAGE_PIN AT43 [get_ports { qsfp0RxP[1] }]
+set_property PACKAGE_PIN AT44 [get_ports { qsfp0RxN[1] }]
+set_property PACKAGE_PIN AT39 [get_ports { qsfp0TxN[1] }]
+set_property PACKAGE_PIN AU40 [get_ports { qsfp0TxP[0] }]
+set_property PACKAGE_PIN AU45 [get_ports { qsfp0RxP[0] }]
+set_property PACKAGE_PIN AU46 [get_ports { qsfp0RxN[0] }]
+set_property PACKAGE_PIN AU41 [get_ports { qsfp0TxN[0] }]
 
 ###########
 # QSFP[1] #
 ###########
 
-set_property -dict { PACKAGE_PIN AU24  IOSTANDARD LVCMOS18 } [get_ports { qsfp1RstL }];
-set_property -dict { PACKAGE_PIN AR22  IOSTANDARD LVCMOS18 } [get_ports { qsfp1LpMode }];
-set_property -dict { PACKAGE_PIN AR23  IOSTANDARD LVCMOS18 } [get_ports { qsfp1ModPrsL }];
-set_property -dict { PACKAGE_PIN AT24  IOSTANDARD LVCMOS18 } [get_ports { qsfp1ModSelL }];
+set_property PACKAGE_PIN AR36 [get_ports { qsfp1RefClkP[0] }] ;# 156.25 MHz
+set_property PACKAGE_PIN AR37 [get_ports { qsfp1RefClkN[0] }] ;# 156.25 MHz
+set_property PACKAGE_PIN AN36 [get_ports { qsfp1RefClkP[1] }] ;# 125 MHz
+set_property PACKAGE_PIN AN37 [get_ports { qsfp1RefClkN[1] }] ;# 125 MHz
+set_property PACKAGE_PIN AK38 [get_ports { qsfp1TxP[3] }]
+set_property PACKAGE_PIN AK43 [get_ports { qsfp1RxP[3] }]
+set_property PACKAGE_PIN AK44 [get_ports { qsfp1RxN[3] }]
+set_property PACKAGE_PIN AK39 [get_ports { qsfp1TxN[3] }]
+set_property PACKAGE_PIN AL40 [get_ports { qsfp1TxP[2] }]
+set_property PACKAGE_PIN AL45 [get_ports { qsfp1RxP[2] }]
+set_property PACKAGE_PIN AL46 [get_ports { qsfp1RxN[2] }]
+set_property PACKAGE_PIN AL41 [get_ports { qsfp1TxN[2] }]
+set_property PACKAGE_PIN AM38 [get_ports { qsfp1TxP[1] }]
+set_property PACKAGE_PIN AM43 [get_ports { qsfp1RxP[1] }]
+set_property PACKAGE_PIN AM44 [get_ports { qsfp1RxN[1] }]
+set_property PACKAGE_PIN AM39 [get_ports { qsfp1TxN[1] }]
+set_property PACKAGE_PIN AN40 [get_ports { qsfp1TxP[0] }]
+set_property PACKAGE_PIN AN45 [get_ports { qsfp1RxP[0] }]
+set_property PACKAGE_PIN AN46 [get_ports { qsfp1RxN[0] }]
+set_property PACKAGE_PIN AN41 [get_ports { qsfp1TxN[0] }]
 
 ##########
 # Clocks #

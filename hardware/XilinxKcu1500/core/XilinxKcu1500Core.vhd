@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-08-11
+-- Last update: 2017-08-14
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -130,17 +130,16 @@ architecture mapping of XilinxKcu1500Core is
    signal userClock   : sl;
    signal dmaIrq      : sl;
 
-   signal bootCsL   : slv(1 downto 0);
-   signal bootSck   : slv(1 downto 0);
-   signal bootMosi  : slv(1 downto 0);
-   signal bootMiso  : slv(1 downto 0);
-   signal di        : slv(3 downto 0);
-   signal do        : slv(3 downto 0);
-   signal sck       : sl;
-   signal unusedClk : sl;
-
-   attribute dont_touch              : string;
-   attribute dont_touch of unusedClk : signal is "TRUE";
+   signal bootCsL  : slv(1 downto 0);
+   signal bootSck  : slv(1 downto 0);
+   signal bootMosi : slv(1 downto 0);
+   signal bootMiso : slv(1 downto 0);
+   signal di       : slv(3 downto 0);
+   signal do       : slv(3 downto 0);
+   signal sck      : sl;
+   signal emcClock : sl;
+   signal userCclk : sl;
+   signal eos      : sl;
 
 begin
 
@@ -189,11 +188,6 @@ begin
    qsfp1LpMode  <= '0';
    qsfp0ModSelL <= '1';
    qsfp1ModSelL <= '1';
-
-   U_emcClk : IBUF
-      port map (
-         I => emcClk,
-         O => unusedClk);
 
    ---------------
    -- AXI PCIe PHY
@@ -279,7 +273,7 @@ begin
          CFGCLK    => open,  -- 1-bit output: Configuration main clock output
          CFGMCLK   => open,  -- 1-bit output: Configuration internal oscillator clock output
          DI        => di,  -- 4-bit output: Allow receiving on the D[3:0] input pins
-         EOS       => open,  -- 1-bit output: Active high output signal indicating the End Of Startup.
+         EOS       => eos,  -- 1-bit output: Active high output signal indicating the End Of Startup.
          PREQ      => open,  -- 1-bit output: PROGRAM request to fabric output
          DO        => do,  -- 4-bit input: Allows control of the D[3:0] pin outputs
          DTS       => "1110",  -- 4-bit input: Allows tristate of the D[3:0] pins
@@ -289,7 +283,7 @@ begin
          GTS       => '0',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
          KEYCLEARB => '0',  -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
          PACK      => '0',  -- 1-bit input: PROGRAM acknowledge input
-         USRCCLKO  => sck,              -- 1-bit input: User CCLK input
+         USRCCLKO  => userCclk,         -- 1-bit input: User CCLK input
          USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
          USRDONEO  => '1',  -- 1-bit input: User DONE pin output control
          USRDONETS => '0');  -- 1-bit input: User DONE 3-state enable output
@@ -297,6 +291,18 @@ begin
    do          <= "111" & bootMosi(0);
    bootMiso(0) <= di(1);
    sck         <= uOr(bootSck);
+
+   U_emcClk : IBUF
+      port map (
+         I => emcClk,
+         O => emcClock);
+
+   U_BUFGMUX : BUFGMUX
+      port map (
+         O  => userCclk,                -- 1-bit output: Clock output
+         I0 => emcClock,                -- 1-bit input: Clock input (S=0)
+         I1 => sck,                     -- 1-bit input: Clock input (S=1)
+         S  => eos);                    -- 1-bit input: Clock select      
 
    ---------------
    -- AXI PCIe DMA

@@ -11,7 +11,6 @@
 ######################
 # FLASH: Constraints #
 ######################
-set_property LOC CONFIG_SITE_X0Y0 [get_cells {U_Core/U_STARTUPE3}]
 
 set_property -dict { PACKAGE_PIN BF27 IOSTANDARD LVCMOS18 } [get_ports { flashCsL }]
 set_property -dict { PACKAGE_PIN AM26 IOSTANDARD LVCMOS18 } [get_ports { flashMosi }]
@@ -19,6 +18,10 @@ set_property -dict { PACKAGE_PIN AN26 IOSTANDARD LVCMOS18 } [get_ports { flashMi
 set_property -dict { PACKAGE_PIN AM25 IOSTANDARD LVCMOS18 } [get_ports { flashHoldL }]
 set_property -dict { PACKAGE_PIN AL25 IOSTANDARD LVCMOS18 } [get_ports { flashWp }]
 set_property -dict { PACKAGE_PIN AL27 IOSTANDARD LVCMOS18 } [get_ports { emcClk }]
+
+set_property LOC CONFIG_SITE_X0Y0        [get_cells {U_Core/U_STARTUPE3}]
+set_property CLOCK_REGION X4Y1           [get_cells {U_Core/U_BUFGMUX}]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets  {U_Core/U_emcClk/O}]
 
 ####################
 # PCIe Constraints #
@@ -130,7 +133,7 @@ set_property HIGH_PRIORITY true [get_nets {userClk}]
 ######################################
 set_property CONFIG_VOLTAGE 1.8                      [current_design]
 set_property CFGBVS GND                              [current_design]
-# set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable  [current_design]
+set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable  [current_design]
 set_property BITSTREAM.GENERAL.COMPRESS TRUE         [current_design]
 set_property CONFIG_MODE SPIx8                       [current_design]
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 8         [current_design]

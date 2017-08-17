@@ -8,4 +8,4 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-# resize_pblock {PB_APP} -add CLOCKREGION_X4Y5:CLOCKREGION_X5Y9
+resize_pblock {PB_APP} -add CLOCKREGION_X4Y5:CLOCKREGION_X5Y9

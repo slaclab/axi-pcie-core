@@ -7,5 +7,3 @@
 ## may be copied, modified, propagated, or distributed except according to 
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
-
-# resize_pblock {PB_APP} -add CLOCKREGION_X2Y0:CLOCKREGION_X3Y3

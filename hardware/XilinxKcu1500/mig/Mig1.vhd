@@ -2,7 +2,7 @@
 -- File       : Mig1.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-08-10
+-- Last update: 2017-08-16
 -------------------------------------------------------------------------------
 -- Description: Wrapper for the MIG core
 -------------------------------------------------------------------------------
@@ -145,37 +145,6 @@ begin
          clk     => sysClk,
          dataIn  => ddrCalDone,
          dataOut => axiReady);
-
-   U_dm : IOBUF
-      port map (
-         IO => ddrInOut.dm(8),
-         I  => '0',
-         O  => open,
-         T  => sysRstL);
-
-   U_dqsC : IOBUF
-      port map (
-         IO => ddrInOut.dqsC(8),
-         I  => '0',
-         O  => open,
-         T  => sysRstL);
-
-   U_dqsT : IOBUF
-      port map (
-         IO => ddrInOut.dqsT(8),
-         I  => '0',
-         O  => open,
-         T  => sysRstL);
-
-   GEN_VEC :
-   for i in 7 downto 0 generate
-      U_dq : IOBUF
-         port map (
-            IO => ddrInOut.dq(i+64),
-            I  => '0',
-            O  => open,
-            T  => sysRstL);
-   end generate GEN_VEC;
 
    U_MIG : Ddr4WithoutEcc
       port map (

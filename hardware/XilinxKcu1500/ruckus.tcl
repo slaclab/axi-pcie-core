@@ -19,7 +19,6 @@ if { [info exists ::env(PCIE_GEN_NUM)] != 1 } {
 
 # Place and Route strategies 
 set_property STRATEGY Performance_ExplorePostRoutePhysOpt [get_runs impl_1]
-set_property STEPS.OPT_DESIGN.ARGS.DIRECTIVE NoBramPowerOpt [get_runs impl_1]
 
 # Set the board part
 set projBoardPart "xilinx.com:kcu1500:part0:1.0"

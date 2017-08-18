@@ -102,7 +102,7 @@
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_BAR5_APERTURE_SIZE">0x05</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_BAR5_CONTROL">0x0</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_CLASS_CODE">0x118000</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_DEVICE_ID">0x8028</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_DEVICE_ID">0x2030</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_INTERRUPT_PIN">001</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_MSI_CAP_MULTIMSGCAP">0</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_REVISION_ID">0x00</spirit:configurableElementValue>
@@ -247,7 +247,7 @@
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_class_code_base">11</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_class_code_interface">00</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_class_code_sub">80</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_device_id">8028</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_device_id">2030</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_interrupt_pin">INTA</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_link_status_slot_clock_config">true</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_msi_cap_multimsgcap">1_vector</spirit:configurableElementValue>

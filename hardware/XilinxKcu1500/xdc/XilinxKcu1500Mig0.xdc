@@ -164,6 +164,14 @@ set_property -dict { PACKAGE_PIN BB38 IOSTANDARD SSTL12_DCI       } [get_ports {
 set_property -dict { PACKAGE_PIN BC38 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[0][csL][1] }]; # BOT
 set_property -dict { PACKAGE_PIN AJ34 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { ddrOut[0][rstL]   }]
 
+#########################
+# Placement Constraints #
+#########################
+
+create_pblock MIG_XBAR0_GRP; 
+add_cells_to_pblock [get_pblocks MIG_XBAR0_GRP] [get_cells [list U_Core/U_Mig0/U_Xbar]]
+resize_pblock [get_pblocks MIG_XBAR0_GRP] -add {CLOCKREGION_X2Y0:CLOCKREGION_X3Y3}
+
 ##########
 # Clocks #
 ##########

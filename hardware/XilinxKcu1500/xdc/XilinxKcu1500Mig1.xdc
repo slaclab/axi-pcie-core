@@ -14,6 +14,14 @@
 
 # Using the pin out constraints that are auto-generated in the Ddr4WithoutEcc.xci
 
+#########################
+# Placement Constraints #
+#########################
+
+create_pblock MIG_XBAR1_GRP; 
+add_cells_to_pblock [get_pblocks MIG_XBAR1_GRP] [get_cells [list U_Core/U_Mig1/U_Xbar]]
+resize_pblock [get_pblocks MIG_XBAR1_GRP] -add {CLOCKREGION_X4Y2:CLOCKREGION_X5Y6}
+
 ##########
 # Clocks #
 ##########

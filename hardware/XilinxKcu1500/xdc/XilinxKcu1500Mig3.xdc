@@ -167,9 +167,9 @@ set_property -dict { PACKAGE_PIN L24 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { 
 # Placement Constraints #
 #########################
 
-create_pblock MIG_XBAR3_GRP; 
-add_cells_to_pblock [get_pblocks MIG_XBAR3_GRP] [get_cells [list U_Core/U_Mig3/U_Xbar]]
-resize_pblock [get_pblocks MIG_XBAR3_GRP] -add {CLOCKREGION_X2Y7:CLOCKREGION_X3Y9}
+# create_pblock MIG_XBAR3_GRP; 
+# add_cells_to_pblock [get_pblocks MIG_XBAR3_GRP] [get_cells [list U_Core/U_Mig3/U_Xbar]]
+# resize_pblock [get_pblocks MIG_XBAR3_GRP] -add {CLOCKREGION_X2Y7:CLOCKREGION_X3Y9}
 
 ##########
 # Clocks #

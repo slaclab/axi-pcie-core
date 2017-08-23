@@ -32,7 +32,7 @@ class DataDev(pr.Device):
 
         if (useBpi):
             self.add(_AxiMicronP30(
-                offset       =  0x0000,
+                offset       =  0x30000,
                 expand       =  False,                                    
                 hidden       =  True,                                    
             ))         
@@ -41,14 +41,14 @@ class DataDev(pr.Device):
             for i in range(2):
                 self.add(AxiMicronN25Q(
                     name         = "AxiMicronN25Q[%i]" % (i),
-                    offset       =  0x1000 + (i * 0x1000),
+                    offset       =  0x40000 + (i * 0x10000),
                     description  = "AxiMicronN25Q: %i" % (i),                                
                     expand       =  False,                                    
                     hidden       =  True,                                    
                 ))        
         
         self.add(AxiVersion(            
-            offset       = 0x30000, 
+            offset       = 0x20000, 
             expand       = False,
         ))
         

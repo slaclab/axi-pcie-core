@@ -30,6 +30,11 @@ loadSource      -path "$::DIR_PATH/mig/MigXbar.vhd"
 loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Core.xdc"
 loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500App.xdc"
 
+# Check for  partial reconfiguration
+if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 } {
+   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Reconfig.xdc"
+}
+
 # Load IP Cores
 loadIpCore -path "$::DIR_PATH/ip/AxiPcieCrossbarIpCore.xci"
 loadIpCore -path "$::DIR_PATH/ip/Ddr4WithEcc.xci"
@@ -55,10 +60,13 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
    loadSource      -path "$::DIR_PATH/mig/Mig2Empty.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig3Empty.vhd"
 
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1Empty.xdc"
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2Empty.xdc"
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3Empty.xdc"
+   # Check for  partial reconfiguration
+   if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 } {    
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1Empty.xdc"
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2Empty.xdc"
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3Empty.xdc"
+   }
 
 } elseif { $::env(NUM_MIG_CORES)  == 1 } {
 
@@ -67,9 +75,12 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
    loadSource      -path "$::DIR_PATH/mig/Mig2Empty.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig3.vhd"
 
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1Empty.xdc"
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2Empty.xdc"
+   # Check for  partial reconfiguration
+   if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 } {   
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1Empty.xdc"
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2Empty.xdc"
+   }
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"
 
 } elseif { $::env(NUM_MIG_CORES)  == 2 } {
@@ -78,9 +89,12 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
    loadSource      -path "$::DIR_PATH/mig/Mig1Empty.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig2.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig3.vhd"
-
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1Empty.xdc"
+   
+   # Check for  partial reconfiguration
+   if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 } {  
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1Empty.xdc"
+   }
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2.xdc"
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"
 
@@ -91,7 +105,10 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
    loadSource      -path "$::DIR_PATH/mig/Mig2.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig3.vhd"
 
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"
+   # Check for  partial reconfiguration
+   if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 } {     
+      loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"  
+   }
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1.xdc"
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2.xdc"
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"

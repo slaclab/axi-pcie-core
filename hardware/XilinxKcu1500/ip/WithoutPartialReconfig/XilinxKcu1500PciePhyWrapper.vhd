@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500PciePhyWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2016-02-12
--- Last update: 2017-08-25
+-- Last update: 2017-08-27
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXI PCIe Core
 -------------------------------------------------------------------------------

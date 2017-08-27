@@ -81,7 +81,7 @@
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.EXT_CH_GT_DRP">false</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.EXT_STARTUP_PRIMITIVE">false</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.IS_BOARD_PROJECT">1</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MCAP_ENABLEMENT">NONE</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MCAP_ENABLEMENT">PR</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MSIX_EN">FALSE</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MSIX_IMPL_EXT">TRUE</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MSI_ENABLED">FALSE</spirit:configurableElementValue>
@@ -194,7 +194,7 @@
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.ext_startup_primitive">false</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.include_baroffset_reg">true</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.ins_loss_profile">Add-in_Card</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.mcap_enablement">None</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.mcap_enablement">PR_over_PCIe</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.mode_selection">Advanced</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.no_slv_err">false</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.old_bridge_timeout">false</spirit:configurableElementValue>

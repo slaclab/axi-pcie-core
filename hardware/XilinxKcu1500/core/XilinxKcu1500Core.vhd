@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-08-14
+-- Last update: 2017-08-29
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -311,6 +311,7 @@ begin
       generic map (
          TPD_G            => TPD_G,
          DMA_SIZE_G       => DMA_SIZE_C,
+         DESC_ARB_G       => false,  -- Round robin to help with timing @ 250 MHz system clock
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C)
       port map (
          -- Clock and reset

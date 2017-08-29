@@ -8,13 +8,13 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-###########################
-# Partial Reconfiguration #
-###########################
+##########
+# Clocks #
+##########
 
-set_property HD.RECONFIGURABLE 1 [get_cells {U_App}]
-create_pblock {PB_APP}
-add_cells_to_pblock [get_pblocks {PB_APP}]  [get_cells [list U_App]]
-resize_pblock {PB_APP} -add CLOCKREGION_X0Y0:CLOCKREGION_X1Y9
-resize_pblock {PB_APP} -add CLOCKREGION_X2Y4:CLOCKREGION_X3Y6
-set_property SNAPPING_MODE ON [get_pblocks {PB_APP}]
+create_generated_clock -name sysClk   [get_pins {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/U0/gt_top_i/phy_clk_i/bufg_gt_userclk/O}]
+
+set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {dnaClk}]
+set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {userClkP}]
+
+set_property HIGH_PRIORITY true [get_nets {sysClk}]

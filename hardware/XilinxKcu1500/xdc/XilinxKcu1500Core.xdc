@@ -115,17 +115,12 @@ create_clock -period 11.111 -name emcClk     [get_ports {emcClk}]
 create_clock -period 10.000 -name pciRefClkP [get_ports {pciRefClkP}]
 
 create_generated_clock -name dnaClk  [get_pins {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
-create_generated_clock -name sysClk  [get_pins {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/U0/gt_top_i/phy_clk_i/bufg_gt_userclk/O}]
-
-set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {dnaClk}]
-set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {userClkP}]
 
 set_false_path -from [get_ports {pciRstL}]
 set_false_path -through [get_pins {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/U0/pcie3_uscale_top_inst/pcie3_uscale_wrapper_inst/PCIE_3_1_inst/CFGMAX*}]
 set_false_path -through [get_nets {U_Core/U_AxiPciePhy/U_AxiPcie/inst/inst/cfg_max*}]
 
 set_property HIGH_PRIORITY true [get_nets {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/gt_top_i/phy_clk_i/CLK_USERCLK}]
-set_property HIGH_PRIORITY true [get_nets {sysClk}]
 set_property HIGH_PRIORITY true [get_nets {userClk}]
 
 ######################################
@@ -140,3 +135,5 @@ set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN div-1 [current_design]
 set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES      [current_design]
 set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup       [current_design]
 set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR Yes     [current_design]
+set_property BITSTREAM.STARTUP.LCK_CYCLE NoWait      [current_design]
+set_property BITSTREAM.STARTUP.MATCH_CYCLE NoWait    [current_design]

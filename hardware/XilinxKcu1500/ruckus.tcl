@@ -29,20 +29,19 @@ loadSource      -dir  "$::DIR_PATH/core/"
 loadSource      -path "$::DIR_PATH/mig/MigXbar.vhd"
 loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Core.xdc"
 loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500App.xdc"
-
-# Load IP Cores
-loadIpCore -path "$::DIR_PATH/ip/AxiPcieCrossbarIpCore.xci"
+loadIpCore      -path "$::DIR_PATH/ip/AxiPcieCrossbarIpCore.xci"
 
 # Check for  partial reconfiguration
 if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 } {
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Reconfig.xdc"
    loadSource      -path "$::DIR_PATH/ip/WithPartialReconfig/XilinxKcu1500PciePhyWrapper.vhd"   
+   loadConstraints -path "$::DIR_PATH/ip/WithPartialReconfig/XilinxKcu1500PciePhy.xdc"
    
    # Select either GEN2 or GEN3 PCIe
    if { $::env(PCIE_GEN_NUM)  == "GEN2" } {
-      loadIpCore -path "$::DIR_PATH/ip/WithPartialReconfig/PcieGen2/XilinxKcu1500PciePhy.xci"
+      loadIpCore      -path "$::DIR_PATH/ip/WithPartialReconfig/PcieGen2/XilinxKcu1500PciePhy.xci"
    } elseif { $::env(PCIE_GEN_NUM)  == "GEN3" } {
-      loadIpCore -path "$::DIR_PATH/ip/WithPartialReconfig/PcieGen3/XilinxKcu1500PciePhy.xci"
+      loadIpCore      -path "$::DIR_PATH/ip/WithPartialReconfig/PcieGen3/XilinxKcu1500PciePhy.xci"
    } else {
       puts "\n\nERROR: PCIE_GEN_NUM = $::env(PCIE_GEN_NUM) is not valid."
       puts "It must be either GEN2 or GEN3"
@@ -53,9 +52,11 @@ if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 }
 
    # Select either GEN2 or GEN3 PCIe
    if { $::env(PCIE_GEN_NUM)  == "GEN2" } {
-      loadIpCore -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen2/XilinxKcu1500PciePhy.xci"
+      loadIpCore      -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen2/XilinxKcu1500PciePhy.xci"
+      loadConstraints -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen2/XilinxKcu1500PciePhy.xdc"
    } elseif { $::env(PCIE_GEN_NUM)  == "GEN3" } {
-      loadIpCore -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen3/XilinxKcu1500PciePhy.xci"
+      loadIpCore      -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen3/XilinxKcu1500PciePhy.xci"
+      loadConstraints -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen3/XilinxKcu1500PciePhy.xdc"
    } else {
       puts "\n\nERROR: PCIE_GEN_NUM = $::env(PCIE_GEN_NUM) is not valid."
       puts "It must be either GEN2 or GEN3"

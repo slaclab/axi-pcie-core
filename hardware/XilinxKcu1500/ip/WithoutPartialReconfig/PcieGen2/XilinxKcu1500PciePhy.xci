@@ -21,7 +21,7 @@
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.AXI_DATA_WIDTH">256</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.CFG_EXT_IF">FALSE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.COMPONENT_NAME">axi_pcie3_v3_0</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.CORE_CLK_FREQ">1</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.CORE_CLK_FREQ">2</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_ATS_CAP_NEXTPTR">0x000</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_ATS_ENABLE">FALSE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_AXIBAR2PCIEBAR_0">0x0000000000000000</spirit:configurableElementValue>
@@ -106,7 +106,7 @@
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_VENDOR_ID">0x1A4A</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PIPE_SIM">FALSE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PLL_TYPE">2</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PL_LINK_CAP_MAX_LINK_SPEED">2</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PL_LINK_CAP_MAX_LINK_SPEED">4</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PL_LINK_CAP_MAX_LINK_WIDTH">8</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PL_UPSTREAM_FACING">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.REF_CLK_FREQ">0</spirit:configurableElementValue>
@@ -121,7 +121,7 @@
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.TL_LEGACY_MODE_ENABLE">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.ULTRASCALE">TRUE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.ULTRASCALE_PLUS">FALSE</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.USER_CLK_FREQ">2</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.USER_CLK_FREQ">3</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.VCU118_BOARD">FALSE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.VU9P_BOARD">FALSE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.xlnx_ref_board">KCU1500</spirit:configurableElementValue>
@@ -161,7 +161,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.axibar_highaddr_3">0x0000000000000000</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.axibar_highaddr_4">0x0000000000000000</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.axibar_highaddr_5">0x0000000000000000</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.axisten_freq">125</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.axisten_freq">250</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.c_ats_enable">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.c_m_axi_num_read">8</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.c_m_axi_num_write">8</spirit:configurableElementValue>
@@ -171,7 +171,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.c_s_axi_supports_narrow_burst">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.cfg_ext_if">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.comp_timeout">50us</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.coreclk_freq">250</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.coreclk_freq">500</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.dedicate_perst">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.device_port_type">PCI_Express_Endpoint_device</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.en_axi_master_if">true</spirit:configurableElementValue>
@@ -259,7 +259,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_subsystem_id">2030</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_subsystem_vendor_id">1A4A</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pipe_sim">false</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pl_link_cap_max_link_speed">5.0_GT/s</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pl_link_cap_max_link_speed">8.0_GT/s</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pl_link_cap_max_link_width">X8</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.plltype">QPLL1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.ref_clk_freq">100_MHz</spirit:configurableElementValue>

@@ -162,7 +162,7 @@ begin
             TPD_G     => TPD_G,
             INV_RST_G => false)
          port map (
-            clk    => clk,
+            clk    => axiClk,
             rstIn  => axiRst,
             rstOut => axisReset(i));
 
@@ -244,7 +244,7 @@ begin
             TPD_G     => TPD_G,
             INV_RST_G => false)
          port map (
-            clk    => clk,
+            clk    => axiClk,
             rstIn  => axiRst,
             rstOut => axiReset(i));
 

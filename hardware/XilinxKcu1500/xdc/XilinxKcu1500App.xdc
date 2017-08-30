@@ -76,14 +76,3 @@ set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {use
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP1}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfp1RefClkP0}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfp1RefClkP1}]
-
-###########################
-# Partial Reconfiguration #
-###########################
-
-set_property HD.RECONFIGURABLE 1 [get_cells {U_App}]
-create_pblock {PB_APP}
-add_cells_to_pblock [get_pblocks {PB_APP}]  [get_cells [list U_App]]
-resize_pblock {PB_APP} -add CLOCKREGION_X0Y0:CLOCKREGION_X1Y9
-resize_pblock {PB_APP} -add CLOCKREGION_X2Y4:CLOCKREGION_X3Y6
-set_property SNAPPING_MODE ON [get_pblocks {PB_APP}]

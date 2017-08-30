@@ -247,7 +247,7 @@
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_class_code_base">11</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_class_code_interface">00</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_class_code_sub">80</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_device_id">8038</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_device_id">2030</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_interrupt_pin">INTA</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_link_status_slot_clock_config">true</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_msi_cap_multimsgcap">1_vector</spirit:configurableElementValue>

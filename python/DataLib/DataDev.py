@@ -19,16 +19,46 @@
 
 import pyrogue as pr
 from surf.axi import *
+from surf.devices.micron import *
+from surf.xilinx import *
 
 class DataDev(pr.Device):
     def __init__(   self,       
             name        = "DataDev",
-            description = "Container for data development registers",
+            description = "Container for data device registers",
+            useBpi      = False,
+            useSpi      = False,
             **kwargs):
         super().__init__(name=name, description=description, **kwargs)
-
-        # Axi Version
-        self.add(AxiVersion(            
-            offset       = 0x30000, 
+        
+        # PCI PHY status
+        self.add(AxiPciePhy(            
+            offset       = 0x10000, 
             expand       = False,
-        ))        
+        ))
+        
+        # Standard AxiVersion Module
+        self.add(AxiVersion(            
+            offset       = 0x20000, 
+            expand       = False,
+        ))
+
+        # Check if using BPI PROM
+        if (useBpi):
+            self.add(AxiMicronP30(
+                offset       =  0x30000,
+                expand       =  False,                                    
+                hidden       =  True,                                    
+            ))         
+        
+        # Check if using SPI PROM
+        if (useSpi):
+            for i in range(2):
+                self.add(AxiMicronN25Q(
+                    name         = "AxiMicronN25Q[%i]" % (i),
+                    offset       =  0x40000 + (i * 0x10000),
+                    description  = "AxiMicronN25Q: %i" % (i),                                
+                    expand       =  False,                                    
+                    hidden       =  True,                                    
+                ))
+                

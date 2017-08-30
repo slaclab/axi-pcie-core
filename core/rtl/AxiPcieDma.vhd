@@ -2,7 +2,7 @@
 -- File       : AxiPcieDma.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-04-08
+-- Last update: 2017-08-30
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXIS DMA Engine
 -------------------------------------------------------------------------------
@@ -30,6 +30,7 @@ entity AxiPcieDma is
    generic (
       TPD_G            : time                   := 1 ns;
       DMA_SIZE_G       : positive range 1 to 16 := 1;
+      DESC_ARB_G       : boolean                := true;
       AXI_ERROR_RESP_G : slv(1 downto 0)        := AXI_RESP_OK_C);
    port (
       -- Clock and reset
@@ -56,6 +57,15 @@ end AxiPcieDma;
 
 architecture mapping of AxiPcieDma is
 
+   constant INT_DMA_AXIS_CONFIG_C : AxiStreamConfigType := (
+      TSTRB_EN_C    => DMA_AXIS_CONFIG_C.TSTRB_EN_C,
+      TDATA_BYTES_C => DMA_AXIS_CONFIG_C.TDATA_BYTES_C,
+      TDEST_BITS_C  => DMA_AXIS_CONFIG_C.TDEST_BITS_C,
+      TID_BITS_C    => DMA_AXIS_CONFIG_C.TID_BITS_C,
+      TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C for performance 
+      TUSER_BITS_C  => DMA_AXIS_CONFIG_C.TUSER_BITS_C,
+      TUSER_MODE_C  => DMA_AXIS_CONFIG_C.TUSER_MODE_C);
+
    signal locReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
    signal locReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
    signal locWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
@@ -73,6 +83,9 @@ architecture mapping of AxiPcieDma is
    signal mAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
    signal mAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
    signal mAxisCtrl    : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0);
+
+   signal axisReset : slv(DMA_SIZE_G-1 downto 0);
+   signal axiReset  : slv(DMA_SIZE_G downto 0);
 
 begin
 
@@ -105,11 +118,12 @@ begin
       generic map (
          TPD_G             => TPD_G,
          DESC_AWIDTH_G     => 12,       -- 4096 entries
-         AXIL_BASE_ADDR_G  => x"00010000",
+         DESC_ARB_G        => DESC_ARB_G,
+         AXIL_BASE_ADDR_G  => x"00000000",
          AXI_ERROR_RESP_G  => AXI_ERROR_RESP_G,
          AXI_READY_EN_G    => false,
          AXIS_READY_EN_G   => false,
-         AXIS_CONFIG_G     => DMA_AXIS_CONFIG_C,
+         AXIS_CONFIG_G     => INT_DMA_AXIS_CONFIG_C,
          AXI_DESC_CONFIG_G => DMA_AXI_CONFIG_C,
          AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
          CHAN_COUNT_G      => DMA_SIZE_G,
@@ -142,6 +156,16 @@ begin
 
    GEN_AXIS_FIFO : for i in DMA_SIZE_G-1 downto 0 generate
 
+      -- Help with timing
+      U_AxisRst : entity work.RstPipeline
+         generic map (
+            TPD_G     => TPD_G,
+            INV_RST_G => false)
+         port map (
+            clk    => clk,
+            rstIn  => axiRst,
+            rstOut => axisReset(i));
+
       --------------------------
       -- Inbound AXI Stream FIFO
       --------------------------
@@ -163,16 +187,16 @@ begin
             FIFO_FIXED_THRESH_G => true,
             FIFO_PAUSE_THRESH_G => 500,  -- Unused
             SLAVE_AXI_CONFIG_G  => DMA_AXIS_CONFIG_C,
-            MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_C)
+            MASTER_AXI_CONFIG_G => INT_DMA_AXIS_CONFIG_C)
          port map (
             sAxisClk        => axiClk,
-            sAxisRst        => axiRst,
+            sAxisRst        => axisReset(i),
             sAxisMaster     => dmaIbMasters(i),
             sAxisSlave      => dmaIbSlaves(i),
             sAxisCtrl       => open,
             fifoPauseThresh => (others => '1'),
             mAxisClk        => axiClk,
-            mAxisRst        => axiRst,
+            mAxisRst        => axisReset(i),
             mAxisMaster     => sAxisMasters(i),
             mAxisSlave      => sAxisSlaves(i));
 
@@ -196,23 +220,33 @@ begin
             FIFO_ADDR_WIDTH_G   => 9,
             FIFO_FIXED_THRESH_G => true,
             FIFO_PAUSE_THRESH_G => 300,  -- 1800 byte buffer before pause and 1696 byte of buffer before FIFO FULL
-            SLAVE_AXI_CONFIG_G  => DMA_AXIS_CONFIG_C,
+            SLAVE_AXI_CONFIG_G  => INT_DMA_AXIS_CONFIG_C,
             MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_C)
          port map (
             sAxisClk        => axiClk,
-            sAxisRst        => axiRst,
+            sAxisRst        => axisReset(i),
             sAxisMaster     => mAxisMasters(i),
             sAxisSlave      => mAxisSlaves(i),
             sAxisCtrl       => mAxisCtrl(i),
             fifoPauseThresh => (others => '1'),
             mAxisClk        => axiClk,
-            mAxisRst        => axiRst,
+            mAxisRst        => axisReset(i),
             mAxisMaster     => dmaObMasters(i),
             mAxisSlave      => dmaObSlaves(i));
 
    end generate;
 
    GEN_AXI_FIFO : for i in DMA_SIZE_G downto 0 generate
+
+      -- Help with timing
+      U_AxiRst : entity work.RstPipeline
+         generic map (
+            TPD_G     => TPD_G,
+            INV_RST_G => false)
+         port map (
+            clk    => clk,
+            rstIn  => axiRst,
+            rstOut => axiReset(i));
 
       ---------------------
       -- Read Path AXI FIFO
@@ -242,11 +276,11 @@ begin
             AXI_CONFIG_G           => DMA_AXI_CONFIG_C)
          port map (
             sAxiClk        => axiClk,
-            sAxiRst        => axiRst,
+            sAxiRst        => axiReset(i),
             sAxiReadMaster => locReadMasters(i),
             sAxiReadSlave  => locReadSlaves(i),
             mAxiClk        => axiClk,
-            mAxiRst        => axiRst,
+            mAxiRst        => axiReset(i),
             mAxiReadMaster => axiReadMasters(i),
             mAxiReadSlave  => axiReadSlaves(i));
 
@@ -282,12 +316,12 @@ begin
             AXI_CONFIG_G             => DMA_AXI_CONFIG_C)
          port map (
             sAxiClk         => axiClk,
-            sAxiRst         => axiRst,
+            sAxiRst         => axiReset(i),
             sAxiWriteMaster => locWriteMasters(i),
             sAxiWriteSlave  => locWriteSlaves(i),
             sAxiCtrl        => locWriteCtrl(i),
             mAxiClk         => axiClk,
-            mAxiRst         => axiRst,
+            mAxiRst         => axiReset(i),
             mAxiWriteMaster => axiWriteMasters(i),
             mAxiWriteSlave  => axiWriteSlaves(i));
 

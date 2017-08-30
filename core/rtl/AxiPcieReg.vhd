@@ -79,35 +79,23 @@ architecture mapping of AxiPcieReg is
 
    constant NUM_AXI_MASTERS_C : natural := 7;
 
-   constant BPI_INDEX_C     : natural := 0;
-   constant SPI0_INDEX_C    : natural := 1;
-   constant SPI1_INDEX_C    : natural := 2;
-   constant DMA_INDEX_C     : natural := 3;
-   constant PHY_INDEX_C     : natural := 4;
-   constant VERSION_INDEX_C : natural := 5;
+   constant DMA_INDEX_C     : natural := 0;
+   constant PHY_INDEX_C     : natural := 1;
+   constant VERSION_INDEX_C : natural := 2;
+   constant BPI_INDEX_C     : natural := 3;
+   constant SPI0_INDEX_C    : natural := 4;
+   constant SPI1_INDEX_C    : natural := 5;
    constant APP_INDEX_C     : natural := 6;
 
-   constant BPI_ADDR_C     : slv(31 downto 0) := x"00000000";
-   constant SPI0_ADDR_C    : slv(31 downto 0) := x"00001000";
-   constant SPI1_ADDR_C    : slv(31 downto 0) := x"00002000";
-   constant DMA_ADDR_C     : slv(31 downto 0) := x"00010000";
-   constant PHY_ADDR_C     : slv(31 downto 0) := x"00020000";
-   constant VERSION_ADDR_C : slv(31 downto 0) := x"00030000";
+   constant DMA_ADDR_C     : slv(31 downto 0) := x"00000000";
+   constant PHY_ADDR_C     : slv(31 downto 0) := x"00010000";
+   constant VERSION_ADDR_C : slv(31 downto 0) := x"00020000";
+   constant BPI_ADDR_C     : slv(31 downto 0) := x"00030000";
+   constant SPI0_ADDR_C    : slv(31 downto 0) := x"00040000";
+   constant SPI1_ADDR_C    : slv(31 downto 0) := x"00050000";
    constant APP_ADDR_C     : slv(31 downto 0) := x"00080000";
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
-      BPI_INDEX_C     => (
-         baseAddr     => BPI_ADDR_C,
-         addrBits     => 12,
-         connectivity => x"FFFF"),
-      SPI0_INDEX_C    => (
-         baseAddr     => SPI0_ADDR_C,
-         addrBits     => 12,
-         connectivity => x"FFFF"),
-      SPI1_INDEX_C    => (
-         baseAddr     => SPI1_ADDR_C,
-         addrBits     => 12,
-         connectivity => x"FFFF"),
       DMA_INDEX_C     => (
          baseAddr     => DMA_ADDR_C,
          addrBits     => 16,
@@ -118,6 +106,18 @@ architecture mapping of AxiPcieReg is
          connectivity => x"FFFF"),
       VERSION_INDEX_C => (
          baseAddr     => VERSION_ADDR_C,
+         addrBits     => 16,
+         connectivity => x"FFFF"),
+      BPI_INDEX_C     => (
+         baseAddr     => BPI_ADDR_C,
+         addrBits     => 16,
+         connectivity => x"FFFF"),
+      SPI0_INDEX_C    => (
+         baseAddr     => SPI0_ADDR_C,
+         addrBits     => 16,
+         connectivity => x"FFFF"),
+      SPI1_INDEX_C    => (
+         baseAddr     => SPI1_ADDR_C,
          addrBits     => 16,
          connectivity => x"FFFF"),
       APP_INDEX_C     => (

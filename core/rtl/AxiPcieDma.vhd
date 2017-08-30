@@ -2,7 +2,7 @@
 -- File       : AxiPcieDma.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-08-29
+-- Last update: 2017-08-30
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXIS DMA Engine
 -------------------------------------------------------------------------------
@@ -84,6 +84,9 @@ architecture mapping of AxiPcieDma is
    signal mAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
    signal mAxisCtrl    : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0);
 
+   signal axisReset : slv(DMA_SIZE_G-1 downto 0);
+   signal axiReset  : slv(DMA_SIZE_G downto 0);
+
 begin
 
    ----------------
@@ -153,6 +156,16 @@ begin
 
    GEN_AXIS_FIFO : for i in DMA_SIZE_G-1 downto 0 generate
 
+      -- Help with timing
+      U_AxisRst : entity work.RstPipeline
+         generic map (
+            TPD_G     => TPD_G,
+            INV_RST_G => false)
+         port map (
+            clk    => clk,
+            rstIn  => axiRst,
+            rstOut => axisReset(i));
+
       --------------------------
       -- Inbound AXI Stream FIFO
       --------------------------
@@ -177,13 +190,13 @@ begin
             MASTER_AXI_CONFIG_G => INT_DMA_AXIS_CONFIG_C)
          port map (
             sAxisClk        => axiClk,
-            sAxisRst        => axiRst,
+            sAxisRst        => axisReset(i),
             sAxisMaster     => dmaIbMasters(i),
             sAxisSlave      => dmaIbSlaves(i),
             sAxisCtrl       => open,
             fifoPauseThresh => (others => '1'),
             mAxisClk        => axiClk,
-            mAxisRst        => axiRst,
+            mAxisRst        => axisReset(i),
             mAxisMaster     => sAxisMasters(i),
             mAxisSlave      => sAxisSlaves(i));
 
@@ -211,19 +224,29 @@ begin
             MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_C)
          port map (
             sAxisClk        => axiClk,
-            sAxisRst        => axiRst,
+            sAxisRst        => axisReset(i),
             sAxisMaster     => mAxisMasters(i),
             sAxisSlave      => mAxisSlaves(i),
             sAxisCtrl       => mAxisCtrl(i),
             fifoPauseThresh => (others => '1'),
             mAxisClk        => axiClk,
-            mAxisRst        => axiRst,
+            mAxisRst        => axisReset(i),
             mAxisMaster     => dmaObMasters(i),
             mAxisSlave      => dmaObSlaves(i));
 
    end generate;
 
    GEN_AXI_FIFO : for i in DMA_SIZE_G downto 0 generate
+
+      -- Help with timing
+      U_AxiRst : entity work.RstPipeline
+         generic map (
+            TPD_G     => TPD_G,
+            INV_RST_G => false)
+         port map (
+            clk    => clk,
+            rstIn  => axiRst,
+            rstOut => axiReset(i));
 
       ---------------------
       -- Read Path AXI FIFO
@@ -253,11 +276,11 @@ begin
             AXI_CONFIG_G           => DMA_AXI_CONFIG_C)
          port map (
             sAxiClk        => axiClk,
-            sAxiRst        => axiRst,
+            sAxiRst        => axiReset(i),
             sAxiReadMaster => locReadMasters(i),
             sAxiReadSlave  => locReadSlaves(i),
             mAxiClk        => axiClk,
-            mAxiRst        => axiRst,
+            mAxiRst        => axiReset(i),
             mAxiReadMaster => axiReadMasters(i),
             mAxiReadSlave  => axiReadSlaves(i));
 
@@ -293,12 +316,12 @@ begin
             AXI_CONFIG_G             => DMA_AXI_CONFIG_C)
          port map (
             sAxiClk         => axiClk,
-            sAxiRst         => axiRst,
+            sAxiRst         => axiReset(i),
             sAxiWriteMaster => locWriteMasters(i),
             sAxiWriteSlave  => locWriteSlaves(i),
             sAxiCtrl        => locWriteCtrl(i),
             mAxiClk         => axiClk,
-            mAxiRst         => axiRst,
+            mAxiRst         => axiReset(i),
             mAxiWriteMaster => axiWriteMasters(i),
             mAxiWriteSlave  => axiWriteSlaves(i));
 

@@ -53,17 +53,15 @@ if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 }
    # Select either GEN2 or GEN3 PCIe
    if { $::env(PCIE_GEN_NUM)  == "GEN2" } {
       loadIpCore      -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen2/XilinxKcu1500PciePhy.xci"
-      loadConstraints -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen2/XilinxKcu1500PciePhy.xdc"
    } elseif { $::env(PCIE_GEN_NUM)  == "GEN3" } {
       loadIpCore      -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen3/XilinxKcu1500PciePhy.xci"
-      loadConstraints -path "$::DIR_PATH/ip/WithoutPartialReconfig/PcieGen3/XilinxKcu1500PciePhy.xdc"
    } else {
       puts "\n\nERROR: PCIE_GEN_NUM = $::env(PCIE_GEN_NUM) is not valid."
       puts "It must be either GEN2 or GEN3"
       puts "Please fix this in $::env(PROJ_DIR)/Makefile\n\n"; exit -1
    }
    
-   if { [info exists ::env(DEBUG_ILA)] != 1 || $::env(DEBUG_ILA) == 0 } {
+   if { [info exists ::env(TIG)] != 1 || $::env(TIG) == 0 } {
       loadConstraints -path "$::DIR_PATH/ip/WithoutPartialReconfig/XilinxKcu1500PciePhy.xdc"
    } else {
       if { $::env(PCIE_GEN_NUM)  == "GEN2" } {

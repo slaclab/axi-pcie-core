@@ -86,6 +86,10 @@ architecture mapping of AxiPcieDma is
 
    signal axisReset : slv(DMA_SIZE_G-1 downto 0);
    signal axiReset  : slv(DMA_SIZE_G downto 0);
+   
+   attribute dont_touch              : string;
+   attribute dont_touch of axisReset : signal is "true";     
+   attribute dont_touch of axiReset  : signal is "true";     
 
 begin
 

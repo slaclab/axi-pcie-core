@@ -18,11 +18,12 @@ if { [info exists ::env(PCIE_GEN_NUM)] != 1 } {
 }
 
 # # Synthesis strategy
-# set_property strategy Flow_PerfOptimized_high [get_runs synth_1]
-set_property STEPS.SYNTH_DESIGN.ARGS.DIRECTIVE AreaMultThresholdDSP [get_runs synth_1]
+set_property strategy Flow_PerfOptimized_high [get_runs synth_1]
 
 # Place and Route strategy 
-set_property STRATEGY Performance_ExplorePostRoutePhysOpt [get_runs impl_1]
+set_property strategy Performance_ExplorePostRoutePhysOpt [get_runs impl_1]
+# set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE SSI_BalanceSLLs [get_runs impl_1]
+set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE SSI_BalanceSLRs [get_runs impl_1]
 
 # Set the board part
 set projBoardPart "xilinx.com:kcu1500:part0:1.0"

@@ -134,7 +134,7 @@ begin
          RD_PIPE_STAGES_G  => 1,
          BURST_BYTES_G     => 256,
          --RD_PEND_THRESH_G  => 512)
-         RD_PEND_THRESH_G  => 0)
+         RD_PEND_THRESH_G  => 1)
       port map (
          -- Clock/Reset
          axiClk          => axiClk,

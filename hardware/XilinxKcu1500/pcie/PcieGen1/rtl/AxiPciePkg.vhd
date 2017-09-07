@@ -49,7 +49,7 @@ package AxiPciePkg is
    -- DMA AXI Configuration   
    constant DMA_AXI_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 32,               -- 32-bit address interface
-      DATA_BYTES_C => DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- 128-bit data interface (matchs the AXIS stream)
+      DATA_BYTES_C => DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- 128-bit data interface (matches the AXIS stream)
       ID_BITS_C    => 5,                -- Up to 32 DMA IDS
       LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface         
 

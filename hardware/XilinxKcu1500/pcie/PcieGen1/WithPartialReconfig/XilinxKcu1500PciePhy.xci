@@ -66,7 +66,7 @@
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S_AXI_ID_WIDTH">5</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S_AXI_NUM_READ">8</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S_AXI_NUM_WRITE">8</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S_AXI_SUPPORTS_NARROW_BURST">0</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S_AXI_SUPPORTS_NARROW_BURST">1</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TIMEOUT0_SEL">0xE</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TIMEOUT1_SEL">0xF</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TIMEOUT_MULT">0x3</spirit:configurableElementValue>
@@ -173,7 +173,7 @@
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.c_pri_enable">false</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.c_s_axi_num_read">8</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.c_s_axi_num_write">8</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.c_s_axi_supports_narrow_burst">false</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.c_s_axi_supports_narrow_burst">true</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.cfg_ext_if">false</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.comp_timeout">50us</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.coreclk_freq">250</spirit:configurableElementValue>
@@ -284,7 +284,7 @@
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.BOARD">xilinx.com:kcu1500:part0:1.0</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.DEVICE">xcku115</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.PACKAGE">flvb2104</spirit:configurableElementValue>
-				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.PREFHDL">VHDL</spirit:configurableElementValue>
+				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.PREFHDL">VERILOG</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.SILICON_REVISION"/>
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.SIMULATOR_LANGUAGE">MIXED</spirit:configurableElementValue>
 				<spirit:configurableElementValue spirit:referenceId="PROJECT_PARAM.SPEEDGRADE">-2</spirit:configurableElementValue>
@@ -314,6 +314,8 @@
 						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.axibar_highaddr_0"
 								xilinx:valueSource="user"/>
 						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.axisten_freq"
+								xilinx:valueSource="user"/>
+						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.c_s_axi_supports_narrow_burst"
 								xilinx:valueSource="user"/>
 						<xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.comp_timeout"
 								xilinx:valueSource="user"/>

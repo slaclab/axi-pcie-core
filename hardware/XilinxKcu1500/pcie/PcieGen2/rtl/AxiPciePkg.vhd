@@ -2,7 +2,7 @@
 -- File       : AxiPciePkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-08-10
+-- Last update: 2017-09-20
 -------------------------------------------------------------------------------
 -- Description: Package file for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -28,9 +28,6 @@ package AxiPciePkg is
 
    -- System Clock Frequency
    constant SYS_CLK_FREQ_C : real := 125.0E+6;  -- units of Hz
-
-   -- Number of DMA channels
-   constant DMA_SIZE_C : positive := 9;  -- 8x DATA + 1x local application configuration
 
    -- Type of Xilinx Device
    constant XIL_DEVICE_C : string := "ULTRASCALE";

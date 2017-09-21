@@ -2,7 +2,7 @@
 -- File       : AxiPciePgpCardG3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-07-31
+-- Last update: 2017-09-20
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for the PgpCardG3 board
 -- https://confluence.slac.stanford.edu/display/AIRTRACK/PC_260_101_03_C03
@@ -49,7 +49,7 @@ entity AxiPciePgpCardG3Core is
       dmaObSlaves    : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters   : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves    : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- (Optional) Application AXI-Lite Interfaces [0x00080000:0x000FFFFF] (sysClk domain)
+      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (sysClk domain)
       appReadMaster  : out   AxiLiteReadMasterType;
       appReadSlave   : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
       appWriteMaster : out   AxiLiteWriteMasterType;
@@ -104,14 +104,25 @@ architecture mapping of AxiPciePgpCardG3Core is
    signal flashDout : slv(15 downto 0);
    signal flashTri  : sl;
 
-   signal sysClock : sl;
-   signal sysReset : sl;
-   signal dmaIrq   : sl;
+   signal sysClock    : sl;
+   signal sysReset    : sl;
+   signal systemReset : sl;
+   signal cardReset   : sl;
+   signal dmaIrq      : sl;
 
 begin
 
    sysClk <= sysClock;
-   sysRst <= sysReset;
+
+   systemReset <= sysReset or cardReset;
+
+   U_Rst : entity work.RstPipeline
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk    => sysClock,
+         rstIn  => systemReset,
+         rstOut => sysRst);
 
    ---------------
    -- AXI PCIe PHY
@@ -180,6 +191,9 @@ begin
          appReadSlave       => appReadSlave,
          appWriteMaster     => appWriteMaster,
          appWriteSlave      => appWriteSlave,
+         -- Application Force reset
+         cardResetOut       => cardReset,
+         cardResetIn        => systemReset,
          -- Boot Memory Ports 
          bpiAddr            => flashAddr,
          bpiAdv             => flashAdv,

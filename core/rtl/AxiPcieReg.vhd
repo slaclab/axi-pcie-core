@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-07-31
+-- Last update: 2017-09-20
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -50,13 +50,14 @@ entity AxiPcieReg is
       phyReadSlave       : in  AxiLiteReadSlaveType;
       phyWriteMaster     : out AxiLiteWriteMasterType;
       phyWriteSlave      : in  AxiLiteWriteSlaveType;
-      -- (Optional) Application AXI-Lite Interfaces [0x00080000:0x000FFFFF]
+      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF]
       appReadMaster      : out AxiLiteReadMasterType;
       appReadSlave       : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
       appWriteMaster     : out AxiLiteWriteMasterType;
       appWriteSlave      : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
       -- Application Force reset
-      cardReset          : out  sl;
+      cardResetIn        : in  sl;
+      cardResetOut       : out sl;
       -- BPI Boot Memory Ports 
       bpiAddr            : out slv(28 downto 0);
       bpiAdv             : out sl;
@@ -93,7 +94,7 @@ architecture mapping of AxiPcieReg is
    constant BPI_ADDR_C     : slv(31 downto 0) := x"00030000";
    constant SPI0_ADDR_C    : slv(31 downto 0) := x"00040000";
    constant SPI1_ADDR_C    : slv(31 downto 0) := x"00050000";
-   constant APP_ADDR_C     : slv(31 downto 0) := x"00080000";
+   constant APP_ADDR_C     : slv(31 downto 0) := x"00800000";
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       DMA_INDEX_C     => (
@@ -122,7 +123,7 @@ architecture mapping of AxiPcieReg is
          connectivity => x"FFFF"),
       APP_INDEX_C     => (
          baseAddr     => APP_ADDR_C,
-         addrBits     => 19,
+         addrBits     => 23,
          connectivity => x"FFFF"));
 
    signal axilReadMaster  : AxiLiteReadMasterType;
@@ -141,6 +142,7 @@ architecture mapping of AxiPcieReg is
    signal bpiAddress : slv(30 downto 0);
    signal spiBusyIn  : slv(1 downto 0);
    signal spiBusyOut : slv(1 downto 0);
+   signal cardRst    : sl;
 
 begin
 
@@ -172,17 +174,17 @@ begin
          axilWriteMaster => axilWriteMaster,
          axilWriteSlave  => axilWriteSlave);
 
-   ---------------------------------------
-   -- Mask off upper address for 1 MB BAR0
-   ---------------------------------------
-   maskWriteMaster.awaddr  <= x"000" & axilWriteMaster.awaddr(19 downto 0);
+   ----------------------------------------
+   -- Mask off upper address for 16 MB BAR0
+   ----------------------------------------
+   maskWriteMaster.awaddr  <= x"00" & axilWriteMaster.awaddr(23 downto 0);
    maskWriteMaster.awprot  <= axilWriteMaster.awprot;
    maskWriteMaster.awvalid <= axilWriteMaster.awvalid;
    maskWriteMaster.wdata   <= axilWriteMaster.wdata;
    maskWriteMaster.wstrb   <= axilWriteMaster.wstrb;
    maskWriteMaster.wvalid  <= axilWriteMaster.wvalid;
    maskWriteMaster.bready  <= axilWriteMaster.bready;
-   maskReadMaster.araddr   <= x"000" & axilReadMaster.araddr(19 downto 0);
+   maskReadMaster.araddr   <= x"00" & axilReadMaster.araddr(23 downto 0);
    maskReadMaster.arprot   <= axilReadMaster.arprot;
    maskReadMaster.arvalid  <= axilReadMaster.arvalid;
    maskReadMaster.rready   <= axilReadMaster.rready;
@@ -229,7 +231,7 @@ begin
          axiWriteMaster => axilWriteMasters(VERSION_INDEX_C),
          axiWriteSlave  => axilWriteSlaves(VERSION_INDEX_C),
          -- Optional: User Reset
-         userReset      => cardReset,      
+         userReset      => cardResetOut,
          -- Optional: user values
          userValues     => userValues);
 
@@ -384,10 +386,30 @@ begin
    end generate;
 
    GEN_APP : if (AXI_APP_BUS_EN_G = true) generate
-      appWriteMaster               <= axilWriteMasters(APP_INDEX_C);
-      axilWriteSlaves(APP_INDEX_C) <= appWriteSlave;
-      appReadMaster                <= axilReadMasters(APP_INDEX_C);
-      axilReadSlaves(APP_INDEX_C)  <= appReadSlave;
+
+      -- Protect against locking CPU during card reset
+      U_AxiLiteAsync : entity work.AxiLiteAsync
+         generic map (
+            TPD_G            => TPD_G,
+            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
+            COMMON_CLK_G     => false,  -- false required for protection even if same clock used
+            NUM_ADDR_BITS_G  => 24)
+         port map (
+            -- Slave Interface
+            sAxiClk         => axiClk,
+            sAxiClkRst      => axiRst,
+            sAxiReadMaster  => axilReadMasters(APP_INDEX_C),
+            sAxiReadSlave   => axilReadSlaves(APP_INDEX_C),
+            sAxiWriteMaster => axilWriteMasters(APP_INDEX_C),
+            sAxiWriteSlave  => axilWriteSlaves(APP_INDEX_C),
+            -- Master Interface
+            mAxiClk         => axiClk,
+            mAxiClkRst      => cardResetIn,
+            mAxiReadMaster  => appReadMaster,
+            mAxiReadSlave   => appReadSlave,
+            mAxiWriteMaster => appWriteMaster,
+            mAxiWriteSlave  => appWriteSlave);
+
    end generate;
 
 end mapping;

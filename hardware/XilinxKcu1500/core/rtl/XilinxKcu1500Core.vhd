@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-08-29
+-- Last update: 2017-09-20
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -35,9 +35,11 @@ use unisim.vcomponents.all;
 
 entity XilinxKcu1500Core is
    generic (
-      TPD_G            : time             := 1 ns;
+      TPD_G            : time                  := 1 ns;
       BUILD_INFO_G     : BuildInfoType;
-      DRIVER_TYPE_ID_G : slv(31 downto 0) := x"00000000");
+      DRIVER_TYPE_ID_G : slv(31 downto 0)      := x"00000000";
+      AXI_APP_BUS_EN_G : boolean               := false;
+      DMA_SIZE_G       : positive range 1 to 9 := 9);
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -49,10 +51,15 @@ entity XilinxKcu1500Core is
       userSwDip       : out   slv(3 downto 0);
       userLed         : in    slv(7 downto 0);
       -- DMA Interfaces  (sysClk domain)
-      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_C-1 downto 0);
-      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_C-1 downto 0);
-      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_C-1 downto 0);
-      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_C-1 downto 0);
+      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (sysClk domain)
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType             := AXI_LITE_READ_SLAVE_INIT_C;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType            := AXI_LITE_WRITE_SLAVE_INIT_C;
       -- Application AXI Interface [0x000000000:0xFFFFFFFF] (sysClk domain)
       memReady        : out   slv(3 downto 0);
       memWriteMasters : in    AxiWriteMasterArray(15 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
@@ -232,7 +239,7 @@ begin
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
          AXI_APP_BUS_EN_G => false,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C,
-         DMA_SIZE_G       => DMA_SIZE_C)
+         DMA_SIZE_G       => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
          axiClk             => sysClock,
@@ -251,8 +258,14 @@ begin
          phyReadSlave       => phyReadSlave,
          phyWriteMaster     => phyWriteMaster,
          phyWriteSlave      => phyWriteSlave,
+         -- (Optional) Application AXI-Lite Interfaces
+         appReadMaster      => appReadMaster,
+         appReadSlave       => appReadSlave,
+         appWriteMaster     => appWriteMaster,
+         appWriteSlave      => appWriteSlave,
          -- Application Force reset
-         cardReset          => cardReset,
+         cardResetOut       => cardReset,
+         cardResetIn        => systemReset,
          -- SPI Boot Memory Ports 
          spiCsL             => bootCsL,
          spiSck             => bootSck,
@@ -310,7 +323,7 @@ begin
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
          TPD_G            => TPD_G,
-         DMA_SIZE_G       => DMA_SIZE_C,
+         DMA_SIZE_G       => DMA_SIZE_G,
          DESC_ARB_G       => false,  -- Round robin to help with timing @ 250 MHz system clock
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C)
       port map (

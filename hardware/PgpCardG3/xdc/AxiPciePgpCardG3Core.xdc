@@ -115,3 +115,9 @@ create_generated_clock -name dnaClkL [get_pins {U_Core/U_REG/U_Version/GEN_DEVIC
 
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {dnaClk}]
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {dnaClkL}]
+
+######################
+# Area Constraint    #
+######################
+create_pblock PCIE_GRP; add_cells_to_pblock [get_pblocks PCIE_GRP] [get_cells U_Core/U_AxiPciePhy/U_AxiPcie]
+resize_pblock [get_pblocks PCIE_GRP] -add {CLOCKREGION_X0Y3:CLOCKREGION_X0Y4}

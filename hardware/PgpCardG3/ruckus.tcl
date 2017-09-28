@@ -14,3 +14,5 @@ loadConstraints -dir "$::DIR_PATH/xdc/"
 loadSource -path "$::DIR_PATH/ip/AxiPgpCardG3PciePhy.dcp"
 # loadIpCore -path "$::DIR_PATH/ip/AxiPgpCardG3PciePhy.xci"
 
+# Place and Route strategy 
+set_property strategy Performance_ExplorePostRoutePhysOpt [get_runs impl_1]

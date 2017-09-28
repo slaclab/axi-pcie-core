@@ -237,7 +237,7 @@ begin
          TPD_G            => TPD_G,
          BUILD_INFO_G     => BUILD_INFO_G,
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
-         AXI_APP_BUS_EN_G => false,
+         AXI_APP_BUS_EN_G => AXI_APP_BUS_EN_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C,
          DMA_SIZE_G       => DMA_SIZE_G)
       port map (

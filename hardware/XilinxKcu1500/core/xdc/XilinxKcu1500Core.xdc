@@ -62,8 +62,8 @@ set_property PACKAGE_PIN AP1 [get_ports {pciRxN[0]}]
 set_property PACKAGE_PIN AP7 [get_ports {pciTxP[0]}]
 set_property PACKAGE_PIN AP6 [get_ports {pciTxN[0]}]
 
-set_property PACKAGE_PIN AT11    [get_ports {pciRefClkP}]
-set_property PACKAGE_PIN AT10    [get_ports {pciRefClkN}]
+set_property PACKAGE_PIN AT11 [get_ports {pciRefClkP}]; # 100 MHz
+set_property PACKAGE_PIN AT10 [get_ports {pciRefClkN}]; # 100 MHz
 
 set_property -dict { PACKAGE_PIN AR26 IOSTANDARD LVCMOS18 } [get_ports {pciRstL}]
 
@@ -85,8 +85,11 @@ set_property -dict { PACKAGE_PIN BC27  IOSTANDARD LVCMOS18 } [get_ports { swDip[
 set_property -dict { PACKAGE_PIN BE25  IOSTANDARD LVCMOS18 } [get_ports { swDip[2] }]
 set_property -dict { PACKAGE_PIN BF25  IOSTANDARD LVCMOS18 } [get_ports { swDip[3] }]
 
-set_property -dict { PACKAGE_PIN AV24  IOSTANDARD LVDS_25 } [get_ports { userClkP }]; # 156.25 MHz
-set_property -dict { PACKAGE_PIN AW24  IOSTANDARD LVDS_25 } [get_ports { userClkN }]; # 156.25 MHz
+set_property -dict { PACKAGE_PIN AV24  IOSTANDARD LVDS_25 } [get_ports { userClkP[0] }]; # 156.25 MHz
+set_property -dict { PACKAGE_PIN AW24  IOSTANDARD LVDS_25 } [get_ports { userClkN[0] }]; # 156.25 MHz
+
+set_property PACKAGE_PIN AM11 [get_ports {userClkP[1]}]; # 100 MHz
+set_property PACKAGE_PIN AM10 [get_ports {userClkN[1]}]; # 100 MHz
 
 ##########################################
 # QSFP[0] ports located in the core area #
@@ -110,7 +113,8 @@ set_property -dict { PACKAGE_PIN AT24  IOSTANDARD LVCMOS18 } [get_ports { qsfp1M
 # Clocks #
 ##########
 
-create_clock -period  6.400 -name userClkP   [get_ports {userClkP}]
+create_clock -period  6.400 -name userClkP0  [get_ports {userClkP[0]}]
+create_clock -period 10.000 -name userClkP1  [get_ports {userClkP[1]}]
 create_clock -period 11.111 -name emcClk     [get_ports {emcClk}]
 create_clock -period 10.000 -name pciRefClkP [get_ports {pciRefClkP}]
 

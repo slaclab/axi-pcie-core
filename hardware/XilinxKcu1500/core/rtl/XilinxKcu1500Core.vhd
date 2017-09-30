@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-09-20
+-- Last update: 2017-09-29
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -45,9 +45,10 @@ entity XilinxKcu1500Core is
       --  Top Level Interfaces
       ------------------------    
       -- System Interface
-      sysClk          : out   sl;       -- 250 MHz
+      sysClk          : out   sl;
       sysRst          : out   sl;
-      userClk         : out   sl;       -- 156.25 MHz
+      userClk156      : out   sl;       -- 156.25 MHz
+      userClk100      : out   sl;       -- 100 MHz
       userSwDip       : out   slv(3 downto 0);
       userLed         : in    slv(7 downto 0);
       -- DMA Interfaces  (sysClk domain)
@@ -71,8 +72,8 @@ entity XilinxKcu1500Core is
       -------------------      
       -- System Ports
       emcClk          : in    sl;
-      userClkP        : in    sl;
-      userClkN        : in    sl;
+      userClkP        : in    slv(1 downto 0);
+      userClkN        : in    slv(1 downto 0);
       swDip           : in    slv(3 downto 0);
       led             : out   slv(7 downto 0);
       -- QSFP[0] Ports
@@ -134,7 +135,7 @@ architecture mapping of XilinxKcu1500Core is
    signal sysReset    : sl;
    signal systemReset : sl;
    signal cardReset   : sl;
-   signal userClock   : sl;
+   signal userClock   : slv(1 downto 0);
    signal dmaIrq      : sl;
 
    signal bootCsL  : slv(1 downto 0);
@@ -164,14 +165,36 @@ begin
 
    U_IBUFDS : IBUFDS
       port map(
-         I  => userClkP,
-         IB => userClkN,
-         O  => userClock);
+         I  => userClkP(0),
+         IB => userClkN(0),
+         O  => userClock(0));
 
    U_BUFG : BUFG
       port map (
-         I => userClock,
-         O => userClk);
+         I => userClock(0),
+         O => userClk156);
+
+   U_IBUFDS_GT : IBUFDS_GTE3
+      generic map (
+         REFCLK_EN_TX_PATH  => '0',
+         REFCLK_HROW_CK_SEL => "00",    -- 2'b00: ODIV2 = O
+         REFCLK_ICNTL_RX    => "00")
+      port map (
+         I     => userClkP(1),
+         IB    => userClkN(1),
+         CEB   => '0',
+         ODIV2 => userClock(1),
+         O     => open);
+
+   U_BUFG_GT : BUFG_GT
+      port map (
+         I       => userClock(1),
+         CE      => '1',
+         CEMASK  => '1',
+         CLR     => '0',
+         CLRMASK => '1',
+         DIV     => "000",              -- Divide by 1
+         O       => userClk100);
 
    GEN_LED :
    for i in 7 downto 0 generate

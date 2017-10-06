@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-09-29
+-- Last update: 2017-10-05
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -56,7 +56,9 @@ entity XilinxKcu1500Core is
       dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (sysClk domain)
+      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
+      appClk          : in    sl;
+      appRst          : in    sl;
       appReadMaster   : out   AxiLiteReadMasterType;
       appReadSlave    : in    AxiLiteReadSlaveType             := AXI_LITE_READ_SLAVE_INIT_C;
       appWriteMaster  : out   AxiLiteWriteMasterType;
@@ -282,6 +284,8 @@ begin
          phyWriteMaster     => phyWriteMaster,
          phyWriteSlave      => phyWriteSlave,
          -- (Optional) Application AXI-Lite Interfaces
+         appClk             => appClk,
+         appRst             => appRst,
          appReadMaster      => appReadMaster,
          appReadSlave       => appReadSlave,
          appWriteMaster     => appWriteMaster,

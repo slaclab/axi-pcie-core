@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-09-20
+-- Last update: 2017-10-05
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -51,10 +51,12 @@ entity AxiPcieReg is
       phyWriteMaster     : out AxiLiteWriteMasterType;
       phyWriteSlave      : in  AxiLiteWriteSlaveType;
       -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF]
+      appClk             : in  sl;
+      appRst             : in  sl;
       appReadMaster      : out AxiLiteReadMasterType;
-      appReadSlave       : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
+      appReadSlave       : in  AxiLiteReadSlaveType;
       appWriteMaster     : out AxiLiteWriteMasterType;
-      appWriteSlave      : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
+      appWriteSlave      : in  AxiLiteWriteSlaveType;
       -- Application Force reset
       cardResetIn        : in  sl;
       cardResetOut       : out sl;
@@ -68,12 +70,12 @@ entity AxiPcieReg is
       bpiWeL             : out sl;
       bpiTri             : out sl;
       bpiDin             : out slv(15 downto 0);
-      bpiDout            : in  slv(15 downto 0)      := x"FFFF";
+      bpiDout            : in  slv(15 downto 0) := x"FFFF";
       -- SPI Boot Memory Ports 
       spiCsL             : out slv(1 downto 0);
       spiSck             : out slv(1 downto 0);
       spiMosi            : out slv(1 downto 0);
-      spiMiso            : in  slv(1 downto 0)       := "11");
+      spiMiso            : in  slv(1 downto 0)  := "11");
 end AxiPcieReg;
 
 architecture mapping of AxiPcieReg is
@@ -143,6 +145,7 @@ architecture mapping of AxiPcieReg is
    signal spiBusyIn  : slv(1 downto 0);
    signal spiBusyOut : slv(1 downto 0);
    signal cardRst    : sl;
+   signal appReset   : sl;
 
 begin
 
@@ -403,12 +406,14 @@ begin
             sAxiWriteMaster => axilWriteMasters(APP_INDEX_C),
             sAxiWriteSlave  => axilWriteSlaves(APP_INDEX_C),
             -- Master Interface
-            mAxiClk         => axiClk,
-            mAxiClkRst      => cardResetIn,
+            mAxiClk         => appClk,
+            mAxiClkRst      => appReset,
             mAxiReadMaster  => appReadMaster,
             mAxiReadSlave   => appReadSlave,
             mAxiWriteMaster => appWriteMaster,
             mAxiWriteSlave  => appWriteSlave);
+
+      appReset <= cardResetIn or appRst;
 
    end generate;
 

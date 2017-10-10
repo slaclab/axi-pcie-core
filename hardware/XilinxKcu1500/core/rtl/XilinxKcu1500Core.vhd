@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-10-05
+-- Last update: 2017-10-10
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -43,32 +43,32 @@ entity XilinxKcu1500Core is
    port (
       ------------------------      
       --  Top Level Interfaces
-      ------------------------    
-      -- System Interface
-      sysClk          : out   sl;
-      sysRst          : out   sl;
+      ------------------------
       userClk156      : out   sl;       -- 156.25 MHz
       userClk100      : out   sl;       -- 100 MHz
       userSwDip       : out   slv(3 downto 0);
       userLed         : in    slv(7 downto 0);
+      -- System Interface
+      sysClk          : out   sl;
+      sysRst          : out   sl;
       -- DMA Interfaces  (sysClk domain)
       dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
-      appClk          : in    sl;
-      appRst          : in    sl;
-      appReadMaster   : out   AxiLiteReadMasterType;
-      appReadSlave    : in    AxiLiteReadSlaveType             := AXI_LITE_READ_SLAVE_INIT_C;
-      appWriteMaster  : out   AxiLiteWriteMasterType;
-      appWriteSlave   : in    AxiLiteWriteSlaveType            := AXI_LITE_WRITE_SLAVE_INIT_C;
       -- Application AXI Interface [0x000000000:0xFFFFFFFF] (sysClk domain)
       memReady        : out   slv(3 downto 0);
       memWriteMasters : in    AxiWriteMasterArray(15 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
       memWriteSlaves  : out   AxiWriteSlaveArray(15 downto 0);
       memReadMasters  : in    AxiReadMasterArray(15 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
       memReadSlaves   : out   AxiReadSlaveArray(15 downto 0);
+      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
+      appClk          : in    sl;
+      appRst          : in    sl;
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType             := AXI_LITE_READ_SLAVE_INIT_C;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType            := AXI_LITE_WRITE_SLAVE_INIT_C;      
       -------------------
       --  Top Level Ports
       -------------------      

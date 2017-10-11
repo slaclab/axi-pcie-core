@@ -119,5 +119,9 @@ set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {
 ######################
 # Area Constraint    #
 ######################
-create_pblock PCIE_GRP; add_cells_to_pblock [get_pblocks PCIE_GRP] [get_cells U_Core/U_AxiPciePhy/U_AxiPcie]
-resize_pblock [get_pblocks PCIE_GRP] -add {CLOCKREGION_X0Y3:CLOCKREGION_X0Y4}
+create_pblock PCIE_GRP
+add_cells_to_pblock [get_pblocks PCIE_GRP] [get_cells U_Core/U_AxiPciePhy/U_AxiPcie/inst/comp_axi_enhanced_pcie/comp_enhanced_core_top_wrap/axi_pcie_enhanced_core_top_i/pcie_7x_v2_0_2_inst/pcie_top_with_gt_top.pcie_top_i/pcie_7x_i]
+add_cells_to_pblock [get_pblocks PCIE_GRP] [get_cells U_Core/U_AxiPciePhy/U_AxiPcie/inst/comp_axi_enhanced_pcie/comp_enhanced_core_top_wrap/axi_pcie_enhanced_core_top_i/pcie_7x_v2_0_2_inst/pcie_top_with_gt_top.pcie_top_i/axi_enhanced_top/tx_inst/tx_arbiter]
+add_cells_to_pblock [get_pblocks PCIE_GRP] [get_cells U_Core/U_AxiPciePhy/U_AxiPcie/inst/comp_axi_pcie_mm_s/comp_slave_bridge/comp_slave_read_req_tlp]
+add_cells_to_pblock [get_pblocks PCIE_GRP] [get_cells U_Core/U_AxiPciePhy/U_AxiPcie/inst/comp_axi_pcie_mm_s/comp_slave_bridge/comp_slave_read_cpl_tlp]
+resize_pblock [get_pblocks PCIE_GRP] -add {CLOCKREGION_X0Y4:CLOCKREGION_X0Y4}

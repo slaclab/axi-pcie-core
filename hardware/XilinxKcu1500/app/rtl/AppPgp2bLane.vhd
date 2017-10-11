@@ -2,7 +2,7 @@
 -- File       : AppPgp2bLane.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-22
--- Last update: 2017-10-10
+-- Last update: 2017-10-11
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -23,7 +23,6 @@ use ieee.std_logic_unsigned.all;
 use work.StdRtlPkg.all;
 use work.AxiLitePkg.all;
 use work.AxiStreamPkg.all;
-use work.AxiPkg.all;
 use work.AxiPciePkg.all;
 use work.Pgp2bPkg.all;
 
@@ -32,13 +31,23 @@ use unisim.vcomponents.all;
 
 entity AppPgp2bLane is
    generic (
-      TPD_G             : time             := 1 ns;
-      PGP_RX_ENABLE_G   : boolean          := true;
-      PGP_TX_ENABLE_G   : boolean          := true;
-      AXIL_CLK_FREQ_C   : real             := 156.25e6;
-      AXIL_BASE_ADDR_G  : slv(31 downto 0) := (others => '0');
-      AXIL_ERROR_RESP_G : slv(1 downto 0)  := AXI_RESP_DECERR_C);
+      TPD_G             : time                := 1 ns;
+      PGP_RX_ENABLE_G   : boolean             := true;
+      PGP_RX_CTRL_EN_G : boolean := false;
+      PGP_TX_ENABLE_G   : boolean             := true;
+      AXIS_CFG_G        : AxiStreamConfigType := DMA_AXIS_CONFIG_C;
+      AXIL_CLK_FREQ_C   : real                := 156.25e6;
+      AXIL_BASE_ADDR_G  : slv(31 downto 0)    := (others => '0');
+      AXIL_ERROR_RESP_G : slv(1 downto 0)     := AXI_RESP_DECERR_C);
    port (
+      -- Pgp Stream Interface
+      pgpClk          : in  sl;
+      pgpRst          : in  sl;
+      pgpTxMaster     : in  AxiStreamMasterType;
+      pgpTxSlave      : out AxiStreamSlaveType;
+      pgpRxMaster     : out AxiStreamMasterType;
+      pgpRxSlave      : in  AxiStreamSlaveType;
+      pgpRxCtrl : in AxiStreamCtrlType;
       -- AXI-Lite Interface      
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -46,13 +55,6 @@ entity AppPgp2bLane is
       axilReadSlave   : out AxiLiteReadSlaveType;
       axilWriteMaster : in  AxiLiteWriteMasterType;
       axilWriteSlave  : out AxiLiteWriteSlaveType;
-      -- DMA Interface  (sysClk domain)
-      dmaClk          : in  sl;
-      dmaRst          : in  sl;
-      dmaObMaster     : in  AxiStreamMasterType;
-      dmaObSlave      : out AxiStreamSlaveType;
-      dmaIbMaster     : out AxiStreamMasterType;
-      dmaIbSlave      : in  AxiStreamSlaveType;
       -- PGP Interface
       gtRefClk        : in  sl;
       gtRxP           : in  sl;
@@ -82,10 +84,10 @@ architecture mapping of AppPgp2bLane is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0);
 
-   signal dmaObMasters : AxiStreamMasterArray(3 downto 0);
-   signal dmaObSlaves  : AxiStreamSlaveArray(3 downto 0);
-   signal dmaIbMasters : AxiStreamMasterArray(3 downto 0);
-   signal dmaIbSlaves  : AxiStreamSlaveArray(3 downto 0);
+   signal pgpTxMasters : AxiStreamMasterArray(3 downto 0);
+   signal pgpTxSlaves  : AxiStreamSlaveArray(3 downto 0);
+   signal pgpRxMasters : AxiStreamMasterArray(3 downto 0);
+   signal pgpRxSlaves  : AxiStreamSlaveArray(3 downto 0);
 
    signal pgpTxClk  : sl;
    signal pgpTxRst  : sl;
@@ -127,9 +129,9 @@ begin
       generic map (
          TPD_G => TPD_G)
       port map (
-         clk    => dmaClk,
-         rstIn  => dmaRst,
-         rstOut => dmaRstPipe);
+         clk    => pgpClk,
+         rstIn  => pgpRst,
+         rstOut => pgpRstPipe);
 
    U_DeMux : entity work.AxiStreamDeMux
       generic map (
@@ -138,14 +140,14 @@ begin
          NUM_MASTERS_G => 4)
       port map (
          -- Clock and reset
-         axisClk      => dmaClk,
-         axisRst      => dmaRstPipe,
+         axisClk      => pgpClk,
+         axisRst      => pgpRstPipe,
          -- Slave         
-         sAxisMaster  => dmaObMaster,
-         sAxisSlave   => dmaObSlave,
+         sAxisMaster  => pgpTxMaster,
+         sAxisSlave   => pgpTxSlave,
          -- Masters
-         mAxisMasters => dmaObMasters,
-         mAxisSlaves  => dmaObSlaves);
+         mAxisMasters => pgpTxMasters,
+         mAxisSlaves  => pgpTxSlaves);
 
    U_Mux : entity work.AxiStreamMux
       generic map (
@@ -154,14 +156,14 @@ begin
          NUM_SLAVES_G  => 4)
       port map (
          -- Clock and reset
-         axisClk      => dmaClk,
-         axisRst      => dmaRstPipe,
+         axisClk      => pgpClk,
+         axisRst      => pgpRstPipe,
          -- Slave
-         sAxisMasters => dmaIbMasters,
-         sAxisSlaves  => dmaIbSlaves,
+         sAxisMasters => pgpRxMasters,
+         sAxisSlaves  => pgpRxSlaves,
          -- Masters
-         mAxisMaster  => dmaIbMaster,
-         mAxisSlave   => dmaIbSlave);
+         mAxisMaster  => pgpRxMaster,
+         mAxisSlave   => pgpRxSlave);
 
    GEN_VEC : for i in 3 downto 0 generate
 
@@ -180,14 +182,14 @@ begin
             CASCADE_SIZE_G      => 1,
             FIFO_ADDR_WIDTH_G   => 10,
             -- AXI Stream Port Configurations
-            SLAVE_AXI_CONFIG_G  => DMA_AXIS_CONFIG_C,
+            SLAVE_AXI_CONFIG_G  => AXIS_CFG_G,
             MASTER_AXI_CONFIG_G => SSI_PGP2B_CONFIG_C)
          port map (
             -- Slave Port
-            sAxisClk    => dmaClk,
-            sAxisRst    => dmaRstPipe,
-            sAxisMaster => dmaObMasters(i),
-            sAxisSlave  => dmaObSlaves(i),
+            sAxisClk    => pgpClk,
+            sAxisRst    => pgpRstPipe,
+            sAxisMaster => pgpTxMasters(i),
+            sAxisSlave  => pgpTxSlaves(i),
             -- Master Port
             mAxisClk    => pgpTxClk,
             mAxisRst    => pgpTxRst,
@@ -212,7 +214,7 @@ begin
             FIFO_PAUSE_THRESH_G => 128,
             -- AXI Stream Port Configurations
             SLAVE_AXI_CONFIG_G  => SSI_PGP2B_CONFIG_C,
-            MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_C)
+            MASTER_AXI_CONFIG_G => AXIS_CFG_G)
          port map (
             -- Slave Port
             sAxisClk    => pgpRxClk,
@@ -220,10 +222,10 @@ begin
             sAxisMaster => rxMasters(i),
             sAxisCtrl   => rxCtrl(i),
             -- Master Port
-            mAxisClk    => dmaClk,
-            mAxisRst    => dmaRstPipe,
-            mAxisMaster => dmaIbMasters(i),
-            mAxisSlave  => dmaIbSlaves(i));
+            mAxisClk    => pgpClk,
+            mAxisRst    => pgpRstPipe,
+            mAxisMaster => pgpRxMasters(i),
+            mAxisSlave  => pgpRxSlaves(i));
 
    end generate;
 

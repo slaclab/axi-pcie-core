@@ -2,7 +2,7 @@
 -- File       : AppPgp2bQuad.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-22
--- Last update: 2017-10-10
+-- Last update: 2017-10-11
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -23,7 +23,6 @@ use ieee.std_logic_unsigned.all;
 use work.StdRtlPkg.all;
 use work.AxiLitePkg.all;
 use work.AxiStreamPkg.all;
-use work.AxiPkg.all;
 use work.AxiPciePkg.all;
 
 library unisim;
@@ -31,21 +30,22 @@ use unisim.vcomponents.all;
 
 entity AppPgp2bQuad is
    generic (
-      TPD_G             : time             := 1 ns;
-      PGP_RX_ENABLE_G   : boolean          := true;
-      PGP_TX_ENABLE_G   : boolean          := true;
-      AXIL_CLK_FREQ_C   : real             := 156.25e6;
-      AXIL_BASE_ADDR_G  : slv(31 downto 0) := (others => '0');
-      AXIL_ERROR_RESP_G : slv(1 downto 0)  := AXI_RESP_DECERR_C);
+      TPD_G             : time                := 1 ns;
+      PGP_RX_ENABLE_G   : boolean             := true;
+      PGP_TX_ENABLE_G   : boolean             := true;
+      AXIS_CFG_G        : AxiStreamConfigType := DMA_AXIS_CONFIG_C;
+      AXIL_CLK_FREQ_C   : real                := 156.25e6;
+      AXIL_BASE_ADDR_G  : slv(31 downto 0)    := (others => '0');
+      AXIL_ERROR_RESP_G : slv(1 downto 0)     := AXI_RESP_DECERR_C);
    port (
-      -- DMA Interface  (sysClk domain)
-      dmaClk          : in  sl;
-      dmaRst          : in  sl;
-      dmaObMasters    : in  AxiStreamMasterArray(3 downto 0);
-      dmaObSlaves     : out AxiStreamSlaveArray(3 downto 0);
-      dmaIbMasters    : out AxiStreamMasterArray(3 downto 0);
-      dmaIbSlaves     : in  AxiStreamSlaveArray(3 downto 0);
-      -- AXI-Lite Interface (sysClk domain)
+      -- Pgp Stream Interface
+      pgpClk          : in  sl;
+      pgpRst          : in  sl;
+      pgpTxMasters    : in  AxiStreamMasterArray(3 downto 0);
+      pgpTxSlaves     : out AxiStreamSlaveArray(3 downto 0);
+      pgpRxMasters    : out AxiStreamMasterArray(3 downto 0);
+      pgpRxSlaves     : in  AxiStreamSlaveArray(3 downto 0);
+      -- AXI-Lite Interface 
       axilClk         : in  sl;
       axilRst         : in  sl;
       axilReadMaster  : in  AxiLiteReadMasterType;
@@ -103,10 +103,18 @@ begin
             TPD_G             => TPD_G,
             PGP_RX_ENABLE_G   => PGP_RX_ENABLE_G,
             PGP_TX_ENABLE_G   => PGP_TX_ENABLE_G,
+            AXIS_CFG_G        => AXIS_CFG_G,
             AXIL_CLK_FREQ_C   => AXIL_CLK_FREQ_C,
             AXIL_BASE_ADDR_G  => XBAR_CONFIG_C(i).baseAddr,
             AXIL_ERROR_RESP_G => AXIL_ERROR_RESP_G)
          port map(
+            -- DMA Interface 
+            pgpClk          => pgpClk,
+            pgpRst          => pgpRst,
+            pgpTxMaster     => pgpTxMasters(i),
+            pgpTxSlave      => pgpTxSlaves(i),
+            pgpRxMaster     => pgpRxMasters(i),
+            pgpRxSlave      => pgpRxSlaves(i),
             -- AXI-Lite Interface            
             axilClk         => axilClk,
             axilRst         => axilRst,
@@ -114,13 +122,6 @@ begin
             axilReadSlave   => axilReadSlaves(i),
             axilWriteMaster => axilWriteMasters(i),
             axilWriteSlave  => axilWriteSlaves(i),
-            -- DMA Interface 
-            dmaClk          => dmaClk,
-            dmaRst          => dmaRst,
-            dmaObMaster     => dmaObMasters(i),
-            dmaObSlave      => dmaObSlaves(i),
-            dmaIbMaster     => dmaIbMasters(i),
-            dmaIbSlave      => dmaIbSlaves(i),
             -- PGP Interface
             pgpClk          => pgpClk,
             pgpRst          => pgpRst,

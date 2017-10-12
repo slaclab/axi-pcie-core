@@ -39,3 +39,4 @@ set_property board_part $projBoardPart [current_project]
 loadRuckusTcl "$::DIR_PATH/core"
 loadRuckusTcl "$::DIR_PATH/pcie"
 loadRuckusTcl "$::DIR_PATH/ddr"
+loadRuckusTcl "$::DIR_PATH/app"

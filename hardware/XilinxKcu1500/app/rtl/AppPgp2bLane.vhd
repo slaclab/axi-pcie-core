@@ -2,7 +2,7 @@
 -- File       : AppPgp2bLane.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-22
--- Last update: 2017-10-11
+-- Last update: 2017-10-12
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -23,7 +23,6 @@ use ieee.std_logic_unsigned.all;
 use work.StdRtlPkg.all;
 use work.AxiLitePkg.all;
 use work.AxiStreamPkg.all;
-use work.AxiPciePkg.all;
 use work.Pgp2bPkg.all;
 
 library unisim;
@@ -31,23 +30,26 @@ use unisim.vcomponents.all;
 
 entity AppPgp2bLane is
    generic (
-      TPD_G             : time                := 1 ns;
-      PGP_RX_ENABLE_G   : boolean             := true;
-      PGP_RX_CTRL_EN_G : boolean := false;
-      PGP_TX_ENABLE_G   : boolean             := true;
-      AXIS_CFG_G        : AxiStreamConfigType := DMA_AXIS_CONFIG_C;
-      AXIL_CLK_FREQ_C   : real                := 156.25e6;
-      AXIL_BASE_ADDR_G  : slv(31 downto 0)    := (others => '0');
-      AXIL_ERROR_RESP_G : slv(1 downto 0)     := AXI_RESP_DECERR_C);
+      TPD_G             : time             := 1 ns;
+      PGP_RX_ENABLE_G   : boolean          := true;
+      PGP_RX_CTRL_EN_G  : boolean          := false;
+      PGP_TX_ENABLE_G   : boolean          := true;
+      AXIS_CFG_G        : AxiStreamConfigType;
+      AXIL_CLK_FREQ_G   : real             := 156.25e6;
+      AXIL_BASE_ADDR_G  : slv(31 downto 0) := (others => '0');
+      AXIL_ERROR_RESP_G : slv(1 downto 0)  := AXI_RESP_DECERR_C);
    port (
       -- Pgp Stream Interface
       pgpClk          : in  sl;
       pgpRst          : in  sl;
-      pgpTxMaster     : in  AxiStreamMasterType;
+      pgpTxMaster     : in  AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
       pgpTxSlave      : out AxiStreamSlaveType;
+      pgpTxIn         : in  Pgp2bTxInType       := PGP2B_TX_IN_INIT_C;
+      pgpTxOut        : out Pgp2bTxOutType;
       pgpRxMaster     : out AxiStreamMasterType;
       pgpRxSlave      : in  AxiStreamSlaveType;
-      pgpRxCtrl : in AxiStreamCtrlType;
+      pgpRxIn         : in  Pgp2bRxInType       := PGP2B_RX_IN_INIT_C;
+      pgpRxOut        : out Pgp2bRxOutType;
       -- AXI-Lite Interface      
       axilClk         : in  sl;
       axilRst         : in  sl;
@@ -56,6 +58,8 @@ entity AppPgp2bLane is
       axilWriteMaster : in  AxiLiteWriteMasterType;
       axilWriteSlave  : out AxiLiteWriteSlaveType;
       -- PGP Interface
+      stableClk       : in  sl;
+      stableRst       : in  sl;
       gtRefClk        : in  sl;
       gtRxP           : in  sl;
       gtRxN           : in  sl;
@@ -89,19 +93,19 @@ architecture mapping of AppPgp2bLane is
    signal pgpRxMasters : AxiStreamMasterArray(3 downto 0);
    signal pgpRxSlaves  : AxiStreamSlaveArray(3 downto 0);
 
-   signal pgpTxClk  : sl;
-   signal pgpTxRst  : sl;
-   signal pgpTxIn   : Pgp2bTxInType;
-   signal pgpTxOut  : Pgp2bTxOutType;
-   signal txMasters : AxiStreamMasterArray(3 downto 0);
-   signal txSlaves  : AxiStreamSlaveArray(3 downto 0);
+   signal pgpTxClk    : sl;
+   signal pgpTxRst    : sl;
+   signal pgpTxInInt  : Pgp2bTxInType;
+   signal pgpTxOutInt : Pgp2bTxOutType;
+   signal txMasters   : AxiStreamMasterArray(3 downto 0);
+   signal txSlaves    : AxiStreamSlaveArray(3 downto 0);
 
-   signal pgpRxClk  : sl;
-   signal pgpRxRst  : sl;
-   signal pgpRxIn   : Pgp2bRxInType;
-   signal pgpRxOut  : Pgp2bRxOutType;
-   signal rxMasters : AxiStreamMasterArray(3 downto 0);
-   signal rxCtrl    : AxiStreamCtrlArray(3 downto 0);
+   signal pgpRxClk    : sl;
+   signal pgpRxRst    : sl;
+   signal pgpRxInInt  : Pgp2bRxInType;
+   signal pgpRxOutInt : Pgp2bRxOutType;
+   signal rxMasters   : AxiStreamMasterArray(3 downto 0);
+   signal rxCtrl      : AxiStreamCtrlArray(3 downto 0);
 
 
 begin
@@ -111,7 +115,7 @@ begin
          TPD_G              => TPD_G,
          NUM_SLAVE_SLOTS_G  => 1,
          NUM_MASTER_SLOTS_G => NUM_AXIL_MASTERS_C,
-         DEC_ERROR_RESP_G   => AXI_ERROR_RESP_G,
+         DEC_ERROR_RESP_G   => AXIL_ERROR_RESP_G,
          MASTERS_CONFIG_G   => XBAR_CONFIG_C)
       port map (
          axiClk              => axilClk,
@@ -125,14 +129,6 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
-   U_Rst : entity work.RstPipeline
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         clk    => pgpClk,
-         rstIn  => pgpRst,
-         rstOut => pgpRstPipe);
-
    U_DeMux : entity work.AxiStreamDeMux
       generic map (
          TPD_G         => TPD_G,
@@ -141,7 +137,7 @@ begin
       port map (
          -- Clock and reset
          axisClk      => pgpClk,
-         axisRst      => pgpRstPipe,
+         axisRst      => pgpRst,
          -- Slave         
          sAxisMaster  => pgpTxMaster,
          sAxisSlave   => pgpTxSlave,
@@ -157,7 +153,7 @@ begin
       port map (
          -- Clock and reset
          axisClk      => pgpClk,
-         axisRst      => pgpRstPipe,
+         axisRst      => pgpRst,
          -- Slave
          sAxisMasters => pgpRxMasters,
          sAxisSlaves  => pgpRxSlaves,
@@ -187,7 +183,7 @@ begin
          port map (
             -- Slave Port
             sAxisClk    => pgpClk,
-            sAxisRst    => pgpRstPipe,
+            sAxisRst    => pgpRst,
             sAxisMaster => pgpTxMasters(i),
             sAxisSlave  => pgpTxSlaves(i),
             -- Master Port
@@ -202,7 +198,7 @@ begin
             TPD_G               => TPD_G,
             INT_PIPE_STAGES_G   => 1,
             PIPE_STAGES_G       => 1,
-            SLAVE_READY_EN_G    => false,
+            SLAVE_READY_EN_G    => true,
             VALID_THOLD_G       => 1,
             INT_WIDTH_SELECT_G  => "NARROW",
             -- FIFO configurations
@@ -223,7 +219,7 @@ begin
             sAxisCtrl   => rxCtrl(i),
             -- Master Port
             mAxisClk    => pgpClk,
-            mAxisRst    => pgpRstPipe,
+            mAxisRst    => pgpRst,
             mAxisMaster => pgpRxMasters(i),
             mAxisSlave  => pgpRxSlaves(i));
 
@@ -234,8 +230,8 @@ begin
    U_PGP : entity work.Pgp2bGthUltra
       generic map (
          TPD_G             => TPD_G,
-         PGP_RX_ENABLE_G   => PGP_RX_ENABLE_G,
-         PGP_TX_ENABLE_G   => PGP_TX_ENABLE_G,
+         RX_ENABLE_G       => PGP_RX_ENABLE_G,
+         TX_ENABLE_G       => PGP_TX_ENABLE_G,
          PAYLOAD_CNT_TOP_G => 7,
          VC_INTERLEAVE_G   => 0,
          NUM_VC_EN_G       => 4)
@@ -251,10 +247,10 @@ begin
          pgpTxClk        => pgpTxClk,
          pgpRxReset      => pgpRxRst,
          pgpRxClk        => pgpRxClk,
-         pgpTxIn         => pgpTxIn,
-         pgpTxOut        => pgpTxOut,
-         pgpRxIn         => pgpRxIn,
-         pgpRxOut        => pgpRxOut,
+         pgpTxIn         => pgpTxInInt,
+         pgpTxOut        => pgpTxOutInt,
+         pgpRxIn         => pgpRxInInt,
+         pgpRxOut        => pgpRxOutInt,
          pgpTxMasters    => txMasters,
          pgpTxSlaves     => txSlaves,
          pgpRxMasters    => rxMasters,
@@ -266,12 +262,14 @@ begin
          axilWriteMaster => axilWriteMasters(DRP_AXIL_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(DRP_AXIL_INDEX_C));
 
-   );
+
+   pgpRxOut <= pgpRxOutInt;
+   pgpTxOut <= pgpTxOutInt;
 
    U_MON : entity work.Pgp2bAxi
       generic map (
          TPD_G              => TPD_G,
-         AXI_ERROR_RESP_G   => AXI_ERROR_RESP_G,
+         AXI_ERROR_RESP_G   => AXIL_ERROR_RESP_G,
          COMMON_TX_CLK_G    => false,
          COMMON_RX_CLK_G    => false,
          WRITE_EN_G         => true,
@@ -281,14 +279,16 @@ begin
       port map (
          -- TX PGP Interface 
          pgpTxClk        => pgpTxClk,
-         pgpTxClkRst     => pgpTxRst
-         pgpTxIn         => pgpTxIn,
-         pgpTxOut        => pgpTxOut,
+         pgpTxClkRst     => pgpTxRst,
+         pgpTxIn         => pgpTxInInt,
+         pgpTxOut        => pgpTxOutInt,
+         locTxIn         => pgpTxIn,
          -- RX PGP Interface 
          pgpRxClk        => pgpRxClk,
          pgpRxClkRst     => pgpRxRst,
-         pgpRxIn         => pgpRxIn,
-         pgpRxOut        => pgpRxOut,
+         pgpRxIn         => pgpRxInInt,
+         pgpRxOut        => pgpRxOutInt,
+         locRxIn         => pgpRxIn,
          -- AXI-Lite Register Interface
          axilClk         => axilClk,
          axilRst         => axilRst,

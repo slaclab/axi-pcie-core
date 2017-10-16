@@ -2,7 +2,7 @@
 -- File       : AxiPciePgpCardG3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-10-05
+-- Last update: 2017-10-16
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for the PgpCardG3 board
 -- https://confluence.slac.stanford.edu/display/AIRTRACK/PC_260_101_03_C03
@@ -35,7 +35,6 @@ entity AxiPciePgpCardG3Core is
       TPD_G            : time                   := 1 ns;
       BUILD_INFO_G     : BuildInfoType;
       DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
-      AXI_APP_BUS_EN_G : boolean                := false;
       DMA_SIZE_G       : positive range 1 to 16 := 1);
    port (
       ------------------------      
@@ -49,13 +48,13 @@ entity AxiPciePgpCardG3Core is
       dmaObSlaves    : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters   : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves    : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
+      -- Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
       appClk         : in    sl;
       appRst         : in    sl;
       appReadMaster  : out   AxiLiteReadMasterType;
-      appReadSlave   : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
+      appReadSlave   : in    AxiLiteReadSlaveType;
       appWriteMaster : out   AxiLiteWriteMasterType;
-      appWriteSlave  : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
+      appWriteSlave  : in    AxiLiteWriteSlaveType;
       -------------------
       --  Top Level Ports
       -------------------
@@ -167,7 +166,6 @@ begin
          TPD_G            => TPD_G,
          BUILD_INFO_G     => BUILD_INFO_G,
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
-         AXI_APP_BUS_EN_G => AXI_APP_BUS_EN_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C,
          DMA_SIZE_G       => DMA_SIZE_G)
       port map (

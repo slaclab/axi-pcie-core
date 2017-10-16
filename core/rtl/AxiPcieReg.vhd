@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-10-05
+-- Last update: 2017-10-16
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -29,7 +29,6 @@ entity AxiPcieReg is
       TPD_G            : time                   := 1 ns;
       BUILD_INFO_G     : BuildInfoType;
       DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
-      AXI_APP_BUS_EN_G : boolean                := false;
       AXI_ERROR_RESP_G : slv(1 downto 0)        := AXI_RESP_OK_C;
       DMA_SIZE_G       : positive range 1 to 16 := 1);
    port (
@@ -50,7 +49,7 @@ entity AxiPcieReg is
       phyReadSlave       : in  AxiLiteReadSlaveType;
       phyWriteMaster     : out AxiLiteWriteMasterType;
       phyWriteSlave      : in  AxiLiteWriteSlaveType;
-      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF]
+      -- Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF]
       appClk             : in  sl;
       appRst             : in  sl;
       appReadMaster      : out AxiLiteReadMasterType;
@@ -153,7 +152,7 @@ begin
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
    ---------------------------------------------------------------------------------------------
    userValues(0) <= toSlv(DMA_SIZE_G, 32);
-   userValues(1) <= x"00000001" when(AXI_APP_BUS_EN_G)         else x"00000000";
+   userValues(1) <= x"00000001";
    userValues(2) <= DRIVER_TYPE_ID_G;
    userValues(3) <= x"00000001" when(XIL_DEVICE_C = "7SERIES") else x"00000000";
    userValues(4) <= toSlv(getTimeRatio(SYS_CLK_FREQ_C, 1.0), 32);
@@ -369,52 +368,28 @@ begin
    ----------------------------------
    -- Map the AXI-Lite to Application
    ----------------------------------   
-   BYPASS_APP : if (AXI_APP_BUS_EN_G = false) generate
+   U_AxiLiteAsync : entity work.AxiLiteAsync
+      generic map (
+         TPD_G            => TPD_G,
+         AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
+         COMMON_CLK_G     => false,
+         NUM_ADDR_BITS_G  => 24)
+      port map (
+         -- Slave Interface
+         sAxiClk         => axiClk,
+         sAxiClkRst      => axiRst,
+         sAxiReadMaster  => axilReadMasters(APP_INDEX_C),
+         sAxiReadSlave   => axilReadSlaves(APP_INDEX_C),
+         sAxiWriteMaster => axilWriteMasters(APP_INDEX_C),
+         sAxiWriteSlave  => axilWriteSlaves(APP_INDEX_C),
+         -- Master Interface
+         mAxiClk         => appClk,
+         mAxiClkRst      => appReset,
+         mAxiReadMaster  => appReadMaster,
+         mAxiReadSlave   => appReadSlave,
+         mAxiWriteMaster => appWriteMaster,
+         mAxiWriteSlave  => appWriteSlave);
 
-      appReadMaster  <= AXI_LITE_READ_MASTER_INIT_C;
-      appWriteMaster <= AXI_LITE_WRITE_MASTER_INIT_C;
-
-      U_AxiLiteEmpty : entity work.AxiLiteEmpty
-         generic map (
-            TPD_G            => TPD_G,
-            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
-         port map (
-            -- AXI-Lite Interface
-            axiClk         => axiClk,
-            axiClkRst      => axiRst,
-            axiReadMaster  => axilReadMasters(APP_INDEX_C),
-            axiReadSlave   => axilReadSlaves(APP_INDEX_C),
-            axiWriteMaster => axilWriteMasters(APP_INDEX_C),
-            axiWriteSlave  => axilWriteSlaves(APP_INDEX_C));
-   end generate;
-
-   GEN_APP : if (AXI_APP_BUS_EN_G = true) generate
-
-      -- Protect against locking CPU during card reset
-      U_AxiLiteAsync : entity work.AxiLiteAsync
-         generic map (
-            TPD_G            => TPD_G,
-            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
-            COMMON_CLK_G     => false,  -- false required for protection even if same clock used
-            NUM_ADDR_BITS_G  => 24)
-         port map (
-            -- Slave Interface
-            sAxiClk         => axiClk,
-            sAxiClkRst      => axiRst,
-            sAxiReadMaster  => axilReadMasters(APP_INDEX_C),
-            sAxiReadSlave   => axilReadSlaves(APP_INDEX_C),
-            sAxiWriteMaster => axilWriteMasters(APP_INDEX_C),
-            sAxiWriteSlave  => axilWriteSlaves(APP_INDEX_C),
-            -- Master Interface
-            mAxiClk         => appClk,
-            mAxiClkRst      => appReset,
-            mAxiReadMaster  => appReadMaster,
-            mAxiReadSlave   => appReadSlave,
-            mAxiWriteMaster => appWriteMaster,
-            mAxiWriteSlave  => appWriteSlave);
-
-      appReset <= cardResetIn or appRst;
-
-   end generate;
+   appReset <= cardResetIn or appRst;
 
 end mapping;

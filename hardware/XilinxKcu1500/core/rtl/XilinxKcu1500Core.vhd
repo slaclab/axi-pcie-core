@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-10-10
+-- Last update: 2017-10-16
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -38,7 +38,6 @@ entity XilinxKcu1500Core is
       TPD_G            : time                  := 1 ns;
       BUILD_INFO_G     : BuildInfoType;
       DRIVER_TYPE_ID_G : slv(31 downto 0)      := x"00000000";
-      AXI_APP_BUS_EN_G : boolean               := false;
       DMA_SIZE_G       : positive range 1 to 9 := 9);
    port (
       ------------------------      
@@ -62,13 +61,13 @@ entity XilinxKcu1500Core is
       memWriteSlaves  : out   AxiWriteSlaveArray(15 downto 0);
       memReadMasters  : in    AxiReadMasterArray(15 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
       memReadSlaves   : out   AxiReadSlaveArray(15 downto 0);
-      -- (Optional) Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
+      -- Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
       appClk          : in    sl;
       appRst          : in    sl;
       appReadMaster   : out   AxiLiteReadMasterType;
-      appReadSlave    : in    AxiLiteReadSlaveType             := AXI_LITE_READ_SLAVE_INIT_C;
+      appReadSlave    : in    AxiLiteReadSlaveType;
       appWriteMaster  : out   AxiLiteWriteMasterType;
-      appWriteSlave   : in    AxiLiteWriteSlaveType            := AXI_LITE_WRITE_SLAVE_INIT_C;      
+      appWriteSlave   : in    AxiLiteWriteSlaveType;
       -------------------
       --  Top Level Ports
       -------------------      

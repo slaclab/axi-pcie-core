@@ -18,34 +18,33 @@
 #-----------------------------------------------------------------------------
 
 import pyrogue as pr
-from surf.axi import *
-from surf.devices.micron import *
-from surf.xilinx import *
+import surf.axi 
+import surf.devices.micron 
+import surf.xilinx 
 
-class DataDev(pr.Device):
+class AxiPcieCore(pr.Device):
     def __init__(   self,       
-            name        = "DataDev",
-            description = "Container for data device registers",
+            description = 'Base components of the PCIe firmware core'
             useBpi      = False,
             useSpi      = False,
             **kwargs):
         super().__init__(name=name, description=description, **kwargs)
         
         # PCI PHY status
-        self.add(AxiPciePhy(            
+        self.add(surf.xilinx.AxiPciePhy(            
             offset       = 0x10000, 
             expand       = False,
         ))
         
         # Standard AxiVersion Module
-        self.add(AxiVersion(            
+        self.add(surf.axi.AxiVersion(            
             offset       = 0x20000, 
             expand       = False,
         ))
 
         # Check if using BPI PROM
         if (useBpi):
-            self.add(AxiMicronP30(
+            self.add(surf.devices.micron.AxiMicronP30(
                 offset       =  0x30000,
                 expand       =  False,                                    
                 hidden       =  True,                                    
@@ -54,10 +53,9 @@ class DataDev(pr.Device):
         # Check if using SPI PROM
         if (useSpi):
             for i in range(2):
-                self.add(AxiMicronN25Q(
-                    name         = "AxiMicronN25Q[%i]" % (i),
+                self.add(surf.devices.micron.AxiMicronN25Q(
+                    name         = f'AxiMicronN25Q[{i}]',
                     offset       =  0x40000 + (i * 0x10000),
-                    description  = "AxiMicronN25Q: %i" % (i),                                
                     expand       =  False,                                    
                     hidden       =  True,                                    
                 ))

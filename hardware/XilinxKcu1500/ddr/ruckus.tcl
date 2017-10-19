@@ -2,8 +2,13 @@
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 set ddrIpDir  "Config$::env(DDR_SPEED)Mbps"
 
-# Load local Source Code and Constraints
-loadSource -path "$::DIR_PATH/mig/MigXbar.vhd"
+# Check if building any MIG core
+if { $::env(NUM_MIG_CORES)  != 0 } {
+   loadSource -path "$::DIR_PATH/mig/MigXbar.vhd"
+   loadIpCore -path "$::DIR_PATH/ip/DdrXbar.xci"
+   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithEcc.xci"
+   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithoutEcc.xci"
+}
 
 # Load MIG configuration based on Makefile constraints
 if { $::env(NUM_MIG_CORES)  == 0 } {
@@ -23,9 +28,6 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
 
 } elseif { $::env(NUM_MIG_CORES)  == 1 } {
 
-   loadIpCore -path "$::DIR_PATH/ip/ddrIpDir/DdrXbar.xci"
-   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithEcc.xci"
-
    loadSource      -path "$::DIR_PATH/mig/Mig0Empty.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig1Empty.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig2Empty.vhd"
@@ -40,9 +42,6 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"
 
 } elseif { $::env(NUM_MIG_CORES)  == 2 } {
-
-   loadIpCore -path "$::DIR_PATH/ip/DdrXbar.xci"
-   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithEcc.xci"
 
    loadSource      -path "$::DIR_PATH/mig/Mig0Empty.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig1Empty.vhd"
@@ -59,10 +58,6 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
 
 } elseif { $::env(NUM_MIG_CORES)  == 3 } {
 
-   loadIpCore -path "$::DIR_PATH/ip/DdrXbar.xci"
-   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithEcc.xci"
-   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithoutEcc.xci"
-
    loadSource      -path "$::DIR_PATH/mig/Mig0Empty.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig1.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig2.vhd"
@@ -77,10 +72,6 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"
 
 } elseif { $::env(NUM_MIG_CORES)  == 4 } {
-
-   loadIpCore -path "$::DIR_PATH/ip/DdrXbar.xci"
-   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithEcc.xci"
-   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithoutEcc.xci"
 
    loadSource      -path "$::DIR_PATH/mig/Mig0.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig1.vhd"

@@ -69,11 +69,13 @@ create_clock -period 6.400 -name qsfp0RefClkP1 [get_ports {qsfp0RefClkP[1]}]; # 
 create_clock -period 6.400 -name qsfp1RefClkP0 [get_ports {qsfp1RefClkP[0]}]
 create_clock -period 6.400 -name qsfp1RefClkP1 [get_ports {qsfp1RefClkP[1]}]; # I am measuring 156.25 MHz even but Xilinx documentation says it should be 125 MHz
 # create_clock -period 8.000 -name qsfp1RefClkP1 [get_ports {qsfp1RefClkP[1]}]
+create_generated_clock -name axilClk [get_pins {U_App/U_ClockManagerUltraScale_1/MmcmGen.U_Mmcm/CLKOUT0}]
 
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP0}]
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP1}]
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {qsfp1RefClkP0}]
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {qsfp1RefClkP1}]
+set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {axilClk}]
 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP0}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP0}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP0}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP1}]

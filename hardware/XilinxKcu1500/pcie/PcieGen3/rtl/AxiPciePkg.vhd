@@ -19,12 +19,18 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.StdRtlPkg.all;
+use work.AxiLitePkg.all;
 use work.AxiStreamPkg.all;
 use work.AxiPkg.all;
 
 package AxiPciePkg is
 
    constant TPD_C : time := 1 ns;
+   
+   -- Application BAR0 address space   
+   constant BAR0_BASE_ADDR_G  : slv(31 downto 0) := x"0080_0000";
+   constant BAR0_HIGH_ADDR_G  : slv(31 downto 0) := x"00FF_FFFF";
+   constant BAR0_ERROR_RESP_C : slv(1 downto 0)  := AXI_RESP_OK_C;  -- Always return OK to a MMAP() 
 
    -- System Clock Frequency
    constant SYS_CLK_FREQ_C : real := 250.0E+6;  -- units of Hz

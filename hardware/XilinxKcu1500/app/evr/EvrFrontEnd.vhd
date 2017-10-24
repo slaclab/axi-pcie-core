@@ -2,7 +2,7 @@
 -- File       : EvrFrontEnd.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-09-20
--- Last update: 2017-09-30
+-- Last update: 2017-10-24
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -52,19 +52,20 @@ entity EvrFrontEnd is
       userClk156      : in  sl;
       userClk100      : in  sl;
       -- GT Serial Ports
-      evrRxP          : in  sl;
-      evrRxN          : in  sl;
-      evrTxP          : out sl;
-      evrTxN          : out sl);
+      evrRxP          : in  slv(1 downto 0);
+      evrRxN          : in  slv(1 downto 0);
+      evrTxP          : out slv(1 downto 0);
+      evrTxN          : out slv(1 downto 0));
 end EvrFrontEnd;
 
 architecture mapping of EvrFrontEnd is
 
-   constant NUM_AXI_MASTERS_C : natural := 3;
+   constant NUM_AXI_MASTERS_C : natural := 4;
 
    constant EVR_INDEX_C  : natural := 0;
-   constant GTP_INDEX_C  : natural := 1;
-   constant MISC_INDEX_C : natural := 2;
+   constant MISC_INDEX_C : natural := 1;
+   constant GTP0_INDEX_C : natural := 2;
+   constant GTP1_INDEX_C : natural := 3;
 
    constant AXI_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXI_MASTERS_C, AXI_BASE_ADDR_G, 18, 16);
 
@@ -73,34 +74,38 @@ architecture mapping of EvrFrontEnd is
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
    signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXI_MASTERS_C-1 downto 0);
 
-   signal gtWriteMaster : AxiLiteWriteMasterType;
-   signal gtWriteSlave  : AxiLiteWriteSlaveType;
-   signal gtReadMaster  : AxiLiteReadMasterType;
-   signal gtReadSlave   : AxiLiteReadSlaveType;
+   signal gtWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
+   signal gtWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0);
+   signal gtReadMasters  : AxiLiteReadMasterArray(1 downto 0);
+   signal gtReadSlaves   : AxiLiteReadSlaveArray(1 downto 0);
 
    signal mmcmRst        : sl;
    signal refClk         : slv(2 downto 0);
    signal refRst         : slv(2 downto 0);
    signal mmcmLocked     : slv(2 downto 0);
    signal timingClockSel : sl;
-   signal evrRefClk      : sl;
-   signal evrRefRst      : sl;
-   signal evrRefLocked   : sl;
    signal loopback       : slv(2 downto 0);
 
-   signal rxUserRst : sl;
-   signal rxClk     : sl;
-   signal rxRst     : sl;
-   signal rxReset   : sl;
-   signal rxData    : slv(15 downto 0);
-   signal rxDataK   : slv(1 downto 0);
-   signal rxDispErr : slv(1 downto 0);
-   signal rxDecErr  : slv(1 downto 0);
-   signal rxStatus  : TimingPhyStatusType;
-   signal rxCtrl    : TimingPhyControlType;
-   signal rxControl : TimingPhyControlType;
+   signal rxUserRst   : sl;
+   signal gtRxClk     : slv(1 downto 0);
+   signal rxClk       : sl;
+   signal rxRst       : sl;
+   signal rxReset     : sl;
+   signal gtRxData    : Slv16Array(1 downto 0);
+   signal rxData      : slv(15 downto 0);
+   signal gtRxDataK   : Slv2Array(1 downto 0);
+   signal rxDataK     : slv(1 downto 0);
+   signal gtRxDispErr : Slv2Array(1 downto 0);
+   signal rxDispErr   : slv(1 downto 0);
+   signal gtRxDecErr  : Slv2Array(1 downto 0);
+   signal rxDecErr    : slv(1 downto 0);
+   signal gtRxStatus  : TimingPhyStatusArray(1 downto 0);
+   signal rxStatus    : TimingPhyStatusType;
+   signal rxCtrl      : TimingPhyControlType;
+   signal rxControl   : TimingPhyControlType;
 
    signal txUserRst    : sl;
+   signal gtTxClk      : slv(1 downto 0);
    signal txClk        : sl;
    signal txRst        : sl;
    signal txData       : slv(15 downto 0);
@@ -108,6 +113,7 @@ architecture mapping of EvrFrontEnd is
    signal txDiffCtrl   : slv(3 downto 0);
    signal txPreCursor  : slv(4 downto 0);
    signal txPostCursor : slv(4 downto 0);
+   signal gtTxStatus   : TimingPhyStatusArray(1 downto 0);
    signal txStatus     : TimingPhyStatusType;
    signal timingPhy    : TimingPhyType;
 
@@ -200,18 +206,6 @@ begin
          -- Locked Status
          locked    => mmcmLocked(2));
 
-   U_BUFG : BUFGMUX
-      generic map (
-         CLK_SEL_TYPE => "ASYNC")       -- ASYNC, SYNC
-      port map (
-         O  => evrRefClk,               -- 1-bit output: Clock output
-         I0 => refClk(1),               -- 1-bit input: Clock input (S=0)
-         I1 => refClk(2),               -- 1-bit input: Clock input (S=1)
-         S  => timingClockSel);         -- 1-bit input: Clock select
-
-   evrRefRst    <= refRst(2)     when (timingClockSel = '1') else refRst(1);
-   evrRefLocked <= mmcmLocked(2) when (timingClockSel = '1') else mmcmLocked(1);
-
    ---------------------
    -- AXI-Lite Crossbar
    ---------------------
@@ -234,77 +228,95 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
-   U_AxiLiteAsync : entity work.AxiLiteAsync
-      generic map (
-         TPD_G            => TPD_G,
-         AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
-         COMMON_CLK_G     => false,
-         NUM_ADDR_BITS_G  => 32)
-      port map (
-         -- Slave Interface
-         sAxiClk         => sysClk,
-         sAxiClkRst      => sysRst,
-         sAxiReadMaster  => axilReadMasters(GTP_INDEX_C),
-         sAxiReadSlave   => axilReadSlaves(GTP_INDEX_C),
-         sAxiWriteMaster => axilWriteMasters(GTP_INDEX_C),
-         sAxiWriteSlave  => axilWriteSlaves(GTP_INDEX_C),
-         -- Master Interface
-         mAxiClk         => drpClk,
-         mAxiClkRst      => drpRst,
-         mAxiReadMaster  => gtReadMaster,
-         mAxiReadSlave   => gtReadSlave,
-         mAxiWriteMaster => gtWriteMaster,
-         mAxiWriteSlave  => gtWriteSlave);
-
    -------------
    -- GTH Module
-   -------------         
-   U_GTP : entity work.EvrGthCoreWrapper
+   -------------
+   GEN_VEC : for i in 1 downto 0 generate
+
+      U_AxiLiteAsync : entity work.AxiLiteAsync
+         generic map (
+            TPD_G            => TPD_G,
+            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
+            COMMON_CLK_G     => false,
+            NUM_ADDR_BITS_G  => 32)
+         port map (
+            -- Slave Interface
+            sAxiClk         => sysClk,
+            sAxiClkRst      => sysRst,
+            sAxiReadMaster  => axilReadMasters(GTP0_INDEX_C+i),
+            sAxiReadSlave   => axilReadSlaves(GTP0_INDEX_C+i),
+            sAxiWriteMaster => axilWriteMasters(GTP0_INDEX_C+i),
+            sAxiWriteSlave  => axilWriteSlaves(GTP0_INDEX_C+i),
+            -- Master Interface
+            mAxiClk         => drpClk,
+            mAxiClkRst      => drpRst,
+            mAxiReadMaster  => gtReadMasters(i),
+            mAxiReadSlave   => gtReadSlaves(i),
+            mAxiWriteMaster => gtWriteMasters(i),
+            mAxiWriteSlave  => gtWriteSlaves(i));
+
+      U_GTP : entity work.EvrGthCoreWrapper
+         generic map (
+            TPD_G            => TPD_G,
+            AXIL_BASE_ADDR_G => AXI_CONFIG_C(GTP0_INDEX_C+i).baseAddr,
+            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
+         port map (
+            axilClk         => drpClk,
+            axilRst         => drpRst,
+            axilReadMaster  => gtReadMasters(i),
+            axilReadSlave   => gtReadSlaves(i),
+            axilWriteMaster => gtWriteMasters(i),
+            axilWriteSlave  => gtWriteSlaves(i),
+            stableClk       => drpClk,
+            gtRefClk        => refClk(1+i),
+            gtRxP           => evrRxP(i),
+            gtRxN           => evrRxN(i),
+            gtTxP           => evrTxP(i),
+            gtTxN           => evrTxN(i),
+            rxControl       => rxControl,
+            rxStatus        => gtRxStatus(i),
+            rxUsrClkActive  => mmcmLocked(1+i),
+            rxUsrClk        => gtRxClk(i),
+            rxData          => gtRxData(i),
+            rxDataK         => gtRxDataK(i),
+            rxDispErr       => gtRxDispErr(i),
+            rxDecErr        => gtRxDecErr(i),
+            rxOutClk        => gtRxClk(i),
+            txControl       => timingPhy.control,
+            txStatus        => gtTxStatus(i),
+            txUsrClk        => gtTxClk(i),
+            txUsrClkActive  => mmcmLocked(1+i),
+            txData          => timingPhy.data,
+            txDataK         => timingPhy.dataK,
+            txOutClk        => gtTxClk(i),
+            loopback        => loopback);
+
+   end generate GEN_VEC;
+
+   rxStatus  <= gtRxStatus(1)  when (timingClockSel = '1') else gtRxStatus(0);
+   rxData    <= gtRxData(1)    when (timingClockSel = '1') else gtRxData(0);
+   rxDataK   <= gtRxDataK(1)   when (timingClockSel = '1') else gtRxDataK(0);
+   rxDispErr <= gtRxDispErr(1) when (timingClockSel = '1') else gtRxDispErr(0);
+   rxDecErr  <= gtRxDecErr(1)  when (timingClockSel = '1') else gtRxDecErr(0);
+   txStatus  <= gtTxStatus(1)  when (timingClockSel = '1') else gtTxStatus(0);
+
+   U_RXCLK : BUFGMUX
       generic map (
-         TPD_G            => TPD_G,
-         AXIL_BASE_ADDR_G => AXI_CONFIG_C(GTP_INDEX_C).baseAddr,
-         AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
+         CLK_SEL_TYPE => "ASYNC")       -- ASYNC, SYNC
       port map (
-         -------------------------------------
-         -- axilClk         => sysClk,
-         -- axilRst         => sysRst,
-         -- axilReadMaster  => axilReadMasters(GTP_INDEX_C),
-         -- axilReadSlave   => axilReadSlaves(GTP_INDEX_C),
-         -- axilWriteMaster => axilWriteMasters(GTP_INDEX_C),
-         -- axilWriteSlave  => axilWriteSlaves(GTP_INDEX_C),
-         -- stableClk       => sysClk,
-         -------------------------------------
-         axilClk         => drpClk,
-         axilRst         => drpRst,
-         axilReadMaster  => gtReadMaster,
-         axilReadSlave   => gtReadSlave,
-         axilWriteMaster => gtWriteMaster,
-         axilWriteSlave  => gtWriteSlave,
-         stableClk       => drpClk,
-         -------------------------------------
-         gtRefClk        => evrRefClk,
-         gtRxP           => evrRxP,
-         gtRxN           => evrRxN,
-         gtTxP           => evrTxP,
-         gtTxN           => evrTxN,
-         rxControl       => rxControl,
-         rxStatus        => rxStatus,
-         rxUsrClkActive  => evrRefLocked,
-         rxCdrStable     => open,
-         rxUsrClk        => rxClk,
-         rxData          => rxData,
-         rxDataK         => rxDataK,
-         rxDispErr       => rxDispErr,
-         rxDecErr        => rxDecErr,
-         rxOutClk        => rxClk,
-         txControl       => timingPhy.control,
-         txStatus        => txStatus,
-         txUsrClk        => txClk,
-         txUsrClkActive  => evrRefLocked,
-         txData          => timingPhy.data,
-         txDataK         => timingPhy.dataK,
-         txOutClk        => txClk,
-         loopback        => loopback);
+         O  => rxClk,                   -- 1-bit output: Clock output
+         I0 => gtRxClk(0),              -- 1-bit input: Clock input (S=0)
+         I1 => gtRxClk(1),              -- 1-bit input: Clock input (S=1)
+         S  => timingClockSel);         -- 1-bit input: Clock select
+
+   U_TXCLK : BUFGMUX
+      generic map (
+         CLK_SEL_TYPE => "ASYNC")       -- ASYNC, SYNC
+      port map (
+         O  => txClk,                   -- 1-bit output: Clock output
+         I0 => gtTxClk(0),              -- 1-bit input: Clock input (S=0)
+         I1 => gtTxClk(1),              -- 1-bit input: Clock input (S=1)
+         S  => timingClockSel);         -- 1-bit input: Clock select         
 
    -----------------------
    -- Insert user RX reset

@@ -28,21 +28,8 @@ class TimingCore(pr.Device):
             offset = 0x00000000,
             expand = False,
         ))          
-        
-        self.add(GthRxAlignCheck(
-            offset = 0x00010000,
-            expand = False,
-            hidden = basicMode,
-        ))        
-
-        self.add(Gthe3Channel(            
-            name         = 'EvrGt', 
-            offset       = 0x00011000, 
-            expand       = False,
-            hidden       = basicMode,
-        ))          
-        
-        regOffset = 0x00020000        
+             
+        regOffset = 0x00010000        
         
         self.add(pr.RemoteCommand(  
             name         = "MmcmRst",

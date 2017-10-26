@@ -217,4 +217,22 @@ class TimingCore(pr.Device):
             hidden       = basicMode, 
         )          
         
-        
+        @self.command(description="Configure for LCLS-I Timing (119 MHz based)",)
+        def ConfigLclsTimingV1():
+            print ( 'ConfigLclsTimingV1()' ) 
+            self.EvrCore.RxPllReset.set(1)
+            time.sleep(1.0)
+            self.EvrCore.RxPllReset.set(0)
+            self.EvrCore.ClkSel.set(0x0)
+            self.EvrCore.RxReset.set(1)
+            self.EvrCore.RxReset.set(0)
+            
+        @self.command(description="Configure for LCLS-II Timing (186 MHz based)",)
+        def ConfigLclsTimingV2():
+            print ( 'ConfigLclsTimingV2()' ) 
+            self.EvrCore.RxPllReset.set(1)
+            time.sleep(1.0)
+            self.EvrCore.RxPllReset.set(0)
+            self.EvrCore.ClkSel.set(0x1)
+            self.EvrCore.RxReset.set(1)
+            self.EvrCore.RxReset.set(0)        

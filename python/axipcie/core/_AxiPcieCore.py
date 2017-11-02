@@ -23,12 +23,12 @@ import surf.devices.micron
 import surf.xilinx 
 
 class AxiPcieCore(pr.Device):
-    def __init__(   self,       
-            description = 'Base components of the PCIe firmware core'
-            useBpi      = False,
-            useSpi      = False,
-            **kwargs):
-        super().__init__(name=name, description=description, **kwargs)
+    def __init__(self,       
+                 description = 'Base components of the PCIe firmware core',
+                 useBpi      = False,
+                 useSpi      = False,
+                 **kwargs):
+        super().__init__(description=description, **kwargs)
         
         # PCI PHY status
         self.add(surf.xilinx.AxiPciePhy(            

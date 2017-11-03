@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-10-16
+-- Last update: 2017-11-03
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -163,7 +163,8 @@ begin
    -------------------------          
    U_AxiToAxiLite : entity work.AxiToAxiLite
       generic map (
-         TPD_G => TPD_G)
+         TPD_G           => TPD_G,
+         EN_SLAVE_RESP_G => false)
       port map (
          axiClk          => axiClk,
          axiClkRst       => axiRst,

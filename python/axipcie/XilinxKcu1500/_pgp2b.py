@@ -7,7 +7,7 @@ LINK_SPEED_TABLE = {
         'CPLL_CFG2'      : 0x0004,
         'CPLL_FBDIV'     : 5,
         'PMA_RSV1'       : 0xE000,
-        'RXCDR_CFG2'     : 0x0756,
+        'RXCDR_CFG2_GEN3'     : 0x0756,
         'RXOUT_DIV'      : 2,
         'TXOUT_DIV'      : 2,
         'TX_PROGDIV_CFG' : 57762, #20.0        
@@ -17,7 +17,7 @@ LINK_SPEED_TABLE = {
         'CPLL_CFG2'      : 0x0007,
         'CPLL_FBDIV'     : 4,
         'PMA_RSV1'       : 0xF000,
-        'RXCDR_CFG2'	 : 0x0756,
+        'RXCDR_CFG2_GEN3'	 : 0x0756,
         'RXOUT_DIV'      : 2,
         'TXOUT_DIV'      : 2,
         'TX_PROGDIV_CFG' : 57762, #20.0
@@ -27,7 +27,7 @@ LINK_SPEED_TABLE = {
         'CPLL_CFG2'      : 0x0007 ,
         'CPLL_FBDIV'     : 4,
         'PMA_RSV1'       : 0xF000,
-        'RXCDR_CFG2'	 : 0x0746,
+        'RXCDR_CFG2_GEN3'	 : 0x0746,
         'RXOUT_DIV'      : 4,
         'TXOUT_DIV'      : 4,
         'TX_PROGDIV_CFG' : 57766, #40.0        
@@ -37,7 +37,7 @@ LINK_SPEED_TABLE = {
         'CPLL_CFG2'      : 0x0007 ,
         'CPLL_FBDIV'     : 4,
         'PMA_RSV1'       : 0xF000,
-        'RXCDR_CFG2'	 : 0x0766,
+        'RXCDR_CFG2_GEN3'	 : 0x0766,
         'RXOUT_DIV'      : 1,
         'TXOUT_DIV'      : 1,
         'TX_PROGDIV_CFG' : 57760, #10.0
@@ -47,7 +47,7 @@ LINK_SPEED_TABLE = {
         'CPLL_CFG2'      : 0x0004,
         'CPLL_FBDIV'     : 5,
         'PMA_RSV1'       : 0xe000,
-        'RXCDR_CFG2'	 : 0x0766,
+        'RXCDR_CFG2_GEN3'	 : 0x0766,
         'RXOUT_DIV'      : 1,
         'TXOUT_DIV'      : 1,
         'TX_PROGDIV_CFG' : 57760, #10.0
@@ -65,19 +65,25 @@ class AppPgp2bLane(pr.Device):
         self._linkRate=linkRate
 
         self.add(surf.protocols.pgp.Pgp2bAxi(offset=0x000))
-#         self.add(surf.xilinx.Gthe3Channel(offset=0x800, hidden=True))
+        self.add(surf.xilinx.Gthe3Channel(offset=0x800))
 
-#         self.add(pr.LinkVariable(
-#             name='LinkRate',
-#             disp=list(LINK_SPEED_TABLE.keys()),
-#             linkedSet=self.setLinkRate,
-#             linkedGet=lambda: self._linkRate))
+        self.Gthe3Channel.hideVariables(True)
+        for key in LINK_SPEED_TABLE['3.125'].keys():
+            self.Gthe3Channel.node(key).hidden = False
 
-#     def setLinkRate(self, value):
-#         self._linkRate = value
-#         params = LINK_SPEED_TABLE[value]
-#         for k,v in params.items():
-#             self.Gthe3Channel.node(k).set(v)
+        self.add(pr.LinkVariable(
+            name='LinkRate',
+            disp=list(LINK_SPEED_TABLE.keys()),
+            linkedSet=self.setLinkRate,
+            linkedGet=lambda: self._linkRate))
+
+    def setLinkRate(self, value):
+        self._linkRate = value
+        params = LINK_SPEED_TABLE[value]
+        for k,v in params.items():
+            self.Gthe3Channel.node(k).set(v)
+        self.Pgp2bAxi.ResetRx()
+        self.Pgp2bAxi.ResetTx()        
         # Need to reset when done
 
 class AppPgp2bQuad(pr.Device):

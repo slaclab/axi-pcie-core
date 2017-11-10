@@ -28,7 +28,7 @@ if { [info exists ::env(DDR_SPEED)] != 1 } {
 set_property strategy Flow_PerfOptimized_high [get_runs synth_1]
 
 # Place and Route strategy 
-set_property strategy Performance_ExplorePostRoutePhysOpt [get_runs impl_1]
+#set_property strategy Performance_ExplorePostRoutePhysOpt [get_runs impl_1]
 set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE SSI_HighUtilSLRs [get_runs impl_1]
 
 # Set the board part

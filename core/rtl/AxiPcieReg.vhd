@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-11-09
+-- Last update: 2017-11-10
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -223,7 +223,6 @@ begin
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
          CLK_PERIOD_G     => (1.0/SYS_CLK_FREQ_C),
          EN_DEVICE_DNA_G  => true,
-         EN_ICAP_G        => true,
          XIL_DEVICE_G     => XIL_DEVICE_C)
       port map (
          -- AXI-Lite Interface

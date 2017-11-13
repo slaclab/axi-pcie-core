@@ -2,7 +2,7 @@
 -- File       : AppPgp2bLane.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-22
--- Last update: 2017-10-12
+-- Last update: 2017-11-13
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -31,6 +31,7 @@ use unisim.vcomponents.all;
 entity AppPgp2bLane is
    generic (
       TPD_G             : time             := 1 ns;
+      SIM_SPEEDUP_G     : boolean          := false;
       PGP_RX_ENABLE_G   : boolean          := true;
       PGP_RX_CTRL_EN_G  : boolean          := false;
       PGP_TX_ENABLE_G   : boolean          := true;
@@ -44,10 +45,10 @@ entity AppPgp2bLane is
       pgpRst          : in  sl;
       pgpTxMaster     : in  AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
       pgpTxSlave      : out AxiStreamSlaveType;
-      pgpTxIn         : in  Pgp2bTxInType       := PGP2B_TX_IN_INIT_C;
-      pgpTxOut        : out Pgp2bTxOutType;
       pgpRxMaster     : out AxiStreamMasterType;
       pgpRxSlave      : in  AxiStreamSlaveType;
+      pgpTxIn         : in  Pgp2bTxInType       := PGP2B_TX_IN_INIT_C;
+      pgpTxOut        : out Pgp2bTxOutType;
       pgpRxIn         : in  Pgp2bRxInType       := PGP2B_RX_IN_INIT_C;
       pgpRxOut        : out Pgp2bRxOutType;
       -- AXI-Lite Interface      
@@ -93,6 +94,7 @@ architecture mapping of AppPgp2bLane is
    signal pgpRxMasters : AxiStreamMasterArray(3 downto 0);
    signal pgpRxSlaves  : AxiStreamSlaveArray(3 downto 0);
 
+   signal pgpTxOutClk : sl;
    signal pgpTxClk    : sl;
    signal pgpTxRst    : sl;
    signal pgpTxInInt  : Pgp2bTxInType;
@@ -225,8 +227,6 @@ begin
 
    end generate;
 
-
-
    U_PGP : entity work.Pgp2bGthUltra
       generic map (
          TPD_G             => TPD_G,
@@ -245,8 +245,12 @@ begin
          pgpGtRxN        => gtRxN,
          pgpTxReset      => pgpTxRst,
          pgpTxClk        => pgpTxClk,
+         pgpTxOutClk     => pgpTxOutClk,
+         pgpTxMmcmLocked => '1',
          pgpRxReset      => pgpRxRst,
          pgpRxClk        => pgpRxClk,
+         pgpRxOutClk     => open,
+         pgpRxMmcmLocked => '1',
          pgpTxIn         => pgpTxInInt,
          pgpTxOut        => pgpTxOutInt,
          pgpRxIn         => pgpRxInInt,
@@ -262,9 +266,30 @@ begin
          axilWriteMaster => axilWriteMasters(DRP_AXIL_INDEX_C),
          axilWriteSlave  => axilWriteSlaves(DRP_AXIL_INDEX_C));
 
+   -- Pgp clocking
+   -- Use TxRecClk to drive everything
+   BUFG_GT_Inst : BUFG_GT
+      port map (
+         I       => pgpTxOutClk,
+         CE      => '1',
+         CEMASK  => '1',
+         CLR     => '0',
+         CLRMASK => '1',
+         DIV     => "000",
+         O       => pgpTxClk);
 
-   pgpRxOut <= pgpRxOutInt;
-   pgpTxOut <= pgpTxOutInt;
+   pgpRxClk <= pgpTxClk;
+
+   U_PwrUpRst_1 : entity work.PwrUpRst
+      generic map (
+         TPD_G         => TPD_G,
+         SIM_SPEEDUP_G => SIM_SPEEDUP_G)
+      port map (
+         arst   => '0',                 -- [in]
+         clk    => pgpTxClk,            -- [in]
+         rstOut => pgpTxRst);           -- [out]
+
+   pgpRxRst <= pgpTxRst;
 
    U_MON : entity work.Pgp2bAxi
       generic map (

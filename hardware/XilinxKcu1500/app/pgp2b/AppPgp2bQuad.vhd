@@ -2,7 +2,7 @@
 -- File       : AppPgp2bQuad.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-22
--- Last update: 2017-11-07
+-- Last update: 2017-11-13
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -31,6 +31,7 @@ use unisim.vcomponents.all;
 entity AppPgp2bQuad is
    generic (
       TPD_G             : time             := 1 ns;
+      SIM_SPEEDUP_G     : boolean          := false;
       PGP_RX_ENABLE_G   : boolean          := true;
       PGP_TX_ENABLE_G   : boolean          := true;
       AXIS_CFG_G        : AxiStreamConfigType;
@@ -105,6 +106,7 @@ begin
       U_PGP : entity work.AppPgp2bLane
          generic map (
             TPD_G             => TPD_G,
+            SIM_SPEEDUP_G     => SIM_SPEEDUP_G,
             PGP_RX_ENABLE_G   => PGP_RX_ENABLE_G,
             PGP_TX_ENABLE_G   => PGP_TX_ENABLE_G,
             AXIS_CFG_G        => AXIS_CFG_G,

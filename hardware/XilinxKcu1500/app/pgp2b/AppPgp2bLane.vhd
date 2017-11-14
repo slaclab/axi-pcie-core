@@ -2,7 +2,7 @@
 -- File       : AppPgp2bLane.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-22
--- Last update: 2017-11-13
+-- Last update: 2017-11-14
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -280,14 +280,15 @@ begin
 
    pgpRxClk <= pgpTxClk;
 
-   U_PwrUpRst_1 : entity work.PwrUpRst
-      generic map (
-         TPD_G         => TPD_G,
-         SIM_SPEEDUP_G => SIM_SPEEDUP_G)
-      port map (
-         arst   => '0',                 -- [in]
-         clk    => pgpTxClk,            -- [in]
-         rstOut => pgpTxRst);           -- [out]
+--    U_PwrUpRst_1 : entity work.PwrUpRst
+--       generic map (
+--          TPD_G         => TPD_G,
+--          SIM_SPEEDUP_G => SIM_SPEEDUP_G)
+--       port map (
+--          arst   => '0',                 -- [in]
+--          clk    => pgpTxClk,            -- [in]
+--          rstOut => pgpTxRst);           -- [out]
+   pgpTxRst <= '0';
 
    pgpRxRst <= pgpTxRst;
 

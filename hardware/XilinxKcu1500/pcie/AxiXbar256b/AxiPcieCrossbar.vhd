@@ -398,45 +398,6 @@ architecture mapping of AxiPcieCrossbar is
          S08_AXI_RLAST        : out std_logic;
          S08_AXI_RVALID       : out std_logic;
          S08_AXI_RREADY       : in  std_logic;
-         S09_AXI_ARESET_OUT_N : out std_logic;
-         S09_AXI_ACLK         : in  std_logic;
-         S09_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S09_AXI_AWADDR       : in  std_logic_vector(31 downto 0);
-         S09_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
-         S09_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
-         S09_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
-         S09_AXI_AWLOCK       : in  std_logic;
-         S09_AXI_AWCACHE      : in  std_logic_vector(3 downto 0);
-         S09_AXI_AWPROT       : in  std_logic_vector(2 downto 0);
-         S09_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
-         S09_AXI_AWVALID      : in  std_logic;
-         S09_AXI_AWREADY      : out std_logic;
-         S09_AXI_WDATA        : in  std_logic_vector(127 downto 0);
-         S09_AXI_WSTRB        : in  std_logic_vector(15 downto 0);
-         S09_AXI_WLAST        : in  std_logic;
-         S09_AXI_WVALID       : in  std_logic;
-         S09_AXI_WREADY       : out std_logic;
-         S09_AXI_BID          : out std_logic_vector(0 downto 0);
-         S09_AXI_BRESP        : out std_logic_vector(1 downto 0);
-         S09_AXI_BVALID       : out std_logic;
-         S09_AXI_BREADY       : in  std_logic;
-         S09_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S09_AXI_ARADDR       : in  std_logic_vector(31 downto 0);
-         S09_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
-         S09_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
-         S09_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
-         S09_AXI_ARLOCK       : in  std_logic;
-         S09_AXI_ARCACHE      : in  std_logic_vector(3 downto 0);
-         S09_AXI_ARPROT       : in  std_logic_vector(2 downto 0);
-         S09_AXI_ARQOS        : in  std_logic_vector(3 downto 0);
-         S09_AXI_ARVALID      : in  std_logic;
-         S09_AXI_ARREADY      : out std_logic;
-         S09_AXI_RID          : out std_logic_vector(0 downto 0);
-         S09_AXI_RDATA        : out std_logic_vector(127 downto 0);
-         S09_AXI_RRESP        : out std_logic_vector(1 downto 0);
-         S09_AXI_RLAST        : out std_logic;
-         S09_AXI_RVALID       : out std_logic;
-         S09_AXI_RREADY       : in  std_logic;
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -855,46 +816,6 @@ begin
          S08_AXI_RLAST        => sAxiReadSlaves(8).rlast,
          S08_AXI_RVALID       => sAxiReadSlaves(8).rvalid,
          S08_AXI_RREADY       => sAxiReadMasters(8).rready,
-         -- SLAVE[9]
-         S09_AXI_ARESET_OUT_N => open,
-         S09_AXI_ACLK         => axiClk,
-         S09_AXI_AWID(0)      => '0',
-         S09_AXI_AWADDR       => sAxiWriteMasters(9).awaddr(31 downto 0),
-         S09_AXI_AWLEN        => sAxiWriteMasters(9).awlen,
-         S09_AXI_AWSIZE       => sAxiWriteMasters(9).awsize,
-         S09_AXI_AWBURST      => sAxiWriteMasters(9).awburst,
-         S09_AXI_AWLOCK       => sAxiWriteMasters(9).awlock(0),
-         S09_AXI_AWCACHE      => sAxiWriteMasters(9).awcache,
-         S09_AXI_AWPROT       => sAxiWriteMasters(9).awprot,
-         S09_AXI_AWQOS        => sAxiWriteMasters(9).awqos,
-         S09_AXI_AWVALID      => sAxiWriteMasters(9).awvalid,
-         S09_AXI_AWREADY      => sAxiWriteSlaves(9).awready,
-         S09_AXI_WDATA        => sAxiWriteMasters(9).wdata(127 downto 0),
-         S09_AXI_WSTRB        => sAxiWriteMasters(9).wstrb(15 downto 0),
-         S09_AXI_WLAST        => sAxiWriteMasters(9).wlast,
-         S09_AXI_WVALID       => sAxiWriteMasters(9).wvalid,
-         S09_AXI_WREADY       => sAxiWriteSlaves(9).wready,
-         S09_AXI_BID          => sAxiWriteSlaves(9).bid(0 downto 0),
-         S09_AXI_BRESP        => sAxiWriteSlaves(9).bresp,
-         S09_AXI_BVALID       => sAxiWriteSlaves(9).bvalid,
-         S09_AXI_BREADY       => sAxiWriteMasters(9).bready,
-         S09_AXI_ARID(0)      => '0',
-         S09_AXI_ARADDR       => sAxiReadMasters(9).araddr(31 downto 0),
-         S09_AXI_ARLEN        => sAxiReadMasters(9).arlen,
-         S09_AXI_ARSIZE       => sAxiReadMasters(9).arsize,
-         S09_AXI_ARBURST      => sAxiReadMasters(9).arburst,
-         S09_AXI_ARLOCK       => sAxiReadMasters(9).arlock(0),
-         S09_AXI_ARCACHE      => sAxiReadMasters(9).arcache,
-         S09_AXI_ARPROT       => sAxiReadMasters(9).arprot,
-         S09_AXI_ARQOS        => sAxiReadMasters(9).arqos,
-         S09_AXI_ARVALID      => sAxiReadMasters(9).arvalid,
-         S09_AXI_ARREADY      => sAxiReadSlaves(9).arready,
-         S09_AXI_RID          => sAxiReadSlaves(9).rid(0 downto 0),
-         S09_AXI_RDATA        => sAxiReadSlaves(9).rdata(127 downto 0),
-         S09_AXI_RRESP        => sAxiReadSlaves(9).rresp,
-         S09_AXI_RLAST        => sAxiReadSlaves(9).rlast,
-         S09_AXI_RVALID       => sAxiReadSlaves(9).rvalid,
-         S09_AXI_RREADY       => sAxiReadMasters(9).rready,
          -- MASTER         
          M00_AXI_ARESET_OUT_N => open,
          M00_AXI_ACLK         => axiClk,

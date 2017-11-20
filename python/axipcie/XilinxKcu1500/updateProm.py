@@ -17,64 +17,63 @@
 import sys
 import argparse
 import pyrogue as pr
-from DataLib.DataDev import *
+import axipcie.core
 import glob
+
+# Declare a generic Kcu1500Root
+class Kcu1500Root(pr.Root):
+    def __init__(dev, path):
+        super().__init__(name='Kcu1500Root', description='')
+
+        # Create the stream interface
+        coreMap = rogue.hardware.data.DataMap(dev)
+
+        # Add Base Device
+        self.add(axipcie.core.AxiPcieCore(memBase=coreMap,useSpi=True))
+        self.start(pollEn=False)
+
+
+if __name__ == '__main__':
     
-# Set the argument parser
-parser = argparse.ArgumentParser()
+    # Set the argument parser
+    parser = argparse.ArgumentParser()
 
-# Add arguments
-parser.add_argument(
-    "--dev", 
-    type     = str,
-    required = True,
-    help     = "path to device",
-)  
+    # Add arguments
+    parser.add_argument(
+        ["--dev", '-d'], 
+        type     = str,
+        default  = '/dev/datadev_0',
+        help     = "path to device",
+    )  
 
-parser.add_argument(
-    "--path", 
-    type     = str,
-    required = True,
-    help     = "path to images",
-)  
+    parser.add_argument(
+        ["--path", '-p'], 
+        type     = str,
+        required = True,
+        help     = "path to images",
+    )  
 
-# Get the arguments
-args = parser.parse_args()
+    # Get the arguments
+    args = parser.parse_args()
     
-# Set base
-devTop = pr.Root(name='devTop',description='')
+    # Get a list of images
+    images = glob.glob('{}/primary*.mcs'.format(args.path))
+    images = [i.replace('_primary.mcs','') for i in images]
 
-# Create the stream interface
-coreMap = rogue.hardware.data.DataMap(args.dev)
+    with Kcu1500Root(args.dev, args.path) as root:
 
-# Add Base Device
-devTop.add(DataDev(memBase=coreMap,useSpi=True))
+        for i, l in enumerate(reversed(sorted(images))):
+            print('{} : {}'.format(i, l))
 
-# Start the system
-devTop.start(pollEn=False)
+        idx = int(input('Enter image: '))
+        image = images[idx]
+        pri = '{}_primary.mcs'.format(image)
+        sec = '{}_secondary.mcs'.format(image)
 
-# Get a list of images
-outLst = []
-inLst = glob.glob('{}/*.mcs'.format(args.path))
-for l in inLst:
-    l = l.replace('_primary.mcs','')
-    l = l.replace('_secondary.mcs','')
-    if not l in outLst:
-        outLst.append(l)
+        print('Loading primary image: {}'.format(pri))
+        root.AxiPcieCore.AxiMicronN25Q[0].LoadMcsFile(pri)  
+        
+        print('Loading secondary image: {}'.format(sec))
+        root.AxiPcieCore.AxiMicronN25Q[1].LoadMcsFile(sec)  
 
-for i,l in enumerate(outLst):
-    print('{} : {}'.format(i,l))
-
-idx = int(input('Enter image: '))
-pri = '{}_primary.mcs'.format(outLst[idx])
-sec = '{}_secondary.mcs'.format(outLst[idx])
-
-print('Loading primary image: {}'.format(pri))
-devTop.DataDev.AxiMicronN25Q[0].LoadMcsFile(pri)  
-
-print('Loading secondary image: {}'.format(sec))
-devTop.DataDev.AxiMicronN25Q[1].LoadMcsFile(sec)  
-
-# Close out
-devTop.stop()
-exit()
+    exit()

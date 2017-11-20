@@ -12,7 +12,25 @@
 > https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
 
 4) Setup for large filesystems on github
-> $ git lfs install
+``` $ git lfs install```
 
 # Clone the GIT repository
-> $ git clone --recursive git@github.com:slaclab/axi-pcie-core
+``` $ git clone --recursive git@github.com:slaclab/axi-pcie-core```
+
+# How to build the Linux Driver Software
+
+1) Clone the aes-stream-driver GIT repository
+```
+$ git clone --recursive git@github.com:slaclab/aes-stream-drivers
+```
+
+2) Go to the data_dev driver directory and build the driver:
+```
+$ aes-stream-drivers/data_dev/driver/
+$ make
+```
+
+3) Add the new driver
+```
+$ sudo /sbin/insmod ./datadev.ko || exit 1
+```

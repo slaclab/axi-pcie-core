@@ -163,7 +163,8 @@ begin
    -------------------------          
    U_AxiToAxiLite : entity work.AxiToAxiLite
       generic map (
-         TPD_G => TPD_G)
+         TPD_G           => TPD_G,
+         EN_SLAVE_RESP_G => false)
       port map (
          axiClk          => axiClk,
          axiClkRst       => axiRst,

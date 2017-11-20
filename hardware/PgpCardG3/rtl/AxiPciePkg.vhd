@@ -19,6 +19,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 use work.StdRtlPkg.all;
+use work.AxiLitePkg.all;
 use work.AxiStreamPkg.all;
 use work.AxiPkg.all;
 

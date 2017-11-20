@@ -6,6 +6,10 @@ if { $::env(PCIE_GEN_NUM)  == "GEN1" } {
    loadSource -path "$::DIR_PATH/AxiXbar128b/AxiPcieCrossbar.vhd"
 } else { 
    loadSource      -path "$::DIR_PATH/AxiXbar256b/AxiPcieCrossbar.vhd"
+
+   # loadIpCore    -path "$::DIR_PATH/AxiXbar256b/AxiPcieCrossbarResize.xci"
+   loadSource      -path "$::DIR_PATH/AxiXbar256b/AxiPcieCrossbarResize.dcp"
+   
    # loadIpCore    -path "$::DIR_PATH/AxiXbar256b/AxiPcieCrossbarIpCore.xci"
    loadSource      -path "$::DIR_PATH/AxiXbar256b/AxiPcieCrossbarIpCore.dcp"
    loadConstraints -path "$::DIR_PATH/AxiXbar256b/AxiPcieCrossbarIpCore.xdc"

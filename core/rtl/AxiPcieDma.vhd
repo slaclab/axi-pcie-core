@@ -2,7 +2,7 @@
 -- File       : AxiPcieDma.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-08-30
+-- Last update: 2017-11-16
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXIS DMA Engine
 -------------------------------------------------------------------------------
@@ -29,6 +29,7 @@ use work.AxiPciePkg.all;
 entity AxiPcieDma is
    generic (
       TPD_G            : time                   := 1 ns;
+      SIMULATION_G     : boolean                := false;
       DMA_SIZE_G       : positive range 1 to 16 := 1;
       DESC_ARB_G       : boolean                := true;
       AXI_ERROR_RESP_G : slv(1 downto 0)        := AXI_RESP_OK_C);
@@ -86,10 +87,10 @@ architecture mapping of AxiPcieDma is
 
    signal axisReset : slv(DMA_SIZE_G-1 downto 0);
    signal axiReset  : slv(DMA_SIZE_G downto 0);
-   
+
    attribute dont_touch              : string;
-   attribute dont_touch of axisReset : signal is "true";     
-   attribute dont_touch of axiReset  : signal is "true";     
+   attribute dont_touch of axisReset : signal is "true";
+   attribute dont_touch of axiReset  : signal is "true";
 
 begin
 
@@ -121,6 +122,7 @@ begin
    U_V2Gen : entity work.AxiStreamDmaV2
       generic map (
          TPD_G             => TPD_G,
+         SIMULATION_G      => SIMULATION_G,
          DESC_AWIDTH_G     => 12,       -- 4096 entries
          DESC_ARB_G        => DESC_ARB_G,
          AXIL_BASE_ADDR_G  => x"00000000",

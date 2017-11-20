@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-10-16
+-- Last update: 2017-11-16
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -38,7 +38,7 @@ entity XilinxKcu1500Core is
       TPD_G            : time                  := 1 ns;
       BUILD_INFO_G     : BuildInfoType;
       DRIVER_TYPE_ID_G : slv(31 downto 0)      := x"00000000";
-      DMA_SIZE_G       : positive range 1 to 9 := 9);
+      DMA_SIZE_G       : positive range 1 to 8 := 1);
    port (
       ------------------------      
       --  Top Level Interfaces

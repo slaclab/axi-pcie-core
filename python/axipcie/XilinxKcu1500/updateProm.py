@@ -17,12 +17,13 @@
 import sys
 import argparse
 import pyrogue as pr
+import rogue
 import axipcie.core
 import glob
 
 # Declare a generic Kcu1500Root
 class Kcu1500Root(pr.Root):
-    def __init__(dev, path):
+    def __init__(self, dev, path):
         super().__init__(name='Kcu1500Root', description='')
 
         # Create the stream interface
@@ -40,14 +41,14 @@ if __name__ == '__main__':
 
     # Add arguments
     parser.add_argument(
-        ["--dev", '-d'], 
+        "--dev", '-d', 
         type     = str,
         default  = '/dev/datadev_0',
         help     = "path to device",
     )  
 
     parser.add_argument(
-        ["--path", '-p'], 
+        "--path", '-p', 
         type     = str,
         required = True,
         help     = "path to images",
@@ -57,12 +58,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     # Get a list of images
-    images = glob.glob('{}/primary*.mcs'.format(args.path))
-    images = [i.replace('_primary.mcs','') for i in images]
+    images = glob.glob('{}/*_primary.mcs'.format(args.path))
+    images = list(reversed(sorted(i.replace('_primary.mcs','') for i in images)))
 
     with Kcu1500Root(args.dev, args.path) as root:
 
-        for i, l in enumerate(reversed(sorted(images))):
+        for i, l in enumerate(images):
             print('{} : {}'.format(i, l))
 
         idx = int(input('Enter image: '))

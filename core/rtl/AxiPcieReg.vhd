@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-11-03
+-- Last update: 2017-11-27
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -28,6 +28,8 @@ entity AxiPcieReg is
    generic (
       TPD_G            : time                   := 1 ns;
       BUILD_INFO_G     : BuildInfoType;
+      XIL_DEVICE_G     : string                 := "7SERIES";
+      BOOT_PROM_G      : string                 := "BPI";
       DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
       AXI_ERROR_RESP_G : slv(1 downto 0)        := AXI_RESP_OK_C;
       DMA_SIZE_G       : positive range 1 to 16 := 1);
@@ -154,9 +156,9 @@ begin
    userValues(0) <= toSlv(DMA_SIZE_G, 32);
    userValues(1) <= x"00000001";
    userValues(2) <= DRIVER_TYPE_ID_G;
-   userValues(3) <= x"00000001" when(XIL_DEVICE_C = "7SERIES") else x"00000000";
+   userValues(3) <= x"00000001" when(XIL_DEVICE_G = "7SERIES") else x"00000000";
    userValues(4) <= toSlv(getTimeRatio(SYS_CLK_FREQ_C, 1.0), 32);
-   userValues(5) <= x"00000001" when(BOOT_PROM_C = "SPI")      else x"00000000";
+   userValues(5) <= x"00000001" when(BOOT_PROM_G = "SPI")      else x"00000000";
 
    -------------------------          
    -- AXI-to-AXI-Lite Bridge
@@ -224,7 +226,7 @@ begin
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
          CLK_PERIOD_G     => (1.0/SYS_CLK_FREQ_C),
          EN_DEVICE_DNA_G  => true,
-         XIL_DEVICE_G     => XIL_DEVICE_C)
+         XIL_DEVICE_G     => XIL_DEVICE_G)
       port map (
          -- AXI-Lite Interface
          axiClk         => axiClk,
@@ -241,7 +243,7 @@ begin
    -----------------------------         
    -- AXI-Lite Boot Flash Module
    -----------------------------        
-   GEN_BPI : if (BOOT_PROM_C = "BPI") generate
+   GEN_BPI : if (BOOT_PROM_G = "BPI") generate
 
       U_BootProm : entity work.AxiMicronP30Reg
          generic map (
@@ -293,7 +295,7 @@ begin
 
    end generate;
 
-   GEN_SPI : if (BOOT_PROM_C = "SPI") generate
+   GEN_SPI : if (BOOT_PROM_G = "SPI") generate
 
       bpiAddr <= (others => '1');
       bpiAdv  <= '1';

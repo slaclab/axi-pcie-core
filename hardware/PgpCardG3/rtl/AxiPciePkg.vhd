@@ -2,7 +2,7 @@
 -- File       : AxiPciePkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-04-08
+-- Last update: 2017-11-27
 -------------------------------------------------------------------------------
 -- Description: Package file for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -24,7 +24,7 @@ use work.AxiStreamPkg.all;
 use work.AxiPkg.all;
 
 package AxiPciePkg is
-   
+
    -- Application BAR0 address space
    constant BAR0_BASE_ADDR_G  : slv(31 downto 0) := x"0080_0000";
    constant BAR0_HIGH_ADDR_G  : slv(31 downto 0) := x"00FF_FFFF";
@@ -32,10 +32,6 @@ package AxiPciePkg is
 
    -- System Clock Frequency
    constant SYS_CLK_FREQ_C : real := 125.0E+6;  -- units of Hz
-
-   -- Type of Xilinx Device
-   constant XIL_DEVICE_C : string := "7SERIES";
-   constant BOOT_PROM_C  : string := "BPI";   
 
    -- DMA AXI Stream Configuration
    constant DMA_AXIS_CONFIG_C : AxiStreamConfigType := (

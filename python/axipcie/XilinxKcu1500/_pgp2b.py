@@ -7,17 +7,24 @@ LINK_SPEED_TABLE = {
         'CPLL_CFG2'      : '0x0004',
         'CPLL_FBDIV'     : '5',
         'PMA_RSV1'       : '0xE000',
-        'RXCDR_CFG2_GEN3': '0x0756',
+        'RXCDR_CFG2': '0x0756',
+        'RXCDR_CFG2_GEN3': '0x07E6',        
         'RXOUT_DIV'      : '2',
         'TXOUT_DIV'      : '2',
         'TX_PROGDIV_CFG' : '20.0',
+        'CLK_COR_MIN_LAT' : '12',
+        'CLK_COR_MAX_LAT' : '17',
+        'CLK_COR_SEQ_1_1' : '256',
+        'CLK_COR_SEQ_1_2' : '0',
+        'CLK_COR_SEQ_1_3' : '0',
+        'CLK_COR_SEQ_1_4' : '0',        
     },
     '2.5' : {
         'CPLL_CFG0'      : '0x67F8',
         'CPLL_CFG2'      : '0x0007',
         'CPLL_FBDIV'     : '4',
         'PMA_RSV1'       : '0xF000',
-        'RXCDR_CFG2_GEN3': '0x0756',
+        'RXCDR_CFG2': '0x0756',
         'RXOUT_DIV'      : '2',
         'TXOUT_DIV'      : '2',
         'TX_PROGDIV_CFG' : '20.0',
@@ -27,7 +34,7 @@ LINK_SPEED_TABLE = {
         'CPLL_CFG2'      : '0x0007' ,
         'CPLL_FBDIV'     : '4',
         'PMA_RSV1'       : '0xF000',
-        'RXCDR_CFG2_GEN3': '0x0746',
+        'RXCDR_CFG2': '0x0746',
         'RXOUT_DIV'      : '4',
         'TXOUT_DIV'      : '4',
         'TX_PROGDIV_CFG' : '40.0',
@@ -37,7 +44,7 @@ LINK_SPEED_TABLE = {
         'CPLL_CFG2'      : '0x0007' ,
         'CPLL_FBDIV'     : '4',
         'PMA_RSV1'       : '0xF000',
-        'RXCDR_CFG2_GEN3': '0x0766',
+        'RXCDR_CFG2': '0x0766',
         'RXOUT_DIV'      : '1',
         'TXOUT_DIV'      : '1',
         'TX_PROGDIV_CFG' : '10.0',
@@ -47,7 +54,7 @@ LINK_SPEED_TABLE = {
         'CPLL_CFG2'      : '0x0004',
         'CPLL_FBDIV'     : '5',
         'PMA_RSV1'       : '0xe000',
-        'RXCDR_CFG2_GEN3': '0x0766',
+        'RXCDR_CFG2': '0x0766',
         'RXOUT_DIV'      : '1',
         'TXOUT_DIV'      : '1',
         'TX_PROGDIV_CFG' : '10.0',
@@ -70,6 +77,13 @@ class AppPgp2bLane(pr.Device):
         self.Gthe3Channel.hideVariables(True)
         for key in LINK_SPEED_TABLE['3.125'].keys():
             self.Gthe3Channel.node(key).hidden = False
+
+        for var in self.Gthe3Channel.find(name='(CLK_COR)'):
+            print(f'Unhiding {var.path}')
+            var.hidden = False
+
+        self.Gthe3Channel.RX_DATA_WIDTH.hidden = False
+        self.Gthe3Channel.TX_DATA_WIDTH.hidden = False        
 
         self.add(pr.LinkVariable(
             name='LinkRate',

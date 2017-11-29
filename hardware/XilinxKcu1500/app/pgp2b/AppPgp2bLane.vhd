@@ -2,7 +2,7 @@
 -- File       : AppPgp2bLane.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-22
--- Last update: 2017-11-14
+-- Last update: 2017-11-28
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -200,7 +200,7 @@ begin
             TPD_G               => TPD_G,
             INT_PIPE_STAGES_G   => 1,
             PIPE_STAGES_G       => 1,
-            SLAVE_READY_EN_G    => true,
+            SLAVE_READY_EN_G    => false,
             VALID_THOLD_G       => 1,
             INT_WIDTH_SELECT_G  => "NARROW",
             -- FIFO configurations

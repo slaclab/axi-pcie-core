@@ -2,7 +2,7 @@
 -- File       : AppPgp2bLane.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-22
--- Last update: 2017-11-28
+-- Last update: 2017-11-29
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -94,20 +94,22 @@ architecture mapping of AppPgp2bLane is
    signal pgpRxMasters : AxiStreamMasterArray(3 downto 0);
    signal pgpRxSlaves  : AxiStreamSlaveArray(3 downto 0);
 
-   signal pgpTxOutClk : sl;
-   signal pgpTxClk    : sl;
-   signal pgpTxRst    : sl;
-   signal pgpTxInInt  : Pgp2bTxInType;
-   signal pgpTxOutInt : Pgp2bTxOutType;
-   signal txMasters   : AxiStreamMasterArray(3 downto 0);
-   signal txSlaves    : AxiStreamSlaveArray(3 downto 0);
+   signal pgpTxOutClk    : sl;
+   signal pgpTxClk       : sl;
+   signal pgpTxRst       : sl;
+   signal pgpTxResetDone : sl;
+   signal pgpTxInInt     : Pgp2bTxInType;
+   signal pgpTxOutInt    : Pgp2bTxOutType;
+   signal txMasters      : AxiStreamMasterArray(3 downto 0);
+   signal txSlaves       : AxiStreamSlaveArray(3 downto 0);
 
-   signal pgpRxClk    : sl;
-   signal pgpRxRst    : sl;
-   signal pgpRxInInt  : Pgp2bRxInType;
-   signal pgpRxOutInt : Pgp2bRxOutType;
-   signal rxMasters   : AxiStreamMasterArray(3 downto 0);
-   signal rxCtrl      : AxiStreamCtrlArray(3 downto 0);
+   signal pgpRxClk       : sl;
+   signal pgpRxRst       : sl;
+   signal pgpRxResetDone : sl;
+   signal pgpRxInInt     : Pgp2bRxInType;
+   signal pgpRxOutInt    : Pgp2bRxOutType;
+   signal rxMasters      : AxiStreamMasterArray(3 downto 0);
+   signal rxCtrl         : AxiStreamCtrlArray(3 downto 0);
 
 
 begin
@@ -244,10 +246,12 @@ begin
          pgpGtRxP        => gtRxP,
          pgpGtRxN        => gtRxN,
          pgpTxReset      => pgpTxRst,
+         pgpTxResetDone  => pgpTxResetDone,
          pgpTxClk        => pgpTxClk,
          pgpTxOutClk     => pgpTxOutClk,
          pgpTxMmcmLocked => '1',
          pgpRxReset      => pgpRxRst,
+         pgpRxResetDone  => open,
          pgpRxClk        => pgpRxClk,
          pgpRxOutClk     => open,
          pgpRxMmcmLocked => '1',
@@ -288,7 +292,9 @@ begin
 --          arst   => '0',                 -- [in]
 --          clk    => pgpTxClk,            -- [in]
 --          rstOut => pgpTxRst);           -- [out]
-   pgpTxRst <= '0';
+
+   -- Use a normal Synchronizer here? (Not reset sync, which would deadlock)
+   pgpTxRst <= not pgpTxResetDone;
 
    pgpRxRst <= pgpTxRst;
 

@@ -12,12 +12,12 @@ LINK_SPEED_TABLE = {
         'RXOUT_DIV'      : '2',
         'TXOUT_DIV'      : '2',
         'TX_PROGDIV_CFG' : '20.0',
-        'CLK_COR_MIN_LAT' : '12',
-        'CLK_COR_MAX_LAT' : '17',
-        'CLK_COR_SEQ_1_1' : '256',
-        'CLK_COR_SEQ_1_2' : '0',
-        'CLK_COR_SEQ_1_3' : '0',
-        'CLK_COR_SEQ_1_4' : '0',        
+        'CLK_COR_MIN_LAT' : '18',
+        'CLK_COR_MAX_LAT' : '21',
+        'CLK_COR_SEQ_1_1' : '0b0110111100',
+        'CLK_COR_SEQ_1_2' : '0b0100011100',
+        'CLK_COR_SEQ_1_3' : '0b0100011100',
+        'CLK_COR_SEQ_1_4' : '0b0100011100',        
     },
     '2.5' : {
         'CPLL_CFG0'      : '0x67F8',
@@ -79,7 +79,6 @@ class AppPgp2bLane(pr.Device):
             self.Gthe3Channel.node(key).hidden = False
 
         for var in self.Gthe3Channel.find(name='(CLK_COR)'):
-            print(f'Unhiding {var.path}')
             var.hidden = False
 
         self.Gthe3Channel.RX_DATA_WIDTH.hidden = False
@@ -99,8 +98,8 @@ class AppPgp2bLane(pr.Device):
                 self.Gthe3Channel.node(k).setDisp(v)
             else:
                 self.Gthe3Channel.node(k).set(v)
-        self.Pgp2bAxi.ResetRx()
-        self.Pgp2bAxi.ResetTx()
+#       self.Pgp2bAxi.ResetRx()
+#       self.Pgp2bAxi.ResetTx()
         self.Pgp2bAxi.ResetGt()
         # Need to reset when done
 

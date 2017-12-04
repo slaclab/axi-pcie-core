@@ -2,7 +2,7 @@
 -- File       : AppPgp2bLane.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-22
--- Last update: 2017-11-29
+-- Last update: 2017-12-04
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -103,6 +103,7 @@ architecture mapping of AppPgp2bLane is
    signal txMasters      : AxiStreamMasterArray(3 downto 0);
    signal txSlaves       : AxiStreamSlaveArray(3 downto 0);
 
+   signal pgpRxOutClk    : sl;
    signal pgpRxClk       : sl;
    signal pgpRxRst       : sl;
    signal pgpRxResetDone : sl;
@@ -136,8 +137,11 @@ begin
    U_DeMux : entity work.AxiStreamDeMux
       generic map (
          TPD_G         => TPD_G,
+         NUM_MASTERS_G => 4,
+         MODE_G        => "INDEXED",
          PIPE_STAGES_G => 1,
-         NUM_MASTERS_G => 4)
+         TDEST_HIGH_G  => 3,
+         TDEST_LOW_G   => 0)
       port map (
          -- Clock and reset
          axisClk      => pgpClk,
@@ -151,9 +155,11 @@ begin
 
    U_Mux : entity work.AxiStreamMux
       generic map (
-         TPD_G         => TPD_G,
-         PIPE_STAGES_G => 1,
-         NUM_SLAVES_G  => 4)
+         TPD_G          => TPD_G,
+         PIPE_STAGES_G  => 1,
+         NUM_SLAVES_G   => 4,
+         ILEAVE_EN_G    => true,
+         ILEAVE_REARB_G => 128)
       port map (
          -- Clock and reset
          axisClk      => pgpClk,
@@ -174,7 +180,8 @@ begin
             INT_PIPE_STAGES_G   => 1,
             PIPE_STAGES_G       => 1,
             SLAVE_READY_EN_G    => true,
-            VALID_THOLD_G       => 1,
+            VALID_THOLD_G       => 128,
+            VALID_BURST_MODE_G  => true,
             INT_WIDTH_SELECT_G  => "NARROW",
             -- FIFO configurations
             BRAM_EN_G           => true,
@@ -253,7 +260,7 @@ begin
          pgpRxReset      => pgpRxRst,
          pgpRxResetDone  => open,
          pgpRxClk        => pgpRxClk,
-         pgpRxOutClk     => open,
+         pgpRxOutClk     => pgpRxOutClk,
          pgpRxMmcmLocked => '1',
          pgpTxIn         => pgpTxInInt,
          pgpTxOut        => pgpTxOutInt,
@@ -271,8 +278,7 @@ begin
          axilWriteSlave  => axilWriteSlaves(DRP_AXIL_INDEX_C));
 
    -- Pgp clocking
-   -- Use TxRecClk to drive everything
-   BUFG_GT_Inst : BUFG_GT
+   BUFG_GT_TX : BUFG_GT
       port map (
          I       => pgpTxOutClk,
          CE      => '1',
@@ -282,7 +288,16 @@ begin
          DIV     => "000",
          O       => pgpTxClk);
 
-   pgpRxClk <= pgpTxClk;
+   BUFG_GT_RX : BUFG_GT
+      port map (
+         I       => pgpRxOutClk,
+         CE      => '1',
+         CEMASK  => '1',
+         CLR     => '0',
+         CLRMASK => '1',
+         DIV     => "000",
+         O       => pgpRxClk);
+
 
 --    U_PwrUpRst_1 : entity work.PwrUpRst
 --       generic map (
@@ -294,9 +309,11 @@ begin
 --          rstOut => pgpTxRst);           -- [out]
 
    -- Use a normal Synchronizer here? (Not reset sync, which would deadlock)
-   pgpTxRst <= not pgpTxResetDone;
+   pgpTxRst <= '0';                     --not pgpTxResetDone;
 
-   pgpRxRst <= pgpTxRst;
+
+   -- Thing to try - use not pgpRxResetDone here
+   pgpRxRst <= '0';                     --pgpTxRst;
 
    U_MON : entity work.Pgp2bAxi
       generic map (

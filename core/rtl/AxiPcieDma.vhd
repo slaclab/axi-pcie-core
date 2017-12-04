@@ -2,7 +2,7 @@
 -- File       : AxiPcieDma.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-11-21
+-- Last update: 2017-12-01
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXIS DMA Engine
 -------------------------------------------------------------------------------
@@ -58,9 +58,12 @@ end AxiPcieDma;
 
 architecture mapping of AxiPcieDma is
 
+   constant BURST_BYTES_C : positive := 256;  -- 256B is max. size without paging
+   constant TDATA_BYTES_C : positive := DMA_AXIS_CONFIG_C.TDATA_BYTES_C;
+
    constant INT_DMA_AXIS_CONFIG_C : AxiStreamConfigType := (
       TSTRB_EN_C    => DMA_AXIS_CONFIG_C.TSTRB_EN_C,
-      TDATA_BYTES_C => DMA_AXIS_CONFIG_C.TDATA_BYTES_C,
+      TDATA_BYTES_C => TDATA_BYTES_C,
       TDEST_BITS_C  => DMA_AXIS_CONFIG_C.TDEST_BITS_C,
       TID_BITS_C    => DMA_AXIS_CONFIG_C.TID_BITS_C,
       TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C for performance 
@@ -133,8 +136,7 @@ begin
          AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
          CHAN_COUNT_G      => DMA_SIZE_G,
          RD_PIPE_STAGES_G  => 1,
-         BURST_BYTES_G     => 256,
-         --RD_PEND_THRESH_G  => 512)
+         BURST_BYTES_G     => BURST_BYTES_C,
          RD_PEND_THRESH_G  => 1)
       port map (
          -- Clock/Reset
@@ -176,21 +178,19 @@ begin
       --------------------------
       U_IbFifo : entity work.AxiStreamFifoV2
          generic map (
+            -- General Configurations
             TPD_G               => TPD_G,
             INT_PIPE_STAGES_G   => 1,
             PIPE_STAGES_G       => 1,
             SLAVE_READY_EN_G    => true,
-            VALID_THOLD_G       => 1,
+            VALID_THOLD_G       => (BURST_BYTES_C/TDATA_BYTES_C),  -- Hold until enough to burst into the DMA engine
+            VALID_BURST_MODE_G  => true,
+            -- FIFO configurations
             BRAM_EN_G           => true,
-            XIL_DEVICE_G        => "7SERIES",
-            USE_BUILT_IN_G      => false,
             GEN_SYNC_FIFO_G     => true,
-            ALTERA_SYN_G        => false,
-            ALTERA_RAM_G        => "M9K",
             CASCADE_SIZE_G      => 1,
             FIFO_ADDR_WIDTH_G   => 9,
-            FIFO_FIXED_THRESH_G => true,
-            FIFO_PAUSE_THRESH_G => 500,  -- Unused
+            -- AXI Stream Port Configurations
             SLAVE_AXI_CONFIG_G  => DMA_AXIS_CONFIG_C,
             MASTER_AXI_CONFIG_G => INT_DMA_AXIS_CONFIG_C)
          port map (

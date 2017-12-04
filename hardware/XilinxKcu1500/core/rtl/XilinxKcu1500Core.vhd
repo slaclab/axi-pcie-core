@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-11-16
+-- Last update: 2017-11-27
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -260,6 +260,8 @@ begin
       generic map (
          TPD_G            => TPD_G,
          BUILD_INFO_G     => BUILD_INFO_G,
+         XIL_DEVICE_G     => "ULTRASCALE",
+         BOOT_PROM_G      => "SPI",
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C,
          DMA_SIZE_G       => DMA_SIZE_G)

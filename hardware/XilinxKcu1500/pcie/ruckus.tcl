@@ -31,3 +31,9 @@ if { $::env(PCIE_GEN_NUM)  == "GEN1" } {
    puts "It must be either GEN1 or GEN2 or GEN3"
    puts "Please fix this in $::env(PROJ_DIR)/Makefile\n\n"; exit -1
 }   
+
+if { [info exists ::env(EXTENDED_PCIE)] != 1 || $::env(EXTENDED_PCIE) == 0 } {
+   set EXTENDED_PCIE 1
+} else {
+   loadRuckusTcl "$::DIR_PATH/extended"
+}

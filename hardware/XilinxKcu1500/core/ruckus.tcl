@@ -7,6 +7,8 @@ loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Core.xdc"
 loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500App.xdc"
 
 # Check for  partial reconfiguration
-if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 } {
+if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 1 } {
+   set BYPASS_RECONFIG 1
+} else {
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Reconfig.xdc"
 }

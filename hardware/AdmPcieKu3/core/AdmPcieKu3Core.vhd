@@ -2,7 +2,7 @@
 -- File       : AdmPcieKu3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-11-27
+-- Last update: 2017-12-04
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for ADM-PCIE-KU3 board 
 --
@@ -80,11 +80,12 @@ entity AdmPcieKu3Core is
       qsfp1RstL      : out   sl;
       qsfp1LpMode    : out   sl;
       -- Boot Memory Ports 
-      flashAddr      : out   slv(25 downto 0);
+      flashAddr      : out   slv(23 downto 0);
       flashData      : inout slv(15 downto 4);
       flashAdv       : out   sl;
       flashOeL       : out   sl;
       flashWeL       : out   sl;
+      flashRstL      : out   sl;
       -- PCIe Ports 
       pciRstL        : in    sl;
       pciRefClkP     : in    sl;
@@ -130,6 +131,7 @@ architecture mapping of AdmPcieKu3Core is
    signal cardReset   : sl;
    signal dmaIrq      : sl;
    signal flashCeL    : sl;
+   signal flashClk    : sl;
 
 begin
 
@@ -191,7 +193,7 @@ begin
          TPD_G            => TPD_G,
          BUILD_INFO_G     => BUILD_INFO_G,
          XIL_DEVICE_G     => "ULTRASCALE",
-         BOOT_PROM_G      => "BPI",      
+         BOOT_PROM_G      => "BPI",
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C,
          DMA_SIZE_G       => DMA_SIZE_G)
@@ -224,16 +226,18 @@ begin
          cardResetOut       => cardReset,
          cardResetIn        => systemReset,
          -- Boot Memory Ports 
-         bpiAddr          => flashAddress,
-         bpiAdv           => flashAdv,
-         bpiCeL           => flashCeL,
-         bpiOeL           => flashOeL,
-         bpiWeL           => flashWeL,
-         bpiDin           => flashDin,
-         bpiDout          => flashDout,
-         bpiTri           => flashTri);
+         bpiAddr            => flashAddress,
+         bpiAdv             => flashAdv,
+         bpiClk             => flashClk,
+         bpiRstL            => flashRstL,
+         bpiCeL             => flashCeL,
+         bpiOeL             => flashOeL,
+         bpiWeL             => flashWeL,
+         bpiDin             => flashDin,
+         bpiDout            => flashDout,
+         bpiTri             => flashTri);
 
-   flashAddr <= flashAddress(25 downto 0);
+   flashAddr <= flashAddress(23 downto 0);
 
    U_STARTUPE3 : STARTUPE3
       generic map (
@@ -253,8 +257,8 @@ begin
          GTS       => '0',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
          KEYCLEARB => '0',  -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
          PACK      => '0',  -- 1-bit input: PROGRAM acknowledge input
-         USRCCLKO  => '1',              -- 1-bit input: User CCLK input
-         USRCCLKTS => '1',  -- 1-bit input: User CCLK 3-state enable input
+         USRCCLKO  => flashClk,         -- 1-bit input: User CCLK input
+         USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
          USRDONEO  => '1',  -- 1-bit input: User DONE pin output control
          USRDONETS => '1');  -- 1-bit input: User DONE 3-state enable output              
 

@@ -66,7 +66,6 @@
 # AP9    FUSION_AUX1   3.3
 
 # U22    FLASH_WAIT        1.8
-# AB24   FPGA_FLASH_RST_L  1.8
 
 # V7     INIT_B_1V8        1.8
 # T7     PROGRAM_B_1V8     1.8
@@ -509,8 +508,8 @@ set_property -dict { PACKAGE_PIN J23 IOSTANDARD LVCMOS18 } [get_ports { flashAdd
 set_property -dict { PACKAGE_PIN H24 IOSTANDARD LVCMOS18 } [get_ports { flashAddr[21] }]; # H24   FLASH_A21   1.8
 set_property -dict { PACKAGE_PIN J26 IOSTANDARD LVCMOS18 } [get_ports { flashAddr[22] }]; # J26   FLASH_A22   1.8
 set_property -dict { PACKAGE_PIN H26 IOSTANDARD LVCMOS18 } [get_ports { flashAddr[23] }]; # H26   FLASH_A23   1.8
-set_property -dict { PACKAGE_PIN H27 IOSTANDARD LVCMOS18 } [get_ports { flashAddr[24] }]; # H27   FLASH_A24   1.8
-set_property -dict { PACKAGE_PIN G27 IOSTANDARD LVCMOS18 } [get_ports { flashAddr[25] }]; # G27   FLASH_A25   1.8
+# set_property -dict { PACKAGE_PIN H27 IOSTANDARD LVCMOS18 } [get_ports { flashAddr[24] }]; # H27   FLASH_A24   1.8
+# set_property -dict { PACKAGE_PIN G27 IOSTANDARD LVCMOS18 } [get_ports { flashAddr[25] }]; # G27   FLASH_A25   1.8
 
 # set_property -dict { PACKAGE_PIN AC7 IOSTANDARD LVCMOS18 PULLUP true} [get_ports { flashData[0]  }]; # AC7   FLASH_DQ0   1.8
 # set_property -dict { PACKAGE_PIN AB7 IOSTANDARD LVCMOS18 PULLUP true} [get_ports { flashData[1]  }]; # AB7   FLASH_DQ1   1.8
@@ -529,10 +528,11 @@ set_property -dict { PACKAGE_PIN P23 IOSTANDARD LVCMOS18 PULLUP true} [get_ports
 set_property -dict { PACKAGE_PIN R25 IOSTANDARD LVCMOS18 PULLUP true} [get_ports { flashData[14] }]; # R25   FLASH_DQ14   1.8
 set_property -dict { PACKAGE_PIN R26 IOSTANDARD LVCMOS18 PULLUP true} [get_ports { flashData[15] }]; # R26   FLASH_DQ15   1.8
 
-# set_property -dict { PACKAGE_PIN U7  IOSTANDARD LVCMOS18 } [get_ports { flashCeL }]; # U7    FLASH_CE_L   1.8
-set_property -dict { PACKAGE_PIN G25 IOSTANDARD LVCMOS18 } [get_ports { flashOeL }]; # G25   FLASH_OE_L   1.8
-set_property -dict { PACKAGE_PIN G26 IOSTANDARD LVCMOS18 } [get_ports { flashWeL }]; # G26   FLASH_WE_L   1.8
-set_property -dict { PACKAGE_PIN N27 IOSTANDARD LVCMOS18 } [get_ports { flashAdv }]; # N27   FLASH_ADV_L  1.8
+# set_property -dict { PACKAGE_PIN U7 IOSTANDARD LVCMOS18 } [get_ports { flashCeL }];  # U7   FLASH_CE_L       1.8
+set_property -dict { PACKAGE_PIN G25  IOSTANDARD LVCMOS18 } [get_ports { flashOeL }];  # G25  FLASH_OE_L       1.8
+set_property -dict { PACKAGE_PIN G26  IOSTANDARD LVCMOS18 } [get_ports { flashWeL }];  # G26  FLASH_WE_L       1.8
+set_property -dict { PACKAGE_PIN N27  IOSTANDARD LVCMOS18 } [get_ports { flashAdv }];  # N27  FLASH_ADV_L      1.8
+set_property -dict { PACKAGE_PIN AB24 IOSTANDARD LVCMOS18 } [get_ports { flashRstL }]; # AB24 FPGA_FLASH_RST_L 1.8
 
 ####################
 # PCIe Constraints #

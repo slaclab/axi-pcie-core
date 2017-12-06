@@ -108,14 +108,12 @@ set_property -dict { PACKAGE_PIN AT24  IOSTANDARD LVCMOS18 } [get_ports { qsfp1M
 # Clocks #
 ##########
 
-create_clock -period  6.400 -name userClkP  [get_ports {userClkP}]
+create_clock -period  6.400 -name userClkP   [get_ports {userClkP}]
 create_clock -period 11.111 -name emcClk     [get_ports {emcClk}]
 create_clock -period 10.000 -name pciRefClkP [get_ports {pciRefClkP}]
+create_clock -period 16.000 -name dnaClk     [get_pins  {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 
-create_generated_clock -name dnaClk  [get_pins {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
-
-set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {dnaClk}]
-
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks {dnaClk}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {emcClk}]
 
 set_false_path -from [get_ports {pciRstL}]

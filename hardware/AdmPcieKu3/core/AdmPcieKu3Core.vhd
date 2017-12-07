@@ -2,7 +2,7 @@
 -- File       : AdmPcieKu3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-12-04
+-- Last update: 2017-12-06
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for ADM-PCIE-KU3 board 
 --
@@ -193,7 +193,7 @@ begin
          TPD_G            => TPD_G,
          BUILD_INFO_G     => BUILD_INFO_G,
          XIL_DEVICE_G     => "ULTRASCALE",
-         BOOT_PROM_G      => "BPI",
+         BOOT_PROM_G      => "NOT_SUPPORTED",
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C,
          DMA_SIZE_G       => DMA_SIZE_G)

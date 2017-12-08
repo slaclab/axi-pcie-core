@@ -50,7 +50,6 @@ entity EvrFrontEnd is
       axilWriteSlave  : out AxiLiteWriteSlaveType;
       -- Reference Clocks
       userClk156      : in  sl;
-      userClk100      : in  sl;
       -- GT Serial Ports
       evrRxP          : in  slv(1 downto 0);
       evrRxN          : in  slv(1 downto 0);
@@ -379,7 +378,6 @@ begin
          txPostCursor    => txPostCursor,
          loopback        => loopback,
          userClk156      => userClk156,
-         userClk100      => userClk100,
          mmcmRst         => mmcmRst,
          mmcmLocked      => mmcmLocked,
          refClk          => refClk,

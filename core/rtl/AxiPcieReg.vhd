@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-12-04
+-- Last update: 2017-12-11
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -370,6 +370,52 @@ begin
                -- Clocks and Resets
                axiClk         => axiClk,
                axiRst         => axiRst);
+
+      end generate GEN_VEC;
+
+   end generate;
+
+   GEN_NO_PROM : if ((BOOT_PROM_G /= "BPI") and (BOOT_PROM_G /= "SPI")) generate
+
+      bpiAddr <= (others => '1');
+      bpiAdv  <= '1';
+      bpiClk  <= '1';
+      bpiRstL <= '1';
+      bpiCeL  <= '1';
+      bpiOeL  <= '1';
+      bpiWeL  <= '1';
+      bpiTri  <= '1';
+      bpiDin  <= (others => '1');
+
+      U_AxiLiteEmpty : entity work.AxiLiteEmpty
+         generic map (
+            TPD_G            => TPD_G,
+            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
+         port map (
+            axiClk         => axiClk,
+            axiClkRst      => axiRst,
+            axiReadMaster  => axilReadMasters(BPI_INDEX_C),
+            axiReadSlave   => axilReadSlaves(BPI_INDEX_C),
+            axiWriteMaster => axilWriteMasters(BPI_INDEX_C),
+            axiWriteSlave  => axilWriteSlaves(BPI_INDEX_C));
+
+      GEN_VEC : for i in 1 downto 0 generate
+
+         spiCsL  <= (others => '1');
+         spiSck  <= (others => '1');
+         spiMosi <= (others => '1');
+
+         U_AxiLiteEmpty : entity work.AxiLiteEmpty
+            generic map (
+               TPD_G            => TPD_G,
+               AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
+            port map (
+               axiClk         => axiClk,
+               axiClkRst      => axiRst,
+               axiReadMaster  => axilReadMasters(SPI0_INDEX_C+i),
+               axiReadSlave   => axilReadSlaves(SPI0_INDEX_C+i),
+               axiWriteMaster => axilWriteMasters(SPI0_INDEX_C+i),
+               axiWriteSlave  => axilWriteSlaves(SPI0_INDEX_C+i));
 
       end generate GEN_VEC;
 

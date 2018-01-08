@@ -186,20 +186,7 @@ class TimingCore(pr.Device):
             disp         = '{:d}',
             mode         = "RO",
             pollInterval = 1
-        ))  
-        
-        self.add(pr.RemoteVariable( 
-            name         = "RefClk100Freq",
-            description  = "RefClk100Freq",
-            offset       = (regOffset | 0x54),
-            bitSize      = 32,
-            bitOffset    = 0,
-            units        = 'Hz',
-            base         = pr.UInt,
-            disp         = '{:d}',
-            mode         = "RO",
-            pollInterval = 1
-        ))          
+        ))         
         
         self.addRemoteVariables(   
             name         = "EvrRefClkFreq",

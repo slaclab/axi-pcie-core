@@ -1,25 +1,13 @@
 -------------------------------------------------------------------------------
--- File       : AdmPcieKu3Core.vhd
+-- File       : XilinxKcu1500PcieExtendedCore.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-12-11
+-- Last update: 2017-12-04
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for ADM-PCIE-KU3 board 
+-- Description: AXI PCIe Core for KCU1500 board 
 --
--- # ADM-PCIE-KU3 Product Page
--- http://www.alpha-data.com/dcp/products.php?product=adm-pcie-ku3
---
--- # ADM-PCIE-KU3 Pinout
--- http://www.alpha-data.com/dcp/otherproductdatafiles/adm-pcie-ku3_pinout.csv
---
--- # ADM-PCIE-KU3 Datasheet
--- http://www.alpha-data.com/pdfs/adm-pcie-ku3.pdf
---
--- # ADM-PCIE-KU3 User Manual
--- http://www.alpha-data.com/pdfs/adm-pcie-ku3%20user%20manual.pdf
---
--- # ADM-PCIE-KU3 Factory Default image
--- https://support.alpha-data.com/portals/0/downloads/adm-pcie-ku3_default_images/adm-pcie-ku3_default_images.zip
+-- # KCU1500 Product Page
+-- https://www.xilinx.com/products/boards-and-kits/dk-u1-kcu1500-g.html
 --
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
@@ -45,7 +33,7 @@ use work.AxiPciePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity AdmPcieKu3Core is
+entity XilinxKcu1500PcieExtendedCore is
    generic (
       TPD_G            : time                  := 1 ns;
       BUILD_INFO_G     : BuildInfoType;
@@ -72,24 +60,18 @@ entity AdmPcieKu3Core is
       appWriteSlave  : in  AxiLiteWriteSlaveType;
       -------------------
       --  Top Level Ports
-      -------------------      
-      -- QSFP[0] Ports
-      qsfp0RstL      : out sl;
-      qsfp0LpMode    : out sl;
-      -- QSFP[1] Ports
-      qsfp1RstL      : out sl;
-      qsfp1LpMode    : out sl;
-      -- PCIe Ports 
+      -------------------
+      -- Extended PCIe Ports 
       pciRstL        : in  sl;
-      pciRefClkP     : in  sl;
-      pciRefClkN     : in  sl;
-      pciRxP         : in  slv(7 downto 0);
-      pciRxN         : in  slv(7 downto 0);
-      pciTxP         : out slv(7 downto 0);
-      pciTxN         : out slv(7 downto 0));
-end AdmPcieKu3Core;
+      pciExtRefClkP  : in  sl;
+      pciExtRefClkN  : in  sl;
+      pciExtRxP      : in  slv(7 downto 0);
+      pciExtRxN      : in  slv(7 downto 0);
+      pciExtTxP      : out slv(7 downto 0);
+      pciExtTxN      : out slv(7 downto 0));
+end XilinxKcu1500PcieExtendedCore;
 
-architecture mapping of AdmPcieKu3Core is
+architecture mapping of XilinxKcu1500PcieExtendedCore is
 
    constant AXI_ERROR_RESP_C : slv(1 downto 0) := AXI_RESP_OK_C;  -- Always return OK to a MMAP()
 
@@ -133,15 +115,10 @@ begin
          rstIn  => systemReset,
          rstOut => sysRst);
 
-   qsfp0RstL   <= not(systemReset);
-   qsfp1RstL   <= not(systemReset);
-   qsfp0LpMode <= '0';
-   qsfp1LpMode <= '0';
-
    ---------------
    -- AXI PCIe PHY
    ---------------   
-   U_AxiPciePhy : entity work.AdmPcieKu3PciePhyWrapper
+   U_AxiPciePhy : entity work.XilinxKcu1500ExtendedPciePhyWrapper
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -164,12 +141,12 @@ begin
          dmaIrq         => dmaIrq,
          -- PCIe Ports 
          pciRstL        => pciRstL,
-         pciRefClkP     => pciRefClkP,
-         pciRefClkN     => pciRefClkN,
-         pciRxP         => pciRxP,
-         pciRxN         => pciRxN,
-         pciTxP         => pciTxP,
-         pciTxN         => pciTxN);
+         pciRefClkP     => pciExtRefClkP,
+         pciRefClkN     => pciExtRefClkN,
+         pciRxP         => pciExtRxP,
+         pciRxN         => pciExtRxN,
+         pciTxP         => pciExtTxP,
+         pciTxN         => pciExtTxN);
 
    ---------------
    -- AXI PCIe REG
@@ -179,8 +156,9 @@ begin
          TPD_G            => TPD_G,
          BUILD_INFO_G     => BUILD_INFO_G,
          XIL_DEVICE_G     => "ULTRASCALE",
-         BOOT_PROM_G      => "NOT_SUPPORTED",
+         BOOT_PROM_G      => "NONE",
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
+         EN_DEVICE_DNA_G  => false,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C,
          DMA_SIZE_G       => DMA_SIZE_G)
       port map (

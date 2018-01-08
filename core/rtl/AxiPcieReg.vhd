@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-11-27
+-- Last update: 2017-12-11
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -31,6 +31,7 @@ entity AxiPcieReg is
       XIL_DEVICE_G     : string                 := "7SERIES";
       BOOT_PROM_G      : string                 := "BPI";
       DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
+      EN_DEVICE_DNA_G  : boolean                := true;
       AXI_ERROR_RESP_G : slv(1 downto 0)        := AXI_RESP_OK_C;
       DMA_SIZE_G       : positive range 1 to 16 := 1);
    port (
@@ -152,13 +153,35 @@ begin
 
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
-   ---------------------------------------------------------------------------------------------
-   userValues(0) <= toSlv(DMA_SIZE_G, 32);
-   userValues(1) <= x"00000001";
-   userValues(2) <= DRIVER_TYPE_ID_G;
-   userValues(3) <= x"00000001" when(XIL_DEVICE_G = "7SERIES") else x"00000000";
-   userValues(4) <= toSlv(getTimeRatio(SYS_CLK_FREQ_C, 1.0), 32);
-   userValues(5) <= x"00000001" when(BOOT_PROM_G = "SPI")      else x"00000000";
+   ---------------------------------------------------------------------------------------------   
+   process(appReset)
+      variable i : natural;
+   begin
+      userValues(0) <= toSlv(DMA_SIZE_G, 32);
+      userValues(1) <= x"00000001";
+      userValues(2) <= DRIVER_TYPE_ID_G;
+
+      case XIL_DEVICE_G is
+         when "ULTRASCALE" => userValues(3) <= x"00000000";
+         when "7SERIES"    => userValues(3) <= x"00000001";
+         when others       => userValues(3) <= x"FFFFFFFF";
+      end case;
+
+      userValues(4) <= toSlv(getTimeRatio(SYS_CLK_FREQ_C, 1.0), 32);
+
+      case BOOT_PROM_G is
+         when "BPI"  => userValues(5) <= x"00000000";
+         when "SPI"  => userValues(5) <= x"00000001";
+         when others => userValues(5) <= x"FFFFFFFF";
+      end case;
+
+      userValues(6)(0) <= appReset;
+
+      for i in 63 downto 7 loop
+         userValues(i) <= x"00000000";
+      end loop;
+
+   end process;
 
    -------------------------          
    -- AXI-to-AXI-Lite Bridge
@@ -225,7 +248,7 @@ begin
          BUILD_INFO_G     => BUILD_INFO_G,
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
          CLK_PERIOD_G     => (1.0/SYS_CLK_FREQ_C),
-         EN_DEVICE_DNA_G  => true,
+         EN_DEVICE_DNA_G  => EN_DEVICE_DNA_G,
          XIL_DEVICE_G     => XIL_DEVICE_G)
       port map (
          -- AXI-Lite Interface
@@ -347,6 +370,52 @@ begin
                -- Clocks and Resets
                axiClk         => axiClk,
                axiRst         => axiRst);
+
+      end generate GEN_VEC;
+
+   end generate;
+
+   GEN_NO_PROM : if ((BOOT_PROM_G /= "BPI") and (BOOT_PROM_G /= "SPI")) generate
+
+      bpiAddr <= (others => '1');
+      bpiAdv  <= '1';
+      bpiClk  <= '1';
+      bpiRstL <= '1';
+      bpiCeL  <= '1';
+      bpiOeL  <= '1';
+      bpiWeL  <= '1';
+      bpiTri  <= '1';
+      bpiDin  <= (others => '1');
+
+      U_AxiLiteEmpty : entity work.AxiLiteEmpty
+         generic map (
+            TPD_G            => TPD_G,
+            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
+         port map (
+            axiClk         => axiClk,
+            axiClkRst      => axiRst,
+            axiReadMaster  => axilReadMasters(BPI_INDEX_C),
+            axiReadSlave   => axilReadSlaves(BPI_INDEX_C),
+            axiWriteMaster => axilWriteMasters(BPI_INDEX_C),
+            axiWriteSlave  => axilWriteSlaves(BPI_INDEX_C));
+
+      GEN_VEC : for i in 1 downto 0 generate
+
+         spiCsL  <= (others => '1');
+         spiSck  <= (others => '1');
+         spiMosi <= (others => '1');
+
+         U_AxiLiteEmpty : entity work.AxiLiteEmpty
+            generic map (
+               TPD_G            => TPD_G,
+               AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
+            port map (
+               axiClk         => axiClk,
+               axiClkRst      => axiRst,
+               axiReadMaster  => axilReadMasters(SPI0_INDEX_C+i),
+               axiReadSlave   => axilReadSlaves(SPI0_INDEX_C+i),
+               axiWriteMaster => axilWriteMasters(SPI0_INDEX_C+i),
+               axiWriteSlave  => axilWriteSlaves(SPI0_INDEX_C+i));
 
       end generate GEN_VEC;
 

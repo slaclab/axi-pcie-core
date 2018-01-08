@@ -2,7 +2,7 @@
 -- File       : EvrMisc.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-09-20
--- Last update: 2017-09-29
+-- Last update: 2017-12-06
 -------------------------------------------------------------------------------
 -- Description: 
 -------------------------------------------------------------------------------
@@ -37,7 +37,6 @@ entity EvrMisc is
       txPostCursor    : out slv(4 downto 0);
       loopback        : out slv(2 downto 0);
       userClk156      : in  sl;
-      userClk100      : in  sl;
       mmcmRst         : out sl;
       mmcmLocked      : in  slv(2 downto 0);
       refClk          : in  slv(2 downto 0);
@@ -84,7 +83,6 @@ architecture rtl of EvrMisc is
    signal rin : RegType;
 
    signal userClk156Freq : slv(31 downto 0);
-   signal userClk100Freq : slv(31 downto 0);
    signal refClkFreq     : Slv32Array(2 downto 0);
 
    signal txReset   : sl;
@@ -106,20 +104,6 @@ begin
          freqOut => userClk156Freq,
          -- Clocks
          clkIn   => userClk156,
-         locClk  => sysClk,
-         refClk  => sysClk);
-
-   U_userClk100 : entity work.SyncClockFreq
-      generic map (
-         TPD_G          => TPD_G,
-         REF_CLK_FREQ_G => SYS_CLK_FREQ_C,
-         REFRESH_RATE_G => 1.0,
-         CNT_WIDTH_G    => 32)
-      port map (
-         -- Frequency Measurement (locClk domain)
-         freqOut => userClk100Freq,
-         -- Clocks
-         clkIn   => userClk100,
          locClk  => sysClk,
          refClk  => sysClk);
 
@@ -189,7 +173,7 @@ begin
    --------------------- 
    comb : process (axilReadMaster, axilWriteMaster, mmcmLocked, r, refClkFreq,
                    refRst, rxClkFreq, rxReset, sysRst, txClkFreq, txReset,
-                   userClk100Freq, userClk156Freq) is
+                   userClk156Freq) is
       variable v      : RegType;
       variable regCon : AxiLiteEndPointType;
    begin
@@ -223,7 +207,6 @@ begin
       axiSlaveRegisterR(regCon, x"4C", 0, rxClkFreq);
 
       axiSlaveRegisterR(regCon, x"50", 0, userClk156Freq);
-      axiSlaveRegisterR(regCon, x"54", 0, userClk100Freq);
 
       axiSlaveRegisterR(regCon, x"60", 0, refClkFreq(0));
       axiSlaveRegisterR(regCon, x"64", 0, refClkFreq(1));

@@ -27,8 +27,6 @@ set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets  {U_Core/U_emcClk/O}]
 # PCIe Constraints #
 ####################
 
-set_property LOC PCIE_3_1_X0Y0   [get_cells {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/pcie3_uscale_top_inst/pcie3_uscale_wrapper_inst/PCIE_3_1_inst}]
-
 set_property PACKAGE_PIN BC2 [get_ports {pciRxP[7]}]
 set_property PACKAGE_PIN BC1 [get_ports {pciRxN[7]}]
 set_property PACKAGE_PIN BF5 [get_ports {pciTxP[7]}]
@@ -85,11 +83,8 @@ set_property -dict { PACKAGE_PIN BC27  IOSTANDARD LVCMOS18 } [get_ports { swDip[
 set_property -dict { PACKAGE_PIN BE25  IOSTANDARD LVCMOS18 } [get_ports { swDip[2] }]
 set_property -dict { PACKAGE_PIN BF25  IOSTANDARD LVCMOS18 } [get_ports { swDip[3] }]
 
-set_property -dict { PACKAGE_PIN AV24  IOSTANDARD LVDS_25 } [get_ports { userClkP[0] }]; # 156.25 MHz
-set_property -dict { PACKAGE_PIN AW24  IOSTANDARD LVDS_25 } [get_ports { userClkN[0] }]; # 156.25 MHz
-
-set_property PACKAGE_PIN AM11 [get_ports {userClkP[1]}]; # 100 MHz
-set_property PACKAGE_PIN AM10 [get_ports {userClkN[1]}]; # 100 MHz
+set_property -dict { PACKAGE_PIN AV24  IOSTANDARD LVDS_25 } [get_ports { userClkP }]; # 156.25 MHz
+set_property -dict { PACKAGE_PIN AW24  IOSTANDARD LVDS_25 } [get_ports { userClkN }]; # 156.25 MHz
 
 ##########################################
 # QSFP[0] ports located in the core area #
@@ -113,14 +108,13 @@ set_property -dict { PACKAGE_PIN AT24  IOSTANDARD LVCMOS18 } [get_ports { qsfp1M
 # Clocks #
 ##########
 
-create_clock -period  6.400 -name userClkP0  [get_ports {userClkP[0]}]
-create_clock -period 10.000 -name userClkP1  [get_ports {userClkP[1]}]
+create_clock -period  6.400 -name userClkP   [get_ports {userClkP}]
 create_clock -period 11.111 -name emcClk     [get_ports {emcClk}]
 create_clock -period 10.000 -name pciRefClkP [get_ports {pciRefClkP}]
+create_clock -period 16.000 -name dnaClk     [get_pins  {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 
-create_generated_clock -name dnaClk  [get_pins {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
-
-set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {dnaClk}]
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks {dnaClk}]
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {emcClk}]
 
 set_false_path -from [get_ports {pciRstL}]
 set_false_path -through [get_nets {U_Core/U_AxiPciePhy/U_AxiPcie/inst/inst/cfg_max*}]

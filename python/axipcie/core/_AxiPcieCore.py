@@ -29,6 +29,11 @@ class AxiPcieCore(pr.Device):
                  useSpi      = False,
                  **kwargs):
         super().__init__(description=description, **kwargs)
+
+        self.add(surf.axi.AxiStreamDmaV2Desc(
+            offset = 0x0000,
+            expand = False,
+        ))
         
         # PCI PHY status
         self.add(surf.xilinx.AxiPciePhy(            

@@ -82,7 +82,8 @@ class AppPgp2bLane(pr.Device):
             var.hidden = False
 
         self.Gthe3Channel.RX_DATA_WIDTH.hidden = False
-        self.Gthe3Channel.TX_DATA_WIDTH.hidden = False        
+        self.Gthe3Channel.TX_DATA_WIDTH.hidden = False
+        self.Gthe3Channel.enable.hidden = False                
 
         self.add(pr.LinkVariable(
             name='LinkRate',

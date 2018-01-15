@@ -2,7 +2,7 @@
 -- File       : AxiPcieDma.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-12-06
+-- Last update: 2018-01-15
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXIS DMA Engine
 -------------------------------------------------------------------------------
@@ -28,11 +28,13 @@ use work.AxiPciePkg.all;
 
 entity AxiPcieDma is
    generic (
-      TPD_G            : time                   := 1 ns;
-      SIMULATION_G     : boolean                := false;
-      DMA_SIZE_G       : positive range 1 to 16 := 1;
-      DESC_ARB_G       : boolean                := true;
-      AXI_ERROR_RESP_G : slv(1 downto 0)        := AXI_RESP_OK_C);
+      TPD_G             : time                   := 1 ns;
+      SIMULATION_G      : boolean                := false;
+      DMA_SIZE_G        : positive range 1 to 16 := 1;
+      INT_PIPE_STAGES_G : natural range 0 to 1   := 1;
+      PIPE_STAGES_G     : natural range 0 to 1   := 1;
+      DESC_ARB_G        : boolean                := true;
+      AXI_ERROR_RESP_G  : slv(1 downto 0)        := AXI_RESP_OK_C);
    port (
       -- Clock and reset
       axiClk          : in  sl;
@@ -178,8 +180,8 @@ begin
          generic map (
             -- General Configurations
             TPD_G               => TPD_G,
-            INT_PIPE_STAGES_G   => 1,
-            PIPE_STAGES_G       => 1,
+            INT_PIPE_STAGES_G   => INT_PIPE_STAGES_G,
+            PIPE_STAGES_G       => PIPE_STAGES_G,
             SLAVE_READY_EN_G    => true,
             VALID_THOLD_G       => 1,
             -- FIFO configurations
@@ -208,8 +210,8 @@ begin
       U_ObFifo : entity work.AxiStreamFifoV2
          generic map (
             TPD_G               => TPD_G,
-            INT_PIPE_STAGES_G   => 1,
-            PIPE_STAGES_G       => 1,
+            INT_PIPE_STAGES_G   => INT_PIPE_STAGES_G,
+            PIPE_STAGES_G       => PIPE_STAGES_G,
             SLAVE_READY_EN_G    => false,
             VALID_THOLD_G       => 1,
             BRAM_EN_G           => true,

@@ -2,7 +2,7 @@
 -- File       : AxiPciePgpCardG3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-11-27
+-- Last update: 2018-01-15
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for the PgpCardG3 board
 -- https://confluence.slac.stanford.edu/display/AIRTRACK/PC_260_101_03_C03
@@ -32,10 +32,12 @@ use unisim.vcomponents.all;
 
 entity AxiPciePgpCardG3Core is
    generic (
-      TPD_G            : time                   := 1 ns;
-      BUILD_INFO_G     : BuildInfoType;
-      DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
-      DMA_SIZE_G       : positive range 1 to 16 := 1);
+      TPD_G             : time                   := 1 ns;
+      BUILD_INFO_G      : BuildInfoType;
+      DRIVER_TYPE_ID_G  : slv(31 downto 0)       := x"00000000";
+      DMA_SIZE_G        : positive range 1 to 16 := 1;
+      INT_PIPE_STAGES_G : natural range 0 to 1   := 0;
+      PIPE_STAGES_G     : natural range 0 to 1   := 0);
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -225,9 +227,11 @@ begin
    ---------------   
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
-         TPD_G            => TPD_G,
-         DMA_SIZE_G       => DMA_SIZE_G,
-         AXI_ERROR_RESP_G => AXI_ERROR_RESP_C)
+         TPD_G             => TPD_G,
+         DMA_SIZE_G        => DMA_SIZE_G,
+         INT_PIPE_STAGES_G => INT_PIPE_STAGES_G,
+         PIPE_STAGES_G     => PIPE_STAGES_G,
+         AXI_ERROR_RESP_G  => AXI_ERROR_RESP_C)
       port map (
          -- Clock and reset
          axiClk          => sysClock,

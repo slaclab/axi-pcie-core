@@ -12,12 +12,15 @@ LINK_SPEED_TABLE = {
         'RXOUT_DIV'      : '2',
         'TXOUT_DIV'      : '2',
         'TX_PROGDIV_CFG' : '20.0',
+        'RX_PROGDIV_CFG' : '20.0',        
         'CLK_COR_MIN_LAT' : '18',
         'CLK_COR_MAX_LAT' : '21',
         'CLK_COR_SEQ_1_1' : '0b0110111100',
         'CLK_COR_SEQ_1_2' : '0b0100011100',
         'CLK_COR_SEQ_1_3' : '0b0100011100',
-        'CLK_COR_SEQ_1_4' : '0b0100011100',        
+        'CLK_COR_SEQ_1_4' : '0b0100011100',
+        'TX_DATA_WIDTH' : '20',
+        'RX_DATA_WIDTH' : '20',
     },
     '2.5' : {
         'CPLL_CFG0'      : '0x67F8',
@@ -28,6 +31,7 @@ LINK_SPEED_TABLE = {
         'RXOUT_DIV'      : '2',
         'TXOUT_DIV'      : '2',
         'TX_PROGDIV_CFG' : '20.0',
+        'RX_PROGDIV_CFG' : '20.0',                
     },
     '1.25' : {
         'CPLL_CFG0'      : '0x67F8' ,
@@ -38,6 +42,7 @@ LINK_SPEED_TABLE = {
         'RXOUT_DIV'      : '4',
         'TXOUT_DIV'      : '4',
         'TX_PROGDIV_CFG' : '40.0',
+        'RX_PROGDIV_CFG' : '40.0',                
     },
     '5.0' : {
         'CPLL_CFG0'      : '0x67F8' ,
@@ -48,6 +53,7 @@ LINK_SPEED_TABLE = {
         'RXOUT_DIV'      : '1',
         'TXOUT_DIV'      : '1',
         'TX_PROGDIV_CFG' : '10.0',
+        'RX_PROGDIV_CFG' : '10.0',                
     },
     '6.125' : {
         'CPLL_CFG0'      : '0x21F8',
@@ -58,6 +64,7 @@ LINK_SPEED_TABLE = {
         'RXOUT_DIV'      : '1',
         'TXOUT_DIV'      : '1',
         'TX_PROGDIV_CFG' : '10.0',
+        'RX_PROGDIV_CFG' : '10.0',                
     }
 }
 

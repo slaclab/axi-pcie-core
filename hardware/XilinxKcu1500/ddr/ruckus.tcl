@@ -1,6 +1,5 @@
 # Load RUCKUS environment and library
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
-set ddrIpDir  "Config$::env(DDR_SPEED)Mbps"
 
 # Check if building any MIG core
 if { $::env(NUM_MIG_CORES)  != 0 } {

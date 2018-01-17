@@ -2,8 +2,8 @@
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Check for submodule tagging
-if { [SubmoduleCheck {ruckus} {1.5.3} ] < 0 } {exit -1}
-if { [SubmoduleCheck {surf}   {1.4.3} ] < 0 } {exit -1}
+if { [SubmoduleCheck {ruckus} {1.5.6} ] < 0 } {exit -1}
+if { [SubmoduleCheck {surf}   {1.6.2} ] < 0 } {exit -1}
 
 # Check for version 2017.3 of Vivado (or later)
 if { [VersionCheck 2017.3] < 0 } {exit -1}

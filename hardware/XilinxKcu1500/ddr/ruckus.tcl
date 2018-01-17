@@ -6,8 +6,13 @@ set ddrIpDir  "Config$::env(DDR_SPEED)Mbps"
 if { $::env(NUM_MIG_CORES)  != 0 } {
    loadSource -path "$::DIR_PATH/mig/MigXbar.vhd"
    loadIpCore -path "$::DIR_PATH/ip/DdrXbar.xci"
-   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithEcc.xci"
-   loadIpCore -path "$::DIR_PATH/ip/${ddrIpDir}/Ddr4WithoutEcc.xci"
+   
+   set_property STEPS.PHYS_OPT_DESIGN.TCL.PRE  "$::DIR_PATH/vivado/pthread_pre.tcl"  [get_runs impl_1]
+   set_property STEPS.PHYS_OPT_DESIGN.TCL.POST "$::DIR_PATH/vivado/pthread_post.tcl" [get_runs impl_1] 
+   
+   set_property STEPS.PLACE_DESIGN.TCL.PRE  "$::DIR_PATH/vivado/pthread_pre.tcl"  [get_runs impl_1]
+   set_property STEPS.PLACE_DESIGN.TCL.POST "$::DIR_PATH/vivado/pthread_post.tcl" [get_runs impl_1]    
+   
 }
 
 # Load MIG configuration based on Makefile constraints
@@ -39,7 +44,9 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
       loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1Empty.xdc"
       loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2Empty.xdc"
    }
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig3Core.xci"
+   
+   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"    
 
 } elseif { $::env(NUM_MIG_CORES)  == 2 } {
 
@@ -53,8 +60,11 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
       loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"
       loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1Empty.xdc"
    }
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig2Core.xci"
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig3Core.xci"
+   
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2.xdc"
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"
+   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"     
 
 } elseif { $::env(NUM_MIG_CORES)  == 3 } {
 
@@ -66,10 +76,14 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
    # Check for  partial reconfiguration
    if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 } {     
       loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0Empty.xdc"  
-   }
+   }   
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig1Core.xci"
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig2Core.xci"
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig3Core.xci"  
+
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1.xdc"
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2.xdc"
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"
+   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"      
 
 } elseif { $::env(NUM_MIG_CORES)  == 4 } {
 
@@ -77,11 +91,16 @@ if { $::env(NUM_MIG_CORES)  == 0 } {
    loadSource      -path "$::DIR_PATH/mig/Mig1.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig2.vhd"
    loadSource      -path "$::DIR_PATH/mig/Mig3.vhd"
+   
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig0Core.xci"
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig1Core.xci"
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig2Core.xci"
+   loadIpCore -path "$::DIR_PATH/ip/XilinxKcu1500Mig3Core.xci"  
 
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0.xdc"
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1.xdc"
    loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2.xdc"
-   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"
+   loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"   
 
 } else {
    puts "\n\nERROR: NUM_MIG_CORES = $::env(NUM_MIG_CORES) is not valid."

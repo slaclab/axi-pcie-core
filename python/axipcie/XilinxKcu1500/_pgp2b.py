@@ -1,5 +1,6 @@
 import pyrogue as pr
 import surf
+import time
 
 LINK_SPEED_TABLE = {
     '3.125' : {
@@ -109,6 +110,7 @@ class AppPgp2bLane(pr.Device):
 #       self.Pgp2bAxi.ResetRx()
 #       self.Pgp2bAxi.ResetTx()
         self.Pgp2bAxi.ResetGt()
+        time.sleep(1)
         # Need to reset when done
 
 class AppPgp2bQuad(pr.Device):

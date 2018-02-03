@@ -2,7 +2,7 @@
 -- File       : XilinxVcu1525Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2018-01-29
--- Last update: 2018-01-30
+-- Last update: 2018-02-01
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for VCU1525 board 
 --
@@ -46,56 +46,58 @@ entity XilinxVcu1525Core is
       --  Top Level Interfaces
       ------------------------
       -- System Interface
-      sysClk          : out sl;
-      sysRst          : out sl;
-      userClk156      : out sl;         -- 156.25 MHz
+      sysClk          : out   sl;
+      sysRst          : out   sl;
+      userClk156      : out   sl;       -- 156.25 MHz
       -- DMA Interfaces  (sysClk domain)
-      dmaObMasters    : out AxiStreamMasterArray(7 downto 0);
-      dmaObSlaves     : in  AxiStreamSlaveArray(7 downto 0);
-      dmaIbMasters    : in  AxiStreamMasterArray(7 downto 0);
-      dmaIbSlaves     : out AxiStreamSlaveArray(7 downto 0);
+      dmaObMasters    : out   AxiStreamMasterArray(7 downto 0);
+      dmaObSlaves     : in    AxiStreamSlaveArray(7 downto 0);
+      dmaIbMasters    : in    AxiStreamMasterArray(7 downto 0);
+      dmaIbSlaves     : out   AxiStreamSlaveArray(7 downto 0);
       -- Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
-      appClk          : in  sl;
-      appRst          : in  sl;
-      appReadMaster   : out AxiLiteReadMasterType;
-      appReadSlave    : in  AxiLiteReadSlaveType;
-      appWriteMaster  : out AxiLiteWriteMasterType;
-      appWriteSlave   : in  AxiLiteWriteSlaveType;
-      -- MIG[1] DDR AXI Interface (sysClk domain)
-      mig1Ready        : out sl;
-      mig1WriteMasters : in  AxiWriteMasterArray(3 downto 0);
-      mig1WriteSlaves  : out AxiWriteSlaveArray(3 downto 0);
-      mig1ReadMasters  : in  AxiReadMasterArray(3 downto 0);
-      mig1ReadSlaves   : out AxiReadSlaveArray(3 downto 0);
+      appClk          : in    sl;
+      appRst          : in    sl;
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType;
+      -- AXI MEM Interface (mig1Clk domain)
+      mig1Clk         : out   sl;
+      mig1Rst         : out   sl;
+      mig1Ready       : out   sl;
+      mig1WriteMaster : in    AxiWriteMasterType;
+      mig1WriteSlave  : out   AxiWriteSlaveType;
+      mig1ReadMaster  : in    AxiReadMasterType;
+      mig1ReadSlave   : out   AxiReadSlaveType;
       -------------------
       --  Top Level Ports
       -------------------      
       -- System Ports
-      userClkP        : in  sl;
-      userClkN        : in  sl;
+      userClkP        : in    sl;
+      userClkN        : in    sl;
       -- MIG[1] DDR Ports
       mig1DdrClkP     : in    sl;
       mig1DdrClkN     : in    sl;
       mig1DdrOut      : out   DdrOutType;
       mig1DdrInOut    : inout DdrInOutType;
       -- QSFP[0] Ports
-      qsfp0RstL       : out sl;
-      qsfp0LpMode     : out sl;
-      qsfp0ModSelL    : out sl;
-      qsfp0ModPrsL    : in  sl;
+      qsfp0RstL       : out   sl;
+      qsfp0LpMode     : out   sl;
+      qsfp0ModSelL    : out   sl;
+      qsfp0ModPrsL    : in    sl;
       -- QSFP[1] Ports
-      qsfp1RstL       : out sl;
-      qsfp1LpMode     : out sl;
-      qsfp1ModSelL    : out sl;
-      qsfp1ModPrsL    : in  sl;
+      qsfp1RstL       : out   sl;
+      qsfp1LpMode     : out   sl;
+      qsfp1ModSelL    : out   sl;
+      qsfp1ModPrsL    : in    sl;
       -- PCIe Ports 
-      pciRstL         : in  sl;
-      pciRefClkP      : in  sl;
-      pciRefClkN      : in  sl;
-      pciRxP          : in  slv(15 downto 0);
-      pciRxN          : in  slv(15 downto 0);
-      pciTxP          : out slv(15 downto 0);
-      pciTxN          : out slv(15 downto 0));
+      pciRstL         : in    sl;
+      pciRefClkP      : in    sl;
+      pciRefClkN      : in    sl;
+      pciRxP          : in    slv(15 downto 0);
+      pciRxN          : in    slv(15 downto 0);
+      pciTxP          : out   slv(15 downto 0);
+      pciTxN          : out   slv(15 downto 0));
 end XilinxVcu1525Core;
 
 architecture mapping of XilinxVcu1525Core is
@@ -129,12 +131,12 @@ architecture mapping of XilinxVcu1525Core is
    signal userClock   : sl;
    signal dmaIrq      : sl;
 
-   signal bootCsL  : slv(1 downto 0) := (others=>'0');
-   signal bootSck  : slv(1 downto 0) := (others=>'0');
-   signal bootMosi : slv(1 downto 0) := (others=>'0');
-   signal bootMiso : slv(1 downto 0) := (others=>'0');
-   signal di       : slv(3 downto 0) := (others=>'0');
-   signal do       : slv(3 downto 0) := (others=>'0');
+   signal bootCsL  : slv(1 downto 0) := (others => '0');
+   signal bootSck  : slv(1 downto 0) := (others => '0');
+   signal bootMosi : slv(1 downto 0) := (others => '0');
+   signal bootMiso : slv(1 downto 0) := (others => '0');
+   signal di       : slv(3 downto 0) := (others => '0');
+   signal do       : slv(3 downto 0) := (others => '0');
 
 begin
 
@@ -303,7 +305,7 @@ begin
          dmaObSlaves     => dmaObSlaves,
          dmaIbMasters    => dmaIbMasters,
          dmaIbSlaves     => dmaIbSlaves);
-         
+
    ----------------- 
    -- AXI DDR MIG[1]
    ----------------- 
@@ -312,18 +314,20 @@ begin
          TPD_G => TPD_G)
       port map (
          -- System Clock and reset
-         sysClk          => sysClock,
-         sysRst          => sysReset,
-         -- AXI MEM Interface (sysClk domain)
-         axiReady        => mig1Ready,
-         axiWriteMasters => mig1WriteMasters,
-         axiWriteSlaves  => mig1WriteSlaves,
-         axiReadMasters  => mig1ReadMasters,
-         axiReadSlaves   => mig1ReadSlaves,
+         sysClk         => sysClock,
+         sysRst         => sysReset,
+         -- AXI MEM Interface (axiClk domain)
+         axiClk         => mig1Clk,
+         axiRst         => mig1Rst,
+         axiReady       => mig1Ready,
+         axiWriteMaster => mig1WriteMaster,
+         axiWriteSlave  => mig1WriteSlave,
+         axiReadMaster  => mig1ReadMaster,
+         axiReadSlave   => mig1ReadSlave,
          -- DDR Ports
-         ddrClkP         => mig1DdrClkP,
-         ddrClkN         => mig1DdrClkN,
-         ddrOut          => mig1DdrOut,
-         ddrInOut        => mig1DdrInOut);         
+         ddrClkP        => mig1DdrClkP,
+         ddrClkN        => mig1DdrClkN,
+         ddrOut         => mig1DdrOut,
+         ddrInOut       => mig1DdrInOut);
 
 end mapping;

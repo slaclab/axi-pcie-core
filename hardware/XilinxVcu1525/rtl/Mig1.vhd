@@ -2,7 +2,7 @@
 -- File       : Mig1.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2018-01-29
--- Last update: 2018-01-29
+-- Last update: 2018-02-01
 -------------------------------------------------------------------------------
 -- Description: Wrapper for the MIG core
 -------------------------------------------------------------------------------
@@ -31,19 +31,21 @@ entity Mig1 is
       TPD_G : time := 1 ns);
    port (
       -- System Clock and reset
-      sysClk          : in    sl;
-      sysRst          : in    sl;
-      -- AXI MEM Interface (sysClk domain)
-      axiReady        : out   sl;
-      axiWriteMasters : in    AxiWriteMasterArray(3 downto 0);
-      axiWriteSlaves  : out   AxiWriteSlaveArray(3 downto 0);
-      axiReadMasters  : in    AxiReadMasterArray(3 downto 0);
-      axiReadSlaves   : out   AxiReadSlaveArray(3 downto 0);
+      sysClk         : in    sl;
+      sysRst         : in    sl;
+      -- AXI MEM Interface (axiClk domain)
+      axiClk         : out   sl;
+      axiRst         : out   sl;
+      axiReady       : out   sl;
+      axiWriteMaster : in    AxiWriteMasterType;
+      axiWriteSlave  : out   AxiWriteSlaveType;
+      axiReadMaster  : in    AxiReadMasterType;
+      axiReadSlave   : out   AxiReadSlaveType;
       -- DDR Ports
-      ddrClkP         : in    sl;
-      ddrClkN         : in    sl;
-      ddrOut          : out   DdrOutType;
-      ddrInOut        : inout DdrInOutType);
+      ddrClkP        : in    sl;
+      ddrClkN        : in    sl;
+      ddrOut         : out   DdrOutType;
+      ddrInOut       : inout DdrInOutType);
 end Mig1;
 
 architecture mapping of Mig1 is
@@ -129,11 +131,6 @@ architecture mapping of Mig1 is
          sys_rst                    : in    std_logic
          );
    end component;
-
-   signal axiWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-   signal axiWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
-   signal axiReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
-   signal axiReadSlave   : AxiReadSlaveType   := AXI_READ_SLAVE_INIT_C;
 
    signal ddrWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal ddrWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
@@ -244,7 +241,7 @@ begin
          c0_ddr4_s_axi_rdata        => ddrReadSlave.rdata(511 downto 0),
          sys_rst                    => sysRst);
 
-   coreRst <= coreReset and not(ddrCalDone);
+   coreRst <= (coreReset and not(ddrCalDone)) or sysRst;
 
    U_Rst : entity work.RstPipeline
       generic map (
@@ -254,23 +251,13 @@ begin
          rstIn  => coreRst,
          rstOut => ddrRst);
 
-   U_Xbar : entity work.MigXbar
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- Slave Interfaces
-         sAxiClk          => sysClk,
-         sAxiRst          => sysRst,
-         sAxiWriteMasters => axiWriteMasters,
-         sAxiWriteSlaves  => axiWriteSlaves,
-         sAxiReadMasters  => axiReadMasters,
-         sAxiReadSlaves   => axiReadSlaves,
-         -- Master Interface
-         mAxiClk          => ddrClk,
-         mAxiRst          => ddrRst,
-         mAxiWriteMaster  => ddrWriteMaster,
-         mAxiWriteSlave   => ddrWriteSlave,
-         mAxiReadMaster   => ddrReadMaster,
-         mAxiReadSlave    => ddrReadSlave);
+   axiClk <= ddrClk;
+   axiRst <= ddrRst;
+
+   ddrWriteMaster <= axiWriteMaster;
+   axiWriteSlave  <= ddrWriteSlave;
+
+   ddrReadMaster <= axiReadMaster;
+   axiReadSlave  <= ddrReadSlave;
 
 end mapping;

@@ -19,7 +19,6 @@ set_property board_part {xilinx.com:vcu1525:part0:1.0} [current_project]
 loadIpCore      -dir  "$::DIR_PATH/ip"
 loadSource      -dir  "$::DIR_PATH/rtl"
 loadConstraints -dir  "$::DIR_PATH/xdc"
-loadSource      -path "$::DIR_PATH/mig/rtl/Mig1.vhd"
-loadSource      -path "$::DIR_PATH/mig/rtl/MigXbar.vhd"
-loadIpCore      -path "$::DIR_PATH/mig/ip/XilinxVcu1525Mig1Core.xci"
-loadIpCore      -path "$::DIR_PATH/mig/ip/XilinxVcu1525MigXbar.xci"
+
+loadSource      -path "$::DIR_PATH/dynamic/rtl/MigXbar.vhd"
+loadIpCore      -path "$::DIR_PATH/dynamic/ip/XilinxVcu1525MigXbar.xci"

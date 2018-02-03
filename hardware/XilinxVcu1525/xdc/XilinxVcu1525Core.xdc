@@ -8,6 +8,8 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
+set_property RAM_STYLE ULTRA [get_cells {U_Core}]
+
 ####################
 # PCIe Constraints #
 ####################

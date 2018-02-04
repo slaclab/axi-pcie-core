@@ -19,6 +19,7 @@ add_cells_to_pblock [get_pblocks {PB_APP}]  [get_cells [list U_App]]
 resize_pblock [get_pblocks {PB_APP}] -add {CLOCKREGION_X0Y0:CLOCKREGION_X5Y4}
 resize_pblock [get_pblocks {PB_APP}] -add {CLOCKREGION_X0Y5:CLOCKREGION_X1Y9}
 resize_pblock [get_pblocks {PB_APP}] -add {CLOCKREGION_X2Y8:CLOCKREGION_X2Y9}
+resize_pblock [get_pblocks {PB_APP}] -add {CLOCKREGION_X3Y9:CLOCKREGION_X5Y9}
 resize_pblock [get_pblocks {PB_APP}] -add {CLOCKREGION_X0Y10:CLOCKREGION_X5Y14}
 set_property CONTAIN_ROUTING 1   [get_pblocks {PB_APP}]
 set_property EXCLUDE_PLACEMENT 1 [get_pblocks {PB_APP}]

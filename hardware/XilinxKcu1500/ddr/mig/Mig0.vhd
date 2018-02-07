@@ -48,7 +48,7 @@ end Mig0;
 
 architecture mapping of Mig0 is
 
-   component Ddr4WithEcc
+   component XilinxKcu1500Mig0Core
       port (
          c0_init_calib_complete     : out   std_logic;
          dbg_clk                    : out   std_logic;
@@ -163,7 +163,7 @@ begin
          dataIn  => ddrCalDone,
          dataOut => axiReady);
 
-   U_MIG : Ddr4WithEcc
+   U_MIG : XilinxKcu1500Mig0Core
       port map (
          c0_init_calib_complete     => ddrCalDone,
          dbg_clk                    => open,

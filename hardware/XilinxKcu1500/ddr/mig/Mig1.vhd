@@ -48,7 +48,7 @@ end Mig1;
 
 architecture mapping of Mig1 is
 
-   component Ddr4WithoutEcc
+   component XilinxKcu1500Mig1Core
       port (
          c0_init_calib_complete  : out   std_logic;
          dbg_clk                 : out   std_logic;
@@ -146,7 +146,7 @@ begin
          dataIn  => ddrCalDone,
          dataOut => axiReady);
 
-   U_MIG : Ddr4WithoutEcc
+   U_MIG : XilinxKcu1500Mig1Core
       port map (
          c0_init_calib_complete  => ddrCalDone,
          dbg_clk                 => open,

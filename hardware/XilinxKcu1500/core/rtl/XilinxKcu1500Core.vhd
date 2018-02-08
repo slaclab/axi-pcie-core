@@ -45,7 +45,7 @@ entity XilinxKcu1500Core is
       ------------------------
       userClk156      : out   sl;       -- 156.25 MHz
       userSwDip       : out   slv(3 downto 0);
-      userLed         : in    slv(7 downto 0);
+      userLed         : in    slv(7 downto 0) := x"80";
       -- System Interface
       sysClk          : out   sl;
       sysRst          : out   sl;

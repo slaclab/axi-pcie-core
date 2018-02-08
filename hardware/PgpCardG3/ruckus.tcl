@@ -13,9 +13,3 @@ loadConstraints -dir "$::DIR_PATH/xdc/"
 # IP cores
 loadSource -path "$::DIR_PATH/ip/AxiPgpCardG3PciePhy.dcp"
 # loadIpCore -path "$::DIR_PATH/ip/AxiPgpCardG3PciePhy.xci"
-
-# Load Application Source Code and Constraints
-loadRuckusTcl "$::DIR_PATH/app"
-
-# Place and Route strategy 
-set_property strategy Performance_ExplorePostRoutePhysOpt [get_runs impl_1]

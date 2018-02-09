@@ -111,6 +111,7 @@ class AppPgp2bLane(pr.Device):
 #       self.Pgp2bAxi.ResetTx()
         self.Pgp2bAxi.ResetGt()
         time.sleep(1)
+        self.readBlocks()
         # Need to reset when done
 
 class AppPgp2bQuad(pr.Device):
@@ -118,6 +119,7 @@ class AppPgp2bQuad(pr.Device):
                  name='AppPgp2bLane',
                  description='',
                  numLinks=4,
+                 linkRate='3.125',
                  **kwargs):
         super().__init__(name=name, description=description, **kwargs)
 
@@ -125,5 +127,6 @@ class AppPgp2bQuad(pr.Device):
             nodeClass=AppPgp2bLane,
             name='AppPgp2bLane',
             number=numLinks,
+            linkRate=linkRate,
             offset=0x000,
             stride=0x1000)

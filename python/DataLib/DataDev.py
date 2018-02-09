@@ -18,9 +18,9 @@
 #-----------------------------------------------------------------------------
 
 import pyrogue as pr
-from surf.axi import *
-from surf.devices.micron import *
-from surf.xilinx import *
+import surf.axi as axi
+import surf.devices.micron as micron
+import surf.xilinx as xilinx
 
 class DataDev(pr.Device):
     def __init__(   self,       
@@ -28,24 +28,25 @@ class DataDev(pr.Device):
             description = "Container for data device registers",
             useBpi      = False,
             useSpi      = False,
+            numDmaLanes = 8,
             **kwargs):
         super().__init__(name=name, description=description, **kwargs)
         
         # PCI PHY status
-        self.add(AxiPciePhy(            
+        self.add(xilinx.AxiPciePhy(            
             offset       = 0x10000, 
             expand       = False,
         ))
         
         # Standard AxiVersion Module
-        self.add(AxiVersion(            
+        self.add(axi.AxiVersion(            
             offset       = 0x20000, 
             expand       = False,
         ))
 
         # Check if using BPI PROM
         if (useBpi):
-            self.add(AxiMicronP30(
+            self.add(micron.AxiMicronP30(
                 offset       =  0x30000,
                 expand       =  False,                                    
                 hidden       =  True,                                    
@@ -54,7 +55,7 @@ class DataDev(pr.Device):
         # Check if using SPI PROM
         if (useSpi):
             for i in range(2):
-                self.add(AxiMicronN25Q(
+                self.add(micron.AxiMicronN25Q(
                     name         = "AxiMicronN25Q[%i]" % (i),
                     offset       =  0x40000 + (i * 0x10000),
                     description  = "AxiMicronN25Q: %i" % (i),                                
@@ -62,3 +63,19 @@ class DataDev(pr.Device):
                     hidden       =  True,                                    
                 ))
                 
+        # DMA AXI Stream Inbound Monitor        
+        self.add(axi.AxiStreamMonitoring(            
+            name        = 'DmaIbAxisMon', 
+            offset      = 0x60000, 
+            numberLanes = numDmaLanes,
+            expand      = False,
+        ))        
+
+        # DMA AXI Stream Outbound Monitor        
+        self.add(axi.AxiStreamMonitoring(            
+            name        = 'DmaObAxisMon', 
+            offset      = 0x70000, 
+            numberLanes = numDmaLanes,
+            expand      = False,
+        ))
+        

@@ -1,9 +1,6 @@
 # Load RUCKUS environment and library
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
-# Check for version 2017.4 of Vivado (or later)
-if { [VersionCheck 2017.4] < 0 } {exit -1}
-
 # Set the target language for Verilog (removes warning messages in PCIe IP core)
 set_property target_language Verilog [current_project]
 

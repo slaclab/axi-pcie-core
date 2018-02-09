@@ -2,7 +2,7 @@
 -- File       : AdmPcieKu3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-12-11
+-- Last update: 2018-02-07
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for ADM-PCIE-KU3 board 
 --
@@ -103,10 +103,10 @@ architecture mapping of AdmPcieKu3Core is
    signal regWriteMaster : AxiWriteMasterType;
    signal regWriteSlave  : AxiWriteSlaveType;
 
-   signal dmaCtrlReadMaster  : AxiLiteReadMasterType;
-   signal dmaCtrlReadSlave   : AxiLiteReadSlaveType;
-   signal dmaCtrlWriteMaster : AxiLiteWriteMasterType;
-   signal dmaCtrlWriteSlave  : AxiLiteWriteSlaveType;
+   signal dmaCtrlReadMasters  : AxiLiteReadMasterArray(2 downto 0);
+   signal dmaCtrlReadSlaves   : AxiLiteReadSlaveArray(2 downto 0);
+   signal dmaCtrlWriteMasters : AxiLiteWriteMasterArray(2 downto 0);
+   signal dmaCtrlWriteSlaves  : AxiLiteWriteSlaveArray(2 downto 0);
 
    signal phyReadMaster  : AxiLiteReadMasterType;
    signal phyReadSlave   : AxiLiteReadSlaveType;
@@ -185,32 +185,32 @@ begin
          DMA_SIZE_G       => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
-         axiClk             => sysClock,
-         axiRst             => sysReset,
-         regReadMaster      => regReadMaster,
-         regReadSlave       => regReadSlave,
-         regWriteMaster     => regWriteMaster,
-         regWriteSlave      => regWriteSlave,
+         axiClk              => sysClock,
+         axiRst              => sysReset,
+         regReadMaster       => regReadMaster,
+         regReadSlave        => regReadSlave,
+         regWriteMaster      => regWriteMaster,
+         regWriteSlave       => regWriteSlave,
          -- DMA AXI-Lite Interfaces
-         dmaCtrlReadMaster  => dmaCtrlReadMaster,
-         dmaCtrlReadSlave   => dmaCtrlReadSlave,
-         dmaCtrlWriteMaster => dmaCtrlWriteMaster,
-         dmaCtrlWriteSlave  => dmaCtrlWriteSlave,
+         dmaCtrlReadMasters  => dmaCtrlReadMasters,
+         dmaCtrlReadSlaves   => dmaCtrlReadSlaves,
+         dmaCtrlWriteMasters => dmaCtrlWriteMasters,
+         dmaCtrlWriteSlaves  => dmaCtrlWriteSlaves,
          -- PHY AXI-Lite Interfaces
-         phyReadMaster      => phyReadMaster,
-         phyReadSlave       => phyReadSlave,
-         phyWriteMaster     => phyWriteMaster,
-         phyWriteSlave      => phyWriteSlave,
+         phyReadMaster       => phyReadMaster,
+         phyReadSlave        => phyReadSlave,
+         phyWriteMaster      => phyWriteMaster,
+         phyWriteSlave       => phyWriteSlave,
          -- (Optional) Application AXI-Lite Interfaces
-         appClk             => appClk,
-         appRst             => appRst,
-         appReadMaster      => appReadMaster,
-         appReadSlave       => appReadSlave,
-         appWriteMaster     => appWriteMaster,
-         appWriteSlave      => appWriteSlave,
+         appClk              => appClk,
+         appRst              => appRst,
+         appReadMaster       => appReadMaster,
+         appReadSlave        => appReadSlave,
+         appWriteMaster      => appWriteMaster,
+         appWriteSlave       => appWriteSlave,
          -- Application Force reset
-         cardResetOut       => cardReset,
-         cardResetIn        => systemReset);
+         cardResetOut        => cardReset,
+         cardResetIn         => systemReset);
 
    ---------------
    -- AXI PCIe DMA
@@ -223,24 +223,24 @@ begin
          AXI_ERROR_RESP_G => AXI_ERROR_RESP_C)
       port map (
          -- Clock and reset
-         axiClk          => sysClock,
-         axiRst          => sysReset,
+         axiClk           => sysClock,
+         axiRst           => sysReset,
          -- AXI4 Interfaces
-         axiReadMaster   => dmaReadMaster,
-         axiReadSlave    => dmaReadSlave,
-         axiWriteMaster  => dmaWriteMaster,
-         axiWriteSlave   => dmaWriteSlave,
+         axiReadMaster    => dmaReadMaster,
+         axiReadSlave     => dmaReadSlave,
+         axiWriteMaster   => dmaWriteMaster,
+         axiWriteSlave    => dmaWriteSlave,
          -- AXI4-Lite Interfaces
-         axilReadMaster  => dmaCtrlReadMaster,
-         axilReadSlave   => dmaCtrlReadSlave,
-         axilWriteMaster => dmaCtrlWriteMaster,
-         axilWriteSlave  => dmaCtrlWriteSlave,
+         axilReadMasters  => dmaCtrlReadMasters,
+         axilReadSlaves   => dmaCtrlReadSlaves,
+         axilWriteMasters => dmaCtrlWriteMasters,
+         axilWriteSlaves  => dmaCtrlWriteSlaves,
          -- Interrupts
-         dmaIrq          => dmaIrq,
+         dmaIrq           => dmaIrq,
          -- DMA Interfaces
-         dmaObMasters    => dmaObMasters,
-         dmaObSlaves     => dmaObSlaves,
-         dmaIbMasters    => dmaIbMasters,
-         dmaIbSlaves     => dmaIbSlaves);
+         dmaObMasters     => dmaObMasters,
+         dmaObSlaves      => dmaObSlaves,
+         dmaIbMasters     => dmaIbMasters,
+         dmaIbSlaves      => dmaIbSlaves);
 
 end mapping;

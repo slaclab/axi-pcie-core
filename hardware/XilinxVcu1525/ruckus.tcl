@@ -17,5 +17,6 @@ loadIpCore      -dir  "$::DIR_PATH/ip"
 loadSource      -dir  "$::DIR_PATH/rtl"
 loadConstraints -dir  "$::DIR_PATH/xdc"
 
+loadSource      -path "$::DIR_PATH/static-release/XilinxVcu1525Base.vhd"
 loadSource      -path "$::DIR_PATH/dynamic/rtl/MigXbar.vhd"
 loadIpCore      -path "$::DIR_PATH/dynamic/ip/XilinxVcu1525MigXbar.xci"

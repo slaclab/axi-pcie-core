@@ -2,7 +2,7 @@
 -- File       : AxiPciePgpCardG3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2018-02-07
+-- Last update: 2018-02-12
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for the PgpCardG3 board
 -- https://confluence.slac.stanford.edu/display/AIRTRACK/PC_260_101_03_C03
@@ -80,8 +80,6 @@ entity AxiPciePgpCardG3Core is
 end AxiPciePgpCardG3Core;
 
 architecture mapping of AxiPciePgpCardG3Core is
-
-   constant AXI_ERROR_RESP_C : slv(1 downto 0) := AXI_RESP_OK_C;  -- Always return OK to a MMAP()
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -170,7 +168,6 @@ begin
          XIL_DEVICE_G     => "7SERIES",
          BOOT_PROM_G      => "BPI",
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
-         AXI_ERROR_RESP_G => AXI_ERROR_RESP_C,
          DMA_SIZE_G       => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
@@ -230,8 +227,7 @@ begin
          TPD_G             => TPD_G,
          DMA_SIZE_G        => DMA_SIZE_G,
          INT_PIPE_STAGES_G => INT_PIPE_STAGES_G,
-         PIPE_STAGES_G     => PIPE_STAGES_G,
-         AXI_ERROR_RESP_G  => AXI_ERROR_RESP_C)
+         PIPE_STAGES_G     => PIPE_STAGES_G)
       port map (
          -- Clock and reset
          axiClk           => sysClock,

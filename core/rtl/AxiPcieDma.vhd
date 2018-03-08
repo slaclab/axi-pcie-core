@@ -2,7 +2,7 @@
 -- File       : AxiPcieDma.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2017-12-06
+-- Last update: 2018-02-07
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXIS DMA Engine
 -------------------------------------------------------------------------------
@@ -28,32 +28,34 @@ use work.AxiPciePkg.all;
 
 entity AxiPcieDma is
    generic (
-      TPD_G            : time                   := 1 ns;
-      SIMULATION_G     : boolean                := false;
-      DMA_SIZE_G       : positive range 1 to 16 := 1;
-      DESC_ARB_G       : boolean                := true;
-      AXI_ERROR_RESP_G : slv(1 downto 0)        := AXI_RESP_OK_C);
+      TPD_G             : time                   := 1 ns;
+      SIMULATION_G      : boolean                := false;
+      DMA_SIZE_G        : positive range 1 to 16 := 1;
+      INT_PIPE_STAGES_G : natural range 0 to 1   := 1;
+      PIPE_STAGES_G     : natural range 0 to 1   := 1;
+      DESC_ARB_G        : boolean                := true;
+      AXI_ERROR_RESP_G  : slv(1 downto 0)        := AXI_RESP_OK_C);
    port (
       -- Clock and reset
-      axiClk          : in  sl;
-      axiRst          : in  sl;
+      axiClk           : in  sl;
+      axiRst           : in  sl;
       -- AXI4 Interfaces
-      axiReadMaster   : out AxiReadMasterType;
-      axiReadSlave    : in  AxiReadSlaveType;
-      axiWriteMaster  : out AxiWriteMasterType;
-      axiWriteSlave   : in  AxiWriteSlaveType;
+      axiReadMaster    : out AxiReadMasterType;
+      axiReadSlave     : in  AxiReadSlaveType;
+      axiWriteMaster   : out AxiWriteMasterType;
+      axiWriteSlave    : in  AxiWriteSlaveType;
       -- AXI4-Lite Interfaces
-      axilReadMaster  : in  AxiLiteReadMasterType;
-      axilReadSlave   : out AxiLiteReadSlaveType;
-      axilWriteMaster : in  AxiLiteWriteMasterType;
-      axilWriteSlave  : out AxiLiteWriteSlaveType;
+      axilReadMasters  : in  AxiLiteReadMasterArray(2 downto 0);
+      axilReadSlaves   : out AxiLiteReadSlaveArray(2 downto 0);
+      axilWriteMasters : in  AxiLiteWriteMasterArray(2 downto 0);
+      axilWriteSlaves  : out AxiLiteWriteSlaveArray(2 downto 0);
       -- Interrupts
-      dmaIrq          : out sl;
+      dmaIrq           : out sl;
       -- DMA Interfaces
-      dmaObMasters    : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves     : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0));
+      dmaObMasters     : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves      : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters     : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves      : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0));
 end AxiPcieDma;
 
 architecture mapping of AxiPcieDma is
@@ -93,6 +95,54 @@ architecture mapping of AxiPcieDma is
    attribute dont_touch of axiReset  : signal is "true";
 
 begin
+
+   -----------------------------------
+   -- Monitor the Outbound DMA streams
+   -----------------------------------
+   DMA_AXIS_MON_OB : entity work.AxiStreamMonAxiL
+      generic map(
+         TPD_G            => TPD_G,
+         COMMON_CLK_G     => true,
+         AXIS_CLK_FREQ_G  => SYS_CLK_FREQ_C,
+         AXIS_NUM_SLOTS_G => DMA_SIZE_G,
+         AXIS_CONFIG_G    => DMA_AXIS_CONFIG_C)
+      port map(
+         -- AXIS Stream Interface
+         axisClk          => axiClk,
+         axisRst          => axiRst,
+         axisMaster       => mAxisMasters,
+         axisSlave        => (others => AXI_STREAM_SLAVE_FORCE_C),  -- SLAVE_READY_EN_G    => false,
+         -- AXI lite slave port for register access
+         axilClk          => axiClk,
+         axilRst          => axiRst,
+         sAxilWriteMaster => axilWriteMasters(2),
+         sAxilWriteSlave  => axilWriteSlaves(2),
+         sAxilReadMaster  => axilReadMasters(2),
+         sAxilReadSlave   => axilReadSlaves(2));
+
+   ----------------------------------
+   -- Monitor the Inbound DMA streams
+   ----------------------------------
+   DMA_AXIS_MON_IB : entity work.AxiStreamMonAxiL
+      generic map(
+         TPD_G            => TPD_G,
+         COMMON_CLK_G     => true,
+         AXIS_CLK_FREQ_G  => SYS_CLK_FREQ_C,
+         AXIS_NUM_SLOTS_G => DMA_SIZE_G,
+         AXIS_CONFIG_G    => DMA_AXIS_CONFIG_C)
+      port map(
+         -- AXIS Stream Interface
+         axisClk          => axiClk,
+         axisRst          => axiRst,
+         axisMaster       => sAxisMasters,
+         axisSlave        => sAxisSlaves,
+         -- AXI lite slave port for register access
+         axilClk          => axiClk,
+         axilRst          => axiRst,
+         sAxilWriteMaster => axilWriteMasters(1),
+         sAxilWriteSlave  => axilWriteSlaves(1),
+         sAxilReadMaster  => axilReadMasters(1),
+         sAxilReadSlave   => axilReadSlaves(1));
 
    ----------------
    -- AXI PCIe XBAR
@@ -140,10 +190,10 @@ begin
          axiClk          => axiClk,
          axiRst          => axiRst,
          -- Register Access & Interrupt
-         axilReadMaster  => axilReadMaster,
-         axilReadSlave   => axilReadSlave,
-         axilWriteMaster => axilWriteMaster,
-         axilWriteSlave  => axilWriteSlave,
+         axilReadMaster  => axilReadMasters(0),
+         axilReadSlave   => axilReadSlaves(0),
+         axilWriteMaster => axilWriteMasters(0),
+         axilWriteSlave  => axilWriteSlaves(0),
          interrupt       => dmaIrq,
          -- AXI Stream Interface 
          sAxisMaster     => sAxisMasters,
@@ -177,8 +227,8 @@ begin
          generic map (
             -- General Configurations
             TPD_G               => TPD_G,
-            INT_PIPE_STAGES_G   => 1,
-            PIPE_STAGES_G       => 1,
+            INT_PIPE_STAGES_G   => INT_PIPE_STAGES_G,
+            PIPE_STAGES_G       => PIPE_STAGES_G,
             SLAVE_READY_EN_G    => true,
             VALID_THOLD_G       => 1,
             -- FIFO configurations
@@ -207,8 +257,8 @@ begin
       U_ObFifo : entity work.AxiStreamFifoV2
          generic map (
             TPD_G               => TPD_G,
-            INT_PIPE_STAGES_G   => 1,
-            PIPE_STAGES_G       => 1,
+            INT_PIPE_STAGES_G   => INT_PIPE_STAGES_G,
+            PIPE_STAGES_G       => PIPE_STAGES_G,
             SLAVE_READY_EN_G    => false,
             VALID_THOLD_G       => 1,
             BRAM_EN_G           => true,

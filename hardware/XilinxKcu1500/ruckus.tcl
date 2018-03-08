@@ -17,23 +17,10 @@ if { [info exists ::env(PCIE_GEN_NUM)] != 1 } {
    puts "\n\nERROR: PCIE_GEN_SEL is not defined in $::env(PROJ_DIR)/Makefile\n\n"; exit -1
 }
 
-if { [info exists ::env(DDR_SPEED)] != 1 } {
-   puts "\n\nERROR: DDR_SPEED is not defined in $::env(PROJ_DIR)/Makefile\n\n"; exit -1
-}
-
-# Synthesis strategy
-set_property strategy Flow_PerfOptimized_high [get_runs synth_1]
-
-# Place and Route strategy 
-set_property strategy Performance_ExplorePostRoutePhysOpt [get_runs impl_1]
-set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE SSI_HighUtilSLRs [get_runs impl_1]
-
 # Set the board part
-set projBoardPart "xilinx.com:kcu1500:part0:1.0"
-set_property board_part $projBoardPart [current_project]
+set_property board_part {xilinx.com:kcu1500:part0:1.1} [current_project]
 
 # Load local Source Code and Constraints
 loadRuckusTcl "$::DIR_PATH/core"
 loadRuckusTcl "$::DIR_PATH/pcie"
 loadRuckusTcl "$::DIR_PATH/ddr"
-loadRuckusTcl "$::DIR_PATH/app"

@@ -48,7 +48,7 @@ end Mig3;
 
 architecture mapping of Mig3 is
 
-   component Ddr4WithEcc
+   component XilinxKcu1500Mig3Core
       port (
          c0_init_calib_complete     : out   std_logic;
          dbg_clk                    : out   std_logic;
@@ -163,7 +163,7 @@ begin
          dataIn  => ddrCalDone,
          dataOut => axiReady);
 
-   U_MIG : Ddr4WithEcc
+   U_MIG : XilinxKcu1500Mig3Core
       port map (
          c0_init_calib_complete     => ddrCalDone,
          dbg_clk                    => open,

@@ -22,7 +22,7 @@ import axipcie.core
 import glob
 
 # Declare a generic Kcu1500Root
-class Kcu1500Root(pr.Root):
+class AxiPcieRoot(pr.Root):
     def __init__(self, dev, path):
         super().__init__(name='Kcu1500Root', description='')
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     images = glob.glob('{}/*_primary.mcs'.format(args.path))
     images = list(reversed(sorted(i.replace('_primary.mcs','') for i in images)))
 
-    with Kcu1500Root(args.dev, args.path) as root:
+    with AxiPcieRoot(args.dev, args.path) as root:
 
         for i, l in enumerate(images):
             print('{} : {}'.format(i, l))

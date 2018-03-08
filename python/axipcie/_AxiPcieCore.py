@@ -27,14 +27,10 @@ class AxiPcieCore(pr.Device):
                  description = 'Base components of the PCIe firmware core',
                  useBpi      = False,
                  useSpi      = False,
+                 numDmaLanes = 8,
                  **kwargs):
         super().__init__(description=description, **kwargs)
 
-#         self.add(surf.axi.AxiStreamDmaV2Desc(
-#             offset = 0x0000,
-#             expand = False,
-#         ))
-        
         # PCI PHY status
         self.add(surf.xilinx.AxiPciePhy(            
             offset       = 0x10000, 
@@ -65,3 +61,18 @@ class AxiPcieCore(pr.Device):
                     hidden       =  True,                                    
                 ))
                 
+        # DMA AXI Stream Inbound Monitor        
+        self.add(surf.axi.AxiStreamMonitoring(            
+            name        = 'DmaIbAxisMon', 
+            offset      = 0x60000, 
+            numberLanes = numDmaLanes,
+            expand      = False,
+        ))        
+
+        # DMA AXI Stream Outbound Monitor        
+        self.add(surf.axi.AxiStreamMonitoring(            
+            name        = 'DmaObAxisMon', 
+            offset      = 0x70000, 
+            numberLanes = numDmaLanes,
+            expand      = False,
+        ))

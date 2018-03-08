@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2018-02-07
+-- Last update: 2018-02-12
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -32,7 +32,6 @@ entity AxiPcieReg is
       BOOT_PROM_G      : string                 := "BPI";
       DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
       EN_DEVICE_DNA_G  : boolean                := true;
-      AXI_ERROR_RESP_G : slv(1 downto 0)        := AXI_RESP_OK_C;
       DMA_SIZE_G       : positive range 1 to 16 := 1);
    port (
       -- AXI4 Interfaces
@@ -140,9 +139,9 @@ architecture mapping of AxiPcieReg is
    signal axilWriteSlave  : AxiLiteWriteSlaveType;
 
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
-   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXI_MASTERS_C-1 downto 0);
+   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXI_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
-   signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXI_MASTERS_C-1 downto 0);
+   signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXI_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
    signal userValues : Slv32Array(63 downto 0) := (others => x"00000000");
    signal bpiAddress : slv(30 downto 0);
@@ -225,7 +224,7 @@ begin
    U_XBAR : entity work.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
-         DEC_ERROR_RESP_G   => AXI_ERROR_RESP_G,
+         DEC_ERROR_RESP_G   => AXI_RESP_OK_C,  -- Can't respon with error to a mmapped bus
          NUM_SLAVE_SLOTS_G  => 1,
          NUM_MASTER_SLOTS_G => NUM_AXI_MASTERS_C,
          MASTERS_CONFIG_G   => AXI_CROSSBAR_MASTERS_CONFIG_C)
@@ -246,12 +245,11 @@ begin
    --------------------------   
    U_Version : entity work.AxiVersion
       generic map (
-         TPD_G            => TPD_G,
-         BUILD_INFO_G     => BUILD_INFO_G,
-         AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
-         CLK_PERIOD_G     => (1.0/SYS_CLK_FREQ_C),
-         EN_DEVICE_DNA_G  => EN_DEVICE_DNA_G,
-         XIL_DEVICE_G     => XIL_DEVICE_G)
+         TPD_G           => TPD_G,
+         BUILD_INFO_G    => BUILD_INFO_G,
+         CLK_PERIOD_G    => (1.0/SYS_CLK_FREQ_C),
+         EN_DEVICE_DNA_G => EN_DEVICE_DNA_G,
+         XIL_DEVICE_G    => XIL_DEVICE_G)
       port map (
          -- AXI-Lite Interface
          axiClk         => axiClk,
@@ -272,9 +270,8 @@ begin
 
       U_BootProm : entity work.AxiMicronP30Reg
          generic map (
-            TPD_G            => TPD_G,
-            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
-            AXI_CLK_FREQ_G   => SYS_CLK_FREQ_C)
+            TPD_G          => TPD_G,
+            AXI_CLK_FREQ_G => SYS_CLK_FREQ_C)
          port map (
             -- FLASH Interface 
             flashAddr      => bpiAddress,
@@ -299,23 +296,9 @@ begin
       bpiAddr <= bpiAddress(28 downto 0);
 
       GEN_VEC : for i in 1 downto 0 generate
-
-         spiCsL  <= (others => '1');
-         spiSck  <= (others => '1');
-         spiMosi <= (others => '1');
-
-         U_AxiLiteEmpty : entity work.AxiLiteEmpty
-            generic map (
-               TPD_G            => TPD_G,
-               AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
-            port map (
-               axiClk         => axiClk,
-               axiClkRst      => axiRst,
-               axiReadMaster  => axilReadMasters(SPI0_INDEX_C+i),
-               axiReadSlave   => axilReadSlaves(SPI0_INDEX_C+i),
-               axiWriteMaster => axilWriteMasters(SPI0_INDEX_C+i),
-               axiWriteSlave  => axilWriteSlaves(SPI0_INDEX_C+i));
-
+         spiCsL                          <= (others => '1');
+         spiSck                          <= (others => '1');
+         spiMosi                         <= (others => '1');
       end generate GEN_VEC;
 
    end generate;
@@ -332,18 +315,6 @@ begin
       bpiTri  <= '1';
       bpiDin  <= (others => '1');
 
-      U_AxiLiteEmpty : entity work.AxiLiteEmpty
-         generic map (
-            TPD_G            => TPD_G,
-            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
-         port map (
-            axiClk         => axiClk,
-            axiClkRst      => axiRst,
-            axiReadMaster  => axilReadMasters(BPI_INDEX_C),
-            axiReadSlave   => axilReadSlaves(BPI_INDEX_C),
-            axiWriteMaster => axilWriteMasters(BPI_INDEX_C),
-            axiWriteSlave  => axilWriteSlaves(BPI_INDEX_C));
-
       spiBusyIn(0) <= spiBusyOut(1);
       spiBusyIn(1) <= spiBusyOut(0);
 
@@ -351,10 +322,9 @@ begin
 
          U_BootProm : entity work.AxiMicronN25QCore
             generic map (
-               TPD_G            => TPD_G,
-               AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
-               AXI_CLK_FREQ_G   => SYS_CLK_FREQ_C,        -- units of Hz
-               SPI_CLK_FREQ_G   => (SYS_CLK_FREQ_C/8.0))  -- units of Hz
+               TPD_G          => TPD_G,
+               AXI_CLK_FREQ_G => SYS_CLK_FREQ_C,        -- units of Hz
+               SPI_CLK_FREQ_G => (SYS_CLK_FREQ_C/8.0))  -- units of Hz
             port map (
                -- FLASH Memory Ports
                csL            => spiCsL(i),
@@ -389,35 +359,11 @@ begin
       bpiTri  <= '1';
       bpiDin  <= (others => '1');
 
-      U_AxiLiteEmpty : entity work.AxiLiteEmpty
-         generic map (
-            TPD_G            => TPD_G,
-            AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
-         port map (
-            axiClk         => axiClk,
-            axiClkRst      => axiRst,
-            axiReadMaster  => axilReadMasters(BPI_INDEX_C),
-            axiReadSlave   => axilReadSlaves(BPI_INDEX_C),
-            axiWriteMaster => axilWriteMasters(BPI_INDEX_C),
-            axiWriteSlave  => axilWriteSlaves(BPI_INDEX_C));
-
       GEN_VEC : for i in 1 downto 0 generate
 
          spiCsL  <= (others => '1');
          spiSck  <= (others => '1');
          spiMosi <= (others => '1');
-
-         U_AxiLiteEmpty : entity work.AxiLiteEmpty
-            generic map (
-               TPD_G            => TPD_G,
-               AXI_ERROR_RESP_G => AXI_ERROR_RESP_G)
-            port map (
-               axiClk         => axiClk,
-               axiClkRst      => axiRst,
-               axiReadMaster  => axilReadMasters(SPI0_INDEX_C+i),
-               axiReadSlave   => axilReadSlaves(SPI0_INDEX_C+i),
-               axiWriteMaster => axilWriteMasters(SPI0_INDEX_C+i),
-               axiWriteSlave  => axilWriteSlaves(SPI0_INDEX_C+i));
 
       end generate GEN_VEC;
 
@@ -455,7 +401,6 @@ begin
    U_AxiLiteAsync : entity work.AxiLiteAsync
       generic map (
          TPD_G            => TPD_G,
-         AXI_ERROR_RESP_G => AXI_ERROR_RESP_G,
          COMMON_CLK_G     => false,
          NUM_ADDR_BITS_G  => 24)
       port map (

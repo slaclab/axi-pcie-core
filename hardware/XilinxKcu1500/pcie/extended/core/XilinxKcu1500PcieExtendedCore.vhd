@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500PcieExtendedCore.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2017-12-04
+-- Last update: 2018-02-12
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -72,8 +72,6 @@ entity XilinxKcu1500PcieExtendedCore is
 end XilinxKcu1500PcieExtendedCore;
 
 architecture mapping of XilinxKcu1500PcieExtendedCore is
-
-   constant AXI_ERROR_RESP_C : slv(1 downto 0) := AXI_RESP_OK_C;  -- Always return OK to a MMAP()
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -159,7 +157,6 @@ begin
          BOOT_PROM_G      => "NONE",
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
          EN_DEVICE_DNA_G  => false,
-         AXI_ERROR_RESP_G => AXI_ERROR_RESP_C,
          DMA_SIZE_G       => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
@@ -195,10 +192,9 @@ begin
    ---------------   
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
-         TPD_G            => TPD_G,
-         DMA_SIZE_G       => DMA_SIZE_G,
-         DESC_ARB_G       => false,  -- Round robin to help with timing @ 250 MHz system clock
-         AXI_ERROR_RESP_G => AXI_ERROR_RESP_C)
+         TPD_G      => TPD_G,
+         DMA_SIZE_G => DMA_SIZE_G,
+         DESC_ARB_G => false)           -- Round robin to help with timing @ 250 MHz system clock
       port map (
          -- Clock and reset
          axiClk          => sysClock,

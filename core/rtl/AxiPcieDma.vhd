@@ -2,7 +2,7 @@
 -- File       : AxiPcieDma.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2018-02-07
+-- Last update: 2018-02-12
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXIS DMA Engine
 -------------------------------------------------------------------------------
@@ -33,8 +33,7 @@ entity AxiPcieDma is
       DMA_SIZE_G        : positive range 1 to 16 := 1;
       INT_PIPE_STAGES_G : natural range 0 to 1   := 1;
       PIPE_STAGES_G     : natural range 0 to 1   := 1;
-      DESC_ARB_G        : boolean                := true;
-      AXI_ERROR_RESP_G  : slv(1 downto 0)        := AXI_RESP_OK_C);
+      DESC_ARB_G        : boolean                := true);
    port (
       -- Clock and reset
       axiClk           : in  sl;
@@ -176,7 +175,6 @@ begin
          DESC_AWIDTH_G     => 12,       -- 4096 entries
          DESC_ARB_G        => DESC_ARB_G,
          AXIL_BASE_ADDR_G  => x"00000000",
-         AXI_ERROR_RESP_G  => AXI_ERROR_RESP_G,
          AXI_READY_EN_G    => false,
          AXIS_READY_EN_G   => false,
          AXIS_CONFIG_G     => INT_DMA_AXIS_CONFIG_C,

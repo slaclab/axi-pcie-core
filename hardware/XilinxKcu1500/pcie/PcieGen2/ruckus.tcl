@@ -13,7 +13,7 @@ if { [info exists ::env(BYPASS_RECONFIG)] != 1 || $::env(BYPASS_RECONFIG) == 0 }
 } else {
    loadSource      -path "$::DIR_PATH/WithoutPartialReconfig/XilinxKcu1500PciePhyWrapper.vhd"
    loadConstraints -path "$::DIR_PATH/WithoutPartialReconfig/XilinxKcu1500PciePhy.xdc"
-   # loadIpCore    -path "$::DIR_PATH/WithoutPartialReconfig/XilinxKcu1500PciePhy.xci"
+   #loadIpCore    -path "$::DIR_PATH/WithoutPartialReconfig/XilinxKcu1500PciePhy.xci"
    loadSource      -path "$::DIR_PATH/WithoutPartialReconfig/XilinxKcu1500PciePhy.dcp"
 }
 

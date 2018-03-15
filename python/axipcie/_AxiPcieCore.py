@@ -18,35 +18,34 @@
 #-----------------------------------------------------------------------------
 
 import pyrogue as pr
-import surf.axi as axi
-import surf.devices.micron as micron
-import surf.xilinx as xilinx
+import surf.axi 
+import surf.devices.micron 
+import surf.xilinx 
 
-class DataDev(pr.Device):
-    def __init__(   self,       
-            name        = "DataDev",
-            description = "Container for data device registers",
-            useBpi      = False,
-            useSpi      = False,
-            numDmaLanes = 8,
-            **kwargs):
-        super().__init__(name=name, description=description, **kwargs)
-        
+class AxiPcieCore(pr.Device):
+    def __init__(self,       
+                 description = 'Base components of the PCIe firmware core',
+                 useBpi      = False,
+                 useSpi      = False,
+                 numDmaLanes = 8,
+                 **kwargs):
+        super().__init__(description=description, **kwargs)
+
         # PCI PHY status
-        self.add(xilinx.AxiPciePhy(            
+        self.add(surf.xilinx.AxiPciePhy(            
             offset       = 0x10000, 
             expand       = False,
         ))
         
         # Standard AxiVersion Module
-        self.add(axi.AxiVersion(            
+        self.add(surf.axi.AxiVersion(            
             offset       = 0x20000, 
             expand       = False,
         ))
 
         # Check if using BPI PROM
         if (useBpi):
-            self.add(micron.AxiMicronP30(
+            self.add(surf.devices.micron.AxiMicronP30(
                 offset       =  0x30000,
                 expand       =  False,                                    
                 hidden       =  True,                                    
@@ -55,16 +54,15 @@ class DataDev(pr.Device):
         # Check if using SPI PROM
         if (useSpi):
             for i in range(2):
-                self.add(micron.AxiMicronN25Q(
-                    name         = "AxiMicronN25Q[%i]" % (i),
+                self.add(surf.devices.micron.AxiMicronN25Q(
+                    name         = f'AxiMicronN25Q[{i}]',
                     offset       =  0x40000 + (i * 0x10000),
-                    description  = "AxiMicronN25Q: %i" % (i),                                
                     expand       =  False,                                    
                     hidden       =  True,                                    
                 ))
                 
         # DMA AXI Stream Inbound Monitor        
-        self.add(axi.AxiStreamMonitoring(            
+        self.add(surf.axi.AxiStreamMonitoring(            
             name        = 'DmaIbAxisMon', 
             offset      = 0x60000, 
             numberLanes = numDmaLanes,
@@ -72,10 +70,9 @@ class DataDev(pr.Device):
         ))        
 
         # DMA AXI Stream Outbound Monitor        
-        self.add(axi.AxiStreamMonitoring(            
+        self.add(surf.axi.AxiStreamMonitoring(            
             name        = 'DmaObAxisMon', 
             offset      = 0x70000, 
             numberLanes = numDmaLanes,
             expand      = False,
         ))
-        

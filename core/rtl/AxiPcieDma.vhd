@@ -171,7 +171,6 @@ begin
    U_V2Gen : entity work.AxiStreamDmaV2
       generic map (
          TPD_G             => TPD_G,
-         SIMULATION_G      => SIMULATION_G,
          DESC_AWIDTH_G     => 12,       -- 4096 entries
          DESC_ARB_G        => DESC_ARB_G,
          AXIL_BASE_ADDR_G  => x"00000000",

@@ -4,7 +4,7 @@ target: bin
 
 # Define the file path to the static checkpoint
 export RECONFIG_DCP_DIR    = $(MODULES)/axi-pcie-core/hardware/XilinxVcu1525/static-release
-export RECONFIG_CHECKPOINT = $(RECONFIG_DCP_DIR)/XilinxVcu1525Base-0x00000002-20180204095219-ruckman-e02f92a0-static.dcp
+export RECONFIG_CHECKPOINT = $(RECONFIG_DCP_DIR)/XilinxVcu1525Base-0x00000004-20180315133730-ruckman-4e0f14a0-static.dcp
 
 # Define hierarchical path to dynamic module
 export RECONFIG_ENDPOINT = U_App

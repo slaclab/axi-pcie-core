@@ -2,7 +2,7 @@
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-03-06
--- Last update: 2018-02-12
+-- Last update: 2018-04-23
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -249,7 +249,8 @@ begin
          BUILD_INFO_G    => BUILD_INFO_G,
          CLK_PERIOD_G    => (1.0/SYS_CLK_FREQ_C),
          EN_DEVICE_DNA_G => EN_DEVICE_DNA_G,
-         XIL_DEVICE_G    => XIL_DEVICE_G)
+         XIL_DEVICE_G    => XIL_DEVICE_G,
+         EN_ICAP_G       => true)
       port map (
          -- AXI-Lite Interface
          axiClk         => axiClk,
@@ -296,9 +297,9 @@ begin
       bpiAddr <= bpiAddress(28 downto 0);
 
       GEN_VEC : for i in 1 downto 0 generate
-         spiCsL                          <= (others => '1');
-         spiSck                          <= (others => '1');
-         spiMosi                         <= (others => '1');
+         spiCsL  <= (others => '1');
+         spiSck  <= (others => '1');
+         spiMosi <= (others => '1');
       end generate GEN_VEC;
 
    end generate;
@@ -400,9 +401,9 @@ begin
    ----------------------------------   
    U_AxiLiteAsync : entity work.AxiLiteAsync
       generic map (
-         TPD_G            => TPD_G,
-         COMMON_CLK_G     => false,
-         NUM_ADDR_BITS_G  => 24)
+         TPD_G           => TPD_G,
+         COMMON_CLK_G    => false,
+         NUM_ADDR_BITS_G => 24)
       port map (
          -- Slave Interface
          sAxiClk         => axiClk,

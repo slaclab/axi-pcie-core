@@ -634,14 +634,17 @@ create_clock -name pciRefClkP -period 10.000 [get_ports {pciRefClkP}]
 create_clock -name ddrClkP0   -period  2.500 [get_ports {ddrClkP[0]}]
 create_clock -name ddrClkP1   -period  2.500 [get_ports {ddrClkP[1]}]
 
-create_generated_clock -name dnaClk  [get_pins {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
-create_generated_clock -name sysClk  [get_pins {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/gt_top_i/phy_clk_i/bufg_gt_userclk/O}]
+create_generated_clock -name dnaClk   [get_pins {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
+create_generated_clock -name iprogClk [get_pins  {U_Core/U_REG/U_Version/GEN_ICAP.Iprog_1/GEN_ULTRA_SCALE.IprogUltraScale_Inst/BUFGCE_DIV_Inst/O}]
+create_generated_clock -name sysClk   [get_pins {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/gt_top_i/phy_clk_i/bufg_gt_userclk/O}]
 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {ddrClkP0}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {ddrClkP1}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {ddrClkP0}]   -group [get_clocks -include_generated_clocks {ddrClkP1}]
 
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {dnaClk}]
+set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {dnaClkL}]
+set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks {iprogClk}]
 
 ######################################
 # BITSTREAM: .bit file Configuration #

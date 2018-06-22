@@ -15,10 +15,11 @@
 #-----------------------------------------------------------------------------
 
 import sys
+import glob
 import argparse
 import pyrogue as pr
-from axipcie import AxiPcieCore
-import glob
+import rogue.hardware.axi
+import axipcie as pcie
     
 # Set the argument parser
 parser = argparse.ArgumentParser()
@@ -43,16 +44,28 @@ parser.add_argument(
 args = parser.parse_args()
     
 # Set base
-progTop = pr.Root(name='progTop',description='')
+base = pr.Root(name='PcieTop',description='')
 
 # Create the stream interface
-coreMap = rogue.hardware.axi.AxiMemMap(args.dev)
+memMap = rogue.hardware.axi.AxiMemMap(args.dev)
 
 # Add Base Device
-progTop.add(AxiPcieCore(memBase=coreMap,useSpi=True))
+base.add(pcie.AxiPcieCore(memBase=memMap,useSpi=True))
 
 # Start the system
-progTop.start(pollEn=False)
+base.start(pollEn=False)
+
+# Create useful pointers
+AxiVersion = base.AxiPcieCore.AxiVersion
+PROM_PRI   = base.AxiPcieCore.AxiMicronN25Q[0]
+PROM_SEC   = base.AxiPcieCore.AxiMicronN25Q[1]
+
+# Printout Current AxiVersion status
+print('#########################################')
+print('Current Firmware Loaded on the PCIe card:')
+print('#########################################')
+AxiVersion.printStatus()
+print('#########################################')
 
 # Get a list of images
 outLst = []
@@ -66,17 +79,25 @@ for l in inLst:
 for i,l in enumerate(outLst):
     print('{} : {}'.format(i,l))
 
-idx = int(input('Enter image: '))
+idx = int(input('Enter image to program into the PCIe card\'s PROM: '))
 pri = '{}_primary.mcs'.format(outLst[idx])
 sec = '{}_secondary.mcs'.format(outLst[idx])
 
+# Load the primary MCS file to QSPI[0]
 print('Loading primary image: {}'.format(pri))
-progTop.AxiPcieCore.AxiMicronN25Q[0].LoadMcsFile(pri)  
+PROM_PRI.LoadMcsFile(pri)  
 
+# Load the secondary MCS file to QSPI[1]
 print('Loading secondary image: {}'.format(sec))
-progTop.AxiPcieCore.AxiMicronN25Q[1].LoadMcsFile(sec)  
+PROM_SEC.LoadMcsFile(sec)  
 
+if(PROM_PRI._progDone and PROM_SEC._progDone):
+    print('\nReloading FPGA firmware from PROM ....')
+    AxiVersion.FpgaReload()
+    print('\nPlease reboot the computer')
+else:
+    print('Failed to program FPGA')
+    
 # Close out
-devTop.stop()
+base.stop()
 exit()
-

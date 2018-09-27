@@ -46,10 +46,10 @@ entity XilinxVcu1525Core is
       --  Top Level Interfaces
       ------------------------
       -- System Interface
-      sysClk          : out   sl;
-      sysRst          : out   sl;
       userClk156      : out   sl;       -- 156.25 MHz
       -- DMA Interfaces  (sysClk domain)
+      dmaClk          : out   sl;
+      dmaRst          : out   sl;
       dmaObMasters    : out   AxiStreamMasterArray(7 downto 0);
       dmaObSlaves     : in    AxiStreamSlaveArray(7 downto 0);
       dmaIbMasters    : in    AxiStreamMasterArray(7 downto 0);
@@ -138,7 +138,7 @@ architecture mapping of XilinxVcu1525Core is
 
 begin
 
-   sysClk <= sysClock;
+   dmaClk <= sysClock;
 
    systemReset <= sysReset or cardReset;
 
@@ -148,7 +148,7 @@ begin
       port map (
          clk    => sysClock,
          rstIn  => systemReset,
-         rstOut => sysRst);
+         rstOut => dmaRst);
 
    U_IBUFDS : IBUFDS
       port map(

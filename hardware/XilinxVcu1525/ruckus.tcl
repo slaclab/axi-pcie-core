@@ -9,6 +9,9 @@ if { $::env(PRJ_PART) != "xcvu9p-fsgd2104-2-i" } {
    puts "\n\nERROR: PRJ_PART was not defined as xcvu9p-fsgd2104-2-i in the Makefile\n\n"; exit -1
 }
 
+# Load shared source code
+loadRuckusTcl "$::DIR_PATH/../../shared"
+
 # Set the board part
 set_property board_part {xilinx.com:vcu1525:part0:1.0} [current_project]
 

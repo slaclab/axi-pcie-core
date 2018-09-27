@@ -44,23 +44,15 @@ entity XilinxKcu1500Core is
       --  Top Level Interfaces
       ------------------------
       userClk156      : out   sl;       -- 156.25 MHz
-      userSwDip       : out   slv(3 downto 0);
-      userLed         : in    slv(7 downto 0) := x"80";
-      -- System Interface
-      sysClk          : out   sl;
-      sysRst          : out   sl;
-      -- DMA Interfaces  (sysClk domain)
+      userClk312      : out   sl;       -- 312.50 MHz
+      -- DMA Interfaces  (dmaClk domain)
+      dmaClk          : out   sl;
+      dmaRst          : out   sl;
       dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- Application AXI Interface [0x000000000:0xFFFFFFFF] (sysClk domain)
-      memReady        : out   slv(3 downto 0);
-      memWriteMasters : in    AxiWriteMasterArray(15 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
-      memWriteSlaves  : out   AxiWriteSlaveArray(15 downto 0);
-      memReadMasters  : in    AxiReadMasterArray(15 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
-      memReadSlaves   : out   AxiReadSlaveArray(15 downto 0);
-      -- Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
+      -- Application AXI-Lite Interfaces (appClk domain)
       appClk          : in    sl;
       appRst          : in    sl;
       appReadMaster   : out   AxiLiteReadMasterType;
@@ -74,8 +66,6 @@ entity XilinxKcu1500Core is
       emcClk          : in    sl;
       userClkP        : in    sl;
       userClkN        : in    sl;
-      swDip           : in    slv(3 downto 0);
-      led             : out   slv(7 downto 0);
       -- QSFP[0] Ports
       qsfp0RstL       : out   sl;
       qsfp0LpMode     : out   sl;
@@ -92,11 +82,6 @@ entity XilinxKcu1500Core is
       flashMiso       : in    sl;
       flashHoldL      : out   sl;
       flashWp         : out   sl;
-      -- DDR Ports
-      ddrClkP         : in    slv(3 downto 0);
-      ddrClkN         : in    slv(3 downto 0);
-      ddrOut          : out   DdrOutArray(3 downto 0);
-      ddrInOut        : inout DdrInOutArray(3 downto 0);
       -- PCIe Ports 
       pciRstL         : in    sl;
       pciRefClkP      : in    sl;
@@ -149,7 +134,7 @@ architecture mapping of XilinxKcu1500Core is
 
 begin
 
-   sysClk <= sysClock;
+   dmaClk <= sysClock;
 
    systemReset <= sysReset or cardReset;
 
@@ -159,7 +144,7 @@ begin
       port map (
          clk    => sysClock,
          rstIn  => systemReset,
-         rstOut => sysRst);
+         rstOut => dmaRst);
 
    U_IBUFDS : IBUFDS
       port map(
@@ -171,22 +156,6 @@ begin
       port map (
          I => userClock,
          O => userClk156);
-
-   GEN_LED :
-   for i in 7 downto 0 generate
-      U_LED : OBUF
-         port map (
-            I => userLed(i),
-            O => led(i));
-   end generate GEN_LED;
-
-   GEN_SW_DIP :
-   for i in 3 downto 0 generate
-      U_SwDip : IBUF
-         port map (
-            I => swDip(i),
-            O => userSwDip(i));
-   end generate GEN_SW_DIP;
 
    qsfp0RstL    <= not(systemReset);
    qsfp1RstL    <= not(systemReset);
@@ -347,93 +316,5 @@ begin
          dmaObSlaves      => dmaObSlaves,
          dmaIbMasters     => dmaIbMasters,
          dmaIbSlaves      => dmaIbSlaves);
-
-   ----------------- 
-   -- AXI DDR MIG[0]
-   ----------------- 
-   U_Mig0 : entity work.Mig0
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- System Clock and reset
-         sysClk          => sysClock,
-         sysRst          => sysReset,
-         -- AXI MEM Interface (sysClk domain)
-         axiReady        => memReady(3),  -- $::env(NUM_MIG_CORES)  == 4
-         axiWriteMasters => memWriteMasters(15 downto 12),
-         axiWriteSlaves  => memWriteSlaves(15 downto 12),
-         axiReadMasters  => memReadMasters(15 downto 12),
-         axiReadSlaves   => memReadSlaves(15 downto 12),
-         -- DDR Ports
-         ddrClkP         => ddrClkP(0),
-         ddrClkN         => ddrClkN(0),
-         ddrOut          => ddrOut(0),
-         ddrInOut        => ddrInOut(0));
-
-   ----------------- 
-   -- AXI DDR MIG[1]
-   -----------------          
-   U_Mig1 : entity work.Mig1
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- System Clock and reset
-         sysClk          => sysClock,
-         sysRst          => sysReset,
-         -- AXI MEM Interface (sysClk domain)
-         axiReady        => memReady(2),  -- $::env(NUM_MIG_CORES)  == 3
-         axiWriteMasters => memWriteMasters(11 downto 8),
-         axiWriteSlaves  => memWriteSlaves(11 downto 8),
-         axiReadMasters  => memReadMasters(11 downto 8),
-         axiReadSlaves   => memReadSlaves(11 downto 8),
-         -- DDR Ports
-         ddrClkP         => ddrClkP(1),
-         ddrClkN         => ddrClkN(1),
-         ddrOut          => ddrOut(1),
-         ddrInOut        => ddrInOut(1));
-
-   ----------------- 
-   -- AXI DDR MIG[2]
-   ----------------- 
-   U_Mig2 : entity work.Mig2
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- System Clock and reset
-         sysClk          => sysClock,
-         sysRst          => sysReset,
-         -- AXI MEM Interface (sysClk domain)
-         axiReady        => memReady(1),  -- $::env(NUM_MIG_CORES)  == 2
-         axiWriteMasters => memWriteMasters(7 downto 4),
-         axiWriteSlaves  => memWriteSlaves(7 downto 4),
-         axiReadMasters  => memReadMasters(7 downto 4),
-         axiReadSlaves   => memReadSlaves(7 downto 4),
-         -- DDR Ports
-         ddrClkP         => ddrClkP(2),
-         ddrClkN         => ddrClkN(2),
-         ddrOut          => ddrOut(2),
-         ddrInOut        => ddrInOut(2));
-
-   ----------------- 
-   -- AXI DDR MIG[3]
-   ----------------- 
-   U_Mig3 : entity work.Mig3
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- System Clock and reset
-         sysClk          => sysClock,
-         sysRst          => sysReset,
-         -- AXI MEM Interface (sysClk domain)
-         axiReady        => memReady(0),  -- $::env(NUM_MIG_CORES)  == 1
-         axiWriteMasters => memWriteMasters(3 downto 0),
-         axiWriteSlaves  => memWriteSlaves(3 downto 0),
-         axiReadMasters  => memReadMasters(3 downto 0),
-         axiReadSlaves   => memReadSlaves(3 downto 0),
-         -- DDR Ports
-         ddrClkP         => ddrClkP(3),
-         ddrClkN         => ddrClkN(3),
-         ddrOut          => ddrOut(3),
-         ddrInOut        => ddrInOut(3));
 
 end mapping;

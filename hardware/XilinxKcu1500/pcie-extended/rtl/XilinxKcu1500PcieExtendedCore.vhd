@@ -2,7 +2,7 @@
 -- File       : XilinxKcu1500PcieExtendedCore.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -- Created    : 2017-04-06
--- Last update: 2018-02-12
+-- Last update: 2018-09-26
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -43,15 +43,14 @@ entity XilinxKcu1500PcieExtendedCore is
       ------------------------      
       --  Top Level Interfaces
       ------------------------
-      -- System Interface
-      sysClk         : out sl;
-      sysRst         : out sl;
-      -- DMA Interfaces  (sysClk domain)
+      -- DMA Interfaces  (dmaClk domain)
+      dmaClk         : out sl;
+      dmaRst         : out sl;
       dmaObMasters   : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
+      -- Application AXI-Lite Interfaces (appClk domain)
       appClk         : in  sl;
       appRst         : in  sl;
       appReadMaster  : out AxiLiteReadMasterType;
@@ -83,10 +82,10 @@ architecture mapping of XilinxKcu1500PcieExtendedCore is
    signal regWriteMaster : AxiWriteMasterType;
    signal regWriteSlave  : AxiWriteSlaveType;
 
-   signal dmaCtrlReadMaster  : AxiLiteReadMasterType;
-   signal dmaCtrlReadSlave   : AxiLiteReadSlaveType;
-   signal dmaCtrlWriteMaster : AxiLiteWriteMasterType;
-   signal dmaCtrlWriteSlave  : AxiLiteWriteSlaveType;
+   signal dmaCtrlReadMasters  : AxiLiteReadMasterArray(2 downto 0);
+   signal dmaCtrlReadSlaves   : AxiLiteReadSlaveArray(2 downto 0);
+   signal dmaCtrlWriteMasters : AxiLiteWriteMasterArray(2 downto 0);
+   signal dmaCtrlWriteSlaves  : AxiLiteWriteSlaveArray(2 downto 0);
 
    signal phyReadMaster  : AxiLiteReadMasterType;
    signal phyReadSlave   : AxiLiteReadSlaveType;
@@ -101,7 +100,7 @@ architecture mapping of XilinxKcu1500PcieExtendedCore is
 
 begin
 
-   sysClk <= sysClock;
+   dmaClk <= sysClock;
 
    systemReset <= sysReset or cardReset;
 
@@ -111,7 +110,7 @@ begin
       port map (
          clk    => sysClock,
          rstIn  => systemReset,
-         rstOut => sysRst);
+         rstOut => dmaRst);
 
    ---------------
    -- AXI PCIe PHY
@@ -160,32 +159,32 @@ begin
          DMA_SIZE_G       => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
-         axiClk             => sysClock,
-         axiRst             => sysReset,
-         regReadMaster      => regReadMaster,
-         regReadSlave       => regReadSlave,
-         regWriteMaster     => regWriteMaster,
-         regWriteSlave      => regWriteSlave,
+         axiClk              => sysClock,
+         axiRst              => sysReset,
+         regReadMaster       => regReadMaster,
+         regReadSlave        => regReadSlave,
+         regWriteMaster      => regWriteMaster,
+         regWriteSlave       => regWriteSlave,
          -- DMA AXI-Lite Interfaces
-         dmaCtrlReadMaster  => dmaCtrlReadMaster,
-         dmaCtrlReadSlave   => dmaCtrlReadSlave,
-         dmaCtrlWriteMaster => dmaCtrlWriteMaster,
-         dmaCtrlWriteSlave  => dmaCtrlWriteSlave,
+         dmaCtrlReadMasters  => dmaCtrlReadMasters,
+         dmaCtrlReadSlaves   => dmaCtrlReadSlaves,
+         dmaCtrlWriteMasters => dmaCtrlWriteMasters,
+         dmaCtrlWriteSlaves  => dmaCtrlWriteSlaves,
          -- PHY AXI-Lite Interfaces
-         phyReadMaster      => phyReadMaster,
-         phyReadSlave       => phyReadSlave,
-         phyWriteMaster     => phyWriteMaster,
-         phyWriteSlave      => phyWriteSlave,
+         phyReadMaster       => phyReadMaster,
+         phyReadSlave        => phyReadSlave,
+         phyWriteMaster      => phyWriteMaster,
+         phyWriteSlave       => phyWriteSlave,
          -- (Optional) Application AXI-Lite Interfaces
-         appClk             => appClk,
-         appRst             => appRst,
-         appReadMaster      => appReadMaster,
-         appReadSlave       => appReadSlave,
-         appWriteMaster     => appWriteMaster,
-         appWriteSlave      => appWriteSlave,
+         appClk              => appClk,
+         appRst              => appRst,
+         appReadMaster       => appReadMaster,
+         appReadSlave        => appReadSlave,
+         appWriteMaster      => appWriteMaster,
+         appWriteSlave       => appWriteSlave,
          -- Application Force reset
-         cardResetOut       => cardReset,
-         cardResetIn        => systemReset);
+         cardResetOut        => cardReset,
+         cardResetIn         => systemReset);
 
    ---------------
    -- AXI PCIe DMA
@@ -194,27 +193,27 @@ begin
       generic map (
          TPD_G      => TPD_G,
          DMA_SIZE_G => DMA_SIZE_G,
-         DESC_ARB_G => false)           -- Round robin to help with timing @ 250 MHz system clock
+         DESC_ARB_G => false)  -- Round robin to help with timing @ 250 MHz system clock
       port map (
          -- Clock and reset
-         axiClk          => sysClock,
-         axiRst          => sysReset,
+         axiClk           => sysClock,
+         axiRst           => sysReset,
          -- AXI4 Interfaces
-         axiReadMaster   => dmaReadMaster,
-         axiReadSlave    => dmaReadSlave,
-         axiWriteMaster  => dmaWriteMaster,
-         axiWriteSlave   => dmaWriteSlave,
+         axiReadMaster    => dmaReadMaster,
+         axiReadSlave     => dmaReadSlave,
+         axiWriteMaster   => dmaWriteMaster,
+         axiWriteSlave    => dmaWriteSlave,
          -- AXI4-Lite Interfaces
-         axilReadMaster  => dmaCtrlReadMaster,
-         axilReadSlave   => dmaCtrlReadSlave,
-         axilWriteMaster => dmaCtrlWriteMaster,
-         axilWriteSlave  => dmaCtrlWriteSlave,
+         axilReadMasters  => dmaCtrlReadMasters,
+         axilReadSlaves   => dmaCtrlReadSlaves,
+         axilWriteMasters => dmaCtrlWriteMasters,
+         axilWriteSlaves  => dmaCtrlWriteSlaves,
          -- Interrupts
-         dmaIrq          => dmaIrq,
+         dmaIrq           => dmaIrq,
          -- DMA Interfaces
-         dmaObMasters    => dmaObMasters,
-         dmaObSlaves     => dmaObSlaves,
-         dmaIbMasters    => dmaIbMasters,
-         dmaIbSlaves     => dmaIbSlaves);
+         dmaObMasters     => dmaObMasters,
+         dmaObSlaves      => dmaObSlaves,
+         dmaIbMasters     => dmaIbMasters,
+         dmaIbSlaves      => dmaIbSlaves);
 
 end mapping;

@@ -69,20 +69,6 @@ set_property -dict { PACKAGE_PIN AR26 IOSTANDARD LVCMOS18 } [get_ports {pciRstL}
 # System #
 ##########
 
-set_property -dict { PACKAGE_PIN AW25  IOSTANDARD LVCMOS18 } [get_ports { led[0] }]
-set_property -dict { PACKAGE_PIN AY25  IOSTANDARD LVCMOS18 } [get_ports { led[1] }]
-set_property -dict { PACKAGE_PIN BA27  IOSTANDARD LVCMOS18 } [get_ports { led[2] }]
-set_property -dict { PACKAGE_PIN BA28  IOSTANDARD LVCMOS18 } [get_ports { led[3] }]
-set_property -dict { PACKAGE_PIN BB26  IOSTANDARD LVCMOS18 } [get_ports { led[4] }]
-set_property -dict { PACKAGE_PIN BB27  IOSTANDARD LVCMOS18 } [get_ports { led[5] }]
-set_property -dict { PACKAGE_PIN BA25  IOSTANDARD LVCMOS18 } [get_ports { led[6] }]
-set_property -dict { PACKAGE_PIN BB25  IOSTANDARD LVCMOS18 } [get_ports { led[7] }]
-
-set_property -dict { PACKAGE_PIN BC26  IOSTANDARD LVCMOS18 } [get_ports { swDip[0] }]
-set_property -dict { PACKAGE_PIN BC27  IOSTANDARD LVCMOS18 } [get_ports { swDip[1] }]
-set_property -dict { PACKAGE_PIN BE25  IOSTANDARD LVCMOS18 } [get_ports { swDip[2] }]
-set_property -dict { PACKAGE_PIN BF25  IOSTANDARD LVCMOS18 } [get_ports { swDip[3] }]
-
 set_property -dict { PACKAGE_PIN AV24  IOSTANDARD LVDS_25 } [get_ports { userClkP }]; # 156.25 MHz
 set_property -dict { PACKAGE_PIN AW24  IOSTANDARD LVDS_25 } [get_ports { userClkN }]; # 156.25 MHz
 

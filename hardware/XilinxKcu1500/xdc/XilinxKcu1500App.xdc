@@ -8,6 +8,24 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
+##########
+# System #
+##########
+
+set_property -dict { PACKAGE_PIN AW25  IOSTANDARD LVCMOS18 } [get_ports { led[0] }]
+set_property -dict { PACKAGE_PIN AY25  IOSTANDARD LVCMOS18 } [get_ports { led[1] }]
+set_property -dict { PACKAGE_PIN BA27  IOSTANDARD LVCMOS18 } [get_ports { led[2] }]
+set_property -dict { PACKAGE_PIN BA28  IOSTANDARD LVCMOS18 } [get_ports { led[3] }]
+set_property -dict { PACKAGE_PIN BB26  IOSTANDARD LVCMOS18 } [get_ports { led[4] }]
+set_property -dict { PACKAGE_PIN BB27  IOSTANDARD LVCMOS18 } [get_ports { led[5] }]
+set_property -dict { PACKAGE_PIN BA25  IOSTANDARD LVCMOS18 } [get_ports { led[6] }]
+set_property -dict { PACKAGE_PIN BB25  IOSTANDARD LVCMOS18 } [get_ports { led[7] }]
+
+set_property -dict { PACKAGE_PIN BC26  IOSTANDARD LVCMOS18 } [get_ports { swDip[0] }]
+set_property -dict { PACKAGE_PIN BC27  IOSTANDARD LVCMOS18 } [get_ports { swDip[1] }]
+set_property -dict { PACKAGE_PIN BE25  IOSTANDARD LVCMOS18 } [get_ports { swDip[2] }]
+set_property -dict { PACKAGE_PIN BF25  IOSTANDARD LVCMOS18 } [get_ports { swDip[3] }]
+
 ###########
 # QSFP[0] #
 ###########
@@ -69,7 +87,6 @@ create_clock -period 6.400 -name qsfp0RefClkP1 [get_ports {qsfp0RefClkP[1]}]; # 
 create_clock -period 6.400 -name qsfp1RefClkP0 [get_ports {qsfp1RefClkP[0]}]
 create_clock -period 6.400 -name qsfp1RefClkP1 [get_ports {qsfp1RefClkP[1]}]; # I am measuring 156.25 MHz even but Xilinx documentation says it should be 125 MHz
 # create_clock -period 8.000 -name qsfp1RefClkP1 [get_ports {qsfp1RefClkP[1]}]
-
 
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP0}]
 set_clock_groups -asynchronous -group [get_clocks {sysClk}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP1}]

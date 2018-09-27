@@ -21,19 +21,26 @@ if { $::env(PCIE_GEN_NUM)  == "GEN1" } {
 
 # Select either GEN1 or GEN2 or GEN3 PCIe
 if { $::env(PCIE_GEN_NUM)  == "GEN1" } {
-   loadRuckusTcl "$::DIR_PATH/PcieGen1"
+   set pciePath "$::DIR_PATH/PcieGen1"
 } elseif { $::env(PCIE_GEN_NUM)  == "GEN2" } {
-   loadRuckusTcl "$::DIR_PATH/PcieGen2"
+   set pciePath "$::DIR_PATH/PcieGen2"   
 } elseif { $::env(PCIE_GEN_NUM)  == "GEN3" } {
-   loadRuckusTcl "$::DIR_PATH/PcieGen3"
+   set pciePath "$::DIR_PATH/PcieGen3"   
 } else {
    puts "\n\nERROR: PCIE_GEN_NUM = $::env(PCIE_GEN_NUM) is not valid."
    puts "It must be either GEN1 or GEN2 or GEN3"
    puts "Please fix this in $::env(PROJ_DIR)/Makefile\n\n"; exit -1
 }   
 
-if { [info exists ::env(EXTENDED_PCIE)] != 1 || $::env(EXTENDED_PCIE) == 0 } {
-   set EXTENDED_PCIE 1
-} else {
-   loadRuckusTcl "$::DIR_PATH/extended"
-}
+# Load local Source Code and Constraints
+loadSource      -path "${pciePath}/AxiPciePkg.vhd"
+loadSource      -path "${pciePath}/XilinxKcu1500PciePhyWrapper.vhd"
+
+# Load IP core
+# loadIpCore    -path "${pciePath}/XilinxKcu1500PciePhy.xci"
+loadSource      -path "${pciePath}/XilinxKcu1500PciePhy.dcp"
+
+loadConstraints -path "${pciePath}/XilinxKcu1500PciePhy.xdc"
+set_property PROCESSING_ORDER {EARLY}                         [get_files {XilinxKcu1500PciePhy.xdc}]
+set_property SCOPED_TO_REF    {XilinxKcu1500PciePhy_pcie3_ip} [get_files {XilinxKcu1500PciePhy.xdc}]
+set_property SCOPED_TO_CELLS  {inst}                          [get_files {XilinxKcu1500PciePhy.xdc}]

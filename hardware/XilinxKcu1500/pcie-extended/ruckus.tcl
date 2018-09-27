@@ -15,15 +15,15 @@ if { $::env(PCIE_GEN_NUM)  == "GEN1" } {
 }   
 
 # Load local Source Code and Constraints
-loadSource      -dir  "$::DIR_PATH/core"
-loadConstraints -dir  "$::DIR_PATH/core"
+loadSource      -dir  "$::DIR_PATH/rtl"
+loadConstraints -dir  "$::DIR_PATH/xdc"
 loadSource      -path "${pciePath}/XilinxKcu1500ExtendedPciePhyWrapper.vhd"
 
 # Load IP core
 loadSource      -path "${pciePath}/XilinxKcu1500ExtendedPciePhy.dcp"
-loadConstraints -path "${pciePath}/XilinxKcu1500ExtendedPciePhy.xdc"
-# loadIpCore      -path "${pciePath}/XilinxKcu1500ExtendedPciePhy.xci"
+# loadIpCore    -path "${pciePath}/XilinxKcu1500ExtendedPciePhy.xci"
 
-set_property PROCESSING_ORDER {EARLY}                         [get_files {XilinxKcu1500ExtendedPciePhy.xdc}]
+loadConstraints -path "${pciePath}/XilinxKcu1500ExtendedPciePhy.xdc"
+set_property PROCESSING_ORDER {EARLY}                                 [get_files {XilinxKcu1500ExtendedPciePhy.xdc}]
 set_property SCOPED_TO_REF    {XilinxKcu1500ExtendedPciePhy_pcie3_ip} [get_files {XilinxKcu1500ExtendedPciePhy.xdc}]
-set_property SCOPED_TO_CELLS  {inst}                          [get_files {XilinxKcu1500ExtendedPciePhy.xdc}]
+set_property SCOPED_TO_CELLS  {inst}                                  [get_files {XilinxKcu1500ExtendedPciePhy.xdc}]

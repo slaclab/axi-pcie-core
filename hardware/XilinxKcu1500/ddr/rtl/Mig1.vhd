@@ -21,7 +21,7 @@ use ieee.std_logic_1164.all;
 use work.StdRtlPkg.all;
 use work.AxiLitePkg.all;
 use work.AxiPkg.all;
-use work.AxiPciePkg.all;
+use work.MigPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -30,15 +30,14 @@ entity Mig1 is
    generic (
       TPD_G : time := 1 ns);
    port (
-      -- System Clock and reset
-      sysClk          : in    sl;
-      sysRst          : in    sl;
-      -- AXI MEM Interface (sysClk domain)
+      -- AXI MEM Interface
+      axiClk          : out    sl;
+      axiRst          : out    sl;
       axiReady        : out   sl;
-      axiWriteMasters : in    AxiWriteMasterArray(3 downto 0);
-      axiWriteSlaves  : out   AxiWriteSlaveArray(3 downto 0);
-      axiReadMasters  : in    AxiReadMasterArray(3 downto 0);
-      axiReadSlaves   : out   AxiReadSlaveArray(3 downto 0);
+      axiWriteMasters : in    AxiWriteMasterType;
+      axiWriteSlaves  : out   AxiWriteSlaveType;
+      axiReadMasters  : in    AxiReadMasterType;
+      axiReadSlaves   : out   AxiReadSlaveType;
       -- DDR Ports
       ddrClkP         : in    sl;
       ddrClkN         : in    sl;
@@ -112,20 +111,10 @@ architecture mapping of Mig1 is
          sys_rst                 : in    std_logic);
    end component;
 
-   signal axiWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-   signal axiWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
-   signal axiReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
-   signal axiReadSlave   : AxiReadSlaveType   := AXI_READ_SLAVE_INIT_C;
-
    signal ddrWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal ddrWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
    signal ddrReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
    signal ddrReadSlave   : AxiReadSlaveType   := AXI_READ_SLAVE_INIT_C;
-
-   signal memWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-   signal memWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
-   signal memReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
-   signal memReadSlave   : AxiReadSlaveType   := AXI_READ_SLAVE_INIT_C;
 
    signal ddrClk     : sl;
    signal ddrRst     : sl;
@@ -218,24 +207,14 @@ begin
          clk    => ddrClk,
          rstIn  => coreRst,
          rstOut => ddrRst);
-
-   U_Xbar : entity work.MigXbar
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- Slave Interfaces
-         sAxiClk          => sysClk,
-         sAxiRst          => sysRst,
-         sAxiWriteMasters => axiWriteMasters,
-         sAxiWriteSlaves  => axiWriteSlaves,
-         sAxiReadMasters  => axiReadMasters,
-         sAxiReadSlaves   => axiReadSlaves,
-         -- Master Interface
-         mAxiClk          => ddrClk,
-         mAxiRst          => ddrRst,
-         mAxiWriteMaster  => ddrWriteMaster,
-         mAxiWriteSlave   => ddrWriteSlave,
-         mAxiReadMaster   => ddrReadMaster,
-         mAxiReadSlave    => ddrReadSlave);
+         
+   axiClk <= ddrClk;
+   axiRst <= ddrRst;
+   
+   ddrWriteMaster <= axiWriteMaster;
+   axiWriteSlave  <= ddrWriteSlave;
+   
+   ddrReadMaster <= axiReadMaster;
+   axiReadSlave  <= ddrReadSlave;   
 
 end mapping;

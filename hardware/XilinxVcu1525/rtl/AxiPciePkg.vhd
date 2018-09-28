@@ -47,14 +47,14 @@ package AxiPciePkg is
    constant DMA_AXI_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 48,               -- 48-bit address interface
       DATA_BYTES_C => DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- 128-bit data interface (matches the AXIS stream)
-      ID_BITS_C    => 5,                -- Up to 32 DMA IDS
+      ID_BITS_C    => 4,                -- Up to 16 DMA IDS
       LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface         
 
    -- PCIE PHY AXI Configuration   
    constant PCIE_AXI_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 48,               -- 48-bit address interface
       DATA_BYTES_C => 64,               -- 512-bit data interface
-      ID_BITS_C    => 5,                -- Up to 32 DMA IDS
+      ID_BITS_C    => 4,                -- Up to 16 DMA IDS
       LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface      
 
    -- DDR MEM AXI Configuration

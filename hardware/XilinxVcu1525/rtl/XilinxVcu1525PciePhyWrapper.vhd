@@ -82,7 +82,7 @@ architecture mapping of XilinxVcu1525PciePhyWrapper is
          m_axib_awvalid     : out std_logic;
          m_axib_awready     : in  std_logic;
          m_axib_awlock      : out std_logic;
-         m_axib_awcache     : out std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
+         m_axib_awcache     : out std_logic_vector(3 downto 0);
          m_axib_wdata       : out std_logic_vector(8*PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0);
          m_axib_wstrb       : out std_logic_vector(PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0);
          m_axib_wlast       : out std_logic;

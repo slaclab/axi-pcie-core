@@ -1,8 +1,6 @@
 -------------------------------------------------------------------------------
 -- File       : XilinxVcu1525PciePhyWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
--- Created    : 2018-01-29
--- Last update: 2018-01-29
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXI PCIe Core
 -------------------------------------------------------------------------------
@@ -21,6 +19,7 @@ use ieee.std_logic_1164.all;
 use work.StdRtlPkg.all;
 use work.AxiPkg.all;
 use work.AxiLitePkg.all;
+use work.AxiPciePkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -74,28 +73,28 @@ architecture mapping of XilinxVcu1525PciePhyWrapper is
          axi_ctl_aresetn    : out std_logic;
          usr_irq_req        : in  std_logic_vector(0 downto 0);
          usr_irq_ack        : out std_logic_vector(0 downto 0);
-         m_axib_awid        : out std_logic_vector(3 downto 0);
-         m_axib_awaddr      : out std_logic_vector(31 downto 0);
-         m_axib_awlen       : out std_logic_vector(7 downto 0);
+         m_axib_awid        : out std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
+         m_axib_awaddr      : out std_logic_vector(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C-1 downto 0);
+         m_axib_awlen       : out std_logic_vector(PCIE_AXI_CONFIG_C.LEN_BITS_C-1 downto 0);
          m_axib_awsize      : out std_logic_vector(2 downto 0);
          m_axib_awburst     : out std_logic_vector(1 downto 0);
          m_axib_awprot      : out std_logic_vector(2 downto 0);
          m_axib_awvalid     : out std_logic;
          m_axib_awready     : in  std_logic;
          m_axib_awlock      : out std_logic;
-         m_axib_awcache     : out std_logic_vector(3 downto 0);
-         m_axib_wdata       : out std_logic_vector(511 downto 0);
-         m_axib_wstrb       : out std_logic_vector(63 downto 0);
+         m_axib_awcache     : out std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
+         m_axib_wdata       : out std_logic_vector(8*PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0);
+         m_axib_wstrb       : out std_logic_vector(PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0);
          m_axib_wlast       : out std_logic;
          m_axib_wvalid      : out std_logic;
          m_axib_wready      : in  std_logic;
-         m_axib_bid         : in  std_logic_vector(3 downto 0);
+         m_axib_bid         : in  std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
          m_axib_bresp       : in  std_logic_vector(1 downto 0);
          m_axib_bvalid      : in  std_logic;
          m_axib_bready      : out std_logic;
-         m_axib_arid        : out std_logic_vector(3 downto 0);
-         m_axib_araddr      : out std_logic_vector(31 downto 0);
-         m_axib_arlen       : out std_logic_vector(7 downto 0);
+         m_axib_arid        : out std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
+         m_axib_araddr      : out std_logic_vector(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C-1 downto 0);
+         m_axib_arlen       : out std_logic_vector(PCIE_AXI_CONFIG_C.LEN_BITS_C-1 downto 0);
          m_axib_arsize      : out std_logic_vector(2 downto 0);
          m_axib_arburst     : out std_logic_vector(1 downto 0);
          m_axib_arprot      : out std_logic_vector(2 downto 0);
@@ -103,8 +102,8 @@ architecture mapping of XilinxVcu1525PciePhyWrapper is
          m_axib_arready     : in  std_logic;
          m_axib_arlock      : out std_logic;
          m_axib_arcache     : out std_logic_vector(3 downto 0);
-         m_axib_rid         : in  std_logic_vector(3 downto 0);
-         m_axib_rdata       : in  std_logic_vector(511 downto 0);
+         m_axib_rid         : in  std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
+         m_axib_rdata       : in  std_logic_vector(8*PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0);
          m_axib_rresp       : in  std_logic_vector(1 downto 0);
          m_axib_rlast       : in  std_logic;
          m_axib_rvalid      : in  std_logic;
@@ -133,34 +132,34 @@ architecture mapping of XilinxVcu1525PciePhyWrapper is
          cap_gnt            : in  std_logic;
          cap_rel            : in  std_logic;
          interrupt_out      : out std_logic;
-         s_axib_awid        : in  std_logic_vector(4 downto 0);
-         s_axib_awaddr      : in  std_logic_vector(31 downto 0);
+         s_axib_awid        : in  std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
+         s_axib_awaddr      : in  std_logic_vector(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C-1 downto 0);
          s_axib_awregion    : in  std_logic_vector(3 downto 0);
-         s_axib_awlen       : in  std_logic_vector(7 downto 0);
+         s_axib_awlen       : in  std_logic_vector(PCIE_AXI_CONFIG_C.LEN_BITS_C-1 downto 0);
          s_axib_awsize      : in  std_logic_vector(2 downto 0);
          s_axib_awburst     : in  std_logic_vector(1 downto 0);
          s_axib_awvalid     : in  std_logic;
-         s_axib_wdata       : in  std_logic_vector(511 downto 0);
-         s_axib_wstrb       : in  std_logic_vector(63 downto 0);
+         s_axib_wdata       : in  std_logic_vector(8*PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0);
+         s_axib_wstrb       : in  std_logic_vector(PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0);
          s_axib_wlast       : in  std_logic;
          s_axib_wvalid      : in  std_logic;
          s_axib_bready      : in  std_logic;
-         s_axib_arid        : in  std_logic_vector(4 downto 0);
-         s_axib_araddr      : in  std_logic_vector(31 downto 0);
+         s_axib_arid        : in  std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
+         s_axib_araddr      : in  std_logic_vector(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C-1 downto 0);
          s_axib_arregion    : in  std_logic_vector(3 downto 0);
-         s_axib_arlen       : in  std_logic_vector(7 downto 0);
+         s_axib_arlen       : in  std_logic_vector(PCIE_AXI_CONFIG_C.LEN_BITS_C-1 downto 0);
          s_axib_arsize      : in  std_logic_vector(2 downto 0);
          s_axib_arburst     : in  std_logic_vector(1 downto 0);
          s_axib_arvalid     : in  std_logic;
          s_axib_rready      : in  std_logic;
          s_axib_awready     : out std_logic;
          s_axib_wready      : out std_logic;
-         s_axib_bid         : out std_logic_vector(4 downto 0);
+         s_axib_bid         : out std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
          s_axib_bresp       : out std_logic_vector(1 downto 0);
          s_axib_bvalid      : out std_logic;
          s_axib_arready     : out std_logic;
-         s_axib_rid         : out std_logic_vector(4 downto 0);
-         s_axib_rdata       : out std_logic_vector(511 downto 0);
+         s_axib_rid         : out std_logic_vector(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0);
+         s_axib_rdata       : out std_logic_vector(8*PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0);
          s_axib_rresp       : out std_logic_vector(1 downto 0);
          s_axib_rlast       : out std_logic;
          s_axib_rvalid      : out std_logic);
@@ -223,40 +222,40 @@ begin
          usr_irq_ack(0)     => open,  -- Action Item: Unclear if there needs to be handshaking with existing AxisDMAv2's IRQ.  Need to determine if a FSM between the usr_irq_req/usr_irq_ack to dmaIrq is need???
          interrupt_out      => open,
          -- Slave AXI4 Interface
-         s_axib_awid        => dmaWriteMaster.awid(4 downto 0),
-         s_axib_awaddr      => dmaWriteMaster.awaddr(31 downto 0),
+         s_axib_awid        => dmaWriteMaster.awid(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0),
+         s_axib_awaddr      => dmaWriteMaster.awaddr(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
          s_axib_awregion    => dmaWriteMaster.awregion,
-         s_axib_awlen       => dmaWriteMaster.awlen(7 downto 0),
+         s_axib_awlen       => dmaWriteMaster.awlen(PCIE_AXI_CONFIG_C.LEN_BITS_C-1 downto 0),
          s_axib_awsize      => dmaWriteMaster.awsize(2 downto 0),
          s_axib_awburst     => dmaWriteMaster.awburst(1 downto 0),
          s_axib_awvalid     => dmaWriteMaster.awvalid,
          s_axib_awready     => dmaWriteSlave.awready,
-         s_axib_wdata       => dmaWriteMaster.wdata(511 downto 0),
-         s_axib_wstrb       => dmaWriteMaster.wstrb(63 downto 0),
+         s_axib_wdata       => dmaWriteMaster.wdata(8*PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0),
+         s_axib_wstrb       => dmaWriteMaster.wstrb(PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0),
          s_axib_wlast       => dmaWriteMaster.wlast,
          s_axib_wvalid      => dmaWriteMaster.wvalid,
          s_axib_wready      => dmaWriteSlave.wready,
-         s_axib_bid         => dmaWriteSlave.bid(4 downto 0),
+         s_axib_bid         => dmaWriteSlave.bid(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0),
          s_axib_bresp       => dmaWriteSlave.bresp(1 downto 0),
          s_axib_bvalid      => dmaWriteSlave.bvalid,
          s_axib_bready      => dmaWriteMaster.bready,
-         s_axib_arid        => dmaReadMaster.arid(4 downto 0),
-         s_axib_araddr      => dmaReadMaster.araddr(31 downto 0),
+         s_axib_arid        => dmaReadMaster.arid(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0),
+         s_axib_araddr      => dmaReadMaster.araddr(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
          s_axib_arregion    => dmaReadMaster.arregion,
-         s_axib_arlen       => dmaReadMaster.arlen(7 downto 0),
+         s_axib_arlen       => dmaReadMaster.arlen(PCIE_AXI_CONFIG_C.LEN_BITS_C-1 downto 0),
          s_axib_arsize      => dmaReadMaster.arsize(2 downto 0),
          s_axib_arburst     => dmaReadMaster.arburst(1 downto 0),
          s_axib_arvalid     => dmaReadMaster.arvalid,
          s_axib_arready     => dmaReadSlave.arready,
-         s_axib_rid         => dmaReadSlave.rid(4 downto 0),
-         s_axib_rdata       => dmaReadSlave.rdata(511 downto 0),
+         s_axib_rid         => dmaReadSlave.rid(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0),
+         s_axib_rdata       => dmaReadSlave.rdata(8*PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0),
          s_axib_rresp       => dmaReadSlave.rresp(1 downto 0),
          s_axib_rlast       => dmaReadSlave.rlast,
          s_axib_rvalid      => dmaReadSlave.rvalid,
          s_axib_rready      => dmaReadMaster.rready,
          -- Master AXI4 Interface
-         m_axib_awaddr      => regWriteMaster.awaddr(31 downto 0),
-         m_axib_awlen       => regWriteMaster.awlen(7 downto 0),
+         m_axib_awaddr      => regWriteMaster.awaddr(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
+         m_axib_awlen       => regWriteMaster.awlen(PCIE_AXI_CONFIG_C.LEN_BITS_C-1 downto 0),
          m_axib_awsize      => regWriteMaster.awsize(2 downto 0),
          m_axib_awburst     => regWriteMaster.awburst(1 downto 0),
          m_axib_awprot      => regWriteMaster.awprot,
@@ -264,17 +263,17 @@ begin
          m_axib_awready     => regWriteSlave.awready,
          m_axib_awlock      => regWriteMaster.awlock(0),
          m_axib_awcache     => regWriteMaster.awcache,
-         m_axib_wdata       => regWriteMaster.wdata(511 downto 0),
-         m_axib_wstrb       => regWriteMaster.wstrb(63 downto 0),
+         m_axib_wdata       => regWriteMaster.wdata(8*PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0),
+         m_axib_wstrb       => regWriteMaster.wstrb(PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0),
          m_axib_wlast       => regWriteMaster.wlast,
          m_axib_wvalid      => regWriteMaster.wvalid,
          m_axib_wready      => regWriteSlave.wready,
-         m_axib_bid         => regWriteSlave.bid(3 downto 0),
+         m_axib_bid         => regWriteSlave.bid(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0),
          m_axib_bresp       => regWriteSlave.bresp(1 downto 0),
          m_axib_bvalid      => regWriteSlave.bvalid,
          m_axib_bready      => regWriteMaster.bready,
-         m_axib_araddr      => regReadMaster.araddr(31 downto 0),
-         m_axib_arlen       => regReadMaster.arlen(7 downto 0),
+         m_axib_araddr      => regReadMaster.araddr(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
+         m_axib_arlen       => regReadMaster.arlen(PCIE_AXI_CONFIG_C.LEN_BITS_C-1 downto 0),
          m_axib_arsize      => regReadMaster.arsize(2 downto 0),
          m_axib_arburst     => regReadMaster.arburst(1 downto 0),
          m_axib_arprot      => regReadMaster.arprot,
@@ -282,8 +281,8 @@ begin
          m_axib_arready     => regReadSlave.arready,
          m_axib_arlock      => regReadMaster.arlock(0),
          m_axib_arcache     => regReadMaster.arcache,
-         m_axib_rid         => regReadSlave.rid(3 downto 0),
-         m_axib_rdata       => regReadSlave.rdata(511 downto 0),
+         m_axib_rid         => regReadSlave.rid(PCIE_AXI_CONFIG_C.ID_BITS_C-1 downto 0),
+         m_axib_rdata       => regReadSlave.rdata(8*PCIE_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0),
          m_axib_rresp       => regReadSlave.rresp(1 downto 0),
          m_axib_rlast       => regReadSlave.rlast,
          m_axib_rvalid      => regReadSlave.rvalid,

@@ -1,8 +1,6 @@
 -------------------------------------------------------------------------------
 -- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
--- Created    : 2017-03-06
--- Last update: 2018-04-23
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
@@ -32,6 +30,7 @@ entity AxiPcieReg is
       BOOT_PROM_G      : string                 := "BPI";
       DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
       EN_DEVICE_DNA_G  : boolean                := true;
+      EN_ICAP_G        : boolean                := true;
       DMA_SIZE_G       : positive range 1 to 16 := 1);
    port (
       -- AXI4 Interfaces
@@ -158,27 +157,52 @@ begin
    process(appReset)
       variable i : natural;
    begin
+      -- Number of DMA lanes (defined by user)
       userValues(0) <= toSlv(DMA_SIZE_G, 32);
+      
+      -- Reserved
       userValues(1) <= x"00000001";
+      
+      -- Driver TYPE ID (defined by user)
       userValues(2) <= DRIVER_TYPE_ID_G;
 
+      -- FPGA Fabric Type
       case XIL_DEVICE_G is
          when "ULTRASCALE" => userValues(3) <= x"00000000";
          when "7SERIES"    => userValues(3) <= x"00000001";
          when others       => userValues(3) <= x"FFFFFFFF";
       end case;
 
+      -- System Clock Frequency
       userValues(4) <= toSlv(getTimeRatio(SYS_CLK_FREQ_C, 1.0), 32);
 
+      -- PROM configuration
       case BOOT_PROM_G is
          when "BPI"  => userValues(5) <= x"00000000";
          when "SPI"  => userValues(5) <= x"00000001";
          when others => userValues(5) <= x"FFFFFFFF";
       end case;
 
+      -- DMA AXI Stream Configuration
+      userValues(6)(31 downto 24) <= toSlv(DMA_AXIS_CONFIG_C.TDATA_BYTES_C,8);
+      
+      -- Application Reset 
       userValues(6)(0) <= appReset;
+      
+      -- PCIE PHY AXI Configuration   
+      userValues(7)(31 downto 24) <= toSlv(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C,8);
+      userValues(7)(23 downto 16) <= toSlv(PCIE_AXI_CONFIG_C.DATA_BYTES_C,8);
+      userValues(7)(15 downto 8)  <= toSlv(PCIE_AXI_CONFIG_C.ID_BITS_C,8);
+      userValues(7)(7 downto 0)   <= toSlv(PCIE_AXI_CONFIG_C.LEN_BITS_C,8);
 
-      for i in 63 downto 7 loop
+      -- DMA AXI Configuration
+      userValues(8)(31 downto 24) <= toSlv(DMA_AXI_CONFIG_C.ADDR_WIDTH_C,8);
+      userValues(8)(23 downto 16) <= toSlv(DMA_AXI_CONFIG_C.DATA_BYTES_C,8);
+      userValues(8)(15 downto 8)  <= toSlv(DMA_AXI_CONFIG_C.ID_BITS_C,8);
+      userValues(8)(7 downto 0)   <= toSlv(DMA_AXI_CONFIG_C.LEN_BITS_C,8);  
+      
+      -- Set unused to zero
+      for i in 63 downto 9 loop
          userValues(i) <= x"00000000";
       end loop;
 
@@ -250,7 +274,7 @@ begin
          CLK_PERIOD_G    => (1.0/SYS_CLK_FREQ_C),
          EN_DEVICE_DNA_G => EN_DEVICE_DNA_G,
          XIL_DEVICE_G    => XIL_DEVICE_G,
-         EN_ICAP_G       => true)
+         EN_ICAP_G       => EN_ICAP_G)
       port map (
          -- AXI-Lite Interface
          axiClk         => axiClk,

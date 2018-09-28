@@ -1,8 +1,6 @@
 -------------------------------------------------------------------------------
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
--- Created    : 2017-04-06
--- Last update: 2018-02-12
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --

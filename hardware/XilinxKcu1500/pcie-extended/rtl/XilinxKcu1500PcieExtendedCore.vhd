@@ -1,8 +1,6 @@
 -------------------------------------------------------------------------------
 -- File       : XilinxKcu1500PcieExtendedCore.vhd
 -- Company    : SLAC National Accelerator Laboratory
--- Created    : 2017-04-06
--- Last update: 2018-09-26
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board 
 --
@@ -156,6 +154,7 @@ begin
          BOOT_PROM_G      => "NONE",
          DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
          EN_DEVICE_DNA_G  => false,
+         EN_ICAP_G        => false,
          DMA_SIZE_G       => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces

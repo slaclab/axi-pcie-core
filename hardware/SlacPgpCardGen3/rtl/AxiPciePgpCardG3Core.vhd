@@ -1,8 +1,6 @@
 -------------------------------------------------------------------------------
 -- File       : AxiPciePgpCardG3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
--- Created    : 2017-03-06
--- Last update: 2018-02-12
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for the PgpCardG3 board
 -- https://confluence.slac.stanford.edu/display/AIRTRACK/PC_260_101_03_C03

@@ -9,6 +9,9 @@ if { $::env(PRJ_PART) != "XC7A200TFFG1156-3" } {
    puts "\n\nERROR: PRJ_PART was not defined as XC7A200TFFG1156-3 in the Makefile\n\n"; exit -1
 }
 
+# Check for version 2018.2 of Vivado (or later)
+if { [VersionCheck 2018.2] < 0 } {exit -1}
+
 # Load shared source code
 loadRuckusTcl "$::DIR_PATH/../../shared"
 

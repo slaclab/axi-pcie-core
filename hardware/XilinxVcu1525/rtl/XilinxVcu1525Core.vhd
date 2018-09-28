@@ -1,8 +1,6 @@
 -------------------------------------------------------------------------------
 -- File       : XilinxVcu1525Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
--- Created    : 2018-01-29
--- Last update: 2018-02-12
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for VCU1525 board 
 --

@@ -52,7 +52,7 @@ entity XilinxVcu1525Core is
       dmaObSlaves     : in    AxiStreamSlaveArray(7 downto 0);
       dmaIbMasters    : in    AxiStreamMasterArray(7 downto 0);
       dmaIbSlaves     : out   AxiStreamSlaveArray(7 downto 0);
-      -- Application AXI-Lite Interfaces [0x00800000:0x00FFFFFF] (appClk domain)
+      -- Application AXI-Lite Interfaces [0x00080000:0x00FFFFFF] (appClk domain)
       appClk          : in    sl;
       appRst          : in    sl;
       appReadMaster   : out   AxiLiteReadMasterType;

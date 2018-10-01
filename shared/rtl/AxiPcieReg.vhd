@@ -33,24 +33,24 @@ entity AxiPcieReg is
       EN_ICAP_G        : boolean                := true;
       DMA_SIZE_G       : positive range 1 to 16 := 1);
    port (
-      -- AXI4 Interfaces
+      -- AXI4 Interfaces (axiClk domain)
       axiClk              : in  sl;
       axiRst              : in  sl;
       regReadMaster       : in  AxiReadMasterType;
       regReadSlave        : out AxiReadSlaveType;
       regWriteMaster      : in  AxiWriteMasterType;
       regWriteSlave       : out AxiWriteSlaveType;
-      -- DMA AXI-Lite Interfaces
+      -- DMA AXI-Lite Interfaces (axiClk domain)
       dmaCtrlReadMasters  : out AxiLiteReadMasterArray(2 downto 0);
       dmaCtrlReadSlaves   : in  AxiLiteReadSlaveArray(2 downto 0);
       dmaCtrlWriteMasters : out AxiLiteWriteMasterArray(2 downto 0);
       dmaCtrlWriteSlaves  : in  AxiLiteWriteSlaveArray(2 downto 0);
-      -- PHY AXI-Lite Interfaces
+      -- PHY AXI-Lite Interfaces (axiClk domain)
       phyReadMaster       : out AxiLiteReadMasterType;
       phyReadSlave        : in  AxiLiteReadSlaveType;
       phyWriteMaster      : out AxiLiteWriteMasterType;
       phyWriteSlave       : in  AxiLiteWriteSlaveType;
-      -- Application AXI-Lite Interfaces
+      -- Application AXI-Lite Interfaces [0x00080000:0x00FFFFFF] (appClk domain)
       appClk              : in  sl;
       appRst              : in  sl;
       appReadMaster       : out AxiLiteReadMasterType;
@@ -80,7 +80,7 @@ end AxiPcieReg;
 
 architecture mapping of AxiPcieReg is
 
-   constant NUM_AXI_MASTERS_C : natural := 9;
+   constant NUM_AXI_MASTERS_C : natural := 13;
 
    constant DMA_INDEX_C     : natural := 0;
    constant PHY_INDEX_C     : natural := 1;
@@ -90,44 +90,70 @@ architecture mapping of AxiPcieReg is
    constant SPI1_INDEX_C    : natural := 5;
    constant AXIS_MON_IB_C   : natural := 6;
    constant AXIS_MON_OB_C   : natural := 7;
-   constant APP_INDEX_C     : natural := 8;
+   constant APP0_INDEX_C    : natural := 8;
+   constant APP1_INDEX_C    : natural := 9;
+   constant APP2_INDEX_C    : natural := 10;
+   constant APP3_INDEX_C    : natural := 11;
+   constant APP4_INDEX_C    : natural := 12;
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       DMA_INDEX_C     => (
-         baseAddr     => x"00000000",
+         baseAddr     => x"0000_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
       PHY_INDEX_C     => (
-         baseAddr     => x"00010000",
+         baseAddr     => x"0001_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
       VERSION_INDEX_C => (
-         baseAddr     => x"00020000",
+         baseAddr     => x"0002_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
       BPI_INDEX_C     => (
-         baseAddr     => x"00030000",
+         baseAddr     => x"0003_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
       SPI0_INDEX_C    => (
-         baseAddr     => x"00040000",
+         baseAddr     => x"0004_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
       SPI1_INDEX_C    => (
-         baseAddr     => x"00050000",
+         baseAddr     => x"0005_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
       AXIS_MON_IB_C   => (
-         baseAddr     => x"00060000",
+         baseAddr     => x"0006_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
       AXIS_MON_OB_C   => (
-         baseAddr     => x"00070000",
+         baseAddr     => x"0007_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
-      APP_INDEX_C     => (
-         baseAddr     => x"00800000",
+      APP0_INDEX_C    => (
+         baseAddr     => x"0008_0000",
+         addrBits     => 19,
+         connectivity => x"FFFF"),
+      APP1_INDEX_C    => (
+         baseAddr     => x"0010_0000",
+         addrBits     => 20,
+         connectivity => x"FFFF"),
+      APP2_INDEX_C    => (
+         baseAddr     => x"0020_0000",
+         addrBits     => 21,
+         connectivity => x"FFFF"),
+      APP3_INDEX_C    => (
+         baseAddr     => x"0040_0000",
+         addrBits     => 22,
+         connectivity => x"FFFF"),
+      APP4_INDEX_C    => (
+         baseAddr     => x"0080_0000",
          addrBits     => 23,
+         connectivity => x"FFFF"));
+
+   constant APP_CROSSBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
+      0               => (
+         baseAddr     => x"00000000",
+         addrBits     => 24,
          connectivity => x"FFFF"));
 
    signal axilReadMaster  : AxiLiteReadMasterType;
@@ -159,10 +185,10 @@ begin
    begin
       -- Number of DMA lanes (defined by user)
       userValues(0) <= toSlv(DMA_SIZE_G, 32);
-      
+
       -- Reserved
       userValues(1) <= x"00000001";
-      
+
       -- Driver TYPE ID (defined by user)
       userValues(2) <= DRIVER_TYPE_ID_G;
 
@@ -184,23 +210,23 @@ begin
       end case;
 
       -- DMA AXI Stream Configuration
-      userValues(6)(31 downto 24) <= toSlv(DMA_AXIS_CONFIG_C.TDATA_BYTES_C,8);
-      
+      userValues(6)(31 downto 24) <= toSlv(DMA_AXIS_CONFIG_C.TDATA_BYTES_C, 8);
+
       -- Application Reset 
       userValues(6)(0) <= appReset;
-      
+
       -- PCIE PHY AXI Configuration   
-      userValues(7)(31 downto 24) <= toSlv(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C,8);
-      userValues(7)(23 downto 16) <= toSlv(PCIE_AXI_CONFIG_C.DATA_BYTES_C,8);
-      userValues(7)(15 downto 8)  <= toSlv(PCIE_AXI_CONFIG_C.ID_BITS_C,8);
-      userValues(7)(7 downto 0)   <= toSlv(PCIE_AXI_CONFIG_C.LEN_BITS_C,8);
+      userValues(7)(31 downto 24) <= toSlv(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C, 8);
+      userValues(7)(23 downto 16) <= toSlv(PCIE_AXI_CONFIG_C.DATA_BYTES_C, 8);
+      userValues(7)(15 downto 8)  <= toSlv(PCIE_AXI_CONFIG_C.ID_BITS_C, 8);
+      userValues(7)(7 downto 0)   <= toSlv(PCIE_AXI_CONFIG_C.LEN_BITS_C, 8);
 
       -- DMA AXI Configuration
-      userValues(8)(31 downto 24) <= toSlv(DMA_AXI_CONFIG_C.ADDR_WIDTH_C,8);
-      userValues(8)(23 downto 16) <= toSlv(DMA_AXI_CONFIG_C.DATA_BYTES_C,8);
-      userValues(8)(15 downto 8)  <= toSlv(DMA_AXI_CONFIG_C.ID_BITS_C,8);
-      userValues(8)(7 downto 0)   <= toSlv(DMA_AXI_CONFIG_C.LEN_BITS_C,8);  
-      
+      userValues(8)(31 downto 24) <= toSlv(DMA_AXI_CONFIG_C.ADDR_WIDTH_C, 8);
+      userValues(8)(23 downto 16) <= toSlv(DMA_AXI_CONFIG_C.DATA_BYTES_C, 8);
+      userValues(8)(15 downto 8)  <= toSlv(DMA_AXI_CONFIG_C.ID_BITS_C, 8);
+      userValues(8)(7 downto 0)   <= toSlv(DMA_AXI_CONFIG_C.LEN_BITS_C, 8);
+
       -- Set unused to zero
       for i in 63 downto 9 loop
          userValues(i) <= x"00000000";
@@ -248,7 +274,7 @@ begin
    U_XBAR : entity work.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
-         DEC_ERROR_RESP_G   => AXI_RESP_OK_C,  -- Can't respon with error to a mmapped bus
+         DEC_ERROR_RESP_G   => AXI_RESP_OK_C,  -- Can't respond with error to a memory mapped bus
          NUM_SLAVE_SLOTS_G  => 1,
          NUM_MASTER_SLOTS_G => NUM_AXI_MASTERS_C,
          MASTERS_CONFIG_G   => AXI_CROSSBAR_MASTERS_CONFIG_C)
@@ -420,9 +446,31 @@ begin
    phyReadMaster                <= axilReadMasters(PHY_INDEX_C);
    axilReadSlaves(PHY_INDEX_C)  <= phyReadSlave;
 
+   --------------------------------------   
+   -- Combine APP AXI-Lite buses together
+   --------------------------------------   
+   U_APP_XBAR : entity work.AxiLiteCrossbar
+      generic map (
+         TPD_G              => TPD_G,
+         DEC_ERROR_RESP_G   => AXI_RESP_OK_C,  -- Can't respond with error to a memory mapped bus
+         NUM_SLAVE_SLOTS_G  => (APP4_INDEX_C-APP0_INDEX_C+1),
+         NUM_MASTER_SLOTS_G => 1,
+         MASTERS_CONFIG_G   => APP_CROSSBAR_CONFIG_C)
+      port map (
+         axiClk              => axiClk,
+         axiClkRst           => axiRst,
+         sAxiWriteMasters    => axilWriteMasters(APP4_INDEX_C downto APP0_INDEX_C),
+         sAxiWriteSlaves     => axilWriteSlaves(APP4_INDEX_C downto APP0_INDEX_C),
+         sAxiReadMasters     => axilReadMasters(APP4_INDEX_C downto APP0_INDEX_C),
+         sAxiReadSlaves      => axilReadSlaves(APP4_INDEX_C downto APP0_INDEX_C),
+         mAxiWriteMasters(0) => mAxilWriteMaster,
+         mAxiWriteSlaves(0)  => mAxilWriteSlave,
+         mAxiReadMasters(0)  => mAxilReadMaster,
+         mAxiReadSlaves(0)   => mAxilReadSlave);
+
    ----------------------------------
    -- Map the AXI-Lite to Application
-   ----------------------------------   
+   ----------------------------------               
    U_AxiLiteAsync : entity work.AxiLiteAsync
       generic map (
          TPD_G           => TPD_G,
@@ -432,10 +480,10 @@ begin
          -- Slave Interface
          sAxiClk         => axiClk,
          sAxiClkRst      => axiRst,
-         sAxiReadMaster  => axilReadMasters(APP_INDEX_C),
-         sAxiReadSlave   => axilReadSlaves(APP_INDEX_C),
-         sAxiWriteMaster => axilWriteMasters(APP_INDEX_C),
-         sAxiWriteSlave  => axilWriteSlaves(APP_INDEX_C),
+         sAxiReadMaster  => mAxilReadMaster,
+         sAxiReadSlave   => mAxilReadSlave,
+         sAxiWriteMaster => mAxilWriteMaster,
+         sAxiWriteSlave  => mAxilWriteSlave,
          -- Master Interface
          mAxiClk         => appClk,
          mAxiClkRst      => appReset,

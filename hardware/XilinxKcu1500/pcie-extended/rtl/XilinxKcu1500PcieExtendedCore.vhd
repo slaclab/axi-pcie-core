@@ -33,10 +33,11 @@ use unisim.vcomponents.all;
 
 entity XilinxKcu1500PcieExtendedCore is
    generic (
-      TPD_G            : time                  := 1 ns;
-      BUILD_INFO_G     : BuildInfoType;
-      DRIVER_TYPE_ID_G : slv(31 downto 0)      := x"00000000";
-      DMA_SIZE_G       : positive range 1 to 8 := 1);
+      TPD_G             : time                  := 1 ns;
+      BUILD_INFO_G      : BuildInfoType;
+      DMA_AXIS_CONFIG_G : AxiStreamConfigType;
+      DRIVER_TYPE_ID_G  : slv(31 downto 0)      := x"00000000";
+      DMA_SIZE_G        : positive range 1 to 8 := 1);
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -96,11 +97,10 @@ architecture mapping of XilinxKcu1500PcieExtendedCore is
    signal cardReset   : sl;
    signal dmaIrq      : sl;
 
+
 begin
 
    dmaClk <= sysClock;
-
-   systemReset <= sysReset or cardReset;
 
    U_Rst : entity work.RstPipeline
       generic map (
@@ -109,6 +109,8 @@ begin
          clk    => sysClock,
          rstIn  => systemReset,
          rstOut => dmaRst);
+
+   systemReset <= sysReset or cardReset;
 
    ---------------
    -- AXI PCIe PHY
@@ -148,14 +150,15 @@ begin
    --------------- 
    U_REG : entity work.AxiPcieReg
       generic map (
-         TPD_G            => TPD_G,
-         BUILD_INFO_G     => BUILD_INFO_G,
-         XIL_DEVICE_G     => "ULTRASCALE",
-         BOOT_PROM_G      => "NONE",
-         DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
-         EN_DEVICE_DNA_G  => false,
-         EN_ICAP_G        => false,
-         DMA_SIZE_G       => DMA_SIZE_G)
+         TPD_G             => TPD_G,
+         BUILD_INFO_G      => BUILD_INFO_G,
+         XIL_DEVICE_G      => "ULTRASCALE",
+         BOOT_PROM_G       => "NONE",
+         EN_DEVICE_DNA_G   => false,
+         EN_ICAP_G         => false,
+         DRIVER_TYPE_ID_G  => DRIVER_TYPE_ID_G,
+         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G,
+         DMA_SIZE_G        => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
          axiClk              => sysClock,
@@ -190,14 +193,14 @@ begin
    ---------------   
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
-         TPD_G      => TPD_G,
-         DMA_SIZE_G => DMA_SIZE_G,
-         DESC_ARB_G => false)  -- Round robin to help with timing @ 250 MHz system clock
+         TPD_G             => TPD_G,
+         DMA_SIZE_G        => DMA_SIZE_G,
+         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G,
+         DESC_ARB_G        => false)    -- Round robin to help with timing
       port map (
-         -- Clock and reset
          axiClk           => sysClock,
          axiRst           => sysReset,
-         -- AXI4 Interfaces
+         -- AXI4 Interfaces (
          axiReadMaster    => dmaReadMaster,
          axiReadSlave     => dmaReadSlave,
          axiWriteMaster   => dmaWriteMaster,
@@ -207,9 +210,8 @@ begin
          axilReadSlaves   => dmaCtrlReadSlaves,
          axilWriteMasters => dmaCtrlWriteMasters,
          axilWriteSlaves  => dmaCtrlWriteSlaves,
-         -- Interrupts
-         dmaIrq           => dmaIrq,
          -- DMA Interfaces
+         dmaIrq           => dmaIrq,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,
          dmaIbMasters     => dmaIbMasters,

@@ -30,12 +30,12 @@ use unisim.vcomponents.all;
 
 entity AxiPciePgpCardG3Core is
    generic (
-      TPD_G             : time                   := 1 ns;
+      TPD_G             : time                  := 1 ns;
       BUILD_INFO_G      : BuildInfoType;
-      DRIVER_TYPE_ID_G  : slv(31 downto 0)       := x"00000000";
-      DMA_SIZE_G        : positive range 1 to 16 := 1;
-      INT_PIPE_STAGES_G : natural range 0 to 1   := 0;
-      PIPE_STAGES_G     : natural range 0 to 1   := 0);
+      DRIVER_TYPE_ID_G  : slv(31 downto 0)      := x"00000000";
+      DMA_SIZE_G        : positive range 1 to 8 := 1;
+      INT_PIPE_STAGES_G : natural range 0 to 1  := 0;
+      PIPE_STAGES_G     : natural range 0 to 1  := 0);
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -224,13 +224,14 @@ begin
       generic map (
          TPD_G             => TPD_G,
          DMA_SIZE_G        => DMA_SIZE_G,
+         COMMON_CLK_G      => true,
+         AXIS_CLK_FREQ_G   => SYS_CLK_FREQ_C,
          INT_PIPE_STAGES_G => INT_PIPE_STAGES_G,
          PIPE_STAGES_G     => PIPE_STAGES_G)
       port map (
-         -- Clock and reset
+         -- AXI4 Interfaces
          axiClk           => sysClock,
          axiRst           => sysReset,
-         -- AXI4 Interfaces
          axiReadMaster    => dmaReadMaster,
          axiReadSlave     => dmaReadSlave,
          axiWriteMaster   => dmaWriteMaster,
@@ -240,9 +241,10 @@ begin
          axilReadSlaves   => dmaCtrlReadSlaves,
          axilWriteMasters => dmaCtrlWriteMasters,
          axilWriteSlaves  => dmaCtrlWriteSlaves,
-         -- Interrupts
-         dmaIrq           => dmaIrq,
          -- DMA Interfaces
+         dmaClk           => sysClock,
+         dmaRst           => sysReset,         
+         dmaIrq           => dmaIrq,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,
          dmaIbMasters     => dmaIbMasters,

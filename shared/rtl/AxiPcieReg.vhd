@@ -18,20 +18,22 @@ use ieee.std_logic_1164.all;
 
 use work.StdRtlPkg.all;
 use work.AxiPkg.all;
+use work.AxiStreamPkg.all;
 use work.AxiLitePkg.all;
 use work.AxiPciePkg.all;
 use work.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
    generic (
-      TPD_G            : time                   := 1 ns;
-      BUILD_INFO_G     : BuildInfoType;
-      XIL_DEVICE_G     : string                 := "7SERIES";
-      BOOT_PROM_G      : string                 := "BPI";
-      DRIVER_TYPE_ID_G : slv(31 downto 0)       := x"00000000";
-      EN_DEVICE_DNA_G  : boolean                := true;
-      EN_ICAP_G        : boolean                := true;
-      DMA_SIZE_G       : positive range 1 to 16 := 1);
+      TPD_G             : time                   := 1 ns;
+      BUILD_INFO_G      : BuildInfoType;
+      DMA_AXIS_CONFIG_G : AxiStreamConfigType;
+      XIL_DEVICE_G      : string                 := "7SERIES";
+      BOOT_PROM_G       : string                 := "BPI";
+      DRIVER_TYPE_ID_G  : slv(31 downto 0)       := x"00000000";
+      EN_DEVICE_DNA_G   : boolean                := true;
+      EN_ICAP_G         : boolean                := true;
+      DMA_SIZE_G        : positive range 1 to 16 := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)
       axiClk              : in  sl;
@@ -168,6 +170,11 @@ architecture mapping of AxiPcieReg is
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
    signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXI_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
+   signal mAxilReadMaster  : AxiLiteReadMasterType;
+   signal mAxilReadSlave   : AxiLiteReadSlaveType;
+   signal mAxilWriteMaster : AxiLiteWriteMasterType;
+   signal mAxilWriteSlave  : AxiLiteWriteSlaveType;
+
    signal userValues : Slv32Array(63 downto 0) := (others => x"00000000");
    signal bpiAddress : slv(30 downto 0);
    signal spiBusyIn  : slv(1 downto 0);
@@ -200,7 +207,7 @@ begin
       end case;
 
       -- System Clock Frequency
-      userValues(4) <= toSlv(getTimeRatio(SYS_CLK_FREQ_C, 1.0), 32);
+      userValues(4) <= toSlv(getTimeRatio(DMA_CLK_FREQ_C, 1.0), 32);
 
       -- PROM configuration
       case BOOT_PROM_G is
@@ -210,9 +217,29 @@ begin
       end case;
 
       -- DMA AXI Stream Configuration
-      userValues(6)(31 downto 24) <= toSlv(DMA_AXIS_CONFIG_C.TDATA_BYTES_C, 8);
+      userValues(6)(31 downto 24) <= toSlv(DMA_AXIS_CONFIG_G.TDATA_BYTES_C, 8);
+      userValues(6)(23 downto 20) <= toSlv(DMA_AXIS_CONFIG_G.TDEST_BITS_C, 4);
+      userValues(6)(19 downto 16) <= toSlv(DMA_AXIS_CONFIG_G.TUSER_BITS_C, 4);
+      userValues(6)(15 downto 12) <= toSlv(DMA_AXIS_CONFIG_G.TID_BITS_C, 4);
+
+      case DMA_AXIS_CONFIG_G.TKEEP_MODE_C is
+         when TKEEP_NORMAL_C => userValues(6)(11 downto 8) <= x"0";
+         when TKEEP_COMP_C   => userValues(6)(11 downto 8) <= x"1";
+         when TKEEP_FIXED_C  => userValues(6)(11 downto 8) <= x"2";
+         when TKEEP_COUNT_C  => userValues(6)(11 downto 8) <= x"3";
+         when others         => userValues(6)(11 downto 8) <= x"F";
+      end case;
+
+      case DMA_AXIS_CONFIG_G.TUSER_MODE_C is
+         when TUSER_NORMAL_C     => userValues(6)(7 downto 4) <= x"0";
+         when TUSER_FIRST_LAST_C => userValues(6)(7 downto 4) <= x"1";
+         when TUSER_LAST_C       => userValues(6)(7 downto 4) <= x"2";
+         when TUSER_NONE_C       => userValues(6)(7 downto 4) <= x"3";
+         when others             => userValues(6)(7 downto 4) <= x"F";
+      end case;
 
       -- Application Reset 
+      userValues(6)(1) <= ite(DMA_AXIS_CONFIG_G.TSTRB_EN_C, '1', '0');
       userValues(6)(0) <= appReset;
 
       -- PCIE PHY AXI Configuration   
@@ -221,14 +248,8 @@ begin
       userValues(7)(15 downto 8)  <= toSlv(PCIE_AXI_CONFIG_C.ID_BITS_C, 8);
       userValues(7)(7 downto 0)   <= toSlv(PCIE_AXI_CONFIG_C.LEN_BITS_C, 8);
 
-      -- DMA AXI Configuration
-      userValues(8)(31 downto 24) <= toSlv(DMA_AXI_CONFIG_C.ADDR_WIDTH_C, 8);
-      userValues(8)(23 downto 16) <= toSlv(DMA_AXI_CONFIG_C.DATA_BYTES_C, 8);
-      userValues(8)(15 downto 8)  <= toSlv(DMA_AXI_CONFIG_C.ID_BITS_C, 8);
-      userValues(8)(7 downto 0)   <= toSlv(DMA_AXI_CONFIG_C.LEN_BITS_C, 8);
-
       -- Set unused to zero
-      for i in 63 downto 9 loop
+      for i in 63 downto 8 loop
          userValues(i) <= x"00000000";
       end loop;
 
@@ -297,7 +318,7 @@ begin
       generic map (
          TPD_G           => TPD_G,
          BUILD_INFO_G    => BUILD_INFO_G,
-         CLK_PERIOD_G    => (1.0/SYS_CLK_FREQ_C),
+         CLK_PERIOD_G    => (1.0/DMA_CLK_FREQ_C),
          EN_DEVICE_DNA_G => EN_DEVICE_DNA_G,
          XIL_DEVICE_G    => XIL_DEVICE_G,
          EN_ICAP_G       => EN_ICAP_G)
@@ -322,7 +343,7 @@ begin
       U_BootProm : entity work.AxiMicronP30Reg
          generic map (
             TPD_G          => TPD_G,
-            AXI_CLK_FREQ_G => SYS_CLK_FREQ_C)
+            AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
          port map (
             -- FLASH Interface 
             flashAddr      => bpiAddress,
@@ -374,8 +395,8 @@ begin
          U_BootProm : entity work.AxiMicronN25QCore
             generic map (
                TPD_G          => TPD_G,
-               AXI_CLK_FREQ_G => SYS_CLK_FREQ_C,        -- units of Hz
-               SPI_CLK_FREQ_G => (SYS_CLK_FREQ_C/8.0))  -- units of Hz
+               AXI_CLK_FREQ_G => DMA_CLK_FREQ_C,        -- units of Hz
+               SPI_CLK_FREQ_G => (DMA_CLK_FREQ_C/8.0))  -- units of Hz
             port map (
                -- FLASH Memory Ports
                csL            => spiCsL(i),

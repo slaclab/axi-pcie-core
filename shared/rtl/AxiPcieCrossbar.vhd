@@ -21,35 +21,62 @@ use work.AxiPkg.all;
 
 entity AxiPcieCrossbar is
    generic (
-      TPD_G : time := 1 ns;
-      DMA_SIZE_G       : positive range 1 to 16 := 1);
+      TPD_G               : time                  := 1 ns;
+      SLAVE_AXI_CONFIG_G  : AxiConfigType;
+      MASTER_AXI_CONFIG_G : AxiConfigType;
+      DMA_SIZE_G          : positive range 1 to 8 := 1);
    port (
-      -- Clock and Reset
       axiClk           : in  sl;
       axiRst           : in  sl;
       -- Slaves
-      sAxiWriteMasters : in  AxiWriteMasterArray(16 downto 0);
-      sAxiWriteSlaves  : out AxiWriteSlaveArray(16 downto 0);
-      sAxiReadMasters  : in  AxiReadMasterArray(16 downto 0);
-      sAxiReadSlaves   : out AxiReadSlaveArray(16 downto 0);
+      sAxiWriteMasters : in  AxiWriteMasterArray(DMA_SIZE_G downto 0);
+      sAxiWriteSlaves  : out AxiWriteSlaveArray(DMA_SIZE_G downto 0);
+      sAxiReadMasters  : in  AxiReadMasterArray(DMA_SIZE_G downto 0);
+      sAxiReadSlaves   : out AxiReadSlaveArray(DMA_SIZE_G downto 0);
       -- Master
       mAxiWriteMaster  : out AxiWriteMasterType;
       mAxiWriteSlave   : in  AxiWriteSlaveType;
       mAxiReadMaster   : out AxiReadMasterType;
-      mAxiReadSlave    : in  AxiReadSlaveType);      
+      mAxiReadSlave    : in  AxiReadSlaveType);
 end AxiPcieCrossbar;
 
 architecture mapping of AxiPcieCrossbar is
 
+   signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
+   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);
+   signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
+   signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
+
 begin
 
-   TERM_UNUSED : if (DMA_SIZE_G /= 16) generate
-      GEN_VEC : for i in 16 downto DMA_SIZE_G+1 generate
-         sAxiWriteSlaves(i) <= AXI_WRITE_SLAVE_FORCE_C;
-         sAxiReadSlaves(i)  <= AXI_READ_SLAVE_FORCE_C;
-      end generate;
+   -- AxiStreamDmaV2Desc.vhd does burst transfers only (64-bit or wider)
+   axiReadMasters(0)  <= sAxiReadMasters(0);
+   sAxiReadSlaves(0)  <= axiReadSlaves(0);
+   axiWriteMasters(0) <= sAxiWriteMasters(0);
+   sAxiWriteSlaves(0) <= axiWriteSlaves(0);   
+
+   GEN_VEC : for i in DMA_SIZE_G downto 1 generate
+      U_AxiResize : entity work.AxiResize
+         generic map(
+            TPD_G               => TPD_G,
+            SLAVE_AXI_CONFIG_G  => SLAVE_AXI_CONFIG_G,
+            MASTER_AXI_CONFIG_G => MASTER_AXI_CONFIG_G)
+         port map(
+            -- Clock and reset
+            axiClk          => axiClk,
+            axiRst          => axiRst,
+            -- Slave Port
+            sAxiReadMaster  => sAxiReadMasters(i),
+            sAxiReadSlave   => sAxiReadSlaves(i),
+            sAxiWriteMaster => sAxiWriteMasters(i),
+            sAxiWriteSlave  => sAxiWriteSlaves(i),
+            -- Master Port
+            mAxiReadMaster  => axiReadMasters(i),
+            mAxiReadSlave   => axiReadSlaves(i),
+            mAxiWriteMaster => axiWriteMasters(i),
+            mAxiWriteSlave  => axiWriteSlaves(i));
    end generate;
-   
+
    --------------------
    -- AXI Read Path MUX
    --------------------
@@ -62,8 +89,8 @@ begin
          axiClk          => axiClk,
          axiRst          => axiRst,
          -- Slaves
-         sAxiReadMasters => sAxiReadMasters(DMA_SIZE_G downto 0),
-         sAxiReadSlaves  => sAxiReadSlaves(DMA_SIZE_G downto 0),
+         sAxiReadMasters => axiReadMasters,
+         sAxiReadSlaves  => axiReadSlaves,
          -- Master
          mAxiReadMaster  => mAxiReadMaster,
          mAxiReadSlave   => mAxiReadSlave);
@@ -80,8 +107,8 @@ begin
          axiClk           => axiClk,
          axiRst           => axiRst,
          -- Slaves
-         sAxiWriteMasters => sAxiWriteMasters(DMA_SIZE_G downto 0),
-         sAxiWriteSlaves  => sAxiWriteSlaves(DMA_SIZE_G downto 0),
+         sAxiWriteMasters => axiWriteMasters,
+         sAxiWriteSlaves  => axiWriteSlaves,
          -- Master
          mAxiWriteMaster  => mAxiWriteMaster,
          mAxiWriteSlave   => mAxiWriteSlave);

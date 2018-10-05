@@ -33,61 +33,61 @@ use unisim.vcomponents.all;
 
 entity XilinxKcu1500Core is
    generic (
-      TPD_G            : time                  := 1 ns;
-      BUILD_INFO_G     : BuildInfoType;
-      DRIVER_TYPE_ID_G : slv(31 downto 0)      := x"00000000";
-      DMA_SIZE_G       : positive range 1 to 8 := 1);
+      TPD_G             : time                  := 1 ns;
+      BUILD_INFO_G      : BuildInfoType;
+      DMA_AXIS_CONFIG_G : AxiStreamConfigType;
+      DRIVER_TYPE_ID_G  : slv(31 downto 0)      := x"00000000";
+      DMA_SIZE_G        : positive range 1 to 8 := 1);
    port (
       ------------------------      
       --  Top Level Interfaces
       ------------------------
-      userClk156      : out   sl;       -- 156.25 MHz
-      userClk312      : out   sl;       -- 312.50 MHz
+      userClk156     : out sl;
       -- DMA Interfaces  (dmaClk domain)
-      dmaClk          : out   sl;
-      dmaRst          : out   sl;
-      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaClk         : out sl;
+      dmaRst         : out sl;
+      dmaObMasters   : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- Application AXI-Lite Interfaces [0x00080000:0x00FFFFFF] (appClk domain)
-      appClk          : in    sl;
-      appRst          : in    sl;
-      appReadMaster   : out   AxiLiteReadMasterType;
-      appReadSlave    : in    AxiLiteReadSlaveType;
-      appWriteMaster  : out   AxiLiteWriteMasterType;
-      appWriteSlave   : in    AxiLiteWriteSlaveType;
+      appClk         : in  sl;
+      appRst         : in  sl;
+      appReadMaster  : out AxiLiteReadMasterType;
+      appReadSlave   : in  AxiLiteReadSlaveType;
+      appWriteMaster : out AxiLiteWriteMasterType;
+      appWriteSlave  : in  AxiLiteWriteSlaveType;
       -------------------
       --  Top Level Ports
       -------------------      
       -- System Ports
-      emcClk          : in    sl;
-      userClkP        : in    sl;
-      userClkN        : in    sl;
+      emcClk         : in  sl;
+      userClkP       : in  sl;
+      userClkN       : in  sl;
       -- QSFP[0] Ports
-      qsfp0RstL       : out   sl;
-      qsfp0LpMode     : out   sl;
-      qsfp0ModSelL    : out   sl;
-      qsfp0ModPrsL    : in    sl;
+      qsfp0RstL      : out sl;
+      qsfp0LpMode    : out sl;
+      qsfp0ModSelL   : out sl;
+      qsfp0ModPrsL   : in  sl;
       -- QSFP[1] Ports
-      qsfp1RstL       : out   sl;
-      qsfp1LpMode     : out   sl;
-      qsfp1ModSelL    : out   sl;
-      qsfp1ModPrsL    : in    sl;
+      qsfp1RstL      : out sl;
+      qsfp1LpMode    : out sl;
+      qsfp1ModSelL   : out sl;
+      qsfp1ModPrsL   : in  sl;
       -- Boot Memory Ports 
-      flashCsL        : out   sl;
-      flashMosi       : out   sl;
-      flashMiso       : in    sl;
-      flashHoldL      : out   sl;
-      flashWp         : out   sl;
+      flashCsL       : out sl;
+      flashMosi      : out sl;
+      flashMiso      : in  sl;
+      flashHoldL     : out sl;
+      flashWp        : out sl;
       -- PCIe Ports 
-      pciRstL         : in    sl;
-      pciRefClkP      : in    sl;
-      pciRefClkN      : in    sl;
-      pciRxP          : in    slv(7 downto 0);
-      pciRxN          : in    slv(7 downto 0);
-      pciTxP          : out   slv(7 downto 0);
-      pciTxN          : out   slv(7 downto 0));
+      pciRstL        : in  sl;
+      pciRefClkP     : in  sl;
+      pciRefClkN     : in  sl;
+      pciRxP         : in  slv(7 downto 0);
+      pciRxN         : in  slv(7 downto 0);
+      pciTxP         : out slv(7 downto 0);
+      pciTxN         : out slv(7 downto 0));
 end XilinxKcu1500Core;
 
 architecture mapping of XilinxKcu1500Core is
@@ -134,8 +134,6 @@ begin
 
    dmaClk <= sysClock;
 
-   systemReset <= sysReset or cardReset;
-
    U_Rst : entity work.RstPipeline
       generic map (
          TPD_G => TPD_G)
@@ -144,16 +142,13 @@ begin
          rstIn  => systemReset,
          rstOut => dmaRst);
 
+   systemReset <= sysReset or cardReset;
+
    U_IBUFDS : IBUFDS
       port map(
          I  => userClkP,
          IB => userClkN,
-         O  => userClock);
-
-   U_BUFG : BUFG
-      port map (
-         I => userClock,
-         O => userClk156);
+         O  => userClk156);
 
    qsfp0RstL    <= not(systemReset);
    qsfp1RstL    <= not(systemReset);
@@ -200,12 +195,13 @@ begin
    --------------- 
    U_REG : entity work.AxiPcieReg
       generic map (
-         TPD_G            => TPD_G,
-         BUILD_INFO_G     => BUILD_INFO_G,
-         XIL_DEVICE_G     => "ULTRASCALE",
-         BOOT_PROM_G      => "SPI",
-         DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
-         DMA_SIZE_G       => DMA_SIZE_G)
+         TPD_G             => TPD_G,
+         BUILD_INFO_G      => BUILD_INFO_G,
+         XIL_DEVICE_G      => "ULTRASCALE",
+         BOOT_PROM_G       => "SPI",
+         DRIVER_TYPE_ID_G  => DRIVER_TYPE_ID_G,
+         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G,
+         DMA_SIZE_G        => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
          axiClk              => sysClock,
@@ -290,14 +286,14 @@ begin
    ---------------   
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
-         TPD_G            => TPD_G,
-         DMA_SIZE_G       => DMA_SIZE_G,
-         DESC_ARB_G       => false)  -- Round robin to help with timing @ 250 MHz system clock
+         TPD_G             => TPD_G,
+         DMA_SIZE_G        => DMA_SIZE_G,
+         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G,
+         DESC_ARB_G        => false)    -- Round robin to help with timing
       port map (
-         -- Clock and reset
          axiClk           => sysClock,
          axiRst           => sysReset,
-         -- AXI4 Interfaces
+         -- AXI4 Interfaces (
          axiReadMaster    => dmaReadMaster,
          axiReadSlave     => dmaReadSlave,
          axiWriteMaster   => dmaWriteMaster,
@@ -307,9 +303,8 @@ begin
          axilReadSlaves   => dmaCtrlReadSlaves,
          axilWriteMasters => dmaCtrlWriteMasters,
          axilWriteSlaves  => dmaCtrlWriteSlaves,
-         -- Interrupts
-         dmaIrq           => dmaIrq,
          -- DMA Interfaces
+         dmaIrq           => dmaIrq,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,
          dmaIbMasters     => dmaIbMasters,

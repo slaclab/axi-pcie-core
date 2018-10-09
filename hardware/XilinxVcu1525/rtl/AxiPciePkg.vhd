@@ -23,14 +23,21 @@ use work.AxiPkg.all;
 
 package AxiPciePkg is
 
+   -- Defining this for Partial reconfiguration
    constant TPD_C : time := 1 ns;
-
-   -- Application BAR0 address space   
-   constant BAR0_BASE_ADDR_C : slv(31 downto 0) := x"0008_0000";
-   constant BAR0_HIGH_ADDR_C : slv(31 downto 0) := x"00FF_FFFF";
 
    -- System Clock Frequency
    constant DMA_CLK_FREQ_C : real := 250.0E+6;  -- units of Hz
+
+   -- DMA AXI Stream Configuration
+   constant DMA_AXIS_CONFIG_C : AxiStreamConfigType := (
+      TSTRB_EN_C    => false,
+      TDATA_BYTES_C => 32,              -- 256-bit data interface
+      TDEST_BITS_C  => 8,
+      TID_BITS_C    => 0,
+      TKEEP_MODE_C  => TKEEP_COMP_C,
+      TUSER_BITS_C  => 4,
+      TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
    -- PCIE PHY AXI Configuration   
    constant PCIE_AXI_CONFIG_C : AxiConfigType := (

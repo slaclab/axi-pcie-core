@@ -23,13 +23,19 @@ use work.AxiPkg.all;
 
 package AxiPciePkg is
 
-   -- Application BAR0 address space
-   constant BAR0_BASE_ADDR_C : slv(31 downto 0) := x"0008_0000";
-   constant BAR0_HIGH_ADDR_C : slv(31 downto 0) := x"00FF_FFFF";
-
    -- System Clock Frequency
    constant DMA_CLK_FREQ_C : real := 125.0E+6;  -- units of Hz
 
+   -- DMA AXI Stream Configuration
+   constant DMA_AXIS_CONFIG_C : AxiStreamConfigType := (
+      TSTRB_EN_C    => false,
+      TDATA_BYTES_C => 16,              -- 128-bit data interface
+      TDEST_BITS_C  => 8,
+      TID_BITS_C    => 0,
+      TKEEP_MODE_C  => TKEEP_COMP_C,
+      TUSER_BITS_C  => 4,
+      TUSER_MODE_C  => TUSER_FIRST_LAST_C);   
+   
    -- PCIE PHY AXI Configuration   
    constant PCIE_AXI_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 48,               -- 48-bit address interface

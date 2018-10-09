@@ -161,12 +161,13 @@ begin
    --------------- 
    U_REG : entity work.AxiPcieReg
       generic map (
-         TPD_G            => TPD_G,
-         BUILD_INFO_G     => BUILD_INFO_G,
-         XIL_DEVICE_G     => "7SERIES",
-         BOOT_PROM_G      => "BPI",
-         DRIVER_TYPE_ID_G => DRIVER_TYPE_ID_G,
-         DMA_SIZE_G       => DMA_SIZE_G)
+         TPD_G             => TPD_G,
+         BUILD_INFO_G      => BUILD_INFO_G,
+         XIL_DEVICE_G      => "7SERIES",
+         BOOT_PROM_G       => "BPI",
+         DRIVER_TYPE_ID_G  => DRIVER_TYPE_ID_G,
+         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_C,
+         DMA_SIZE_G        => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
          axiClk              => sysClock,
@@ -224,8 +225,8 @@ begin
       generic map (
          TPD_G             => TPD_G,
          DMA_SIZE_G        => DMA_SIZE_G,
-         COMMON_CLK_G      => true,
-         AXIS_CLK_FREQ_G   => SYS_CLK_FREQ_C,
+         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_C,
+         DESC_ARB_G        => false,  -- Round robin to help with timing      
          INT_PIPE_STAGES_G => INT_PIPE_STAGES_G,
          PIPE_STAGES_G     => PIPE_STAGES_G)
       port map (
@@ -243,7 +244,7 @@ begin
          axilWriteSlaves  => dmaCtrlWriteSlaves,
          -- DMA Interfaces
          dmaClk           => sysClock,
-         dmaRst           => sysReset,         
+         dmaRst           => sysReset,
          dmaIrq           => dmaIrq,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,

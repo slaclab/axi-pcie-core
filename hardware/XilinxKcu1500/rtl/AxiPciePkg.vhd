@@ -23,10 +23,6 @@ use work.AxiPkg.all;
 
 package AxiPciePkg is
 
-   -- Application BAR0 address space   
-   constant BAR0_BASE_ADDR_C : slv(31 downto 0) := x"0008_0000";
-   constant BAR0_HIGH_ADDR_C : slv(31 downto 0) := x"00FF_FFFF";
-
    -- System Clock Frequency
    constant DMA_CLK_FREQ_C : real := 250.0E+6;  -- units of Hz
 

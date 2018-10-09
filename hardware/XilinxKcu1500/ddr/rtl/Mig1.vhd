@@ -28,9 +28,10 @@ entity Mig1 is
    generic (
       TPD_G : time := 1 ns);
    port (
+      extRst          : in    sl := '0';
       -- AXI MEM Interface
-      axiClk          : out    sl;
-      axiRst          : out    sl;
+      axiClk          : out   sl;
+      axiRst          : out   sl;
       axiReady        : out   sl;
       axiWriteMasters : in    AxiWriteMasterType;
       axiWriteSlaves  : out   AxiWriteSlaveType;
@@ -119,19 +120,12 @@ architecture mapping of Mig1 is
    signal ddrCalDone : sl;
    signal coreReset  : sl;
    signal coreRst    : sl;
-   signal sysRstL    : sl;
+   signal extRstL    : sl;
 
 begin
 
-   sysRstL <= not(sysRst);
-
-   U_axiReady : entity work.Synchronizer
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         clk     => sysClk,
-         dataIn  => ddrCalDone,
-         dataOut => axiReady);
+   extRstL  <= not(extRst);
+   axiReady <= ddrCalDone;
 
    U_MIG : XilinxKcu1500Mig1Core
       port map (
@@ -156,7 +150,7 @@ begin
          c0_ddr4_ck_t            => ddrOut.ckT,
          c0_ddr4_ui_clk          => ddrClk,
          c0_ddr4_ui_clk_sync_rst => coreReset,
-         c0_ddr4_aresetn         => sysRstL,
+         c0_ddr4_aresetn         => extRstL,
          c0_ddr4_s_axi_awid      => ddrWriteMaster.awid(3 downto 0),
          c0_ddr4_s_axi_awaddr    => ddrWriteMaster.awaddr(31 downto 0),
          c0_ddr4_s_axi_awlen     => ddrWriteMaster.awlen(7 downto 0),
@@ -194,7 +188,7 @@ begin
          c0_ddr4_s_axi_rresp     => ddrReadSlave.rresp(1 downto 0),
          c0_ddr4_s_axi_rid       => ddrReadSlave.rid(3 downto 0),
          c0_ddr4_s_axi_rdata     => ddrReadSlave.rdata(511 downto 0),
-         sys_rst                 => sysRst);
+         sys_rst                 => extRst);
 
    coreRst <= coreReset and not(ddrCalDone);
 
@@ -205,14 +199,14 @@ begin
          clk    => ddrClk,
          rstIn  => coreRst,
          rstOut => ddrRst);
-         
+
    axiClk <= ddrClk;
    axiRst <= ddrRst;
-   
+
    ddrWriteMaster <= axiWriteMaster;
    axiWriteSlave  <= ddrWriteSlave;
-   
+
    ddrReadMaster <= axiReadMaster;
-   axiReadSlave  <= ddrReadSlave;   
+   axiReadSlave  <= ddrReadSlave;
 
 end mapping;

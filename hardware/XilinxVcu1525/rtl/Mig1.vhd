@@ -28,10 +28,8 @@ entity Mig1 is
    generic (
       TPD_G : time := 1 ns);
    port (
-      -- System Clock and reset
-      sysClk         : in    sl;
-      sysRst         : in    sl;
-      -- AXI MEM Interface (axiClk domain)
+      extRst         : in    sl := '0';
+      -- AXI MEM Interface
       axiClk         : out   sl;
       axiRst         : out   sl;
       axiReady       : out   sl;
@@ -145,19 +143,12 @@ architecture mapping of Mig1 is
    signal ddrCalDone : sl;
    signal coreReset  : sl;
    signal coreRst    : sl;
-   signal sysRstL    : sl;
+   signal extRstL    : sl;
 
 begin
 
-   sysRstL <= not(sysRst);
-
-   U_axiReady : entity work.Synchronizer
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         clk     => sysClk,
-         dataIn  => ddrCalDone,
-         dataOut => axiReady);
+   extRstL  <= not(extRst);
+   axiReady <= ddrCalDone;
 
    U_MIG : XilinxVcu1525Mig1Core
       port map (
@@ -182,7 +173,7 @@ begin
          c0_ddr4_ck_t               => ddrOut.ckT,
          c0_ddr4_ui_clk             => ddrClk,
          c0_ddr4_ui_clk_sync_rst    => coreReset,
-         c0_ddr4_aresetn            => sysRstL,
+         c0_ddr4_aresetn            => extRstL,
          c0_ddr4_s_axi_ctrl_awvalid => AXI_LITE_WRITE_MASTER_INIT_C.awvalid,
          c0_ddr4_s_axi_ctrl_awready => open,
          c0_ddr4_s_axi_ctrl_awaddr  => AXI_LITE_WRITE_MASTER_INIT_C.awaddr,
@@ -237,9 +228,9 @@ begin
          c0_ddr4_s_axi_rresp        => ddrReadSlave.rresp(1 downto 0),
          c0_ddr4_s_axi_rid          => ddrReadSlave.rid(3 downto 0),
          c0_ddr4_s_axi_rdata        => ddrReadSlave.rdata(511 downto 0),
-         sys_rst                    => sysRst);
+         sys_rst                    => extRst);
 
-   coreRst <= (coreReset and not(ddrCalDone)) or sysRst;
+   coreRst <= coreReset and not(ddrCalDone);
 
    U_Rst : entity work.RstPipeline
       generic map (

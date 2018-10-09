@@ -29,6 +29,7 @@ entity AxiPcieDma is
    generic (
       TPD_G             : time                  := 1 ns;
       SIMULATION_G      : boolean               := false;
+      USE_XBAR_IPCORE_G : boolean               := true;
       DMA_SIZE_G        : positive range 1 to 8 := 1;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType   := ssiAxiStreamConfig(16);
       INT_PIPE_STAGES_G : natural range 0 to 1  := 1;
@@ -99,6 +100,7 @@ begin
    U_XBAR : entity work.AxiPcieCrossbar
       generic map (
          TPD_G               => TPD_G,
+         USE_XBAR_IPCORE_G   => USE_XBAR_IPCORE_G,
          SLAVE_AXI_CONFIG_G  => DMA_AXI_CONFIG_C,
          MASTER_AXI_CONFIG_G => PCIE_AXI_CONFIG_C,
          DMA_SIZE_G          => DMA_SIZE_G)

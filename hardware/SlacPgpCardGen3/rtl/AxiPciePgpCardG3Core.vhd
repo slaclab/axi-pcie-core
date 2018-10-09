@@ -40,10 +40,9 @@ entity AxiPciePgpCardG3Core is
       ------------------------      
       --  Top Level Interfaces
       ------------------------    
-      -- System Clock and Reset
-      sysClk         : out   sl;        -- 125 MHz
-      sysRst         : out   sl;
-      -- DMA Interfaces (sysClk domain)
+      -- DMA Interfaces (dmaClk domain)
+      dmaClk         : out   sl;        -- 125 MHz
+      dmaRst         : out   sl;
       dmaObMasters   : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaObSlaves    : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters   : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
@@ -111,9 +110,7 @@ architecture mapping of AxiPciePgpCardG3Core is
 
 begin
 
-   sysClk <= sysClock;
-
-   systemReset <= sysReset or cardReset;
+   dmaClk <= sysClock;
 
    U_Rst : entity work.RstPipeline
       generic map (
@@ -121,7 +118,9 @@ begin
       port map (
          clk    => sysClock,
          rstIn  => systemReset,
-         rstOut => sysRst);
+         rstOut => dmaRst);
+
+   systemReset <= sysReset or cardReset;
 
    ---------------
    -- AXI PCIe PHY
@@ -224,15 +223,16 @@ begin
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
          TPD_G             => TPD_G,
+         USE_XBAR_IPCORE_G => false,
          DMA_SIZE_G        => DMA_SIZE_G,
          DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_C,
          DESC_ARB_G        => false,  -- Round robin to help with timing      
          INT_PIPE_STAGES_G => INT_PIPE_STAGES_G,
          PIPE_STAGES_G     => PIPE_STAGES_G)
       port map (
-         -- AXI4 Interfaces
          axiClk           => sysClock,
          axiRst           => sysReset,
+         -- AXI4 Interfaces (
          axiReadMaster    => dmaReadMaster,
          axiReadSlave     => dmaReadSlave,
          axiWriteMaster   => dmaWriteMaster,
@@ -243,8 +243,6 @@ begin
          axilWriteMasters => dmaCtrlWriteMasters,
          axilWriteSlaves  => dmaCtrlWriteSlaves,
          -- DMA Interfaces
-         dmaClk           => sysClock,
-         dmaRst           => sysReset,
          dmaIrq           => dmaIrq,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,

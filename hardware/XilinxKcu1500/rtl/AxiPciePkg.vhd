@@ -27,7 +27,7 @@ package AxiPciePkg is
    constant DMA_CLK_FREQ_C : real := 250.0E+6;  -- units of Hz
 
    -- PCIE PHY AXI Configuration   
-   constant PCIE_AXI_CONFIG_C : AxiConfigType := (
+   constant AXI_PCIE_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 48,               -- 48-bit address interface
       DATA_BYTES_C => 32,               -- 256-bit data interface
       ID_BITS_C    => 4,                -- Up to 16 DMA IDS

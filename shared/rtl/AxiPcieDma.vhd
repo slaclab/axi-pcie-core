@@ -60,7 +60,8 @@ architecture mapping of AxiPcieDma is
 
    constant INT_DMA_AXIS_CONFIG_C : AxiStreamConfigType := (
       TSTRB_EN_C    => false,
-      TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
+      -- TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
+      TDATA_BYTES_C => AXI_PCIE_CONFIG_C.DATA_BYTES_C, -- Work around for SURF AxiResizer bug
       TDEST_BITS_C  => 8,
       TID_BITS_C    => 0,
       TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
@@ -69,11 +70,18 @@ architecture mapping of AxiPcieDma is
 
    -- DMA AXI Configuration   
    constant DMA_AXI_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => PCIE_AXI_CONFIG_C.ADDR_WIDTH_C,
-      DATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,  -- Matches the AXIS stream
-      ID_BITS_C    => PCIE_AXI_CONFIG_C.ID_BITS_C,
-      LEN_BITS_C   => PCIE_AXI_CONFIG_C.LEN_BITS_C);
-
+      ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
+      DATA_BYTES_C => INT_DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- Matches the AXIS stream
+      ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
+      LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
+      
+   -- AXI DMA descriptor  
+   constant AXI_DESC_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
+      DATA_BYTES_C => 16,  -- always 128-bit AXI DMA descriptor 
+      ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
+      LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);      
+      
    signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
    signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
    signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
@@ -91,19 +99,26 @@ architecture mapping of AxiPcieDma is
    signal ibSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
 
    signal axisReset : slv(DMA_SIZE_G-1 downto 0);
+   
+   attribute dont_touch              : string;
+   attribute dont_touch of axisReset : signal is "true";   
 
 begin
+
+   assert (AXI_PCIE_CONFIG_C.DATA_BYTES_C >= 16)
+      report "AxiPcieDma: AXI_PCIE_CONFIG_C.DATA_BYTES_C must be >= 16" severity failure;
 
    ----------------
    -- AXI PCIe XBAR
    -----------------
    U_XBAR : entity work.AxiPcieCrossbar
       generic map (
-         TPD_G               => TPD_G,
-         USE_XBAR_IPCORE_G   => USE_XBAR_IPCORE_G,
-         SLAVE_AXI_CONFIG_G  => DMA_AXI_CONFIG_C,
-         MASTER_AXI_CONFIG_G => PCIE_AXI_CONFIG_C,
-         DMA_SIZE_G          => DMA_SIZE_G)
+         TPD_G             => TPD_G,
+         USE_XBAR_IPCORE_G => USE_XBAR_IPCORE_G,
+         AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_C,
+         AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
+         AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_C,
+         DMA_SIZE_G        => DMA_SIZE_G)
       port map (
          axiClk           => axiClk,
          axiRst           => axiRst,
@@ -131,7 +146,7 @@ begin
          AXI_READY_EN_G    => false,
          AXIS_READY_EN_G   => false,
          AXIS_CONFIG_G     => INT_DMA_AXIS_CONFIG_C,
-         AXI_DESC_CONFIG_G => DMA_AXI_CONFIG_C,
+         AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_C,
          AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
          CHAN_COUNT_G      => DMA_SIZE_G,
          RD_PIPE_STAGES_G  => 1,

@@ -21,11 +21,12 @@ use work.AxiPkg.all;
 
 entity AxiPcieCrossbar is
    generic (
-      TPD_G               : time                  := 1 ns;
-      USE_XBAR_IPCORE_G   : boolean               := true;
-      SLAVE_AXI_CONFIG_G  : AxiConfigType;
-      MASTER_AXI_CONFIG_G : AxiConfigType;
-      DMA_SIZE_G          : positive range 1 to 8 := 1);
+      TPD_G             : time                  := 1 ns;
+      USE_XBAR_IPCORE_G : boolean               := true;
+      AXI_DESC_CONFIG_G : AxiConfigType;
+      AXI_DMA_CONFIG_G  : AxiConfigType;
+      AXI_PCIE_CONFIG_G : AxiConfigType;
+      DMA_SIZE_G        : positive range 1 to 8 := 1);
    port (
       axiClk           : in  sl;
       axiRst           : in  sl;
@@ -90,7 +91,7 @@ architecture mapping of AxiPcieCrossbar is
          S01_AXI_ARESET_OUT_N : out std_logic;
          S01_AXI_ACLK         : in  std_logic;
          S01_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S01_AXI_AWADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S01_AXI_AWADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S01_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
          S01_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
          S01_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
@@ -100,8 +101,8 @@ architecture mapping of AxiPcieCrossbar is
          S01_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S01_AXI_AWVALID      : in  std_logic;
          S01_AXI_AWREADY      : out std_logic;
-         S01_AXI_WDATA        : in  std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
-         S01_AXI_WSTRB        : in  std_logic_vector(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S01_AXI_WDATA        : in  std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S01_AXI_WSTRB        : in  std_logic_vector(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S01_AXI_WLAST        : in  std_logic;
          S01_AXI_WVALID       : in  std_logic;
          S01_AXI_WREADY       : out std_logic;
@@ -110,7 +111,7 @@ architecture mapping of AxiPcieCrossbar is
          S01_AXI_BVALID       : out std_logic;
          S01_AXI_BREADY       : in  std_logic;
          S01_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S01_AXI_ARADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S01_AXI_ARADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S01_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
          S01_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
          S01_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
@@ -121,7 +122,7 @@ architecture mapping of AxiPcieCrossbar is
          S01_AXI_ARVALID      : in  std_logic;
          S01_AXI_ARREADY      : out std_logic;
          S01_AXI_RID          : out std_logic_vector(0 downto 0);
-         S01_AXI_RDATA        : out std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S01_AXI_RDATA        : out std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S01_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S01_AXI_RLAST        : out std_logic;
          S01_AXI_RVALID       : out std_logic;
@@ -129,7 +130,7 @@ architecture mapping of AxiPcieCrossbar is
          S02_AXI_ARESET_OUT_N : out std_logic;
          S02_AXI_ACLK         : in  std_logic;
          S02_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S02_AXI_AWADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S02_AXI_AWADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S02_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
          S02_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
          S02_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
@@ -139,8 +140,8 @@ architecture mapping of AxiPcieCrossbar is
          S02_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S02_AXI_AWVALID      : in  std_logic;
          S02_AXI_AWREADY      : out std_logic;
-         S02_AXI_WDATA        : in  std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
-         S02_AXI_WSTRB        : in  std_logic_vector(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S02_AXI_WDATA        : in  std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S02_AXI_WSTRB        : in  std_logic_vector(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S02_AXI_WLAST        : in  std_logic;
          S02_AXI_WVALID       : in  std_logic;
          S02_AXI_WREADY       : out std_logic;
@@ -149,7 +150,7 @@ architecture mapping of AxiPcieCrossbar is
          S02_AXI_BVALID       : out std_logic;
          S02_AXI_BREADY       : in  std_logic;
          S02_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S02_AXI_ARADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S02_AXI_ARADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S02_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
          S02_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
          S02_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
@@ -160,7 +161,7 @@ architecture mapping of AxiPcieCrossbar is
          S02_AXI_ARVALID      : in  std_logic;
          S02_AXI_ARREADY      : out std_logic;
          S02_AXI_RID          : out std_logic_vector(0 downto 0);
-         S02_AXI_RDATA        : out std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S02_AXI_RDATA        : out std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S02_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S02_AXI_RLAST        : out std_logic;
          S02_AXI_RVALID       : out std_logic;
@@ -168,7 +169,7 @@ architecture mapping of AxiPcieCrossbar is
          S03_AXI_ARESET_OUT_N : out std_logic;
          S03_AXI_ACLK         : in  std_logic;
          S03_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S03_AXI_AWADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S03_AXI_AWADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S03_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
          S03_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
          S03_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
@@ -178,8 +179,8 @@ architecture mapping of AxiPcieCrossbar is
          S03_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S03_AXI_AWVALID      : in  std_logic;
          S03_AXI_AWREADY      : out std_logic;
-         S03_AXI_WDATA        : in  std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
-         S03_AXI_WSTRB        : in  std_logic_vector(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S03_AXI_WDATA        : in  std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S03_AXI_WSTRB        : in  std_logic_vector(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S03_AXI_WLAST        : in  std_logic;
          S03_AXI_WVALID       : in  std_logic;
          S03_AXI_WREADY       : out std_logic;
@@ -188,7 +189,7 @@ architecture mapping of AxiPcieCrossbar is
          S03_AXI_BVALID       : out std_logic;
          S03_AXI_BREADY       : in  std_logic;
          S03_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S03_AXI_ARADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S03_AXI_ARADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S03_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
          S03_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
          S03_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
@@ -199,7 +200,7 @@ architecture mapping of AxiPcieCrossbar is
          S03_AXI_ARVALID      : in  std_logic;
          S03_AXI_ARREADY      : out std_logic;
          S03_AXI_RID          : out std_logic_vector(0 downto 0);
-         S03_AXI_RDATA        : out std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S03_AXI_RDATA        : out std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S03_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S03_AXI_RLAST        : out std_logic;
          S03_AXI_RVALID       : out std_logic;
@@ -207,7 +208,7 @@ architecture mapping of AxiPcieCrossbar is
          S04_AXI_ARESET_OUT_N : out std_logic;
          S04_AXI_ACLK         : in  std_logic;
          S04_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S04_AXI_AWADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S04_AXI_AWADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S04_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
          S04_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
          S04_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
@@ -217,8 +218,8 @@ architecture mapping of AxiPcieCrossbar is
          S04_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S04_AXI_AWVALID      : in  std_logic;
          S04_AXI_AWREADY      : out std_logic;
-         S04_AXI_WDATA        : in  std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
-         S04_AXI_WSTRB        : in  std_logic_vector(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S04_AXI_WDATA        : in  std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S04_AXI_WSTRB        : in  std_logic_vector(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S04_AXI_WLAST        : in  std_logic;
          S04_AXI_WVALID       : in  std_logic;
          S04_AXI_WREADY       : out std_logic;
@@ -227,7 +228,7 @@ architecture mapping of AxiPcieCrossbar is
          S04_AXI_BVALID       : out std_logic;
          S04_AXI_BREADY       : in  std_logic;
          S04_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S04_AXI_ARADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S04_AXI_ARADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S04_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
          S04_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
          S04_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
@@ -238,7 +239,7 @@ architecture mapping of AxiPcieCrossbar is
          S04_AXI_ARVALID      : in  std_logic;
          S04_AXI_ARREADY      : out std_logic;
          S04_AXI_RID          : out std_logic_vector(0 downto 0);
-         S04_AXI_RDATA        : out std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S04_AXI_RDATA        : out std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S04_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S04_AXI_RLAST        : out std_logic;
          S04_AXI_RVALID       : out std_logic;
@@ -246,7 +247,7 @@ architecture mapping of AxiPcieCrossbar is
          S05_AXI_ARESET_OUT_N : out std_logic;
          S05_AXI_ACLK         : in  std_logic;
          S05_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S05_AXI_AWADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S05_AXI_AWADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S05_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
          S05_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
          S05_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
@@ -256,8 +257,8 @@ architecture mapping of AxiPcieCrossbar is
          S05_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S05_AXI_AWVALID      : in  std_logic;
          S05_AXI_AWREADY      : out std_logic;
-         S05_AXI_WDATA        : in  std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
-         S05_AXI_WSTRB        : in  std_logic_vector(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S05_AXI_WDATA        : in  std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S05_AXI_WSTRB        : in  std_logic_vector(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S05_AXI_WLAST        : in  std_logic;
          S05_AXI_WVALID       : in  std_logic;
          S05_AXI_WREADY       : out std_logic;
@@ -266,7 +267,7 @@ architecture mapping of AxiPcieCrossbar is
          S05_AXI_BVALID       : out std_logic;
          S05_AXI_BREADY       : in  std_logic;
          S05_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S05_AXI_ARADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S05_AXI_ARADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S05_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
          S05_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
          S05_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
@@ -277,7 +278,7 @@ architecture mapping of AxiPcieCrossbar is
          S05_AXI_ARVALID      : in  std_logic;
          S05_AXI_ARREADY      : out std_logic;
          S05_AXI_RID          : out std_logic_vector(0 downto 0);
-         S05_AXI_RDATA        : out std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S05_AXI_RDATA        : out std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S05_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S05_AXI_RLAST        : out std_logic;
          S05_AXI_RVALID       : out std_logic;
@@ -285,7 +286,7 @@ architecture mapping of AxiPcieCrossbar is
          S06_AXI_ARESET_OUT_N : out std_logic;
          S06_AXI_ACLK         : in  std_logic;
          S06_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S06_AXI_AWADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S06_AXI_AWADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S06_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
          S06_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
          S06_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
@@ -295,8 +296,8 @@ architecture mapping of AxiPcieCrossbar is
          S06_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S06_AXI_AWVALID      : in  std_logic;
          S06_AXI_AWREADY      : out std_logic;
-         S06_AXI_WDATA        : in  std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
-         S06_AXI_WSTRB        : in  std_logic_vector(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S06_AXI_WDATA        : in  std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S06_AXI_WSTRB        : in  std_logic_vector(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S06_AXI_WLAST        : in  std_logic;
          S06_AXI_WVALID       : in  std_logic;
          S06_AXI_WREADY       : out std_logic;
@@ -305,7 +306,7 @@ architecture mapping of AxiPcieCrossbar is
          S06_AXI_BVALID       : out std_logic;
          S06_AXI_BREADY       : in  std_logic;
          S06_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S06_AXI_ARADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S06_AXI_ARADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S06_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
          S06_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
          S06_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
@@ -316,7 +317,7 @@ architecture mapping of AxiPcieCrossbar is
          S06_AXI_ARVALID      : in  std_logic;
          S06_AXI_ARREADY      : out std_logic;
          S06_AXI_RID          : out std_logic_vector(0 downto 0);
-         S06_AXI_RDATA        : out std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S06_AXI_RDATA        : out std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S06_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S06_AXI_RLAST        : out std_logic;
          S06_AXI_RVALID       : out std_logic;
@@ -324,7 +325,7 @@ architecture mapping of AxiPcieCrossbar is
          S07_AXI_ARESET_OUT_N : out std_logic;
          S07_AXI_ACLK         : in  std_logic;
          S07_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S07_AXI_AWADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S07_AXI_AWADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S07_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
          S07_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
          S07_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
@@ -334,8 +335,8 @@ architecture mapping of AxiPcieCrossbar is
          S07_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S07_AXI_AWVALID      : in  std_logic;
          S07_AXI_AWREADY      : out std_logic;
-         S07_AXI_WDATA        : in  std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
-         S07_AXI_WSTRB        : in  std_logic_vector(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S07_AXI_WDATA        : in  std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S07_AXI_WSTRB        : in  std_logic_vector(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S07_AXI_WLAST        : in  std_logic;
          S07_AXI_WVALID       : in  std_logic;
          S07_AXI_WREADY       : out std_logic;
@@ -344,7 +345,7 @@ architecture mapping of AxiPcieCrossbar is
          S07_AXI_BVALID       : out std_logic;
          S07_AXI_BREADY       : in  std_logic;
          S07_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S07_AXI_ARADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S07_AXI_ARADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S07_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
          S07_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
          S07_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
@@ -355,7 +356,7 @@ architecture mapping of AxiPcieCrossbar is
          S07_AXI_ARVALID      : in  std_logic;
          S07_AXI_ARREADY      : out std_logic;
          S07_AXI_RID          : out std_logic_vector(0 downto 0);
-         S07_AXI_RDATA        : out std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S07_AXI_RDATA        : out std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S07_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S07_AXI_RLAST        : out std_logic;
          S07_AXI_RVALID       : out std_logic;
@@ -363,7 +364,7 @@ architecture mapping of AxiPcieCrossbar is
          S08_AXI_ARESET_OUT_N : out std_logic;
          S08_AXI_ACLK         : in  std_logic;
          S08_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S08_AXI_AWADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S08_AXI_AWADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S08_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
          S08_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
          S08_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
@@ -373,8 +374,8 @@ architecture mapping of AxiPcieCrossbar is
          S08_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S08_AXI_AWVALID      : in  std_logic;
          S08_AXI_AWREADY      : out std_logic;
-         S08_AXI_WDATA        : in  std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
-         S08_AXI_WSTRB        : in  std_logic_vector(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S08_AXI_WDATA        : in  std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S08_AXI_WSTRB        : in  std_logic_vector(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S08_AXI_WLAST        : in  std_logic;
          S08_AXI_WVALID       : in  std_logic;
          S08_AXI_WREADY       : out std_logic;
@@ -383,7 +384,7 @@ architecture mapping of AxiPcieCrossbar is
          S08_AXI_BVALID       : out std_logic;
          S08_AXI_BREADY       : in  std_logic;
          S08_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S08_AXI_ARADDR       : in  std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         S08_AXI_ARADDR       : in  std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S08_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
          S08_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
          S08_AXI_ARBURST      : in  std_logic_vector(1 downto 0);
@@ -394,7 +395,7 @@ architecture mapping of AxiPcieCrossbar is
          S08_AXI_ARVALID      : in  std_logic;
          S08_AXI_ARREADY      : out std_logic;
          S08_AXI_RID          : out std_logic_vector(0 downto 0);
-         S08_AXI_RDATA        : out std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         S08_AXI_RDATA        : out std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          S08_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S08_AXI_RLAST        : out std_logic;
          S08_AXI_RVALID       : out std_logic;
@@ -402,7 +403,7 @@ architecture mapping of AxiPcieCrossbar is
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
-         M00_AXI_AWADDR       : out std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         M00_AXI_AWADDR       : out std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          M00_AXI_AWLEN        : out std_logic_vector(7 downto 0);
          M00_AXI_AWSIZE       : out std_logic_vector(2 downto 0);
          M00_AXI_AWBURST      : out std_logic_vector(1 downto 0);
@@ -412,8 +413,8 @@ architecture mapping of AxiPcieCrossbar is
          M00_AXI_AWQOS        : out std_logic_vector(3 downto 0);
          M00_AXI_AWVALID      : out std_logic;
          M00_AXI_AWREADY      : in  std_logic;
-         M00_AXI_WDATA        : out std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
-         M00_AXI_WSTRB        : out std_logic_vector(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         M00_AXI_WDATA        : out std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         M00_AXI_WSTRB        : out std_logic_vector(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          M00_AXI_WLAST        : out std_logic;
          M00_AXI_WVALID       : out std_logic;
          M00_AXI_WREADY       : in  std_logic;
@@ -422,7 +423,7 @@ architecture mapping of AxiPcieCrossbar is
          M00_AXI_BVALID       : in  std_logic;
          M00_AXI_BREADY       : out std_logic;
          M00_AXI_ARID         : out std_logic_vector(3 downto 0);
-         M00_AXI_ARADDR       : out std_logic_vector(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
+         M00_AXI_ARADDR       : out std_logic_vector(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          M00_AXI_ARLEN        : out std_logic_vector(7 downto 0);
          M00_AXI_ARSIZE       : out std_logic_vector(2 downto 0);
          M00_AXI_ARBURST      : out std_logic_vector(1 downto 0);
@@ -433,7 +434,7 @@ architecture mapping of AxiPcieCrossbar is
          M00_AXI_ARVALID      : out std_logic;
          M00_AXI_ARREADY      : in  std_logic;
          M00_AXI_RID          : in  std_logic_vector(3 downto 0);
-         M00_AXI_RDATA        : in  std_logic_vector(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0);
+         M00_AXI_RDATA        : in  std_logic_vector(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0);
          M00_AXI_RRESP        : in  std_logic_vector(1 downto 0);
          M00_AXI_RLAST        : in  std_logic;
          M00_AXI_RVALID       : in  std_logic;
@@ -452,6 +453,9 @@ architecture mapping of AxiPcieCrossbar is
 
    signal axiRstL  : sl;
    signal axiReset : slv(DMA_SIZE_G downto 0);
+   
+   attribute dont_touch             : string;
+   attribute dont_touch of axiReset : signal is "true";      
 
 begin
 
@@ -472,7 +476,7 @@ begin
          LOCK_FIXED_EN_G        => true,
          PROT_FIXED_EN_G        => true,
          CACHE_FIXED_EN_G       => true,
-         AXI_CONFIG_G           => SLAVE_AXI_CONFIG_G,
+         AXI_CONFIG_G           => AXI_DESC_CONFIG_G,
          -- Address channel
          ADDR_BRAM_EN_G         => false,
          ADDR_FIFO_ADDR_WIDTH_G => 4,
@@ -504,14 +508,14 @@ begin
          LOCK_FIXED_EN_G          => true,
          PROT_FIXED_EN_G          => true,
          CACHE_FIXED_EN_G         => true,
-         AXI_CONFIG_G             => SLAVE_AXI_CONFIG_G,
+         AXI_CONFIG_G             => AXI_DESC_CONFIG_G,
          -- Address channel
          ADDR_BRAM_EN_G           => true,
          ADDR_FIFO_ADDR_WIDTH_G   => 9,
          -- Data channel
          DATA_BRAM_EN_G           => true,
          DATA_FIFO_ADDR_WIDTH_G   => 9,
-         DATA_FIFO_PAUSE_THRESH_G => 256,
+         DATA_FIFO_PAUSE_THRESH_G => 456,
          -- Response channel
          RESP_BRAM_EN_G           => false,
          RESP_FIFO_ADDR_WIDTH_G   => 4)
@@ -555,8 +559,8 @@ begin
       U_AxiResize : entity work.AxiResize
          generic map(
             TPD_G               => TPD_G,
-            SLAVE_AXI_CONFIG_G  => SLAVE_AXI_CONFIG_G,
-            MASTER_AXI_CONFIG_G => MASTER_AXI_CONFIG_G)
+            SLAVE_AXI_CONFIG_G  => ite(i = 0, AXI_DESC_CONFIG_G, AXI_DMA_CONFIG_G),
+            MASTER_AXI_CONFIG_G => AXI_PCIE_CONFIG_G)
          port map(
             -- Clock and reset
             axiClk          => axiClk,
@@ -587,7 +591,7 @@ begin
             LOCK_FIXED_EN_G        => true,
             PROT_FIXED_EN_G        => true,
             CACHE_FIXED_EN_G       => true,
-            AXI_CONFIG_G           => MASTER_AXI_CONFIG_G,
+            AXI_CONFIG_G           => AXI_PCIE_CONFIG_G,
             -- Address channel
             ADDR_BRAM_EN_G         => false,
             ADDR_FIFO_ADDR_WIDTH_G => 4,
@@ -619,14 +623,14 @@ begin
             LOCK_FIXED_EN_G          => true,
             PROT_FIXED_EN_G          => true,
             CACHE_FIXED_EN_G         => true,
-            AXI_CONFIG_G             => MASTER_AXI_CONFIG_G,
+            AXI_CONFIG_G             => AXI_PCIE_CONFIG_G,
             -- Address channel
             ADDR_BRAM_EN_G           => true,
             ADDR_FIFO_ADDR_WIDTH_G   => 9,
             -- Data channel
             DATA_BRAM_EN_G           => true,
             DATA_FIFO_ADDR_WIDTH_G   => 9,
-            DATA_FIFO_PAUSE_THRESH_G => 256,
+            DATA_FIFO_PAUSE_THRESH_G => 456,
             -- Response channel
             RESP_BRAM_EN_G           => false,
             RESP_FIFO_ADDR_WIDTH_G   => 4)
@@ -700,7 +704,7 @@ begin
             S00_AXI_ARESET_OUT_N => open,
             S00_AXI_ACLK         => axiClk,
             S00_AXI_AWID(0)      => '0',
-            S00_AXI_AWADDR       => axiWriteMasters(0).awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S00_AXI_AWADDR       => axiWriteMasters(0).awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S00_AXI_AWLEN        => axiWriteMasters(0).awlen,
             S00_AXI_AWSIZE       => axiWriteMasters(0).awsize,
             S00_AXI_AWBURST      => axiWriteMasters(0).awburst,
@@ -720,7 +724,7 @@ begin
             S00_AXI_BVALID       => axiWriteSlaves(0).bvalid,
             S00_AXI_BREADY       => axiWriteMasters(0).bready,
             S00_AXI_ARID(0)      => '0',
-            S00_AXI_ARADDR       => axiReadMasters(0).araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S00_AXI_ARADDR       => axiReadMasters(0).araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S00_AXI_ARLEN        => axiReadMasters(0).arlen,
             S00_AXI_ARSIZE       => axiReadMasters(0).arsize,
             S00_AXI_ARBURST      => axiReadMasters(0).arburst,
@@ -740,7 +744,7 @@ begin
             S01_AXI_ARESET_OUT_N => open,
             S01_AXI_ACLK         => axiClk,
             S01_AXI_AWID(0)      => '0',
-            S01_AXI_AWADDR       => axiWriteMasters(1).awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S01_AXI_AWADDR       => axiWriteMasters(1).awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S01_AXI_AWLEN        => axiWriteMasters(1).awlen,
             S01_AXI_AWSIZE       => axiWriteMasters(1).awsize,
             S01_AXI_AWBURST      => axiWriteMasters(1).awburst,
@@ -750,8 +754,8 @@ begin
             S01_AXI_AWQOS        => axiWriteMasters(1).awqos,
             S01_AXI_AWVALID      => axiWriteMasters(1).awvalid,
             S01_AXI_AWREADY      => axiWriteSlaves(1).awready,
-            S01_AXI_WDATA        => axiWriteMasters(1).wdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
-            S01_AXI_WSTRB        => axiWriteMasters(1).wstrb(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S01_AXI_WDATA        => axiWriteMasters(1).wdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S01_AXI_WSTRB        => axiWriteMasters(1).wstrb(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S01_AXI_WLAST        => axiWriteMasters(1).wlast,
             S01_AXI_WVALID       => axiWriteMasters(1).wvalid,
             S01_AXI_WREADY       => axiWriteSlaves(1).wready,
@@ -760,7 +764,7 @@ begin
             S01_AXI_BVALID       => axiWriteSlaves(1).bvalid,
             S01_AXI_BREADY       => axiWriteMasters(1).bready,
             S01_AXI_ARID(0)      => '0',
-            S01_AXI_ARADDR       => axiReadMasters(1).araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S01_AXI_ARADDR       => axiReadMasters(1).araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S01_AXI_ARLEN        => axiReadMasters(1).arlen,
             S01_AXI_ARSIZE       => axiReadMasters(1).arsize,
             S01_AXI_ARBURST      => axiReadMasters(1).arburst,
@@ -771,7 +775,7 @@ begin
             S01_AXI_ARVALID      => axiReadMasters(1).arvalid,
             S01_AXI_ARREADY      => axiReadSlaves(1).arready,
             S01_AXI_RID          => axiReadSlaves(1).rid(0 downto 0),
-            S01_AXI_RDATA        => axiReadSlaves(1).rdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S01_AXI_RDATA        => axiReadSlaves(1).rdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S01_AXI_RRESP        => axiReadSlaves(1).rresp,
             S01_AXI_RLAST        => axiReadSlaves(1).rlast,
             S01_AXI_RVALID       => axiReadSlaves(1).rvalid,
@@ -780,7 +784,7 @@ begin
             S02_AXI_ARESET_OUT_N => open,
             S02_AXI_ACLK         => axiClk,
             S02_AXI_AWID(0)      => '0',
-            S02_AXI_AWADDR       => axiWriteMasters(2).awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S02_AXI_AWADDR       => axiWriteMasters(2).awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S02_AXI_AWLEN        => axiWriteMasters(2).awlen,
             S02_AXI_AWSIZE       => axiWriteMasters(2).awsize,
             S02_AXI_AWBURST      => axiWriteMasters(2).awburst,
@@ -790,8 +794,8 @@ begin
             S02_AXI_AWQOS        => axiWriteMasters(2).awqos,
             S02_AXI_AWVALID      => axiWriteMasters(2).awvalid,
             S02_AXI_AWREADY      => axiWriteSlaves(2).awready,
-            S02_AXI_WDATA        => axiWriteMasters(2).wdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
-            S02_AXI_WSTRB        => axiWriteMasters(2).wstrb(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S02_AXI_WDATA        => axiWriteMasters(2).wdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S02_AXI_WSTRB        => axiWriteMasters(2).wstrb(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S02_AXI_WLAST        => axiWriteMasters(2).wlast,
             S02_AXI_WVALID       => axiWriteMasters(2).wvalid,
             S02_AXI_WREADY       => axiWriteSlaves(2).wready,
@@ -800,7 +804,7 @@ begin
             S02_AXI_BVALID       => axiWriteSlaves(2).bvalid,
             S02_AXI_BREADY       => axiWriteMasters(2).bready,
             S02_AXI_ARID(0)      => '0',
-            S02_AXI_ARADDR       => axiReadMasters(2).araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S02_AXI_ARADDR       => axiReadMasters(2).araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S02_AXI_ARLEN        => axiReadMasters(2).arlen,
             S02_AXI_ARSIZE       => axiReadMasters(2).arsize,
             S02_AXI_ARBURST      => axiReadMasters(2).arburst,
@@ -811,7 +815,7 @@ begin
             S02_AXI_ARVALID      => axiReadMasters(2).arvalid,
             S02_AXI_ARREADY      => axiReadSlaves(2).arready,
             S02_AXI_RID          => axiReadSlaves(2).rid(0 downto 0),
-            S02_AXI_RDATA        => axiReadSlaves(2).rdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S02_AXI_RDATA        => axiReadSlaves(2).rdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S02_AXI_RRESP        => axiReadSlaves(2).rresp,
             S02_AXI_RLAST        => axiReadSlaves(2).rlast,
             S02_AXI_RVALID       => axiReadSlaves(2).rvalid,
@@ -820,7 +824,7 @@ begin
             S03_AXI_ARESET_OUT_N => open,
             S03_AXI_ACLK         => axiClk,
             S03_AXI_AWID(0)      => '0',
-            S03_AXI_AWADDR       => axiWriteMasters(3).awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S03_AXI_AWADDR       => axiWriteMasters(3).awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S03_AXI_AWLEN        => axiWriteMasters(3).awlen,
             S03_AXI_AWSIZE       => axiWriteMasters(3).awsize,
             S03_AXI_AWBURST      => axiWriteMasters(3).awburst,
@@ -830,8 +834,8 @@ begin
             S03_AXI_AWQOS        => axiWriteMasters(3).awqos,
             S03_AXI_AWVALID      => axiWriteMasters(3).awvalid,
             S03_AXI_AWREADY      => axiWriteSlaves(3).awready,
-            S03_AXI_WDATA        => axiWriteMasters(3).wdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
-            S03_AXI_WSTRB        => axiWriteMasters(3).wstrb(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S03_AXI_WDATA        => axiWriteMasters(3).wdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S03_AXI_WSTRB        => axiWriteMasters(3).wstrb(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S03_AXI_WLAST        => axiWriteMasters(3).wlast,
             S03_AXI_WVALID       => axiWriteMasters(3).wvalid,
             S03_AXI_WREADY       => axiWriteSlaves(3).wready,
@@ -840,7 +844,7 @@ begin
             S03_AXI_BVALID       => axiWriteSlaves(3).bvalid,
             S03_AXI_BREADY       => axiWriteMasters(3).bready,
             S03_AXI_ARID(0)      => '0',
-            S03_AXI_ARADDR       => axiReadMasters(3).araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S03_AXI_ARADDR       => axiReadMasters(3).araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S03_AXI_ARLEN        => axiReadMasters(3).arlen,
             S03_AXI_ARSIZE       => axiReadMasters(3).arsize,
             S03_AXI_ARBURST      => axiReadMasters(3).arburst,
@@ -851,7 +855,7 @@ begin
             S03_AXI_ARVALID      => axiReadMasters(3).arvalid,
             S03_AXI_ARREADY      => axiReadSlaves(3).arready,
             S03_AXI_RID          => axiReadSlaves(3).rid(0 downto 0),
-            S03_AXI_RDATA        => axiReadSlaves(3).rdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S03_AXI_RDATA        => axiReadSlaves(3).rdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S03_AXI_RRESP        => axiReadSlaves(3).rresp,
             S03_AXI_RLAST        => axiReadSlaves(3).rlast,
             S03_AXI_RVALID       => axiReadSlaves(3).rvalid,
@@ -860,7 +864,7 @@ begin
             S04_AXI_ARESET_OUT_N => open,
             S04_AXI_ACLK         => axiClk,
             S04_AXI_AWID(0)      => '0',
-            S04_AXI_AWADDR       => axiWriteMasters(4).awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S04_AXI_AWADDR       => axiWriteMasters(4).awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S04_AXI_AWLEN        => axiWriteMasters(4).awlen,
             S04_AXI_AWSIZE       => axiWriteMasters(4).awsize,
             S04_AXI_AWBURST      => axiWriteMasters(4).awburst,
@@ -870,8 +874,8 @@ begin
             S04_AXI_AWQOS        => axiWriteMasters(4).awqos,
             S04_AXI_AWVALID      => axiWriteMasters(4).awvalid,
             S04_AXI_AWREADY      => axiWriteSlaves(4).awready,
-            S04_AXI_WDATA        => axiWriteMasters(4).wdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
-            S04_AXI_WSTRB        => axiWriteMasters(4).wstrb(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S04_AXI_WDATA        => axiWriteMasters(4).wdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S04_AXI_WSTRB        => axiWriteMasters(4).wstrb(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S04_AXI_WLAST        => axiWriteMasters(4).wlast,
             S04_AXI_WVALID       => axiWriteMasters(4).wvalid,
             S04_AXI_WREADY       => axiWriteSlaves(4).wready,
@@ -880,7 +884,7 @@ begin
             S04_AXI_BVALID       => axiWriteSlaves(4).bvalid,
             S04_AXI_BREADY       => axiWriteMasters(4).bready,
             S04_AXI_ARID(0)      => '0',
-            S04_AXI_ARADDR       => axiReadMasters(4).araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S04_AXI_ARADDR       => axiReadMasters(4).araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S04_AXI_ARLEN        => axiReadMasters(4).arlen,
             S04_AXI_ARSIZE       => axiReadMasters(4).arsize,
             S04_AXI_ARBURST      => axiReadMasters(4).arburst,
@@ -891,7 +895,7 @@ begin
             S04_AXI_ARVALID      => axiReadMasters(4).arvalid,
             S04_AXI_ARREADY      => axiReadSlaves(4).arready,
             S04_AXI_RID          => axiReadSlaves(4).rid(0 downto 0),
-            S04_AXI_RDATA        => axiReadSlaves(4).rdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S04_AXI_RDATA        => axiReadSlaves(4).rdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S04_AXI_RRESP        => axiReadSlaves(4).rresp,
             S04_AXI_RLAST        => axiReadSlaves(4).rlast,
             S04_AXI_RVALID       => axiReadSlaves(4).rvalid,
@@ -900,7 +904,7 @@ begin
             S05_AXI_ARESET_OUT_N => open,
             S05_AXI_ACLK         => axiClk,
             S05_AXI_AWID(0)      => '0',
-            S05_AXI_AWADDR       => axiWriteMasters(5).awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S05_AXI_AWADDR       => axiWriteMasters(5).awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S05_AXI_AWLEN        => axiWriteMasters(5).awlen,
             S05_AXI_AWSIZE       => axiWriteMasters(5).awsize,
             S05_AXI_AWBURST      => axiWriteMasters(5).awburst,
@@ -910,8 +914,8 @@ begin
             S05_AXI_AWQOS        => axiWriteMasters(5).awqos,
             S05_AXI_AWVALID      => axiWriteMasters(5).awvalid,
             S05_AXI_AWREADY      => axiWriteSlaves(5).awready,
-            S05_AXI_WDATA        => axiWriteMasters(5).wdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
-            S05_AXI_WSTRB        => axiWriteMasters(5).wstrb(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S05_AXI_WDATA        => axiWriteMasters(5).wdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S05_AXI_WSTRB        => axiWriteMasters(5).wstrb(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S05_AXI_WLAST        => axiWriteMasters(5).wlast,
             S05_AXI_WVALID       => axiWriteMasters(5).wvalid,
             S05_AXI_WREADY       => axiWriteSlaves(5).wready,
@@ -920,7 +924,7 @@ begin
             S05_AXI_BVALID       => axiWriteSlaves(5).bvalid,
             S05_AXI_BREADY       => axiWriteMasters(5).bready,
             S05_AXI_ARID(0)      => '0',
-            S05_AXI_ARADDR       => axiReadMasters(5).araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S05_AXI_ARADDR       => axiReadMasters(5).araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S05_AXI_ARLEN        => axiReadMasters(5).arlen,
             S05_AXI_ARSIZE       => axiReadMasters(5).arsize,
             S05_AXI_ARBURST      => axiReadMasters(5).arburst,
@@ -931,7 +935,7 @@ begin
             S05_AXI_ARVALID      => axiReadMasters(5).arvalid,
             S05_AXI_ARREADY      => axiReadSlaves(5).arready,
             S05_AXI_RID          => axiReadSlaves(5).rid(0 downto 0),
-            S05_AXI_RDATA        => axiReadSlaves(5).rdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S05_AXI_RDATA        => axiReadSlaves(5).rdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S05_AXI_RRESP        => axiReadSlaves(5).rresp,
             S05_AXI_RLAST        => axiReadSlaves(5).rlast,
             S05_AXI_RVALID       => axiReadSlaves(5).rvalid,
@@ -940,7 +944,7 @@ begin
             S06_AXI_ARESET_OUT_N => open,
             S06_AXI_ACLK         => axiClk,
             S06_AXI_AWID(0)      => '0',
-            S06_AXI_AWADDR       => axiWriteMasters(6).awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S06_AXI_AWADDR       => axiWriteMasters(6).awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S06_AXI_AWLEN        => axiWriteMasters(6).awlen,
             S06_AXI_AWSIZE       => axiWriteMasters(6).awsize,
             S06_AXI_AWBURST      => axiWriteMasters(6).awburst,
@@ -950,8 +954,8 @@ begin
             S06_AXI_AWQOS        => axiWriteMasters(6).awqos,
             S06_AXI_AWVALID      => axiWriteMasters(6).awvalid,
             S06_AXI_AWREADY      => axiWriteSlaves(6).awready,
-            S06_AXI_WDATA        => axiWriteMasters(6).wdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
-            S06_AXI_WSTRB        => axiWriteMasters(6).wstrb(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S06_AXI_WDATA        => axiWriteMasters(6).wdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S06_AXI_WSTRB        => axiWriteMasters(6).wstrb(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S06_AXI_WLAST        => axiWriteMasters(6).wlast,
             S06_AXI_WVALID       => axiWriteMasters(6).wvalid,
             S06_AXI_WREADY       => axiWriteSlaves(6).wready,
@@ -960,7 +964,7 @@ begin
             S06_AXI_BVALID       => axiWriteSlaves(6).bvalid,
             S06_AXI_BREADY       => axiWriteMasters(6).bready,
             S06_AXI_ARID(0)      => '0',
-            S06_AXI_ARADDR       => axiReadMasters(6).araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S06_AXI_ARADDR       => axiReadMasters(6).araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S06_AXI_ARLEN        => axiReadMasters(6).arlen,
             S06_AXI_ARSIZE       => axiReadMasters(6).arsize,
             S06_AXI_ARBURST      => axiReadMasters(6).arburst,
@@ -971,7 +975,7 @@ begin
             S06_AXI_ARVALID      => axiReadMasters(6).arvalid,
             S06_AXI_ARREADY      => axiReadSlaves(6).arready,
             S06_AXI_RID          => axiReadSlaves(6).rid(0 downto 0),
-            S06_AXI_RDATA        => axiReadSlaves(6).rdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S06_AXI_RDATA        => axiReadSlaves(6).rdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S06_AXI_RRESP        => axiReadSlaves(6).rresp,
             S06_AXI_RLAST        => axiReadSlaves(6).rlast,
             S06_AXI_RVALID       => axiReadSlaves(6).rvalid,
@@ -980,7 +984,7 @@ begin
             S07_AXI_ARESET_OUT_N => open,
             S07_AXI_ACLK         => axiClk,
             S07_AXI_AWID(0)      => '0',
-            S07_AXI_AWADDR       => axiWriteMasters(7).awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S07_AXI_AWADDR       => axiWriteMasters(7).awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S07_AXI_AWLEN        => axiWriteMasters(7).awlen,
             S07_AXI_AWSIZE       => axiWriteMasters(7).awsize,
             S07_AXI_AWBURST      => axiWriteMasters(7).awburst,
@@ -990,8 +994,8 @@ begin
             S07_AXI_AWQOS        => axiWriteMasters(7).awqos,
             S07_AXI_AWVALID      => axiWriteMasters(7).awvalid,
             S07_AXI_AWREADY      => axiWriteSlaves(7).awready,
-            S07_AXI_WDATA        => axiWriteMasters(7).wdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
-            S07_AXI_WSTRB        => axiWriteMasters(7).wstrb(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S07_AXI_WDATA        => axiWriteMasters(7).wdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S07_AXI_WSTRB        => axiWriteMasters(7).wstrb(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S07_AXI_WLAST        => axiWriteMasters(7).wlast,
             S07_AXI_WVALID       => axiWriteMasters(7).wvalid,
             S07_AXI_WREADY       => axiWriteSlaves(7).wready,
@@ -1000,7 +1004,7 @@ begin
             S07_AXI_BVALID       => axiWriteSlaves(7).bvalid,
             S07_AXI_BREADY       => axiWriteMasters(7).bready,
             S07_AXI_ARID(0)      => '0',
-            S07_AXI_ARADDR       => axiReadMasters(7).araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S07_AXI_ARADDR       => axiReadMasters(7).araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S07_AXI_ARLEN        => axiReadMasters(7).arlen,
             S07_AXI_ARSIZE       => axiReadMasters(7).arsize,
             S07_AXI_ARBURST      => axiReadMasters(7).arburst,
@@ -1011,7 +1015,7 @@ begin
             S07_AXI_ARVALID      => axiReadMasters(7).arvalid,
             S07_AXI_ARREADY      => axiReadSlaves(7).arready,
             S07_AXI_RID          => axiReadSlaves(7).rid(0 downto 0),
-            S07_AXI_RDATA        => axiReadSlaves(7).rdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S07_AXI_RDATA        => axiReadSlaves(7).rdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S07_AXI_RRESP        => axiReadSlaves(7).rresp,
             S07_AXI_RLAST        => axiReadSlaves(7).rlast,
             S07_AXI_RVALID       => axiReadSlaves(7).rvalid,
@@ -1020,7 +1024,7 @@ begin
             S08_AXI_ARESET_OUT_N => open,
             S08_AXI_ACLK         => axiClk,
             S08_AXI_AWID(0)      => '0',
-            S08_AXI_AWADDR       => axiWriteMasters(8).awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S08_AXI_AWADDR       => axiWriteMasters(8).awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S08_AXI_AWLEN        => axiWriteMasters(8).awlen,
             S08_AXI_AWSIZE       => axiWriteMasters(8).awsize,
             S08_AXI_AWBURST      => axiWriteMasters(8).awburst,
@@ -1030,8 +1034,8 @@ begin
             S08_AXI_AWQOS        => axiWriteMasters(8).awqos,
             S08_AXI_AWVALID      => axiWriteMasters(8).awvalid,
             S08_AXI_AWREADY      => axiWriteSlaves(8).awready,
-            S08_AXI_WDATA        => axiWriteMasters(8).wdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
-            S08_AXI_WSTRB        => axiWriteMasters(8).wstrb(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S08_AXI_WDATA        => axiWriteMasters(8).wdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S08_AXI_WSTRB        => axiWriteMasters(8).wstrb(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S08_AXI_WLAST        => axiWriteMasters(8).wlast,
             S08_AXI_WVALID       => axiWriteMasters(8).wvalid,
             S08_AXI_WREADY       => axiWriteSlaves(8).wready,
@@ -1040,7 +1044,7 @@ begin
             S08_AXI_BVALID       => axiWriteSlaves(8).bvalid,
             S08_AXI_BREADY       => axiWriteMasters(8).bready,
             S08_AXI_ARID(0)      => '0',
-            S08_AXI_ARADDR       => axiReadMasters(8).araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            S08_AXI_ARADDR       => axiReadMasters(8).araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             S08_AXI_ARLEN        => axiReadMasters(8).arlen,
             S08_AXI_ARSIZE       => axiReadMasters(8).arsize,
             S08_AXI_ARBURST      => axiReadMasters(8).arburst,
@@ -1051,7 +1055,7 @@ begin
             S08_AXI_ARVALID      => axiReadMasters(8).arvalid,
             S08_AXI_ARREADY      => axiReadSlaves(8).arready,
             S08_AXI_RID          => axiReadSlaves(8).rid(0 downto 0),
-            S08_AXI_RDATA        => axiReadSlaves(8).rdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            S08_AXI_RDATA        => axiReadSlaves(8).rdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             S08_AXI_RRESP        => axiReadSlaves(8).rresp,
             S08_AXI_RLAST        => axiReadSlaves(8).rlast,
             S08_AXI_RVALID       => axiReadSlaves(8).rvalid,
@@ -1060,7 +1064,7 @@ begin
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => axiClk,
             M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),
-            M00_AXI_AWADDR       => mAxiWriteMaster.awaddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            M00_AXI_AWADDR       => mAxiWriteMaster.awaddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             M00_AXI_AWLEN        => mAxiWriteMaster.awlen,
             M00_AXI_AWSIZE       => mAxiWriteMaster.awsize,
             M00_AXI_AWBURST      => mAxiWriteMaster.awburst,
@@ -1070,8 +1074,8 @@ begin
             M00_AXI_AWQOS        => mAxiWriteMaster.awqos,
             M00_AXI_AWVALID      => mAxiWriteMaster.awvalid,
             M00_AXI_AWREADY      => mAxiWriteSlave.awready,
-            M00_AXI_WDATA        => mAxiWriteMaster.wdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
-            M00_AXI_WSTRB        => mAxiWriteMaster.wstrb(MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            M00_AXI_WDATA        => mAxiWriteMaster.wdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            M00_AXI_WSTRB        => mAxiWriteMaster.wstrb(AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             M00_AXI_WLAST        => mAxiWriteMaster.wlast,
             M00_AXI_WVALID       => mAxiWriteMaster.wvalid,
             M00_AXI_WREADY       => mAxiWriteSlave.wready,
@@ -1080,7 +1084,7 @@ begin
             M00_AXI_BVALID       => mAxiWriteSlave.bvalid,
             M00_AXI_BREADY       => mAxiWriteMaster.bready,
             M00_AXI_ARID         => mAxiReadMaster.arid(3 downto 0),
-            M00_AXI_ARADDR       => mAxiReadMaster.araddr(MASTER_AXI_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
+            M00_AXI_ARADDR       => mAxiReadMaster.araddr(AXI_PCIE_CONFIG_G.ADDR_WIDTH_C-1 downto 0),
             M00_AXI_ARLEN        => mAxiReadMaster.arlen,
             M00_AXI_ARSIZE       => mAxiReadMaster.arsize,
             M00_AXI_ARBURST      => mAxiReadMaster.arburst,
@@ -1091,7 +1095,7 @@ begin
             M00_AXI_ARVALID      => mAxiReadMaster.arvalid,
             M00_AXI_ARREADY      => mAxiReadSlave.arready,
             M00_AXI_RID          => mAxiReadSlave.rid(3 downto 0),
-            M00_AXI_RDATA        => mAxiReadSlave.rdata(8*MASTER_AXI_CONFIG_G.DATA_BYTES_C-1 downto 0),
+            M00_AXI_RDATA        => mAxiReadSlave.rdata(8*AXI_PCIE_CONFIG_G.DATA_BYTES_C-1 downto 0),
             M00_AXI_RRESP        => mAxiReadSlave.rresp,
             M00_AXI_RLAST        => mAxiReadSlave.rlast,
             M00_AXI_RVALID       => mAxiReadSlave.rvalid,

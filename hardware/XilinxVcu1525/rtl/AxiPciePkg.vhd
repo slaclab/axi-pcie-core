@@ -40,14 +40,14 @@ package AxiPciePkg is
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
    -- PCIE PHY AXI Configuration   
-   constant PCIE_AXI_CONFIG_C : AxiConfigType := (
+   constant AXI_PCIE_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 48,               -- 48-bit address interface
       DATA_BYTES_C => 64,               -- 512-bit data interface
       ID_BITS_C    => 4,                -- Up to 16 DMA IDS
       LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface      
 
    -- DDR MEM AXI Configuration
-   constant MEM_AXI_CONFIG_C : AxiConfigType := (
+   constant AXI_DDR_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 34,               -- 16GB per MIG interface (16GB total)
       DATA_BYTES_C => 64,               -- 512-bit data interface
       ID_BITS_C    => 4,                -- Up to 16 IDS

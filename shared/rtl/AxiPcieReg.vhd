@@ -243,10 +243,10 @@ begin
       userValues(6)(0) <= appReset;
 
       -- PCIE PHY AXI Configuration   
-      userValues(7)(31 downto 24) <= toSlv(PCIE_AXI_CONFIG_C.ADDR_WIDTH_C, 8);
-      userValues(7)(23 downto 16) <= toSlv(PCIE_AXI_CONFIG_C.DATA_BYTES_C, 8);
-      userValues(7)(15 downto 8)  <= toSlv(PCIE_AXI_CONFIG_C.ID_BITS_C, 8);
-      userValues(7)(7 downto 0)   <= toSlv(PCIE_AXI_CONFIG_C.LEN_BITS_C, 8);
+      userValues(7)(31 downto 24) <= toSlv(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C, 8);
+      userValues(7)(23 downto 16) <= toSlv(AXI_PCIE_CONFIG_C.DATA_BYTES_C, 8);
+      userValues(7)(15 downto 8)  <= toSlv(AXI_PCIE_CONFIG_C.ID_BITS_C, 8);
+      userValues(7)(7 downto 0)   <= toSlv(AXI_PCIE_CONFIG_C.LEN_BITS_C, 8);
 
       -- Set unused to zero
       for i in 63 downto 8 loop

@@ -37,7 +37,7 @@ package AxiPciePkg is
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);   
    
    -- PCIE PHY AXI Configuration   
-   constant PCIE_AXI_CONFIG_C : AxiConfigType := (
+   constant AXI_PCIE_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 32,               -- 32-bit address interface
       DATA_BYTES_C => 16,               -- 128-bit data interface
       ID_BITS_C    => 4,                -- Up to 16 DMA IDS

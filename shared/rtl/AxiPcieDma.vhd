@@ -60,8 +60,7 @@ architecture mapping of AxiPcieDma is
 
    constant INT_DMA_AXIS_CONFIG_C : AxiStreamConfigType := (
       TSTRB_EN_C    => false,
-      -- TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
-      TDATA_BYTES_C => AXI_PCIE_CONFIG_C.DATA_BYTES_C, -- Work around for SURF AxiResizer bug (ESCORE-390)
+      TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
       TDEST_BITS_C  => 8,
       TID_BITS_C    => 0,
       TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
@@ -140,6 +139,7 @@ begin
    U_V2Gen : entity work.AxiStreamDmaV2
       generic map (
          TPD_G             => TPD_G,
+         SIMULATION_G      => SIMULATION_G,
          DESC_AWIDTH_G     => 12,       -- 4096 entries
          DESC_ARB_G        => DESC_ARB_G,
          AXIL_BASE_ADDR_G  => x"00000000",

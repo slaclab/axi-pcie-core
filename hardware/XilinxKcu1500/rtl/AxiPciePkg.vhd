@@ -28,7 +28,7 @@ package AxiPciePkg is
 
    -- PCIE PHY AXI Configuration   
    constant AXI_PCIE_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => 48,               -- 48-bit address interface
+      ADDR_WIDTH_C => 40,               -- 40-bit address interface
       DATA_BYTES_C => 32,               -- 256-bit data interface
       ID_BITS_C    => 4,                -- Up to 16 DMA IDS
       LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface      

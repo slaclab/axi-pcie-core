@@ -52,7 +52,7 @@ architecture mapping of AxiPcieCrossbar is
          S00_AXI_ARESET_OUT_N : out std_logic;
          S00_AXI_ACLK         : in  std_logic;
          S00_AXI_AWID         : in  std_logic_vector(0 downto 0);
-         S00_AXI_AWADDR       : in  std_logic_vector(47 downto 0);
+         S00_AXI_AWADDR       : in  std_logic_vector(AXI_DESC_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S00_AXI_AWLEN        : in  std_logic_vector(7 downto 0);
          S00_AXI_AWSIZE       : in  std_logic_vector(2 downto 0);
          S00_AXI_AWBURST      : in  std_logic_vector(1 downto 0);
@@ -72,7 +72,7 @@ architecture mapping of AxiPcieCrossbar is
          S00_AXI_BVALID       : out std_logic;
          S00_AXI_BREADY       : in  std_logic;
          S00_AXI_ARID         : in  std_logic_vector(0 downto 0);
-         S00_AXI_ARADDR       : in  std_logic_vector(47 downto 0);
+         S00_AXI_ARADDR       : in  std_logic_vector(AXI_DESC_CONFIG_G.ADDR_WIDTH_C-1 downto 0);
          S00_AXI_ARLEN        : in  std_logic_vector(7 downto 0);
          S00_AXI_ARSIZE       : in  std_logic_vector(2 downto 0);
          S00_AXI_ARBURST      : in  std_logic_vector(1 downto 0);

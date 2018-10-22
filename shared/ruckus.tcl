@@ -15,11 +15,11 @@ if { [info exists ::env(OVERRIDE_SUBMODULE_LOCKS)] != 1 || $::env(OVERRIDE_SUBMO
 # Load Source Code
 loadSource            -dir "$::DIR_PATH/rtl"
 loadSource -sim_only  -dir "$::DIR_PATH/tb"
-loadIpCore            -dir "$::DIR_PATH/ip"
-
-# AxiBram only used in simulation
-set_property used_in_implementation false [get_files {AxiBram.xci}]
-set_property used_in_synthesis      false [get_files {AxiBram.xci}]
 
 # Skip the utilization check during placement
 set_param place.skipUtilizationCheck 1
+
+# AxiBram only used in simulation
+#loadIpCore            -dir "$::DIR_PATH/ip"
+#set_property used_in_implementation false [get_files {AxiBram.xci}]
+#set_property used_in_synthesis      false [get_files {AxiBram.xci}]

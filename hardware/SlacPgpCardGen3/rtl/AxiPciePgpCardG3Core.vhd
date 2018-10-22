@@ -223,7 +223,6 @@ begin
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
          TPD_G             => TPD_G,
-         USE_XBAR_IPCORE_G => false,
          DMA_SIZE_G        => DMA_SIZE_G,
          DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_C,
          DESC_ARB_G        => false,  -- Round robin to help with timing      

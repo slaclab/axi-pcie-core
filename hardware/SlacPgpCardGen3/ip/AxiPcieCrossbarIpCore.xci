@@ -631,7 +631,7 @@
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S00_AXI_READ_ACCEPTANCE">1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S00_AXI_READ_FIFO_DELAY">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S00_AXI_READ_FIFO_DEPTH">0</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S00_AXI_READ_WRITE_SUPPORT">WRITE-ONLY</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S00_AXI_READ_WRITE_SUPPORT">READ/WRITE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S00_AXI_REGISTER">1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S00_AXI_WRITE_ACCEPTANCE">1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_S00_AXI_WRITE_FIFO_DELAY">0</spirit:configurableElementValue>
@@ -841,7 +841,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.S00_AXI_READ_ACCEPTANCE">1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.S00_AXI_READ_FIFO_DELAY">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.S00_AXI_READ_FIFO_DEPTH">0</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.S00_AXI_READ_WRITE_SUPPORT">WRITE-ONLY</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.S00_AXI_READ_WRITE_SUPPORT">READ/WRITE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.S00_AXI_REGISTER">1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.S00_AXI_WRITE_ACCEPTANCE">1</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.S00_AXI_WRITE_FIFO_DELAY">0</spirit:configurableElementValue>

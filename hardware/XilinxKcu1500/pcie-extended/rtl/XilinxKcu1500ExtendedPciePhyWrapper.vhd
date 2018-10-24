@@ -66,7 +66,7 @@ architecture mapping of XilinxKcu1500ExtendedPciePhyWrapper is
          sys_clk_gt             : in  std_logic;
          intx_msi_request       : in  std_logic;
          s_axi_awid             : in  std_logic_vector(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0);
-         s_axi_awaddr           : in  std_logic_vector(47 downto 0);
+         s_axi_awaddr           : in  std_logic_vector(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0);
          s_axi_awregion         : in  std_logic_vector(3 downto 0);
          s_axi_awlen            : in  std_logic_vector(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0);
          s_axi_awsize           : in  std_logic_vector(2 downto 0);
@@ -79,7 +79,7 @@ architecture mapping of XilinxKcu1500ExtendedPciePhyWrapper is
          s_axi_wvalid           : in  std_logic;
          s_axi_bready           : in  std_logic;
          s_axi_arid             : in  std_logic_vector(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0);
-         s_axi_araddr           : in  std_logic_vector(47 downto 0);
+         s_axi_araddr           : in  std_logic_vector(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0);
          s_axi_arregion         : in  std_logic_vector(3 downto 0);
          s_axi_arlen            : in  std_logic_vector(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0);
          s_axi_arsize           : in  std_logic_vector(2 downto 0);
@@ -128,7 +128,7 @@ architecture mapping of XilinxKcu1500ExtendedPciePhyWrapper is
          s_axi_rlast            : out std_logic;
          s_axi_rvalid           : out std_logic;
          m_axi_awid             : out std_logic_vector(2 downto 0);
-         m_axi_awaddr           : out std_logic_vector(47 downto 0);
+         m_axi_awaddr           : out std_logic_vector(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0);
          m_axi_awlen            : out std_logic_vector(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0);
          m_axi_awsize           : out std_logic_vector(2 downto 0);
          m_axi_awburst          : out std_logic_vector(1 downto 0);
@@ -143,7 +143,7 @@ architecture mapping of XilinxKcu1500ExtendedPciePhyWrapper is
          m_axi_wvalid           : out std_logic;
          m_axi_bready           : out std_logic;
          m_axi_arid             : out std_logic_vector(2 downto 0);
-         m_axi_araddr           : out std_logic_vector(47 downto 0);
+         m_axi_araddr           : out std_logic_vector(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0);
          m_axi_arlen            : out std_logic_vector(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0);
          m_axi_arsize           : out std_logic_vector(2 downto 0);
          m_axi_arburst          : out std_logic_vector(1 downto 0);

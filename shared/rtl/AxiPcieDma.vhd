@@ -72,14 +72,14 @@ architecture mapping of AxiPcieDma is
       DATA_BYTES_C => INT_DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- Matches the AXIS stream
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
-      
+
    -- AXI DMA descriptor  
    constant AXI_DESC_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
-      DATA_BYTES_C => 16,  -- always 128-bit AXI DMA descriptor 
+      DATA_BYTES_C => 16,               -- always 128-bit AXI DMA descriptor 
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
-      LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);      
-      
+      LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
+
    signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
    signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
    signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
@@ -92,13 +92,10 @@ architecture mapping of AxiPcieDma is
    signal mAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
    signal mAxisCtrl    : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0);
 
-   signal obMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-   signal ibSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-
    signal axisReset : slv(DMA_SIZE_G-1 downto 0);
-   
+
    attribute dont_touch              : string;
-   attribute dont_touch of axisReset : signal is "true";   
+   attribute dont_touch of axisReset : signal is "true";
 
 begin
 
@@ -139,7 +136,7 @@ begin
          DESC_AWIDTH_G     => 12,       -- 4096 entries
          DESC_ARB_G        => DESC_ARB_G,
          AXIL_BASE_ADDR_G  => x"00000000",
-         AXI_READY_EN_G    => true, -- Using "Packet FIFO" option in AXI Interconnect IP core
+         AXI_READY_EN_G    => true,  -- Using "Packet FIFO" option in AXI Interconnect IP core
          AXIS_READY_EN_G   => false,
          AXIS_CONFIG_G     => INT_DMA_AXIS_CONFIG_C,
          AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_C,
@@ -169,7 +166,7 @@ begin
          axiReadSlave    => axiReadSlaves,
          axiWriteMaster  => axiWriteMasters,
          axiWriteSlave   => axiWriteSlaves,
-         axiWriteCtrl    => (others=>AXI_CTRL_UNUSED_C));
+         axiWriteCtrl    => (others => AXI_CTRL_UNUSED_C));
 
    GEN_AXIS_FIFO : for i in DMA_SIZE_G-1 downto 0 generate
 
@@ -206,14 +203,12 @@ begin
             sAxisClk    => axiClk,
             sAxisRst    => axisReset(i),
             sAxisMaster => dmaIbMasters(i),
-            sAxisSlave  => ibSlaves(i),
+            sAxisSlave  => dmaIbSlaves(i),
             -- Master Port
             mAxisClk    => axiClk,
             mAxisRst    => axisReset(i),
             mAxisMaster => sAxisMasters(i),
             mAxisSlave  => sAxisSlaves(i));
-
-      dmaIbSlaves(i) <= ibSlaves(i);
 
       ---------------------------
       -- Outbound AXI Stream FIFO
@@ -244,10 +239,8 @@ begin
             -- Master Port
             mAxisClk    => axiClk,
             mAxisRst    => axisReset(i),
-            mAxisMaster => obMasters(i),
+            mAxisMaster => dmaObMasters(i),
             mAxisSlave  => dmaObSlaves(i));
-
-      dmaObMasters(i) <= obMasters(i);
 
    end generate;
 
@@ -260,13 +253,13 @@ begin
          COMMON_CLK_G     => true,
          AXIS_CLK_FREQ_G  => DMA_CLK_FREQ_C,
          AXIS_NUM_SLOTS_G => DMA_SIZE_G,
-         AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G)
+         AXIS_CONFIG_G    => INT_DMA_AXIS_CONFIG_C)
       port map(
          -- AXIS Stream Interface
          axisClk          => axiClk,
          axisRst          => axiRst,
-         axisMaster       => dmaIbMasters,
-         axisSlave        => ibSlaves,
+         axisMasters      => sAxisMasters,
+         axisSlaves       => sAxisSlaves,
          -- AXI lite slave port for register access
          axilClk          => axiClk,
          axilRst          => axiRst,
@@ -284,13 +277,13 @@ begin
          COMMON_CLK_G     => true,
          AXIS_CLK_FREQ_G  => DMA_CLK_FREQ_C,
          AXIS_NUM_SLOTS_G => DMA_SIZE_G,
-         AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G)
+         AXIS_CONFIG_G    => INT_DMA_AXIS_CONFIG_C)
       port map(
          -- AXIS Stream Interface
          axisClk          => axiClk,
          axisRst          => axiRst,
-         axisMaster       => obMasters,
-         axisSlave        => dmaObSlaves,
+         axisMasters      => mAxisMasters,
+         axisSlaves       => (others => AXI_STREAM_SLAVE_FORCE_C),  -- U_ObFifo.SLAVE_READY_EN_G=false
          -- AXI lite slave port for register access
          axilClk          => axiClk,
          axilRst          => axiRst,

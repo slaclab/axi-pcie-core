@@ -29,7 +29,6 @@ entity AxiPcieDma is
    generic (
       TPD_G             : time                  := 1 ns;
       SIMULATION_G      : boolean               := false;
-      USE_XBAR_IPCORE_G : boolean               := true;
       DMA_SIZE_G        : positive range 1 to 8 := 1;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType   := ssiAxiStreamConfig(16);
       INT_PIPE_STAGES_G : natural range 0 to 1  := 1;
@@ -85,7 +84,6 @@ architecture mapping of AxiPcieDma is
    signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
    signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
    signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);
-   signal axiWriteCtrl    : AxiCtrlArray(DMA_SIZE_G downto 0);
 
    signal sAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
    signal sAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
@@ -113,7 +111,6 @@ begin
    U_XBAR : entity work.AxiPcieCrossbar
       generic map (
          TPD_G             => TPD_G,
-         USE_XBAR_IPCORE_G => USE_XBAR_IPCORE_G,
          AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_C,
          AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
          AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_C,
@@ -124,7 +121,6 @@ begin
          -- Slaves
          sAxiWriteMasters => axiWriteMasters,
          sAxiWriteSlaves  => axiWriteSlaves,
-         sAxiWriteCtrl    => axiWriteCtrl,
          sAxiReadMasters  => axiReadMasters,
          sAxiReadSlaves   => axiReadSlaves,
          -- Master
@@ -143,7 +139,7 @@ begin
          DESC_AWIDTH_G     => 12,       -- 4096 entries
          DESC_ARB_G        => DESC_ARB_G,
          AXIL_BASE_ADDR_G  => x"00000000",
-         AXI_READY_EN_G    => false,
+         AXI_READY_EN_G    => true, -- Using "Packet FIFO" option in AXI Interconnect IP core
          AXIS_READY_EN_G   => false,
          AXIS_CONFIG_G     => INT_DMA_AXIS_CONFIG_C,
          AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_C,
@@ -173,7 +169,7 @@ begin
          axiReadSlave    => axiReadSlaves,
          axiWriteMaster  => axiWriteMasters,
          axiWriteSlave   => axiWriteSlaves,
-         axiWriteCtrl    => axiWriteCtrl);
+         axiWriteCtrl    => (others=>AXI_CTRL_UNUSED_C));
 
    GEN_AXIS_FIFO : for i in DMA_SIZE_G-1 downto 0 generate
 

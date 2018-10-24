@@ -69,10 +69,10 @@ print('#########################################')
 
 # Get a list of images
 outLst = []
-inLst = glob.glob('{}/*.mcs'.format(args.path))
+inLst = glob.glob('{}/*.mcs.gz'.format(args.path))
 for l in inLst:
-    l = l.replace('_primary.mcs','')
-    l = l.replace('_secondary.mcs','')
+    l = l.replace('_primary.mcs.gz','')
+    l = l.replace('_secondary.mcs.gz','')
     if not l in outLst:
         outLst.append(l)
 
@@ -80,8 +80,8 @@ for i,l in enumerate(outLst):
     print('{} : {}'.format(i,l))
 
 idx = int(input('Enter image to program into the PCIe card\'s PROM: '))
-pri = '{}_primary.mcs'.format(outLst[idx])
-sec = '{}_secondary.mcs'.format(outLst[idx])
+pri = '{}_primary.mcs.gz'.format(outLst[idx])
+sec = '{}_secondary.mcs.gz'.format(outLst[idx])
 
 # Load the primary MCS file to QSPI[0]
 print('Loading primary image: {}'.format(pri))

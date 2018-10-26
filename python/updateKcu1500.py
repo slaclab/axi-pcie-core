@@ -99,7 +99,7 @@ idx = int(input('Enter image to program into the PCIe card\'s PROM: '))
 
 ent = list(imgLst.items())[idx]
 pri = ent[0] + '_primary.' + ent[1]
-sec = ent[0] + '_seconday.' + ent[1]
+sec = ent[0] + '_secondary.' + ent[1]
 
 # Load the primary MCS file to QSPI[0]
 print('Loading primary image: {}'.format(pri))

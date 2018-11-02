@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- File       : Mig0.vhd
+-- File       : Mig3.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Wrapper for the MIG core
@@ -19,12 +19,12 @@ use ieee.std_logic_1164.all;
 use work.StdRtlPkg.all;
 use work.AxiLitePkg.all;
 use work.AxiPkg.all;
-use work.AxiPciePkg.all;
+use work.MigPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
 
-entity Mig0 is
+entity Mig3 is
    generic (
       TPD_G : time := 1 ns);
    port (
@@ -33,20 +33,20 @@ entity Mig0 is
       axiClk          : out   sl;
       axiRst          : out   sl;
       axiReady        : out   sl;
-      axiWriteMasters : in    AxiWriteMasterArray(3 downto 0);
-      axiWriteSlaves  : out   AxiWriteSlaveArray(3 downto 0);
-      axiReadMasters  : in    AxiReadMasterArray(3 downto 0);
-      axiReadSlaves   : out   AxiReadSlaveArray(3 downto 0);
+      axiWriteMasters : in    AxiWriteMasterType;
+      axiWriteSlaves  : out   AxiWriteSlaveType;
+      axiReadMasters  : in    AxiReadMasterType;
+      axiReadSlaves   : out   AxiReadSlaveType;
       -- DDR Ports
       ddrClkP         : in    sl;
       ddrClkN         : in    sl;
       ddrOut          : out   DdrOutType;
       ddrInOut        : inout DdrInOutType);
-end Mig0;
+end Mig3;
 
-architecture mapping of Mig0 is
+architecture mapping of Mig3 is
 
-   component XilinxVcu1525Mig0Core
+   component XilinxKcu1500Mig3Core
       port (
          c0_init_calib_complete     : out   std_logic;
          dbg_clk                    : out   std_logic;
@@ -56,13 +56,13 @@ architecture mapping of Mig0 is
          c0_ddr4_adr                : out   std_logic_vector(16 downto 0);
          c0_ddr4_ba                 : out   std_logic_vector(1 downto 0);
          c0_ddr4_cke                : out   std_logic_vector(0 downto 0);
-         c0_ddr4_cs_n               : out   std_logic_vector(0 downto 0);
+         c0_ddr4_cs_n               : out   std_logic_vector(1 downto 0);
+         c0_ddr4_dm_dbi_n           : inout std_logic_vector(8 downto 0);
          c0_ddr4_dq                 : inout std_logic_vector(71 downto 0);
-         c0_ddr4_dqs_c              : inout std_logic_vector(17 downto 0);
-         c0_ddr4_dqs_t              : inout std_logic_vector(17 downto 0);
+         c0_ddr4_dqs_c              : inout std_logic_vector(8 downto 0);
+         c0_ddr4_dqs_t              : inout std_logic_vector(8 downto 0);
          c0_ddr4_odt                : out   std_logic_vector(0 downto 0);
-         c0_ddr4_parity             : out   std_logic;
-         c0_ddr4_bg                 : out   std_logic_vector(1 downto 0);
+         c0_ddr4_bg                 : out   std_logic_vector(0 downto 0);
          c0_ddr4_reset_n            : out   std_logic;
          c0_ddr4_act_n              : out   std_logic;
          c0_ddr4_ck_c               : out   std_logic_vector(0 downto 0);
@@ -88,7 +88,7 @@ architecture mapping of Mig0 is
          c0_ddr4_s_axi_ctrl_rresp   : out   std_logic_vector(1 downto 0);
          c0_ddr4_interrupt          : out   std_logic;
          c0_ddr4_s_axi_awid         : in    std_logic_vector(3 downto 0);
-         c0_ddr4_s_axi_awaddr       : in    std_logic_vector(33 downto 0);
+         c0_ddr4_s_axi_awaddr       : in    std_logic_vector(31 downto 0);
          c0_ddr4_s_axi_awlen        : in    std_logic_vector(7 downto 0);
          c0_ddr4_s_axi_awsize       : in    std_logic_vector(2 downto 0);
          c0_ddr4_s_axi_awburst      : in    std_logic_vector(1 downto 0);
@@ -108,7 +108,7 @@ architecture mapping of Mig0 is
          c0_ddr4_s_axi_bresp        : out   std_logic_vector(1 downto 0);
          c0_ddr4_s_axi_bvalid       : out   std_logic;
          c0_ddr4_s_axi_arid         : in    std_logic_vector(3 downto 0);
-         c0_ddr4_s_axi_araddr       : in    std_logic_vector(33 downto 0);
+         c0_ddr4_s_axi_araddr       : in    std_logic_vector(31 downto 0);
          c0_ddr4_s_axi_arlen        : in    std_logic_vector(7 downto 0);
          c0_ddr4_s_axi_arsize       : in    std_logic_vector(2 downto 0);
          c0_ddr4_s_axi_arburst      : in    std_logic_vector(1 downto 0);
@@ -124,24 +124,13 @@ architecture mapping of Mig0 is
          c0_ddr4_s_axi_rresp        : out   std_logic_vector(1 downto 0);
          c0_ddr4_s_axi_rid          : out   std_logic_vector(3 downto 0);
          c0_ddr4_s_axi_rdata        : out   std_logic_vector(511 downto 0);
-         sys_rst                    : in    std_logic
-         );
+         sys_rst                    : in    std_logic);
    end component;
-
-   signal axiWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-   signal axiWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
-   signal axiReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
-   signal axiReadSlave   : AxiReadSlaveType   := AXI_READ_SLAVE_INIT_C;
 
    signal ddrWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal ddrWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
    signal ddrReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
    signal ddrReadSlave   : AxiReadSlaveType   := AXI_READ_SLAVE_INIT_C;
-
-   signal memWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-   signal memWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
-   signal memReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
-   signal memReadSlave   : AxiReadSlaveType   := AXI_READ_SLAVE_INIT_C;
 
    signal ddrClk     : sl;
    signal ddrRst     : sl;
@@ -155,7 +144,7 @@ begin
    extRstL  <= not(extRst);
    axiReady <= ddrCalDone;
 
-   U_MIG : XilinxVcu1525Mig0Core
+   U_MIG : XilinxKcu1500Mig3Core
       port map (
          c0_init_calib_complete     => ddrCalDone,
          dbg_clk                    => open,
@@ -166,11 +155,11 @@ begin
          c0_ddr4_ba                 => ddrOut.ba,
          c0_ddr4_cke                => ddrOut.cke,
          c0_ddr4_cs_n               => ddrOut.csL,
+         c0_ddr4_dm_dbi_n           => ddrInOut.dm,
          c0_ddr4_dq                 => ddrInOut.dq,
          c0_ddr4_dqs_c              => ddrInOut.dqsC,
          c0_ddr4_dqs_t              => ddrInOut.dqsT,
          c0_ddr4_odt                => ddrOut.odt,
-         c0_ddr4_parity             => ddrOut.parity,
          c0_ddr4_bg                 => ddrOut.bg,
          c0_ddr4_reset_n            => ddrOut.rstL,
          c0_ddr4_act_n              => ddrOut.actL,
@@ -197,7 +186,7 @@ begin
          c0_ddr4_s_axi_ctrl_rresp   => open,
          c0_ddr4_interrupt          => open,
          c0_ddr4_s_axi_awid         => ddrWriteMaster.awid(3 downto 0),
-         c0_ddr4_s_axi_awaddr       => ddrWriteMaster.awaddr(33 downto 0),
+         c0_ddr4_s_axi_awaddr       => ddrWriteMaster.awaddr(31 downto 0),
          c0_ddr4_s_axi_awlen        => ddrWriteMaster.awlen(7 downto 0),
          c0_ddr4_s_axi_awsize       => ddrWriteMaster.awsize(2 downto 0),
          c0_ddr4_s_axi_awburst      => ddrWriteMaster.awburst(1 downto 0),
@@ -217,7 +206,7 @@ begin
          c0_ddr4_s_axi_bresp        => ddrWriteSlave.bresp(1 downto 0),
          c0_ddr4_s_axi_bvalid       => ddrWriteSlave.bvalid,
          c0_ddr4_s_axi_arid         => ddrReadMaster.arid(3 downto 0),
-         c0_ddr4_s_axi_araddr       => ddrReadMaster.araddr(33 downto 0),
+         c0_ddr4_s_axi_araddr       => ddrReadMaster.araddr(31 downto 0),
          c0_ddr4_s_axi_arlen        => ddrReadMaster.arlen(7 downto 0),
          c0_ddr4_s_axi_arsize       => ddrReadMaster.arsize(2 downto 0),
          c0_ddr4_s_axi_arburst      => ddrReadMaster.arburst(1 downto 0),

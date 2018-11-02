@@ -20,6 +20,7 @@ import argparse
 import pyrogue as pr
 import rogue.hardware.axi
 import axipcie as pcie
+from collections import OrderedDict as odict
     
 # Set the argument parser
 parser = argparse.ArgumentParser()
@@ -67,21 +68,38 @@ print('#########################################')
 AxiVersion.printStatus()
 print('#########################################')
 
-# Get a list of images
-outLst = []
-inLst = glob.glob('{}/*.mcs'.format(args.path))
-for l in inLst:
+# Get a list of images, using .mcs first
+imgLst = odict()
+
+rawLst = glob.glob('{}/*.mcs*'.format(args.path))
+for l in rawLst:
+
+    # Determine suffix
+    if '.mcs.gz' in l:
+        suff = 'mcs.gz'
+    else:
+        suff = 'mcs'
+
+    # Get basename
+    l = l.replace('_primary.mcs.gz','')
+    l = l.replace('_secondary.mcs.gz','')
     l = l.replace('_primary.mcs','')
     l = l.replace('_secondary.mcs','')
-    if not l in outLst:
-        outLst.append(l)
 
-for i,l in enumerate(outLst):
-    print('{} : {}'.format(i,l))
+    # Store entry
+    imgLst[l] = suff
+
+# Sort list
+imgLst = odict(sorted(imgLst.items(), key=lambda x: x[0]))
+
+for i,l in enumerate(imgLst.items()):
+    print('{} : {}'.format(i,l[0]))
 
 idx = int(input('Enter image to program into the PCIe card\'s PROM: '))
-pri = '{}_primary.mcs'.format(outLst[idx])
-sec = '{}_secondary.mcs'.format(outLst[idx])
+
+ent = list(imgLst.items())[idx]
+pri = ent[0] + '_primary.' + ent[1]
+sec = ent[0] + '_secondary.' + ent[1]
 
 # Load the primary MCS file to QSPI[0]
 print('Loading primary image: {}'.format(pri))

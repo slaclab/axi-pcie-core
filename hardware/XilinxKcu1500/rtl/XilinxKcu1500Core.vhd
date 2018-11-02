@@ -1,14 +1,11 @@
 -------------------------------------------------------------------------------
--- File       : XilinxVcu1525Core.vhd
+-- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for VCU1525 board 
+-- Description: AXI PCIe Core for KCU1500 board 
 --
--- VCU1525 Product Page:
--- https://www.xilinx.com/products/boards-and-kits/vcu1525-a.html
---
--- VCU1525 Known Issues:
--- https://www.xilinx.com/support/answers/69844.html
+-- # KCU1500 Product Page
+-- https://www.xilinx.com/products/boards-and-kits/dk-u1-kcu1500-g.html
 --
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
@@ -34,71 +31,66 @@ use work.AxiPciePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity XilinxVcu1525Core is
+entity XilinxKcu1500Core is
    generic (
-      TPD_G            : time             := 1 ns;
-      BUILD_INFO_G     : BuildInfoType;
-      DRIVER_TYPE_ID_G : slv(31 downto 0) := x"00000000");
+      TPD_G             : time                  := 1 ns;
+      BUILD_INFO_G      : BuildInfoType;
+      DMA_AXIS_CONFIG_G : AxiStreamConfigType;
+      DRIVER_TYPE_ID_G  : slv(31 downto 0)      := x"00000000";
+      DMA_SIZE_G        : positive range 1 to 8 := 1);
    port (
       ------------------------      
       --  Top Level Interfaces
       ------------------------
-      -- System Interface
-      userClk156      : out   sl;       -- 156.25 MHz
-      -- DMA Interfaces  (sysClk domain)
-      dmaClk          : out   sl;
-      dmaRst          : out   sl;
-      dmaObMasters    : out   AxiStreamMasterArray(7 downto 0);
-      dmaObSlaves     : in    AxiStreamSlaveArray(7 downto 0);
-      dmaIbMasters    : in    AxiStreamMasterArray(7 downto 0);
-      dmaIbSlaves     : out   AxiStreamSlaveArray(7 downto 0);
+      userClk156     : out sl;
+      -- DMA Interfaces  (dmaClk domain)
+      dmaClk         : out sl;
+      dmaRst         : out sl;
+      dmaObMasters   : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- Application AXI-Lite Interfaces [0x00080000:0x00FFFFFF] (appClk domain)
-      appClk          : in    sl;
-      appRst          : in    sl;
-      appReadMaster   : out   AxiLiteReadMasterType;
-      appReadSlave    : in    AxiLiteReadSlaveType;
-      appWriteMaster  : out   AxiLiteWriteMasterType;
-      appWriteSlave   : in    AxiLiteWriteSlaveType;
-      -- AXI MEM Interface (mig1Clk domain)
-      mig1Clk         : out   sl;
-      mig1Rst         : out   sl;
-      mig1Ready       : out   sl;
-      mig1WriteMaster : in    AxiWriteMasterType;
-      mig1WriteSlave  : out   AxiWriteSlaveType;
-      mig1ReadMaster  : in    AxiReadMasterType;
-      mig1ReadSlave   : out   AxiReadSlaveType;
+      appClk         : in  sl;
+      appRst         : in  sl;
+      appReadMaster  : out AxiLiteReadMasterType;
+      appReadSlave   : in  AxiLiteReadSlaveType;
+      appWriteMaster : out AxiLiteWriteMasterType;
+      appWriteSlave  : in  AxiLiteWriteSlaveType;
       -------------------
       --  Top Level Ports
       -------------------      
       -- System Ports
-      userClkP        : in    sl;
-      userClkN        : in    sl;
-      -- MIG[1] DDR Ports
-      mig1DdrClkP     : in    sl;
-      mig1DdrClkN     : in    sl;
-      mig1DdrOut      : out   DdrOutType;
-      mig1DdrInOut    : inout DdrInOutType;
+      emcClk         : in  sl;
+      userClkP       : in  sl;
+      userClkN       : in  sl;
       -- QSFP[0] Ports
-      qsfp0RstL       : out   sl;
-      qsfp0LpMode     : out   sl;
-      qsfp0ModSelL    : out   sl;
-      qsfp0ModPrsL    : in    sl;
+      qsfp0RstL      : out sl;
+      qsfp0LpMode    : out sl;
+      qsfp0ModSelL   : out sl;
+      qsfp0ModPrsL   : in  sl;
       -- QSFP[1] Ports
-      qsfp1RstL       : out   sl;
-      qsfp1LpMode     : out   sl;
-      qsfp1ModSelL    : out   sl;
-      qsfp1ModPrsL    : in    sl;
+      qsfp1RstL      : out sl;
+      qsfp1LpMode    : out sl;
+      qsfp1ModSelL   : out sl;
+      qsfp1ModPrsL   : in  sl;
+      -- Boot Memory Ports 
+      flashCsL       : out sl;
+      flashMosi      : out sl;
+      flashMiso      : in  sl;
+      flashHoldL     : out sl;
+      flashWp        : out sl;
       -- PCIe Ports 
-      pciRstL         : in    sl;
-      pciRefClkP      : in    sl;
-      pciRefClkN      : in    sl;
-      pciRxP          : in    slv(15 downto 0);
-      pciRxN          : in    slv(15 downto 0);
-      pciTxP          : out   slv(15 downto 0);
-      pciTxN          : out   slv(15 downto 0));
-end XilinxVcu1525Core;
+      pciRstL        : in  sl;
+      pciRefClkP     : in  sl;
+      pciRefClkN     : in  sl;
+      pciRxP         : in  slv(7 downto 0);
+      pciRxN         : in  slv(7 downto 0);
+      pciTxP         : out slv(7 downto 0);
+      pciTxN         : out slv(7 downto 0));
+end XilinxKcu1500Core;
 
-architecture mapping of XilinxVcu1525Core is
+architecture mapping of XilinxKcu1500Core is
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -127,18 +119,20 @@ architecture mapping of XilinxVcu1525Core is
    signal userClock   : sl;
    signal dmaIrq      : sl;
 
-   signal bootCsL  : slv(1 downto 0) := (others => '0');
-   signal bootSck  : slv(1 downto 0) := (others => '0');
-   signal bootMosi : slv(1 downto 0) := (others => '0');
-   signal bootMiso : slv(1 downto 0) := (others => '0');
-   signal di       : slv(3 downto 0) := (others => '0');
-   signal do       : slv(3 downto 0) := (others => '0');
+   signal bootCsL  : slv(1 downto 0);
+   signal bootSck  : slv(1 downto 0);
+   signal bootMosi : slv(1 downto 0);
+   signal bootMiso : slv(1 downto 0);
+   signal di       : slv(3 downto 0);
+   signal do       : slv(3 downto 0);
+   signal sck      : sl;
+   signal emcClock : sl;
+   signal userCclk : sl;
+   signal eos      : sl;
 
 begin
 
    dmaClk <= sysClock;
-
-   systemReset <= sysReset or cardReset;
 
    U_Rst : entity work.RstPipeline
       generic map (
@@ -148,16 +142,13 @@ begin
          rstIn  => systemReset,
          rstOut => dmaRst);
 
+   systemReset <= sysReset or cardReset;
+
    U_IBUFDS : IBUFDS
       port map(
          I  => userClkP,
          IB => userClkN,
-         O  => userClock);
-
-   U_BUFG : BUFG
-      port map (
-         I => userClock,
-         O => userClk156);
+         O  => userClk156);
 
    qsfp0RstL    <= not(systemReset);
    qsfp1RstL    <= not(systemReset);
@@ -169,7 +160,7 @@ begin
    ---------------
    -- AXI PCIe PHY
    ---------------   
-   U_AxiPciePhy : entity work.XilinxVcu1525PciePhyWrapper
+   U_AxiPciePhy : entity work.XilinxKcu1500PciePhyWrapper
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -209,8 +200,8 @@ begin
          XIL_DEVICE_G      => "ULTRASCALE",
          BOOT_PROM_G       => "SPI",
          DRIVER_TYPE_ID_G  => DRIVER_TYPE_ID_G,
-         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_C,
-         DMA_SIZE_G        => 8)
+         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G,
+         DMA_SIZE_G        => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
          axiClk              => sysClock,
@@ -245,6 +236,12 @@ begin
          spiMosi             => bootMosi,
          spiMiso             => bootMiso);
 
+   flashCsL    <= bootCsL(1);
+   flashMosi   <= bootMosi(1);
+   bootMiso(1) <= flashMiso;
+   flashHoldL  <= '1';
+   flashWp     <= '1';
+
    U_STARTUPE3 : STARTUPE3
       generic map (
          PROG_USR      => "FALSE",  -- Activate program event security feature. Requires encrypted bitstreams.
@@ -253,7 +250,7 @@ begin
          CFGCLK    => open,  -- 1-bit output: Configuration main clock output
          CFGMCLK   => open,  -- 1-bit output: Configuration internal oscillator clock output
          DI        => di,  -- 4-bit output: Allow receiving on the D[3:0] input pins
-         EOS       => open,  -- 1-bit output: Active high output signal indicating the End Of Startup.
+         EOS       => eos,  -- 1-bit output: Active high output signal indicating the End Of Startup.
          PREQ      => open,  -- 1-bit output: PROGRAM request to fabric output
          DO        => do,  -- 4-bit input: Allows control of the D[3:0] pin outputs
          DTS       => "1110",  -- 4-bit input: Allows tristate of the D[3:0] pins
@@ -263,13 +260,26 @@ begin
          GTS       => '0',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
          KEYCLEARB => '0',  -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
          PACK      => '0',  -- 1-bit input: PROGRAM acknowledge input
-         USRCCLKO  => bootSck(0),       -- 1-bit input: User CCLK input
+         USRCCLKO  => userCclk,         -- 1-bit input: User CCLK input
          USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
          USRDONEO  => '1',  -- 1-bit input: User DONE pin output control
          USRDONETS => '0');  -- 1-bit input: User DONE 3-state enable output
 
    do          <= "111" & bootMosi(0);
    bootMiso(0) <= di(1);
+   sck         <= uOr(bootSck);
+
+   U_emcClk : IBUF
+      port map (
+         I => emcClk,
+         O => emcClock);
+
+   U_BUFGMUX : BUFGMUX
+      port map (
+         O  => userCclk,                -- 1-bit output: Clock output
+         I0 => emcClock,                -- 1-bit input: Clock input (S=0)
+         I1 => sck,                     -- 1-bit input: Clock input (S=1)
+         S  => eos);                    -- 1-bit input: Clock select      
 
    ---------------
    -- AXI PCIe DMA
@@ -277,14 +287,13 @@ begin
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
          TPD_G             => TPD_G,
-         DMA_SIZE_G        => 8,
-         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_C,
-         DESC_ARB_G        => false)  -- Round robin to help with timing      
+         DMA_SIZE_G        => DMA_SIZE_G,
+         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G,
+         DESC_ARB_G        => false)    -- Round robin to help with timing
       port map (
-         -- Clock and reset
          axiClk           => sysClock,
          axiRst           => sysReset,
-         -- AXI4 Interfaces
+         -- AXI4 Interfaces (
          axiReadMaster    => dmaReadMaster,
          axiReadSlave     => dmaReadSlave,
          axiWriteMaster   => dmaWriteMaster,
@@ -294,34 +303,11 @@ begin
          axilReadSlaves   => dmaCtrlReadSlaves,
          axilWriteMasters => dmaCtrlWriteMasters,
          axilWriteSlaves  => dmaCtrlWriteSlaves,
-         -- Interrupts
-         dmaIrq           => dmaIrq,
          -- DMA Interfaces
+         dmaIrq           => dmaIrq,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,
          dmaIbMasters     => dmaIbMasters,
          dmaIbSlaves      => dmaIbSlaves);
-
-   ----------------- 
-   -- AXI DDR MIG[1]
-   ----------------- 
-   U_Mig1 : entity work.Mig1
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         extRst         => sysReset,
-         -- AXI MEM Interface
-         axiClk         => mig1Clk,
-         axiRst         => mig1Rst,
-         axiReady       => mig1Ready,
-         axiWriteMaster => mig1WriteMaster,
-         axiWriteSlave  => mig1WriteSlave,
-         axiReadMaster  => mig1ReadMaster,
-         axiReadSlave   => mig1ReadSlave,
-         -- DDR Ports
-         ddrClkP        => mig1DdrClkP,
-         ddrClkN        => mig1DdrClkN,
-         ddrOut         => mig1DdrOut,
-         ddrInOut       => mig1DdrInOut);
 
 end mapping;

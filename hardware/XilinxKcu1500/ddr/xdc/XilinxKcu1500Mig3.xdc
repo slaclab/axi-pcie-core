@@ -163,21 +163,10 @@
 # set_property -dict { PACKAGE_PIN M21 IOSTANDARD SSTL12_DCI       } [get_ports { ddrOut[3][csL][1] }]; # BOT
 # set_property -dict { PACKAGE_PIN L24 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { ddrOut[3][rstL]   }]
 
-#########################
-# Placement Constraints #
-#########################
-
-# create_pblock MIG_XBAR3_GRP; 
-# add_cells_to_pblock [get_pblocks MIG_XBAR3_GRP] [get_cells [list U_Core/U_Mig3/U_Xbar]]
-# resize_pblock [get_pblocks MIG_XBAR3_GRP] -add {CLOCKREGION_X2Y7:CLOCKREGION_X3Y9}
-
 ##########
 # Clocks #
 ##########
 
 create_clock -period  3.333 -name ddrClkP3  [get_ports {ddrClkP[3]}]
-create_generated_clock   -name ddrIntClk03  [get_pins {U_Core/U_Mig3/U_MIG/inst/u_ddr4_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT0}]
-create_generated_clock   -name ddrIntClk13  [get_pins {U_Core/U_Mig3/U_MIG/inst/u_ddr4_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT6}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {ddrClkP3}] -group [get_clocks {sysClk}] 
-
-# set_property HIGH_PRIORITY true [get_nets {U_Core/U_Mig3/U_MIG/inst/u_ddr4_infrastructure/div_clk}]
+# create_generated_clock   -name ddrIntClk03  [get_pins {U_Mig3/U_MIG/inst/u_ddr4_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT0}]
+# create_generated_clock   -name ddrIntClk13  [get_pins {U_Mig3/U_MIG/inst/u_ddr4_infrastructure/gen_mmcme3.u_mmcme_adv_inst/CLKOUT6}]

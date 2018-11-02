@@ -1,8 +1,6 @@
 -------------------------------------------------------------------------------
 -- File       : Mig2.vhd
 -- Company    : SLAC National Accelerator Laboratory
--- Created    : 2018-01-29
--- Last update: 2018-01-29
 -------------------------------------------------------------------------------
 -- Description: Wrapper for the MIG core
 -------------------------------------------------------------------------------
@@ -30,10 +28,10 @@ entity Mig2 is
    generic (
       TPD_G : time := 1 ns);
    port (
-      -- System Clock and reset
-      sysClk          : in    sl;
-      sysRst          : in    sl;
-      -- AXI MEM Interface (sysClk domain)
+      extRst          : in    sl := '0';
+      -- AXI MEM Interface
+      axiClk          : out   sl;
+      axiRst          : out   sl;
       axiReady        : out   sl;
       axiWriteMasters : in    AxiWriteMasterArray(3 downto 0);
       axiWriteSlaves  : out   AxiWriteSlaveArray(3 downto 0);
@@ -150,19 +148,12 @@ architecture mapping of Mig2 is
    signal ddrCalDone : sl;
    signal coreReset  : sl;
    signal coreRst    : sl;
-   signal sysRstL    : sl;
+   signal extRstL    : sl;
 
 begin
 
-   sysRstL <= not(sysRst);
-
-   U_axiReady : entity work.Synchronizer
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         clk     => sysClk,
-         dataIn  => ddrCalDone,
-         dataOut => axiReady);
+   extRstL  <= not(extRst);
+   axiReady <= ddrCalDone;
 
    U_MIG : XilinxVcu1525Mig2Core
       port map (
@@ -187,7 +178,7 @@ begin
          c0_ddr4_ck_t               => ddrOut.ckT,
          c0_ddr4_ui_clk             => ddrClk,
          c0_ddr4_ui_clk_sync_rst    => coreReset,
-         c0_ddr4_aresetn            => sysRstL,
+         c0_ddr4_aresetn            => extRstL,
          c0_ddr4_s_axi_ctrl_awvalid => AXI_LITE_WRITE_MASTER_INIT_C.awvalid,
          c0_ddr4_s_axi_ctrl_awready => open,
          c0_ddr4_s_axi_ctrl_awaddr  => AXI_LITE_WRITE_MASTER_INIT_C.awaddr,
@@ -242,7 +233,7 @@ begin
          c0_ddr4_s_axi_rresp        => ddrReadSlave.rresp(1 downto 0),
          c0_ddr4_s_axi_rid          => ddrReadSlave.rid(3 downto 0),
          c0_ddr4_s_axi_rdata        => ddrReadSlave.rdata(511 downto 0),
-         sys_rst                    => sysRst);
+         sys_rst                    => extRst);
 
    coreRst <= coreReset and not(ddrCalDone);
 
@@ -254,23 +245,13 @@ begin
          rstIn  => coreRst,
          rstOut => ddrRst);
 
-   U_Xbar : entity work.MigXbar
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- Slave Interfaces
-         sAxiClk          => sysClk,
-         sAxiRst          => sysRst,
-         sAxiWriteMasters => axiWriteMasters,
-         sAxiWriteSlaves  => axiWriteSlaves,
-         sAxiReadMasters  => axiReadMasters,
-         sAxiReadSlaves   => axiReadSlaves,
-         -- Master Interface
-         mAxiClk          => ddrClk,
-         mAxiRst          => ddrRst,
-         mAxiWriteMaster  => ddrWriteMaster,
-         mAxiWriteSlave   => ddrWriteSlave,
-         mAxiReadMaster   => ddrReadMaster,
-         mAxiReadSlave    => ddrReadSlave);
+   axiClk <= ddrClk;
+   axiRst <= ddrRst;
+
+   ddrWriteMaster <= axiWriteMaster;
+   axiWriteSlave  <= ddrWriteSlave;
+
+   ddrReadMaster <= axiReadMaster;
+   axiReadSlave  <= ddrReadSlave;
 
 end mapping;

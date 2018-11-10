@@ -181,13 +181,14 @@ architecture mapping of AxiPcieReg is
    signal spiBusyOut : slv(1 downto 0);
    signal cardRst    : sl;
    signal appReset   : sl;
+   signal appResetS  : sl;
 
 begin
 
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
    ---------------------------------------------------------------------------------------------   
-   process(appReset)
+   process(appResetS)
       variable i : natural;
    begin
       -- Number of DMA lanes (defined by user)
@@ -240,7 +241,7 @@ begin
 
       -- Application Reset 
       userValues(6)(1) <= ite(DMA_AXIS_CONFIG_G.TSTRB_EN_C, '1', '0');
-      userValues(6)(0) <= appReset;
+      userValues(6)(0) <= appResetS;
 
       -- PCIE PHY AXI Configuration   
       userValues(7)(31 downto 24) <= toSlv(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C, 8);
@@ -515,4 +516,9 @@ begin
 
    appReset <= cardResetIn or appRst;
 
+   U_AppResetS : entity work.Synchronizer
+     port map ( clk     => axiClk,
+                dataIn  => appReset,
+                dataOut => appResetS );
+   
 end mapping;

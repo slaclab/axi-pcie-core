@@ -37,7 +37,8 @@ entity XilinxKcu1500Core is
       BUILD_INFO_G      : BuildInfoType;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType;
       DRIVER_TYPE_ID_G  : slv(31 downto 0)      := x"00000000";
-      DMA_SIZE_G        : positive range 1 to 8 := 1);
+      DMA_SIZE_G        : positive range 1 to 8 := 1;
+      DMA_DESCRIPTOR_G  : boolean               := true);  -- true=128b, false=64b (support legacy driver testing)
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -289,6 +290,7 @@ begin
          TPD_G             => TPD_G,
          DMA_SIZE_G        => DMA_SIZE_G,
          DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G,
+         DMA_DESCRIPTOR_G  => DMA_DESCRIPTOR_G,
          DESC_ARB_G        => false)    -- Round robin to help with timing
       port map (
          axiClk           => sysClock,

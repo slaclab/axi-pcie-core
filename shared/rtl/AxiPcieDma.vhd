@@ -33,7 +33,6 @@ entity AxiPcieDma is
       DMA_AXIS_CONFIG_G : AxiStreamConfigType   := ssiAxiStreamConfig(16);
       INT_PIPE_STAGES_G : natural range 0 to 1  := 1;
       PIPE_STAGES_G     : natural range 0 to 1  := 1;
-      DMA_DESCRIPTOR_G  : boolean               := true;  -- true=128b, false=64b (support legacy driver testing)
       DESC_ARB_G        : boolean               := true);
    port (
       axiClk           : in  sl;
@@ -77,7 +76,7 @@ architecture mapping of AxiPcieDma is
    -- AXI DMA descriptor  
    constant AXI_DESC_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
-      DATA_BYTES_C => ite(DMA_DESCRIPTOR_G, 16, 8),  -- true=128b, false=64b (support legacy driver testing)
+      DATA_BYTES_C => 16,               -- always 128b wide
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
 

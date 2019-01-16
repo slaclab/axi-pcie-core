@@ -76,9 +76,15 @@ architecture mapping of AxiPcieDma is
    -- AXI DMA descriptor  
    constant AXI_DESC_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
-      DATA_BYTES_C => 16,               -- always 128-bit AXI DMA descriptor 
+      DATA_BYTES_C => 16,               -- always 128b wide
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
+
+   constant AXI_XBAR_DESC_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => AXI_DESC_CONFIG_C.ADDR_WIDTH_C,
+      DATA_BYTES_C => 16,               -- always 128b wide
+      ID_BITS_C    => AXI_DESC_CONFIG_C.ID_BITS_C,
+      LEN_BITS_C   => AXI_DESC_CONFIG_C.LEN_BITS_C);
 
    signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
    signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
@@ -108,7 +114,7 @@ begin
    U_XBAR : entity work.AxiPcieCrossbar
       generic map (
          TPD_G             => TPD_G,
-         AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_C,
+         AXI_DESC_CONFIG_G => AXI_XBAR_DESC_CONFIG_C,
          AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
          AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_C,
          DMA_SIZE_G        => DMA_SIZE_G)

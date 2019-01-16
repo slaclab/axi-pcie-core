@@ -19,3 +19,11 @@ loadConstraints -path "$::DIR_PATH/ip/AxiPcieCrossbarIpCore.xdc"
 set_property PROCESSING_ORDER {LATE}                  [get_files {AxiPcieCrossbarIpCore.xdc}]
 set_property SCOPED_TO_REF    {AxiPcieCrossbarIpCore} [get_files {AxiPcieCrossbarIpCore.xdc}]
 set_property SCOPED_TO_CELLS  {inst}                  [get_files {AxiPcieCrossbarIpCore.xdc}] 
+
+# loadIpCore -path "$::DIR_PATH/ip/AxiPcieResize4BCore.xci"
+# loadIpCore -path "$::DIR_PATH/ip/AxiPcieResize8BCore.xci"
+# loadIpCore -path "$::DIR_PATH/ip/AxiPcieResize16BCore.xci"
+
+loadSource -path "$::DIR_PATH/ip/AxiPcieResize4BCore.dcp"
+loadSource -path "$::DIR_PATH/ip/AxiPcieResize8BCore.dcp"
+loadSource -path "$::DIR_PATH/ip/AxiPcieResize16BCore.dcp"

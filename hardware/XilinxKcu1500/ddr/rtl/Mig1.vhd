@@ -28,20 +28,20 @@ entity Mig1 is
    generic (
       TPD_G : time := 1 ns);
    port (
-      extRst          : in    sl := '0';
+      extRst         : in    sl := '0';
       -- AXI MEM Interface
-      axiClk          : out   sl;
-      axiRst          : out   sl;
-      axiReady        : out   sl;
-      axiWriteMasters : in    AxiWriteMasterType;
-      axiWriteSlaves  : out   AxiWriteSlaveType;
-      axiReadMasters  : in    AxiReadMasterType;
-      axiReadSlaves   : out   AxiReadSlaveType;
+      axiClk         : out   sl;
+      axiRst         : out   sl;
+      axiReady       : out   sl;
+      axiWriteMaster : in    AxiWriteMasterType;
+      axiWriteSlave  : out   AxiWriteSlaveType;
+      axiReadMaster  : in    AxiReadMasterType;
+      axiReadSlave   : out   AxiReadSlaveType;
       -- DDR Ports
-      ddrClkP         : in    sl;
-      ddrClkN         : in    sl;
-      ddrOut          : out   DdrOutType;
-      ddrInOut        : inout DdrInOutType);
+      ddrClkP        : in    sl;
+      ddrClkN        : in    sl;
+      ddrOut         : out   DdrOutType;
+      ddrInOut       : inout DdrInOutType);
 end Mig1;
 
 architecture mapping of Mig1 is

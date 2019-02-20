@@ -288,12 +288,12 @@ begin
             TPD_G      => TPD_G,
             PORT_NUM_G => ROGUE_SIM_PORT_NUM_G+0)
          port map (
-            axiClk         => axiClk,
-            axiRst         => axiRst,
-            axiReadMaster  => axilReadMaster,
-            axiReadSlave   => axilReadSlave,
-            axiWriteMaster => axilWriteMaster,
-            axiWriteSlave  => axilWriteSlave);
+            axilClk         => axiClk,
+            axilRst         => axiRst,
+            axilReadMaster  => axilReadMaster,
+            axilReadSlave   => axilReadSlave,
+            axilWriteMaster => axilWriteMaster,
+            axilWriteSlave  => axilWriteSlave);
    end generate;
 
    ----------------------------------------

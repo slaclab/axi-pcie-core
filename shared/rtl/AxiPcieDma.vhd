@@ -311,20 +311,13 @@ begin
                TPD_G               => TPD_G,
                PORT_NUM_G          => (ROGUE_SIM_PORT_NUM_G + i*512 + 2),
                SSI_EN_G            => true,
-               -- CHAN_COUNT_G        => 256, -- TODO: Need a bigger way to simulate all 256 TDEST of a DMA lane (too slow right now)
-               CHAN_COUNT_G        => 4,
-               COMMON_MASTER_CLK_G => true,
-               COMMON_SLAVE_CLK_G  => true,
+               CHAN_COUNT_G        => 256,
                AXIS_CONFIG_G       => DMA_AXIS_CONFIG_G)
             port map (
-               clk         => axiClk,
-               rst         => axiRst,
-               sAxisClk    => axiClk,
-               sAxisRst    => axiRst,
+               axisClk     => axiClk,
+               axisRst     => axiRst,
                sAxisMaster => dmaIbMasters(i),
                sAxisSlave  => dmaIbSlaves(i),
-               mAxisClk    => axiClk,
-               mAxisRst    => axiRst,
                mAxisMaster => dmaObMasters(i),
                mAxisSlave  => dmaObSlaves(i));
       end generate GEN_VEC;

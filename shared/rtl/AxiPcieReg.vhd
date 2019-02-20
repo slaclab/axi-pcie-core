@@ -25,15 +25,17 @@ use work.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
    generic (
-      TPD_G             : time                   := 1 ns;
-      BUILD_INFO_G      : BuildInfoType;
-      DMA_AXIS_CONFIG_G : AxiStreamConfigType;
-      XIL_DEVICE_G      : string                 := "7SERIES";
-      BOOT_PROM_G       : string                 := "BPI";
-      DRIVER_TYPE_ID_G  : slv(31 downto 0)       := x"00000000";
-      EN_DEVICE_DNA_G   : boolean                := true;
-      EN_ICAP_G         : boolean                := true;
-      DMA_SIZE_G        : positive range 1 to 16 := 1);
+      TPD_G                : time                     := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                  := false;
+      ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
+      BUILD_INFO_G         : BuildInfoType;
+      DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
+      XIL_DEVICE_G         : string                   := "7SERIES";
+      BOOT_PROM_G          : string                   := "BPI";
+      DRIVER_TYPE_ID_G     : slv(31 downto 0)         := x"00000000";
+      EN_DEVICE_DNA_G      : boolean                  := true;
+      EN_ICAP_G            : boolean                  := true;
+      DMA_SIZE_G           : positive range 1 to 16   := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)
       axiClk              : in  sl;
@@ -175,20 +177,20 @@ architecture mapping of AxiPcieReg is
    signal mAxilWriteMaster : AxiLiteWriteMasterType;
    signal mAxilWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal userValues : Slv32Array(63 downto 0) := (others => x"00000000");
-   signal bpiAddress : slv(30 downto 0);
-   signal spiBusyIn  : slv(1 downto 0);
-   signal spiBusyOut : slv(1 downto 0);
-   signal cardRst    : sl;
-   signal appReset   : sl;
-   signal appResetS  : sl;
+   signal userValues   : Slv32Array(63 downto 0) := (others => x"00000000");
+   signal bpiAddress   : slv(30 downto 0);
+   signal spiBusyIn    : slv(1 downto 0);
+   signal spiBusyOut   : slv(1 downto 0);
+   signal cardRst      : sl;
+   signal appReset     : sl;
+   signal appResetSync : sl;
 
 begin
 
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
    ---------------------------------------------------------------------------------------------   
-   process(appResetS)
+   process(appResetSync)
       variable i : natural;
    begin
       -- Number of DMA lanes (defined by user)
@@ -201,21 +203,25 @@ begin
       userValues(2) <= DRIVER_TYPE_ID_G;
 
       -- FPGA Fabric Type
-      case XIL_DEVICE_G is
-         when "ULTRASCALE" => userValues(3) <= x"00000000";
-         when "7SERIES"    => userValues(3) <= x"00000001";
-         when others       => userValues(3) <= x"FFFFFFFF";
-      end case;
+      if (XIL_DEVICE_G = "ULTRASCALE") then
+         userValues(3) <= x"00000000";
+      elsif (XIL_DEVICE_G = "7SERIES") then
+         userValues(3) <= x"00000001";
+      else
+         userValues(3) <= x"FFFFFFFF";
+      end if;
 
       -- System Clock Frequency
       userValues(4) <= toSlv(getTimeRatio(DMA_CLK_FREQ_C, 1.0), 32);
 
       -- PROM configuration
-      case BOOT_PROM_G is
-         when "BPI"  => userValues(5) <= x"00000000";
-         when "SPI"  => userValues(5) <= x"00000001";
-         when others => userValues(5) <= x"FFFFFFFF";
-      end case;
+      if (BOOT_PROM_G = "BPI") then
+         userValues(5) <= x"00000000";
+      elsif (BOOT_PROM_G = "SPI") then
+         userValues(5) <= x"00000001";
+      else
+         userValues(5) <= x"FFFFFFFF";
+      end if;
 
       -- DMA AXI Stream Configuration
       userValues(6)(31 downto 24) <= toSlv(DMA_AXIS_CONFIG_G.TDATA_BYTES_C, 8);
@@ -241,7 +247,7 @@ begin
 
       -- Application Reset 
       userValues(6)(1) <= ite(DMA_AXIS_CONFIG_G.TSTRB_EN_C, '1', '0');
-      userValues(6)(0) <= appResetS;
+      userValues(6)(0) <= appResetSync;
 
       -- PCIE PHY AXI Configuration   
       userValues(7)(31 downto 24) <= toSlv(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C, 8);
@@ -258,22 +264,37 @@ begin
 
    -------------------------          
    -- AXI-to-AXI-Lite Bridge
-   -------------------------          
-   U_AxiToAxiLite : entity work.AxiToAxiLite
-      generic map (
-         TPD_G           => TPD_G,
-         EN_SLAVE_RESP_G => false)
-      port map (
-         axiClk          => axiClk,
-         axiClkRst       => axiRst,
-         axiReadMaster   => regReadMaster,
-         axiReadSlave    => regReadSlave,
-         axiWriteMaster  => regWriteMaster,
-         axiWriteSlave   => regWriteSlave,
-         axilReadMaster  => axilReadMaster,
-         axilReadSlave   => axilReadSlave,
-         axilWriteMaster => axilWriteMaster,
-         axilWriteSlave  => axilWriteSlave);
+   -------------------------
+   REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
+      U_AxiToAxiLite : entity work.AxiToAxiLite
+         generic map (
+            TPD_G           => TPD_G,
+            EN_SLAVE_RESP_G => false)
+         port map (
+            axiClk          => axiClk,
+            axiClkRst       => axiRst,
+            axiReadMaster   => regReadMaster,
+            axiReadSlave    => regReadSlave,
+            axiWriteMaster  => regWriteMaster,
+            axiWriteSlave   => regWriteSlave,
+            axilReadMaster  => axilReadMaster,
+            axilReadSlave   => axilReadSlave,
+            axilWriteMaster => axilWriteMaster,
+            axilWriteSlave  => axilWriteSlave);
+   end generate;
+   SIM_PCIE : if (ROGUE_SIM_EN_G) generate
+      U_TcpToAxiLite : entity work.RogueTcpMemoryWrap
+         generic map (
+            TPD_G      => TPD_G,
+            PORT_NUM_G => ROGUE_SIM_PORT_NUM_G+0)
+         port map (
+            axiClk         => axiClk,
+            axiRst         => axiRst,
+            axiReadMaster  => axilReadMaster,
+            axiReadSlave   => axilReadSlave,
+            axiWriteMaster => axilWriteMaster,
+            axiWriteSlave  => axilWriteSlave);
+   end generate;
 
    ----------------------------------------
    -- Mask off upper address for 16 MB BAR0
@@ -296,7 +317,7 @@ begin
    U_XBAR : entity work.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
-         DEC_ERROR_RESP_G   => AXI_RESP_OK_C,  -- Can't respond with error to a memory mapped bus
+         DEC_ERROR_RESP_G   => ite(ROGUE_SIM_EN_G, AXI_RESP_DECERR_C, AXI_RESP_OK_C),
          NUM_SLAVE_SLOTS_G  => 1,
          NUM_MASTER_SLOTS_G => NUM_AXI_MASTERS_C,
          MASTERS_CONFIG_G   => AXI_CROSSBAR_MASTERS_CONFIG_C)
@@ -339,7 +360,7 @@ begin
    -----------------------------         
    -- AXI-Lite Boot Flash Module
    -----------------------------        
-   GEN_BPI : if (BOOT_PROM_G = "BPI") generate
+   GEN_BPI : if (BOOT_PROM_G = "BPI") and (not ROGUE_SIM_EN_G) generate
 
       U_BootProm : entity work.AxiMicronP30Reg
          generic map (
@@ -376,7 +397,7 @@ begin
 
    end generate;
 
-   GEN_SPI : if (BOOT_PROM_G = "SPI") generate
+   GEN_SPI : if (BOOT_PROM_G = "SPI") and (not ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
       bpiAdv  <= '1';
@@ -420,7 +441,7 @@ begin
 
    end generate;
 
-   GEN_NO_PROM : if ((BOOT_PROM_G /= "BPI") and (BOOT_PROM_G /= "SPI")) generate
+   GEN_NO_PROM : if ((BOOT_PROM_G /= "BPI") and (BOOT_PROM_G /= "SPI")) or (ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
       bpiAdv  <= '1';
@@ -516,9 +537,10 @@ begin
 
    appReset <= cardResetIn or appRst;
 
-   U_AppResetS : entity work.Synchronizer
-     port map ( clk     => axiClk,
-                dataIn  => appReset,
-                dataOut => appResetS );
-   
+   U_AppResetSync : entity work.Synchronizer
+      port map (
+         clk     => axiClk,
+         dataIn  => appReset,
+         dataOut => appResetSync);
+
 end mapping;

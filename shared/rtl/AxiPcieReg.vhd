@@ -177,7 +177,7 @@ architecture mapping of AxiPcieReg is
    signal mAxilWriteMaster : AxiLiteWriteMasterType;
    signal mAxilWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal userValues   : Slv32Array(63 downto 0) := (others => x"00000000");
+   signal userValues   : Slv32Array(0 to 63) := (others => x"00000000");
    signal bpiAddress   : slv(30 downto 0);
    signal spiBusyIn    : slv(1 downto 0);
    signal spiBusyOut   : slv(1 downto 0);

@@ -191,7 +191,7 @@ begin
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
    ---------------------------------------------------------------------------------------------   
-   process(appResetSync)
+   process(appClkFreq, appResetSync)
       variable i : natural;
    begin
       -- Number of DMA lanes (defined by user)
@@ -258,7 +258,7 @@ begin
 
       -- Application Clock Frequency
       userValues(8) <= appClkFreq;
-         
+
       -- Set unused to zero
       for i in 63 downto 9 loop
          userValues(i) <= x"00000000";
@@ -559,6 +559,6 @@ begin
          -- Clocks
          clkIn   => appClk,
          locClk  => axiClk,
-         refClk  => axiClk);         
-         
+         refClk  => axiClk);
+
 end mapping;

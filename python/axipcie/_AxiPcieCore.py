@@ -60,6 +60,10 @@ class PcieAxiVersion(axi.AxiVersion):
             offset       = 0x400+(4*3),
             bitSize      = 32,
             mode         = 'RO',
+            enum        = {
+                0x0: 'ULTRASCALE', 
+                0x1: '7SERIES', 
+            },            
         ))  
 
         self.add(pr.RemoteVariable(
@@ -76,6 +80,10 @@ class PcieAxiVersion(axi.AxiVersion):
             offset       = 0x400+(4*5),
             bitSize      = 32,
             mode         = 'RO',
+            enum        = {
+                0x0: 'BPI', 
+                0x1: 'SPI', 
+            },              
         ))  
 
         self.add(pr.RemoteVariable(
@@ -84,6 +92,7 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 8,
             bitOffset    = 24,
             mode         = 'RO',
+            disp         = '{:d}',
         )) 
 
         self.add(pr.RemoteVariable(
@@ -92,6 +101,7 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 4,
             bitOffset    = 20,
             mode         = 'RO',
+            disp         = '{:d}',
         )) 
 
         self.add(pr.RemoteVariable(
@@ -100,6 +110,7 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 4,
             bitOffset    = 16,
             mode         = 'RO',
+            disp         = '{:d}',
         )) 
 
         self.add(pr.RemoteVariable(
@@ -116,6 +127,12 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 4,
             bitOffset    = 8,
             mode         = 'RO',
+            enum        = {
+                0x0: 'TKEEP_NORMAL_C', 
+                0x1: 'TKEEP_COMP_C', 
+                0x2: 'TKEEP_FIXED_C', 
+                0x3: 'TKEEP_COUNT_C', 
+            },               
         )) 
 
         self.add(pr.RemoteVariable(
@@ -124,6 +141,12 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 4,
             bitOffset    = 4,
             mode         = 'RO',
+            enum        = {
+                0x0: 'TUSER_NORMAL_C', 
+                0x1: 'TUSER_FIRST_LAST_C', 
+                0x2: 'TUSER_LAST_C', 
+                0x3: 'TUSER_NONE_C', 
+            },               
         ))  
 
         self.add(pr.RemoteVariable(
@@ -132,6 +155,7 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 1,
             bitOffset    = 1,
             mode         = 'RO',
+            base         = pr.Bool,            
         )) 
 
         self.add(pr.RemoteVariable(
@@ -140,6 +164,7 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 1,
             bitOffset    = 0,
             mode         = 'RO',
+            base         = pr.Bool,            
             pollInterval = 1,
         ))         
 
@@ -149,6 +174,7 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 8,
             bitOffset    = 24,
             mode         = 'RO',
+            disp         = '{:d}',
         )) 
         
         self.add(pr.RemoteVariable(
@@ -157,6 +183,7 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 8,
             bitOffset    = 16,
             mode         = 'RO',
+            disp         = '{:d}',
         )) 
 
         self.add(pr.RemoteVariable(
@@ -165,6 +192,7 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 8,
             bitOffset    = 8,
             mode         = 'RO',
+            disp         = '{:d}',
         )) 
 
         self.add(pr.RemoteVariable(
@@ -173,16 +201,14 @@ class PcieAxiVersion(axi.AxiVersion):
             bitSize      = 8,
             bitOffset    = 0,
             mode         = 'RO',
+            disp         = '{:d}',
         ))         
         
         self.add(pr.RemoteVariable( 
             name         = "AppClkFreq",
             description  = "Application Clock Frequency",
             offset       = 0x400+(4*8),
-            bitSize      = 32,
-            bitOffset    = 0,
             units        = 'Hz',
-            base         = pr.UInt,
             disp         = '{:d}',
             mode         = "RO",
             pollInterval = 1

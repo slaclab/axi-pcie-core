@@ -30,6 +30,7 @@ entity AxiPcieDma is
       TPD_G                : time                     := 1 ns;
       ROGUE_SIM_EN_G       : boolean                  := false;
       ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
+      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256   := 256;
       SIMULATION_G         : boolean                  := false;
       DMA_SIZE_G           : positive range 1 to 8    := 1;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType      := ssiAxiStreamConfig(16);
@@ -311,7 +312,7 @@ begin
                TPD_G               => TPD_G,
                PORT_NUM_G          => (ROGUE_SIM_PORT_NUM_G + i*512 + 2),
                SSI_EN_G            => true,
-               CHAN_COUNT_G        => 256,
+               CHAN_COUNT_G        => ROGUE_SIM_CH_COUNT_G,
                AXIS_CONFIG_G       => DMA_AXIS_CONFIG_G)
             port map (
                axisClk     => axiClk,

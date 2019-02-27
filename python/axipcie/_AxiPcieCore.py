@@ -175,6 +175,19 @@ class PcieAxiVersion(axi.AxiVersion):
             mode         = 'RO',
         ))         
         
+        self.add(pr.RemoteVariable( 
+            name         = "AppClkFreq",
+            description  = "Application Clock Frequency",
+            offset       = 0x400+(4*8),
+            bitSize      = 32,
+            bitOffset    = 0,
+            units        = 'Hz',
+            base         = pr.UInt,
+            disp         = '{:d}',
+            mode         = "RO",
+            pollInterval = 1
+        ))
+        
 class AxiPcieCore(pr.Device):
     def __init__(self,       
                  description = 'Base components of the PCIe firmware core',

@@ -184,6 +184,7 @@ architecture mapping of AxiPcieReg is
    signal cardRst      : sl;
    signal appReset     : sl;
    signal appResetSync : sl;
+   signal appClkFreq   : slv(31 downto 0);
 
 begin
 
@@ -255,8 +256,11 @@ begin
       userValues(7)(15 downto 8)  <= toSlv(AXI_PCIE_CONFIG_C.ID_BITS_C, 8);
       userValues(7)(7 downto 0)   <= toSlv(AXI_PCIE_CONFIG_C.LEN_BITS_C, 8);
 
+      -- Application Clock Frequency
+      userValues(8) <= appClkFreq;
+         
       -- Set unused to zero
-      for i in 63 downto 8 loop
+      for i in 63 downto 9 loop
          userValues(i) <= x"00000000";
       end loop;
 
@@ -543,4 +547,18 @@ begin
          dataIn  => appReset,
          dataOut => appResetSync);
 
+   U_appClkFreq : entity work.SyncClockFreq
+      generic map (
+         TPD_G          => TPD_G,
+         REF_CLK_FREQ_G => DMA_CLK_FREQ_C,
+         REFRESH_RATE_G => 1.0,
+         CNT_WIDTH_G    => 32)
+      port map (
+         -- Frequency Measurement (locClk domain)
+         freqOut => appClkFreq,
+         -- Clocks
+         clkIn   => appClk,
+         locClk  => axiClk,
+         refClk  => axiClk);         
+         
 end mapping;

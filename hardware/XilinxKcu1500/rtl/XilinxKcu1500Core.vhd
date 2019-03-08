@@ -2,11 +2,8 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for KCU1500 board 
---
--- # KCU1500 Product Page
--- https://www.xilinx.com/products/boards-and-kits/dk-u1-kcu1500-g.html
---
+-- Description: AXI PCIe Core for Xilinx KCU1500 board (PCIe GEN3 x 8 lanes)
+-- https://www.xilinx.com/products/boards-and-kits/kcu1500.html
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the 
@@ -129,9 +126,9 @@ architecture mapping of XilinxKcu1500Core is
    signal di       : slv(3 downto 0);
    signal do       : slv(3 downto 0);
    signal sck      : sl;
-   signal emcClock : sl;
-   signal userCclk : sl;
+
    signal eos      : sl;
+   signal userCclk : sl;
 
 begin
 
@@ -286,17 +283,7 @@ begin
    bootMiso(0) <= di(1);
    sck         <= uOr(bootSck);
 
-   U_emcClk : IBUF
-      port map (
-         I => emcClk,
-         O => emcClock);
-
-   U_BUFGMUX : BUFGMUX
-      port map (
-         O  => userCclk,                -- 1-bit output: Clock output
-         I0 => emcClock,                -- 1-bit input: Clock input (S=0)
-         I1 => sck,                     -- 1-bit input: Clock input (S=1)
-         S  => eos);                    -- 1-bit input: Clock select      
+   userCclk <= emcClk when(eos = '0') else sck;
 
    ---------------
    -- AXI PCIe DMA
@@ -306,7 +293,7 @@ begin
          TPD_G                => TPD_G,
          ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
-         ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,         
+         ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
          DMA_SIZE_G           => DMA_SIZE_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DESC_ARB_G           => false)  -- Round robin to help with timing

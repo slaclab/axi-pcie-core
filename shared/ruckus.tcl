@@ -13,8 +13,10 @@ if { [info exists ::env(OVERRIDE_SUBMODULE_LOCKS)] != 1 || $::env(OVERRIDE_SUBMO
 }   
 
 # Load Source Code
-loadSource            -dir "$::DIR_PATH/rtl"
-loadSource -sim_only  -dir "$::DIR_PATH/tb"
+loadSource -dir "$::DIR_PATH/rtl"
+
+# loadIpCore -dir "$::DIR_PATH/ip"
+loadSource -dir "$::DIR_PATH/ip"
 
 # Skip the utilization check during placement
 set_param place.skipUtilizationCheck 1

@@ -108,9 +108,6 @@ architecture mapping of AxiPcieDma is
 
 begin
 
-   assert (AXI_PCIE_CONFIG_C.DATA_BYTES_C >= 16)
-      report "AxiPcieDma: AXI_PCIE_CONFIG_C.DATA_BYTES_C must be >= 16" severity failure;
-
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
       ----------------

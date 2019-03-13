@@ -3,7 +3,13 @@
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for Xilinx KC705 board (PCIe GEN2 x 4 lanes)
+--
 -- https://www.xilinx.com/products/boards-and-kits/kc705.html
+--
+-- Note: Using the QSPI (not BPI) for booting from PROM.
+--       J3 needs to have the jumper installed 
+--       SW13 needs to be in the "00001" position to set FPGA.M[2:0] = "001"
+--
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the 

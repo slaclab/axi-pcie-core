@@ -8,6 +8,8 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
+set_property DCI_CASCADE {32 34} [get_iobanks 33]
+
 ######################################
 # BITSTREAM: .bit file Configuration #
 ######################################

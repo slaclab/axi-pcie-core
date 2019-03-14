@@ -183,3 +183,5 @@ set_property -dict { IOSTANDARD LVCMOS25 } [get_ports { fmcLpcLaN[*] }]
 ####################
 
 create_clock -name sfpClk125P -period 8.000 [get_ports {sfpClk125P}]
+
+set_clock_groups -asynchronous -group [get_clocks {dmaClk}] -group [get_clocks -include_generated_clocks {sfpClk125P}]

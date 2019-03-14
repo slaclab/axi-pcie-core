@@ -54,3 +54,5 @@ set_property PACKAGE_PIN M6 [get_ports sfpClk156N]
 ####################
 
 create_clock -name sfpClk156P -period 6.400 [get_ports {sfpClk156P}]
+
+set_clock_groups -asynchronous -group [get_clocks {dmaClk}] -group [get_clocks -include_generated_clocks {sfpClk156P}]

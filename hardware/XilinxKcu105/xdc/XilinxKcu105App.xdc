@@ -187,3 +187,5 @@ set_property -dict { IOSTANDARD LVCMOS18 } [get_ports { fmcLpcLaN[*] }]
 ####################
 
 create_clock -name sfpClk156P -period 6.400 [get_ports {sfpClk156P}]
+
+set_clock_groups -asynchronous -group [get_clocks {dmaClk}] -group [get_clocks -include_generated_clocks {sfpClk156P}]

@@ -2,11 +2,8 @@
 -- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for KCU1500 board 
---
--- # KCU1500 Product Page
--- https://www.xilinx.com/products/boards-and-kits/dk-u1-kcu1500-g.html
---
+-- Description: AXI PCIe Core for Xilinx KCU1500 board (PCIe GEN3 x 8 lanes)
+-- https://www.xilinx.com/products/boards-and-kits/kcu1500.html
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the 
@@ -33,11 +30,14 @@ use unisim.vcomponents.all;
 
 entity XilinxKcu1500Core is
    generic (
-      TPD_G             : time                  := 1 ns;
-      BUILD_INFO_G      : BuildInfoType;
-      DMA_AXIS_CONFIG_G : AxiStreamConfigType;
-      DRIVER_TYPE_ID_G  : slv(31 downto 0)      := x"00000000";
-      DMA_SIZE_G        : positive range 1 to 8 := 1);
+      TPD_G                : time                     := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                  := false;
+      ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
+      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256   := 256;
+      BUILD_INFO_G         : BuildInfoType;
+      DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
+      DRIVER_TYPE_ID_G     : slv(31 downto 0)         := x"00000000";
+      DMA_SIZE_G           : positive range 1 to 8    := 1);
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -103,14 +103,14 @@ architecture mapping of XilinxKcu1500Core is
    signal regWriteSlave  : AxiWriteSlaveType;
 
    signal dmaCtrlReadMasters  : AxiLiteReadMasterArray(2 downto 0);
-   signal dmaCtrlReadSlaves   : AxiLiteReadSlaveArray(2 downto 0);
+   signal dmaCtrlReadSlaves   : AxiLiteReadSlaveArray(2 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_OK_C);
    signal dmaCtrlWriteMasters : AxiLiteWriteMasterArray(2 downto 0);
-   signal dmaCtrlWriteSlaves  : AxiLiteWriteSlaveArray(2 downto 0);
+   signal dmaCtrlWriteSlaves  : AxiLiteWriteSlaveArray(2 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_OK_C);
 
    signal phyReadMaster  : AxiLiteReadMasterType;
-   signal phyReadSlave   : AxiLiteReadSlaveType;
+   signal phyReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
    signal phyWriteMaster : AxiLiteWriteMasterType;
-   signal phyWriteSlave  : AxiLiteWriteSlaveType;
+   signal phyWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
 
    signal sysClock    : sl;
    signal sysReset    : sl;
@@ -126,9 +126,9 @@ architecture mapping of XilinxKcu1500Core is
    signal di       : slv(3 downto 0);
    signal do       : slv(3 downto 0);
    signal sck      : sl;
-   signal emcClock : sl;
-   signal userCclk : sl;
+
    signal eos      : sl;
+   signal userCclk : sl;
 
 begin
 
@@ -160,48 +160,62 @@ begin
    ---------------
    -- AXI PCIe PHY
    ---------------   
-   U_AxiPciePhy : entity work.XilinxKcu1500PciePhyWrapper
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- AXI4 Interfaces
-         axiClk         => sysClock,
-         axiRst         => sysReset,
-         dmaReadMaster  => dmaReadMaster,
-         dmaReadSlave   => dmaReadSlave,
-         dmaWriteMaster => dmaWriteMaster,
-         dmaWriteSlave  => dmaWriteSlave,
-         regReadMaster  => regReadMaster,
-         regReadSlave   => regReadSlave,
-         regWriteMaster => regWriteMaster,
-         regWriteSlave  => regWriteSlave,
-         phyReadMaster  => phyReadMaster,
-         phyReadSlave   => phyReadSlave,
-         phyWriteMaster => phyWriteMaster,
-         phyWriteSlave  => phyWriteSlave,
-         -- Interrupt Interface
-         dmaIrq         => dmaIrq,
-         -- PCIe Ports 
-         pciRstL        => pciRstL,
-         pciRefClkP     => pciRefClkP,
-         pciRefClkN     => pciRefClkN,
-         pciRxP         => pciRxP,
-         pciRxN         => pciRxN,
-         pciTxP         => pciTxP,
-         pciTxN         => pciTxN);
+   REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
+      U_AxiPciePhy : entity work.XilinxKcu1500PciePhyWrapper
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            -- AXI4 Interfaces
+            axiClk         => sysClock,
+            axiRst         => sysReset,
+            dmaReadMaster  => dmaReadMaster,
+            dmaReadSlave   => dmaReadSlave,
+            dmaWriteMaster => dmaWriteMaster,
+            dmaWriteSlave  => dmaWriteSlave,
+            regReadMaster  => regReadMaster,
+            regReadSlave   => regReadSlave,
+            regWriteMaster => regWriteMaster,
+            regWriteSlave  => regWriteSlave,
+            phyReadMaster  => phyReadMaster,
+            phyReadSlave   => phyReadSlave,
+            phyWriteMaster => phyWriteMaster,
+            phyWriteSlave  => phyWriteSlave,
+            -- Interrupt Interface
+            dmaIrq         => dmaIrq,
+            -- PCIe Ports 
+            pciRstL        => pciRstL,
+            pciRefClkP     => pciRefClkP,
+            pciRefClkN     => pciRefClkN,
+            pciRxP         => pciRxP,
+            pciRxN         => pciRxN,
+            pciTxP         => pciTxP,
+            pciTxN         => pciTxN);
+   end generate;
+   SIM_PCIE : if (ROGUE_SIM_EN_G) generate
+      U_sysClock : entity work.ClkRst
+         generic map (
+            CLK_PERIOD_G      => 4 ns,  -- 250 MHz
+            RST_START_DELAY_G => 0 ns,
+            RST_HOLD_TIME_G   => 1000 ns)
+         port map (
+            clkP => sysClock,
+            rst  => sysReset);
+   end generate;
 
    ---------------
    -- AXI PCIe REG
    --------------- 
    U_REG : entity work.AxiPcieReg
       generic map (
-         TPD_G             => TPD_G,
-         BUILD_INFO_G      => BUILD_INFO_G,
-         XIL_DEVICE_G      => "ULTRASCALE",
-         BOOT_PROM_G       => "SPI",
-         DRIVER_TYPE_ID_G  => DRIVER_TYPE_ID_G,
-         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G,
-         DMA_SIZE_G        => DMA_SIZE_G)
+         TPD_G                => TPD_G,
+         ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,
+         ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
+         BUILD_INFO_G         => BUILD_INFO_G,
+         XIL_DEVICE_G         => "ULTRASCALE",
+         BOOT_PROM_G          => "SPI",
+         DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
+         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
+         DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
          axiClk              => sysClock,
@@ -269,27 +283,20 @@ begin
    bootMiso(0) <= di(1);
    sck         <= uOr(bootSck);
 
-   U_emcClk : IBUF
-      port map (
-         I => emcClk,
-         O => emcClock);
-
-   U_BUFGMUX : BUFGMUX
-      port map (
-         O  => userCclk,                -- 1-bit output: Clock output
-         I0 => emcClock,                -- 1-bit input: Clock input (S=0)
-         I1 => sck,                     -- 1-bit input: Clock input (S=1)
-         S  => eos);                    -- 1-bit input: Clock select      
+   userCclk <= emcClk when(eos = '0') else sck;
 
    ---------------
    -- AXI PCIe DMA
    ---------------   
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
-         TPD_G             => TPD_G,
-         DMA_SIZE_G        => DMA_SIZE_G,
-         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G,
-         DESC_ARB_G        => false)    -- Round robin to help with timing
+         TPD_G                => TPD_G,
+         ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,
+         ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
+         ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
+         DMA_SIZE_G           => DMA_SIZE_G,
+         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
+         DESC_ARB_G           => false)  -- Round robin to help with timing
       port map (
          axiClk           => sysClock,
          axiRst           => sysReset,

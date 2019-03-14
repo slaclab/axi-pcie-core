@@ -12,25 +12,16 @@ if { $::env(PRJ_PART) != "XC7A200TFFG1156-3" } {
 # Check for version 2018.2 of Vivado (or later)
 if { [VersionCheck 2018.2] < 0 } {exit -1}
 
-# Load shared source code
-loadRuckusTcl "$::DIR_PATH/../../shared"
+#######################################################################################
+# 7-Series PCIe IP core appear to not support 40-bit address (even with 64-bit enabled)
+#######################################################################################
+# loadRuckusTcl "$::DIR_PATH/../../shared"
+loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieDma.vhd"
+loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieReg.vhd"
 
 # Load local Source Code and Constraints
 loadSource      -dir "$::DIR_PATH/rtl"
 loadConstraints -dir "$::DIR_PATH/xdc"
 
-# loadIpCore    -path "$::DIR_PATH/ip/AxiPgpCardG3PciePhy.xci"
-loadSource      -path "$::DIR_PATH/ip/AxiPgpCardG3PciePhy.dcp"
-
-loadConstraints -path "$::DIR_PATH/ip/AxiPgpCardG3PciePhy.xdc"
-set_property PROCESSING_ORDER {EARLY}               [get_files {AxiPgpCardG3PciePhy.xdc}]
-set_property SCOPED_TO_REF    {AxiPgpCardG3PciePhy} [get_files {AxiPgpCardG3PciePhy.xdc}]
-set_property SCOPED_TO_CELLS  {inst}                [get_files {AxiPgpCardG3PciePhy.xdc}]
-
-# loadIpCore    -path "$::DIR_PATH/ip/AxiPcieCrossbarIpCore.xci"
-loadSource      -path "$::DIR_PATH/ip/AxiPcieCrossbarIpCore.dcp"
-loadConstraints -path "$::DIR_PATH/ip/AxiPcieCrossbarIpCore.xdc"
-
-set_property PROCESSING_ORDER {LATE}                  [get_files {AxiPcieCrossbarIpCore.xdc}]
-set_property SCOPED_TO_REF    {AxiPcieCrossbarIpCore} [get_files {AxiPcieCrossbarIpCore.xdc}]
-set_property SCOPED_TO_CELLS  {inst}                  [get_files {AxiPcieCrossbarIpCore.xdc}] 
+# Load the primary PCIe core
+loadRuckusTcl "$::DIR_PATH/pcie"

@@ -272,7 +272,8 @@ begin
          m_axi_wvalid           => regWriteMaster.wvalid,
          m_axi_wready           => regWriteSlave.wready,
          m_axi_bid              => regWriteSlave.bid(2 downto 0),
-         m_axi_bresp            => regWriteSlave.bresp(1 downto 0),
+         -- m_axi_bresp         => regWriteSlave.bresp(1 downto 0),
+         m_axi_bresp            => AXI_RESP_OK_C, -- Always respond OK         
          m_axi_bvalid           => regWriteSlave.bvalid,
          m_axi_bready           => regWriteMaster.bready,
          m_axi_araddr           => regReadMaster.araddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
@@ -287,7 +288,8 @@ begin
          m_axi_rid              => regReadSlave.rid(2 downto 0),
          m_axi_rdata            => regReadSlave.rdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
          m_axi_ruser            => (others => '0'),
-         m_axi_rresp            => regReadSlave.rresp(1 downto 0),
+         -- m_axi_rresp         => regReadSlave.rresp(1 downto 0),
+         m_axi_rresp            => AXI_RESP_OK_C, -- Always respond OK    
          m_axi_rlast            => regReadSlave.rlast,
          m_axi_rvalid           => regReadSlave.rvalid,
          m_axi_rready           => regReadMaster.rready,

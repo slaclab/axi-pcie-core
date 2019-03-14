@@ -2,7 +2,7 @@
 -- File       : AxiPciePgpCardG3Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for the PgpCardG3 board
+-- Description: AXI PCIe Core for the SLAC PgpCardG3 board (PCIe GEN2 x 4 lanes)
 -- https://confluence.slac.stanford.edu/display/AIRTRACK/PC_260_101_03_C03
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
@@ -30,12 +30,15 @@ use unisim.vcomponents.all;
 
 entity AxiPciePgpCardG3Core is
    generic (
-      TPD_G             : time                  := 1 ns;
-      BUILD_INFO_G      : BuildInfoType;
-      DRIVER_TYPE_ID_G  : slv(31 downto 0)      := x"00000000";
-      DMA_SIZE_G        : positive range 1 to 8 := 1;
-      INT_PIPE_STAGES_G : natural range 0 to 1  := 0;
-      PIPE_STAGES_G     : natural range 0 to 1  := 0);
+      TPD_G                : time                     := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                  := false;
+      ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
+      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256   := 256;
+      BUILD_INFO_G         : BuildInfoType;
+      DRIVER_TYPE_ID_G     : slv(31 downto 0)         := x"00000000";
+      DMA_SIZE_G           : positive range 1 to 8    := 1;
+      INT_PIPE_STAGES_G    : natural range 0 to 1     := 0;
+      PIPE_STAGES_G        : natural range 0 to 1     := 0);
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -125,48 +128,62 @@ begin
    ---------------
    -- AXI PCIe PHY
    ---------------   
-   U_AxiPciePhy : entity work.AxiPgpCardG3PciePhyWrapper
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- AXI4 Interfaces
-         axiClk         => sysClock,
-         axiRst         => sysReset,
-         dmaReadMaster  => dmaReadMaster,
-         dmaReadSlave   => dmaReadSlave,
-         dmaWriteMaster => dmaWriteMaster,
-         dmaWriteSlave  => dmaWriteSlave,
-         regReadMaster  => regReadMaster,
-         regReadSlave   => regReadSlave,
-         regWriteMaster => regWriteMaster,
-         regWriteSlave  => regWriteSlave,
-         phyReadMaster  => phyReadMaster,
-         phyReadSlave   => phyReadSlave,
-         phyWriteMaster => phyWriteMaster,
-         phyWriteSlave  => phyWriteSlave,
-         -- Interrupt Interface
-         dmaIrq         => dmaIrq,
-         -- PCIe Ports 
-         pciRstL        => pciRstL,
-         pciRefClkP     => pciRefClkP,
-         pciRefClkN     => pciRefClkN,
-         pciRxP         => pciRxP,
-         pciRxN         => pciRxN,
-         pciTxP         => pciTxP,
-         pciTxN         => pciTxN);
+   REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
+      U_AxiPciePhy : entity work.AxiPgpCardG3PciePhyWrapper
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            -- AXI4 Interfaces
+            axiClk         => sysClock,
+            axiRst         => sysReset,
+            dmaReadMaster  => dmaReadMaster,
+            dmaReadSlave   => dmaReadSlave,
+            dmaWriteMaster => dmaWriteMaster,
+            dmaWriteSlave  => dmaWriteSlave,
+            regReadMaster  => regReadMaster,
+            regReadSlave   => regReadSlave,
+            regWriteMaster => regWriteMaster,
+            regWriteSlave  => regWriteSlave,
+            phyReadMaster  => phyReadMaster,
+            phyReadSlave   => phyReadSlave,
+            phyWriteMaster => phyWriteMaster,
+            phyWriteSlave  => phyWriteSlave,
+            -- Interrupt Interface
+            dmaIrq         => dmaIrq,
+            -- PCIe Ports 
+            pciRstL        => pciRstL,
+            pciRefClkP     => pciRefClkP,
+            pciRefClkN     => pciRefClkN,
+            pciRxP         => pciRxP,
+            pciRxN         => pciRxN,
+            pciTxP         => pciTxP,
+            pciTxN         => pciTxN);
+   end generate;
+   SIM_PCIE : if (ROGUE_SIM_EN_G) generate
+      U_sysClock : entity work.ClkRst
+         generic map (
+            CLK_PERIOD_G      => 4 ns,  -- 250 MHz
+            RST_START_DELAY_G => 0 ns,
+            RST_HOLD_TIME_G   => 1000 ns)
+         port map (
+            clkP => sysClock,
+            rst  => sysReset);
+   end generate;
 
    ---------------
    -- AXI PCIe REG
    --------------- 
    U_REG : entity work.AxiPcieReg
       generic map (
-         TPD_G             => TPD_G,
-         BUILD_INFO_G      => BUILD_INFO_G,
-         XIL_DEVICE_G      => "7SERIES",
-         BOOT_PROM_G       => "BPI",
-         DRIVER_TYPE_ID_G  => DRIVER_TYPE_ID_G,
-         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_C,
-         DMA_SIZE_G        => DMA_SIZE_G)
+         TPD_G                => TPD_G,
+         ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,
+         ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
+         BUILD_INFO_G         => BUILD_INFO_G,
+         XIL_DEVICE_G         => "7SERIES",
+         BOOT_PROM_G          => "BPI",
+         DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
+         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_C,
+         DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
          axiClk              => sysClock,
@@ -222,12 +239,15 @@ begin
    ---------------   
    U_AxiPcieDma : entity work.AxiPcieDma
       generic map (
-         TPD_G             => TPD_G,
-         DMA_SIZE_G        => DMA_SIZE_G,
-         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_C,
-         DESC_ARB_G        => false,  -- Round robin to help with timing      
-         INT_PIPE_STAGES_G => INT_PIPE_STAGES_G,
-         PIPE_STAGES_G     => PIPE_STAGES_G)
+         TPD_G                => TPD_G,
+         ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,
+         ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
+         ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
+         DMA_SIZE_G           => DMA_SIZE_G,
+         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_C,
+         DESC_ARB_G           => false,  -- Round robin to help with timing      
+         INT_PIPE_STAGES_G    => INT_PIPE_STAGES_G,
+         PIPE_STAGES_G        => PIPE_STAGES_G)
       port map (
          axiClk           => sysClock,
          axiRst           => sysReset,

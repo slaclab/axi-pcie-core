@@ -19,11 +19,9 @@ set_property -dict { PACKAGE_PIN AM26 IOSTANDARD LVCMOS18 } [get_ports { flashMo
 set_property -dict { PACKAGE_PIN AN26 IOSTANDARD LVCMOS18 } [get_ports { flashMiso }]
 set_property -dict { PACKAGE_PIN AM25 IOSTANDARD LVCMOS18 } [get_ports { flashHoldL }]
 set_property -dict { PACKAGE_PIN AL25 IOSTANDARD LVCMOS18 } [get_ports { flashWp }]
-set_property -dict { PACKAGE_PIN AL27 IOSTANDARD LVCMOS18 } [get_ports { emcClk }]
 
+set_property -dict { PACKAGE_PIN AL27 IOSTANDARD LVCMOS18 } [get_ports { emcClk }]
 set_property LOC CONFIG_SITE_X0Y0        [get_cells {U_Core/U_STARTUPE3}]
-set_property CLOCK_REGION X4Y1           [get_cells {U_Core/U_BUFGMUX}]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets  {U_Core/U_emcClk/O}]
 
 ####################
 # PCIe Constraints #
@@ -97,19 +95,18 @@ set_property -dict { PACKAGE_PIN AT24  IOSTANDARD LVCMOS18 } [get_ports { qsfp1M
 ##########
 
 create_clock -period  6.400 -name userClkP   [get_ports {userClkP}]
-create_clock -period 11.111 -name emcClk     [get_ports {emcClk}]
 create_clock -period 10.000 -name pciRefClkP [get_ports {pciRefClkP}]
 create_clock -period 16.000 -name dnaClk     [get_pins  {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 create_clock -period 16.000 -name iprogClk   [get_pins  {U_Core/U_REG/U_Version/GEN_ICAP.Iprog_1/GEN_ULTRA_SCALE.IprogUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {emcClk}]
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {userClkP}]
 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks {dnaClk}] -group [get_clocks {iprogClk}]
 
 set_false_path -from [get_ports {pciRstL}]
-set_false_path -through [get_nets {U_Core/U_AxiPciePhy/U_AxiPcie/inst/inst/cfg_max*}]
+set_false_path -through [get_nets {U_Core/REAL_PCIE.U_AxiPciePhy/U_AxiPcie/inst/inst/cfg_max*}]
 
-set_property HIGH_PRIORITY true [get_nets {U_Core/U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/gt_top_i/phy_clk_i/CLK_USERCLK}]
+set_property HIGH_PRIORITY true [get_nets {U_Core/REAL_PCIE.U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/gt_top_i/phy_clk_i/CLK_USERCLK}]
 
 ######################################
 # BITSTREAM: .bit file Configuration #

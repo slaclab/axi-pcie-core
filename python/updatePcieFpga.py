@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 #-----------------------------------------------------------------------------
-# Title      : KCU1500 Prom Update
+# Title      : BPI/SPIx4/SPIx8 Prom Update
 #-----------------------------------------------------------------------------
-# File       : updateKcu1500.py
+# File       : updatePcieFpga.py
 # Created    : 2018-06-22
 #-----------------------------------------------------------------------------
 # This file is part of the 'axi-pcie-core'. It is subject to 
@@ -32,7 +32,7 @@ parser.add_argument(
     required = False,
     default  = "/dev/datadev_0",
     help     = "path to device",
-)  
+) 
 
 parser.add_argument(
     "--path", 
@@ -51,15 +51,31 @@ base = pr.Root(name='PcieTop',description='')
 memMap = rogue.hardware.axi.AxiMemMap(args.dev)
 
 # Add Base Device
-base.add(pcie.AxiPcieCore(memBase=memMap,useSpi=True))
+base.add(pcie.AxiPcieCore(
+    memBase = memMap,
+    useBpi  = True,
+    useSpi  = True,
+))
 
 # Start the system
 base.start(pollEn=False)
 
+# Read all the variables
+base.ReadAll()
+
 # Create useful pointers
 AxiVersion = base.AxiPcieCore.AxiVersion
-PROM_PRI   = base.AxiPcieCore.AxiMicronN25Q[0]
-PROM_SEC   = base.AxiPcieCore.AxiMicronN25Q[1]
+promType   = AxiVersion.BOOT_PROM_G.getDisp()
+
+# Case on PROM type
+if (promType == 'BPI'):
+    PROM_PRI = base.AxiPcieCore.AxiMicronP30
+elif (promType == 'SPIx8') or (promType == 'SPIx4'):
+    PROM_PRI = base.AxiPcieCore.AxiMicronN25Q[0]
+    if (promType == 'SPIx8'):
+        PROM_SEC = base.AxiPcieCore.AxiMicronN25Q[1]
+else:
+    raise ValueError(f'Invalid promType' )
 
 # Printout Current AxiVersion status
 print('#########################################')
@@ -85,6 +101,8 @@ for l in rawLst:
     l = l.replace('_secondary.mcs.gz','')
     l = l.replace('_primary.mcs','')
     l = l.replace('_secondary.mcs','')
+    l = l.replace('.mcs.gz','')    
+    l = l.replace('.mcs','')
 
     # Store entry
     imgLst[l] = suff
@@ -98,18 +116,27 @@ for i,l in enumerate(imgLst.items()):
 idx = int(input('Enter image to program into the PCIe card\'s PROM: '))
 
 ent = list(imgLst.items())[idx]
-pri = ent[0] + '_primary.' + ent[1]
-sec = ent[0] + '_secondary.' + ent[1]
-
-# Load the primary MCS file to QSPI[0]
-print('Loading primary image: {}'.format(pri))
+if (promType == 'SPIx8'):
+    pri = ent[0] + '_primary.' + ent[1]
+    sec = ent[0] + '_secondary.' + ent[1]
+else:
+    pri = ent[0] + '.' + ent[1]
+    
+# Load the primary MCS file
 PROM_PRI.LoadMcsFile(pri)  
 
-# Load the secondary MCS file to QSPI[1]
-print('Loading secondary image: {}'.format(sec))
-PROM_SEC.LoadMcsFile(sec)  
+# Update the programing done flag
+progDone = PROM_PRI._progDone
 
-if(PROM_PRI._progDone and PROM_SEC._progDone):
+# Check for secondary PROM
+if (promType == 'SPIx8'):
+    # Load the secondary MCS file
+    PROM_SEC.LoadMcsFile(sec)  
+    # Update the programing done flag
+    progDone = PROM_PRI._progDone and PROM_SEC._progDone
+
+# Check if programming was successful
+if (progDone):
     print('\nReloading FPGA firmware from PROM ....')
     AxiVersion.FpgaReload()
     print('\nPlease reboot the computer')

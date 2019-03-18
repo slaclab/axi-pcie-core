@@ -82,7 +82,8 @@ class PcieAxiVersion(axi.AxiVersion):
             mode         = 'RO',
             enum        = {
                 0x0: 'BPI', 
-                0x1: 'SPI', 
+                0x1: 'SPIx8', 
+                0x2: 'SPIx4', 
             },              
         ))  
 

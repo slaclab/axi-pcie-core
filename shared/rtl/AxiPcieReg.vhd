@@ -218,8 +218,10 @@ begin
       -- PROM configuration
       if (BOOT_PROM_G = "BPI") then
          userValues(5) <= x"00000000";
-      elsif (BOOT_PROM_G = "SPI") then
+      elsif (BOOT_PROM_G = "SPIx8") then
          userValues(5) <= x"00000001";
+      elsif (BOOT_PROM_G = "SPIx4") then
+         userValues(5) <= x"00000002";
       else
          userValues(5) <= x"FFFFFFFF";
       end if;
@@ -401,7 +403,7 @@ begin
 
    end generate;
 
-   GEN_SPI : if (BOOT_PROM_G = "SPI") and (not ROGUE_SIM_EN_G) generate
+   GEN_SPI : if (BOOT_PROM_G = "SPIx4" or BOOT_PROM_G = "SPIx8") and (not ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
       bpiAdv  <= '1';
@@ -445,7 +447,7 @@ begin
 
    end generate;
 
-   GEN_NO_PROM : if ((BOOT_PROM_G /= "BPI") and (BOOT_PROM_G /= "SPI")) or (ROGUE_SIM_EN_G) generate
+   GEN_NO_PROM : if (BOOT_PROM_G /= "BPI" and BOOT_PROM_G /= "SPIx4" and BOOT_PROM_G /= "SPIx8") or (ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
       bpiAdv  <= '1';

@@ -25,17 +25,17 @@ use work.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
    generic (
-      TPD_G                : time                     := 1 ns;
-      ROGUE_SIM_EN_G       : boolean                  := false;
-      ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
+      TPD_G                : time                        := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                     := false;
+      ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
       BUILD_INFO_G         : BuildInfoType;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
-      XIL_DEVICE_G         : string                   := "7SERIES";
-      BOOT_PROM_G          : string                   := "BPI";
-      DRIVER_TYPE_ID_G     : slv(31 downto 0)         := x"00000000";
-      EN_DEVICE_DNA_G      : boolean                  := true;
-      EN_ICAP_G            : boolean                  := true;
-      DMA_SIZE_G           : positive range 1 to 16   := 1);
+      XIL_DEVICE_G         : string                      := "7SERIES";
+      BOOT_PROM_G          : string                      := "BPI";
+      DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
+      EN_DEVICE_DNA_G      : boolean                     := true;
+      EN_ICAP_G            : boolean                     := true;
+      DMA_SIZE_G           : positive range 1 to 16      := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)
       axiClk              : in  sl;

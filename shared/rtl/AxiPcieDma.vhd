@@ -27,16 +27,16 @@ use work.AxiPciePkg.all;
 
 entity AxiPcieDma is
    generic (
-      TPD_G                : time                     := 1 ns;
-      ROGUE_SIM_EN_G       : boolean                  := false;
-      ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
-      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256   := 256;
-      SIMULATION_G         : boolean                  := false;
-      DMA_SIZE_G           : positive range 1 to 8    := 1;
-      DMA_AXIS_CONFIG_G    : AxiStreamConfigType      := ssiAxiStreamConfig(16);
-      INT_PIPE_STAGES_G    : natural range 0 to 1     := 1;
-      PIPE_STAGES_G        : natural range 0 to 1     := 1;
-      DESC_ARB_G           : boolean                  := true);
+      TPD_G                : time                        := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                     := false;
+      ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
+      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
+      SIMULATION_G         : boolean                     := false;
+      DMA_SIZE_G           : positive range 1 to 8       := 1;
+      DMA_AXIS_CONFIG_G    : AxiStreamConfigType         := ssiAxiStreamConfig(16);
+      INT_PIPE_STAGES_G    : natural range 0 to 1        := 1;
+      PIPE_STAGES_G        : natural range 0 to 1        := 1;
+      DESC_ARB_G           : boolean                     := true);
    port (
       axiClk           : in  sl;
       axiRst           : in  sl;

@@ -25,17 +25,17 @@ use work.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
    generic (
-      TPD_G                : time                     := 1 ns;
-      ROGUE_SIM_EN_G       : boolean                  := false;
-      ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
+      TPD_G                : time                        := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                     := false;
+      ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
       BUILD_INFO_G         : BuildInfoType;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
-      XIL_DEVICE_G         : string                   := "7SERIES";
-      BOOT_PROM_G          : string                   := "BPI";
-      DRIVER_TYPE_ID_G     : slv(31 downto 0)         := x"00000000";
-      EN_DEVICE_DNA_G      : boolean                  := true;
-      EN_ICAP_G            : boolean                  := true;
-      DMA_SIZE_G           : positive range 1 to 16   := 1);
+      XIL_DEVICE_G         : string                      := "7SERIES";
+      BOOT_PROM_G          : string                      := "BPI";
+      DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
+      EN_DEVICE_DNA_G      : boolean                     := true;
+      EN_ICAP_G            : boolean                     := true;
+      DMA_SIZE_G           : positive range 1 to 16      := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)
       axiClk              : in  sl;
@@ -218,8 +218,10 @@ begin
       -- PROM configuration
       if (BOOT_PROM_G = "BPI") then
          userValues(5) <= x"00000000";
-      elsif (BOOT_PROM_G = "SPI") then
+      elsif (BOOT_PROM_G = "SPIx8") then
          userValues(5) <= x"00000001";
+      elsif (BOOT_PROM_G = "SPIx4") then
+         userValues(5) <= x"00000002";
       else
          userValues(5) <= x"FFFFFFFF";
       end if;
@@ -401,7 +403,7 @@ begin
 
    end generate;
 
-   GEN_SPI : if (BOOT_PROM_G = "SPI") and (not ROGUE_SIM_EN_G) generate
+   GEN_SPI : if (BOOT_PROM_G = "SPIx4" or BOOT_PROM_G = "SPIx8") and (not ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
       bpiAdv  <= '1';
@@ -445,7 +447,7 @@ begin
 
    end generate;
 
-   GEN_NO_PROM : if ((BOOT_PROM_G /= "BPI") and (BOOT_PROM_G /= "SPI")) or (ROGUE_SIM_EN_G) generate
+   GEN_NO_PROM : if (BOOT_PROM_G /= "BPI" and BOOT_PROM_G /= "SPIx4" and BOOT_PROM_G /= "SPIx8") or (ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
       bpiAdv  <= '1';

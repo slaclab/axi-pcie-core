@@ -27,16 +27,16 @@ use work.AxiPciePkg.all;
 
 entity AxiPcieDma is
    generic (
-      TPD_G                : time                     := 1 ns;
-      ROGUE_SIM_EN_G       : boolean                  := false;
-      ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
-      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256   := 256;
-      SIMULATION_G         : boolean                  := false;
-      DMA_SIZE_G           : positive range 1 to 8    := 1;
-      DMA_AXIS_CONFIG_G    : AxiStreamConfigType      := ssiAxiStreamConfig(16);
-      INT_PIPE_STAGES_G    : natural range 0 to 1     := 1;
-      PIPE_STAGES_G        : natural range 0 to 1     := 1;
-      DESC_ARB_G           : boolean                  := true);
+      TPD_G                : time                        := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                     := false;
+      ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
+      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
+      SIMULATION_G         : boolean                     := false;
+      DMA_SIZE_G           : positive range 1 to 8       := 1;
+      DMA_AXIS_CONFIG_G    : AxiStreamConfigType         := ssiAxiStreamConfig(16);
+      INT_PIPE_STAGES_G    : natural range 0 to 1        := 1;
+      PIPE_STAGES_G        : natural range 0 to 1        := 1;
+      DESC_ARB_G           : boolean                     := true);
    port (
       axiClk           : in  sl;
       axiRst           : in  sl;
@@ -47,11 +47,11 @@ entity AxiPcieDma is
       axiWriteSlave    : in  AxiWriteSlaveType;
       -- AXI4-Lite Interfaces (axiClk domain)
       axilReadMasters  : in  AxiLiteReadMasterArray(2 downto 0);
-      axilReadSlaves   : out AxiLiteReadSlaveArray(2 downto 0) := (others=>AXI_LITE_READ_SLAVE_EMPTY_OK_C);
+      axilReadSlaves   : out AxiLiteReadSlaveArray(2 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_OK_C);
       axilWriteMasters : in  AxiLiteWriteMasterArray(2 downto 0);
-      axilWriteSlaves  : out AxiLiteWriteSlaveArray(2 downto 0) := (others=>AXI_LITE_WRITE_SLAVE_EMPTY_OK_C);
+      axilWriteSlaves  : out AxiLiteWriteSlaveArray(2 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_OK_C);
       -- DMA Interfaces (axiClk domain)
-      dmaIrq           : out sl := '0';
+      dmaIrq           : out sl                                 := '0';
       dmaObMasters     : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaObSlaves      : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters     : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
@@ -77,9 +77,9 @@ architecture mapping of AxiPcieDma is
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
 
    -- AXI DMA descriptor  
-   constant AXI_DESC_CONFIG_C : AxiConfigType := (
+   constant AXI_DESC_CONFIG_C : AxiConfigType             := (
       ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
-      DATA_BYTES_C => 16,               -- always 128b wide
+      DATA_BYTES_C => ite((AXI_PCIE_CONFIG_C.ADDR_WIDTH_C <= 32), 8, 16),  -- 64-bits wide if address space <= 32-bits ELSE 128b wide for 64-bit support
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
 
@@ -306,11 +306,11 @@ begin
       GEN_VEC : for i in DMA_SIZE_G-1 downto 0 generate
          U_DMA_LANE : entity work.RogueTcpStreamWrap
             generic map (
-               TPD_G               => TPD_G,
-               PORT_NUM_G          => (ROGUE_SIM_PORT_NUM_G + i*512 + 2),
-               SSI_EN_G            => true,
-               CHAN_COUNT_G        => ROGUE_SIM_CH_COUNT_G,
-               AXIS_CONFIG_G       => DMA_AXIS_CONFIG_G)
+               TPD_G         => TPD_G,
+               PORT_NUM_G    => (ROGUE_SIM_PORT_NUM_G + i*512 + 2),
+               SSI_EN_G      => true,
+               CHAN_COUNT_G  => ROGUE_SIM_CH_COUNT_G,
+               AXIS_CONFIG_G => DMA_AXIS_CONFIG_G)
             port map (
                axisClk     => axiClk,
                axisRst     => axiRst,

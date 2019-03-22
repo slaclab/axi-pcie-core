@@ -36,15 +36,15 @@ use unisim.vcomponents.all;
 
 entity XilinxKc705Core is
    generic (
-      TPD_G                : time                     := 1 ns;
-      ROGUE_SIM_EN_G       : boolean                  := false;
-      ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
-      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256   := 256;
+      TPD_G                : time                        := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                     := false;
+      ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
+      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
       BUILD_INFO_G         : BuildInfoType;
-      DRIVER_TYPE_ID_G     : slv(31 downto 0)         := x"00000000";
-      DMA_SIZE_G           : positive range 1 to 8    := 1;
-      INT_PIPE_STAGES_G    : natural range 0 to 1     := 0;
-      PIPE_STAGES_G        : natural range 0 to 1     := 0);
+      DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
+      DMA_SIZE_G           : positive range 1 to 8       := 1;
+      INT_PIPE_STAGES_G    : natural range 0 to 1        := 0;
+      PIPE_STAGES_G        : natural range 0 to 1        := 0);
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -187,7 +187,7 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          BUILD_INFO_G         => BUILD_INFO_G,
          XIL_DEVICE_G         => "7SERIES",
-         BOOT_PROM_G          => "SPI",
+         BOOT_PROM_G          => "SPIx4",
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_C,
          DMA_SIZE_G           => DMA_SIZE_G)

@@ -45,14 +45,14 @@ use unisim.vcomponents.all;
 
 entity AlphaDataKu3Core is
    generic (
-      TPD_G                : time                     := 1 ns;
-      ROGUE_SIM_EN_G       : boolean                  := false;
-      ROGUE_SIM_PORT_NUM_G : natural range 0 to 65535 := 1;
-      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256   := 256;
+      TPD_G                : time                        := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                     := false;
+      ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
+      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
       BUILD_INFO_G         : BuildInfoType;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
-      DRIVER_TYPE_ID_G     : slv(31 downto 0)         := x"00000000";
-      DMA_SIZE_G           : positive range 1 to 8    := 1);
+      DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
+      DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (
       ------------------------      
       --  Top Level Interfaces
@@ -233,7 +233,7 @@ begin
          TPD_G                => TPD_G,
          ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
-         ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,         
+         ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
          DMA_SIZE_G           => DMA_SIZE_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DESC_ARB_G           => false)  -- Round robin to help with timing

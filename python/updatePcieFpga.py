@@ -14,10 +14,15 @@
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
 
+import pyrogue as pr
+import os
+baseDir = os.path.dirname(os.path.realpath(__file__))
+pr.addLibraryPath(baseDir)
+pr.addLibraryPath(baseDir + '/../../surf/python')
+
 import sys
 import glob
 import argparse
-import pyrogue as pr
 import rogue.hardware.axi
 import axipcie as pcie
 from collections import OrderedDict as odict

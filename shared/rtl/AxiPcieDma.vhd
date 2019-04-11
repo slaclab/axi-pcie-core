@@ -163,16 +163,16 @@ begin
             axilWriteSlave  => axilWriteSlaves(0),
             interrupt       => dmaIrq,
             -- AXI Stream Interface 
-            sAxisMaster     => sAxisMasters,
-            sAxisSlave      => sAxisSlaves,
-            mAxisMaster     => mAxisMasters,
-            mAxisSlave      => mAxisSlaves,
+            sAxisMasters    => sAxisMasters,
+            sAxisSlaves     => sAxisSlaves,
+            mAxisMasters    => mAxisMasters,
+            mAxisSlaves     => mAxisSlaves,
             mAxisCtrl       => mAxisCtrl,
             -- AXI Interfaces, 0 = Desc, 1-CHAN_COUNT_G = DMA
-            axiReadMaster   => axiReadMasters,
-            axiReadSlave    => axiReadSlaves,
-            axiWriteMaster  => axiWriteMasters,
-            axiWriteSlave   => axiWriteSlaves,
+            axiReadMasters  => axiReadMasters,
+            axiReadSlaves   => axiReadSlaves,
+            axiWriteMasters => axiWriteMasters,
+            axiWriteSlaves  => axiWriteSlaves,
             axiWriteCtrl    => (others => AXI_CTRL_UNUSED_C));
 
       GEN_AXIS_FIFO : for i in DMA_SIZE_G-1 downto 0 generate

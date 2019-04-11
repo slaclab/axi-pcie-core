@@ -22,7 +22,6 @@ use work.AxiPkg.all;
 entity AxiPcieCrossbar is
    generic (
       TPD_G             : time                  := 1 ns;
-      AXI_DESC_CONFIG_G : AxiConfigType;
       AXI_DMA_CONFIG_G  : AxiConfigType;
       AXI_PCIE_CONFIG_G : AxiConfigType;
       DMA_SIZE_G        : positive range 1 to 8 := 1);
@@ -84,7 +83,7 @@ begin
                mAxiWriteMaster => axiWriteMasters(i),
                mAxiWriteSlave  => axiWriteSlaves(i));
       end generate;
-      
+
       RESIZE_32B : if (AXI_PCIE_CONFIG_G.DATA_BYTES_C = 32) generate
          U_AxiResize : entity work.AxiPcie32BResize
             generic map(
@@ -105,7 +104,7 @@ begin
                mAxiReadSlave   => axiReadSlaves(i),
                mAxiWriteMaster => axiWriteMasters(i),
                mAxiWriteSlave  => axiWriteSlaves(i));
-      end generate;    
+      end generate;
 
       RESIZE_64B : if (AXI_PCIE_CONFIG_G.DATA_BYTES_C = 64) generate
          U_AxiResize : entity work.AxiPcie64BResize
@@ -127,7 +126,7 @@ begin
                mAxiReadSlave   => axiReadSlaves(i),
                mAxiWriteMaster => axiWriteMasters(i),
                mAxiWriteSlave  => axiWriteSlaves(i));
-      end generate;          
+      end generate;
 
    end generate;
 
@@ -137,7 +136,6 @@ begin
    U_AxiXbar : entity work.AxiPcieCrossbarIpCoreWrapper
       generic map(
          TPD_G             => TPD_G,
-         AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_G,
          AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G)
       port map(
          -- Clock and reset

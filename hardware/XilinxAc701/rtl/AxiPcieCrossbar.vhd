@@ -22,7 +22,6 @@ use work.AxiPkg.all;
 entity AxiPcieCrossbar is
    generic (
       TPD_G             : time                  := 1 ns;
-      AXI_DESC_CONFIG_G : AxiConfigType;
       AXI_DMA_CONFIG_G  : AxiConfigType;
       AXI_PCIE_CONFIG_G : AxiConfigType;
       DMA_SIZE_G        : positive range 1 to 8 := 1);
@@ -63,7 +62,6 @@ begin
    U_AxiXbar : entity work.AxiPcieCrossbarIpCoreWrapper
       generic map(
          TPD_G             => TPD_G,
-         AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_G,
          AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G)
       port map(
          -- Clock and reset

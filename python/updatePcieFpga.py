@@ -46,6 +46,14 @@ parser.add_argument(
     help     = "path to images",
 )  
 
+parser.add_argument(
+    "--type", 
+    type     = str,
+    default  = None,
+    required = False,
+    help     = "prom type",
+)  
+
 # Get the arguments
 args = parser.parse_args()
     
@@ -70,7 +78,11 @@ base.ReadAll()
 
 # Create useful pointers
 AxiVersion = base.AxiPcieCore.AxiVersion
-promType   = AxiVersion.BOOT_PROM_G.getDisp()
+
+if args.type is None:
+    promType   = AxiVersion.BOOT_PROM_G.getDisp()
+else:
+    promType   = args.type
 
 # Case on PROM type
 if (promType == 'BPI'):

@@ -76,13 +76,6 @@ architecture mapping of AxiPcieDma is
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
 
-   -- AXI DMA descriptor  
-   constant AXI_DESC_CONFIG_C : AxiConfigType             := (
-      ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
-      DATA_BYTES_C => ite((AXI_PCIE_CONFIG_C.ADDR_WIDTH_C <= 32) or (DMA_AXI_CONFIG_C.DATA_BYTES_C = 8), 8, 16),  -- 64-bits wide if address space <= 32-bits ELSE 128b wide for 64-bit support
-      ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
-      LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
-
    signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
    signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
    signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
@@ -139,7 +132,6 @@ begin
             AXI_READY_EN_G    => true,  -- Using "Packet FIFO" option in AXI Interconnect IP core
             AXIS_READY_EN_G   => false,
             AXIS_CONFIG_G     => INT_DMA_AXIS_CONFIG_C,
-            AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_C,
             AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
             CHAN_COUNT_G      => DMA_SIZE_G,
             RD_PIPE_STAGES_G  => 1,

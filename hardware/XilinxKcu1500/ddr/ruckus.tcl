@@ -2,14 +2,50 @@
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Load source code
-loadSource      -dir "$::DIR_PATH/rtl"
-loadIpCore      -dir "$::DIR_PATH/ip"
-loadConstraints -dir "$::DIR_PATH/xdc"
+loadSource           -dir "$::DIR_PATH/rtl"
+loadSource -sim_only -dir "$::DIR_PATH/tb"
+loadIpCore           -dir "$::DIR_PATH/ip"
 
-# Bug fix for using MIG cores in Vivado 2017.3 (or later)
-# https://forums.xilinx.com/t5/Synthesis/Vivado-2016-4-Linux-crash-during-Phase-7-Resynthesis/td-p/794884
-# https://forums.xilinx.com/t5/Welcome-Join/Abnormal-program-termination-11-in-place-design-vivado-2016-1/td-p/802908
-set_property STEPS.PHYS_OPT_DESIGN.TCL.PRE  "$::DIR_PATH/vivado/pthread_pre.tcl"  [get_runs impl_1]
-set_property STEPS.PHYS_OPT_DESIGN.TCL.POST "$::DIR_PATH/vivado/pthread_post.tcl" [get_runs impl_1] 
-set_property STEPS.PLACE_DESIGN.TCL.PRE     "$::DIR_PATH/vivado/pthread_pre.tcl"  [get_runs impl_1]
-set_property STEPS.PLACE_DESIGN.TCL.POST    "$::DIR_PATH/vivado/pthread_post.tcl" [get_runs impl_1] 
+loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0.xdc"
+set_property PROCESSING_ORDER {EARLY}              [get_files {XilinxKcu1500Mig0.xdc}]
+set_property SCOPED_TO_REF    {XilinxKcu1500Mig0}  [get_files {XilinxKcu1500Mig0.xdc}]
+set_property SCOPED_TO_CELLS  {inst}               [get_files {XilinxKcu1500Mig0.xdc}]
+
+loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1.xdc"
+set_property PROCESSING_ORDER {EARLY}              [get_files {XilinxKcu1500Mig1.xdc}]
+set_property SCOPED_TO_REF    {XilinxKcu1500Mig1}  [get_files {XilinxKcu1500Mig1.xdc}]
+set_property SCOPED_TO_CELLS  {inst}               [get_files {XilinxKcu1500Mig1.xdc}]
+
+loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2.xdc"
+set_property PROCESSING_ORDER {EARLY}              [get_files {XilinxKcu1500Mig2.xdc}]
+set_property SCOPED_TO_REF    {XilinxKcu1500Mig2}  [get_files {XilinxKcu1500Mig2.xdc}]
+set_property SCOPED_TO_CELLS  {inst}               [get_files {XilinxKcu1500Mig2.xdc}]
+
+loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3.xdc"
+set_property PROCESSING_ORDER {EARLY}              [get_files {XilinxKcu1500Mig3.xdc}]
+set_property SCOPED_TO_REF    {XilinxKcu1500Mig3}  [get_files {XilinxKcu1500Mig3.xdc}]
+set_property SCOPED_TO_CELLS  {inst}               [get_files {XilinxKcu1500Mig3.xdc}]
+
+loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0_board.xdc"
+set_property USED_IN {synthesis implementation board} [get_files {XilinxKcu1500Mig0_board.xdc}]
+set_property PROCESSING_ORDER {EARLY}                 [get_files {XilinxKcu1500Mig0_board.xdc}]
+set_property SCOPED_TO_REF    {XilinxKcu1500Mig0}     [get_files {XilinxKcu1500Mig0_board.xdc}]
+set_property SCOPED_TO_CELLS  {inst}                  [get_files {XilinxKcu1500Mig0_board.xdc}]
+
+loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig1_board.xdc"
+set_property USED_IN {synthesis implementation board} [get_files {XilinxKcu1500Mig1_board.xdc}]
+set_property PROCESSING_ORDER {EARLY}                 [get_files {XilinxKcu1500Mig1_board.xdc}]
+set_property SCOPED_TO_REF    {XilinxKcu1500Mig1}     [get_files {XilinxKcu1500Mig1_board.xdc}]
+set_property SCOPED_TO_CELLS  {inst}                  [get_files {XilinxKcu1500Mig1_board.xdc}]
+
+loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig2_board.xdc"
+set_property USED_IN {synthesis implementation board} [get_files {XilinxKcu1500Mig2_board.xdc}]
+set_property PROCESSING_ORDER {EARLY}                 [get_files {XilinxKcu1500Mig2_board.xdc}]
+set_property SCOPED_TO_REF    {XilinxKcu1500Mig2}     [get_files {XilinxKcu1500Mig2_board.xdc}]
+set_property SCOPED_TO_CELLS  {inst}                  [get_files {XilinxKcu1500Mig2_board.xdc}]
+
+loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig3_board.xdc"
+set_property USED_IN {synthesis implementation board} [get_files {XilinxKcu1500Mig3_board.xdc}]
+set_property PROCESSING_ORDER {EARLY}                 [get_files {XilinxKcu1500Mig3_board.xdc}]
+set_property SCOPED_TO_REF    {XilinxKcu1500Mig3}     [get_files {XilinxKcu1500Mig3_board.xdc}]
+set_property SCOPED_TO_CELLS  {inst}                  [get_files {XilinxKcu1500Mig3_board.xdc}]

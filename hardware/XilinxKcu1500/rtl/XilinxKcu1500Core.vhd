@@ -50,7 +50,12 @@ entity XilinxKcu1500Core is
       dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- Application AXI-Lite Interfaces [0x00080000:0x00FFFFFF] (appClk domain)
+      -- PIP Interface [0x00080000:0008FFFF] (dmaClk domain)
+      pipIbMaster    : out AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave     : in  AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+      pipObMaster    : in  AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+      pipObSlave     : out AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+      -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk         : in  sl;
       appRst         : in  sl;
       appReadMaster  : out AxiLiteReadMasterType;
@@ -224,6 +229,8 @@ begin
          regReadSlave        => regReadSlave,
          regWriteMaster      => regWriteMaster,
          regWriteSlave       => regWriteSlave,
+         pipIbMaster         => pipIbMaster,
+         pipIbSlave          => pipIbSlave,
          -- DMA AXI-Lite Interfaces
          dmaCtrlReadMasters  => dmaCtrlReadMasters,
          dmaCtrlReadSlaves   => dmaCtrlReadSlaves,
@@ -305,6 +312,8 @@ begin
          axiReadSlave     => dmaReadSlave,
          axiWriteMaster   => dmaWriteMaster,
          axiWriteSlave    => dmaWriteSlave,
+         pipObMaster      => pipObMaster,
+         pipObSlave       => pipObSlave,
          -- AXI4-Lite Interfaces
          axilReadMasters  => dmaCtrlReadMasters,
          axilReadSlaves   => dmaCtrlReadSlaves,

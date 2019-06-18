@@ -12,8 +12,12 @@ if { [info exists ::env(OVERRIDE_SUBMODULE_LOCKS)] != 1 || $::env(OVERRIDE_SUBMO
    puts "*********************************************************\n\n"
 }   
 
+# Check for version 2018.3 of Vivado (or later)
+if { [VersionCheck 2018.3] < 0 } {exit -1}
+
 # Load Source Code
 loadSource -dir "$::DIR_PATH/rtl"
+loadRuckusTcl "$::DIR_PATH/../protocol/pip"
 
 # loadIpCore -dir "$::DIR_PATH/ip"
 loadSource -dir "$::DIR_PATH/ip"

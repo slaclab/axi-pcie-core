@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 #-----------------------------------------------------------------------------
-# Title      : 
-#-----------------------------------------------------------------------------
-# File       : DataDev.py
-# Created    : 2017-04-03
-#-----------------------------------------------------------------------------
-# Description:
-# 
-#-----------------------------------------------------------------------------
 # This file is part of the 'axi-pcie-core'. It is subject to 
 # the license terms in the LICENSE.txt file found in the top-level directory 
 # of this distribution and at: 
@@ -214,6 +206,13 @@ class PcieAxiVersion(axi.AxiVersion):
             mode         = "RO",
             pollInterval = 1
         ))
+        
+        self.add(pr.RemoteVariable(
+            name         = 'BAR0_BASE_ADDRESS',
+            offset       = 0x400+(4*9),
+            bitSize      = 64,
+            mode         = 'RO',
+        ))        
         
 class AxiPcieCore(pr.Device):
     def __init__(self,       

@@ -44,6 +44,8 @@ entity AxiPcieReg is
       regReadSlave        : out AxiReadSlaveType;
       regWriteMaster      : in  AxiWriteMasterType;
       regWriteSlave       : out AxiWriteSlaveType;
+      pipIbMaster         : out AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave          : in  AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
       -- DMA AXI-Lite Interfaces (axiClk domain)
       dmaCtrlReadMasters  : out AxiLiteReadMasterArray(2 downto 0);
       dmaCtrlReadSlaves   : in  AxiLiteReadSlaveArray(2 downto 0);
@@ -74,17 +76,17 @@ entity AxiPcieReg is
       bpiWeL              : out sl;
       bpiTri              : out sl;
       bpiDin              : out slv(15 downto 0);
-      bpiDout             : in  slv(15 downto 0) := x"FFFF";
+      bpiDout             : in  slv(15 downto 0)   := x"FFFF";
       -- SPI Boot Memory Ports 
       spiCsL              : out slv(1 downto 0);
       spiSck              : out slv(1 downto 0);
       spiMosi             : out slv(1 downto 0);
-      spiMiso             : in  slv(1 downto 0)  := "11");
+      spiMiso             : in  slv(1 downto 0)    := "11");
 end AxiPcieReg;
 
 architecture mapping of AxiPcieReg is
 
-   constant NUM_AXI_MASTERS_C : natural := 13;
+   constant NUM_AXI_MASTERS_C : natural := 12;
 
    constant DMA_INDEX_C     : natural := 0;
    constant PHY_INDEX_C     : natural := 1;
@@ -94,11 +96,11 @@ architecture mapping of AxiPcieReg is
    constant SPI1_INDEX_C    : natural := 5;
    constant AXIS_MON_IB_C   : natural := 6;
    constant AXIS_MON_OB_C   : natural := 7;
-   constant APP0_INDEX_C    : natural := 8;
-   constant APP1_INDEX_C    : natural := 9;
-   constant APP2_INDEX_C    : natural := 10;
-   constant APP3_INDEX_C    : natural := 11;
-   constant APP4_INDEX_C    : natural := 12;
+   -- constant APP0_INDEX_C    : natural := XXX; -- Now used for PIP interface
+   constant APP1_INDEX_C    : natural := 8;
+   constant APP2_INDEX_C    : natural := 9;
+   constant APP3_INDEX_C    : natural := 10;
+   constant APP4_INDEX_C    : natural := 11;
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       DMA_INDEX_C     => (
@@ -133,10 +135,10 @@ architecture mapping of AxiPcieReg is
          baseAddr     => x"0007_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
-      APP0_INDEX_C    => (
-         baseAddr     => x"0008_0000",
-         addrBits     => 19,
-         connectivity => x"FFFF"),
+--      APP0_INDEX_C    => (
+--         baseAddr     => x"0008_0000",
+--         addrBits     => 19,
+--         connectivity => x"FFFF"),
       APP1_INDEX_C    => (
          baseAddr     => x"0010_0000",
          addrBits     => 20,
@@ -160,11 +162,17 @@ architecture mapping of AxiPcieReg is
          addrBits     => 24,
          connectivity => x"FFFF"));
 
+   signal maskWriteMaster : AxiWriteMasterType;
+   signal maskWriteSlave  : AxiWriteSlaveType;
+   signal maskReadMaster  : AxiReadMasterType;
+   signal maskReadSlave   : AxiReadSlaveType;
+   
+   signal muxWriteMaster : AxiWriteMasterType;
+   signal muxWriteSlave  : AxiWriteSlaveType;   
+
    signal axilReadMaster  : AxiLiteReadMasterType;
-   signal maskReadMaster  : AxiLiteReadMasterType;
    signal axilReadSlave   : AxiLiteReadSlaveType;
    signal axilWriteMaster : AxiLiteWriteMasterType;
-   signal maskWriteMaster : AxiLiteWriteMasterType;
    signal axilWriteSlave  : AxiLiteWriteSlaveType;
 
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
@@ -185,13 +193,14 @@ architecture mapping of AxiPcieReg is
    signal appReset     : sl;
    signal appResetSync : sl;
    signal appClkFreq   : slv(31 downto 0);
+   signal bar0BaseAddr : slv(63 downto 0)    := (others => '0');
 
 begin
 
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
    ---------------------------------------------------------------------------------------------   
-   process(appClkFreq, appResetSync)
+   process(appClkFreq, appResetSync, bar0BaseAddr)
       variable i : natural;
    begin
       -- Number of DMA lanes (defined by user)
@@ -261,17 +270,70 @@ begin
       -- Application Clock Frequency
       userValues(8) <= appClkFreq;
 
+      -- BAR0 base address
+      userValues(9)  <= bar0BaseAddr(31 downto 0);
+      userValues(10) <= bar0BaseAddr(63 downto 32);
+
       -- Set unused to zero
-      for i in 63 downto 9 loop
+      for i in 63 downto 11 loop
          userValues(i) <= x"00000000";
       end loop;
 
    end process;
 
+   ----------------------------------------
+   -- Mask off upper address for 16 MB BAR0
+   ----------------------------------------
+   MASK_ADDR : process (regReadMaster, regWriteMaster) is
+      variable tmpWr : AxiWriteMasterType;
+      variable tmpRd : AxiReadMasterType;
+   begin
+      tmpWr := regWriteMaster;
+      tmpRd := regReadMaster;
+
+      tmpWr.awaddr(63 downto 24) := (others => '0');
+      tmpRd.araddr(63 downto 24) := (others => '0');
+
+      maskWriteMaster <= tmpWr;
+      maskReadMaster  <= tmpRd;
+   end process;
+
+   -----------------------------
+   -- Get the local BAR0 Address
+   -----------------------------
+   process(axiClk)
+   begin
+      if rising_edge(axiClk) then
+         if (regReadMaster.arvalid = '1') and (maskReadSlave.arready = '1') then
+            bar0BaseAddr(63 downto 24) <= regReadMaster.araddr(63 downto 24) after TPD_G;
+         end if;
+      end if;
+   end process;
+
+   regWriteSlave <= maskWriteSlave;
+   regReadSlave  <= maskReadSlave;
+
    -------------------------          
    -- AXI-to-AXI-Lite Bridge
    -------------------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
+
+      U_AxiPcieRegWriteMux : entity work.AxiPcieRegWriteMux
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            -- Clock and Reset
+            axiClk          => axiClk,
+            axiRst          => axiRst,
+            -- Slave AXI4 Interface
+            sAxiWriteMaster => maskWriteMaster,
+            sAxiWriteSlave  => maskWriteSlave,
+            -- Master AXI4 Interface
+            pipIbMaster     => pipIbMaster,
+            pipIbSlave      => pipIbSlave,
+            muxWriteMaster  => muxWriteMaster,
+            muxWriteSlave   => muxWriteSlave);
+
       U_AxiToAxiLite : entity work.AxiToAxiLite
          generic map (
             TPD_G           => TPD_G,
@@ -279,15 +341,17 @@ begin
          port map (
             axiClk          => axiClk,
             axiClkRst       => axiRst,
-            axiReadMaster   => regReadMaster,
-            axiReadSlave    => regReadSlave,
-            axiWriteMaster  => regWriteMaster,
-            axiWriteSlave   => regWriteSlave,
+            axiReadMaster   => maskReadMaster,
+            axiReadSlave    => maskReadSlave,
+            axiWriteMaster  => muxWriteMaster,
+            axiWriteSlave   => muxWriteSlave,
             axilReadMaster  => axilReadMaster,
             axilReadSlave   => axilReadSlave,
             axilWriteMaster => axilWriteMaster,
             axilWriteSlave  => axilWriteSlave);
+
    end generate;
+
    SIM_PCIE : if (ROGUE_SIM_EN_G) generate
       U_TcpToAxiLite : entity work.RogueTcpMemoryWrap
          generic map (
@@ -302,21 +366,6 @@ begin
             axilWriteSlave  => axilWriteSlave);
    end generate;
 
-   ----------------------------------------
-   -- Mask off upper address for 16 MB BAR0
-   ----------------------------------------
-   maskWriteMaster.awaddr  <= x"00" & axilWriteMaster.awaddr(23 downto 0);
-   maskWriteMaster.awprot  <= axilWriteMaster.awprot;
-   maskWriteMaster.awvalid <= axilWriteMaster.awvalid;
-   maskWriteMaster.wdata   <= axilWriteMaster.wdata;
-   maskWriteMaster.wstrb   <= axilWriteMaster.wstrb;
-   maskWriteMaster.wvalid  <= axilWriteMaster.wvalid;
-   maskWriteMaster.bready  <= axilWriteMaster.bready;
-   maskReadMaster.araddr   <= x"00" & axilReadMaster.araddr(23 downto 0);
-   maskReadMaster.arprot   <= axilReadMaster.arprot;
-   maskReadMaster.arvalid  <= axilReadMaster.arvalid;
-   maskReadMaster.rready   <= axilReadMaster.rready;
-
    --------------------
    -- AXI-Lite Crossbar
    --------------------
@@ -330,9 +379,9 @@ begin
       port map (
          axiClk              => axiClk,
          axiClkRst           => axiRst,
-         sAxiWriteMasters(0) => maskWriteMaster,
+         sAxiWriteMasters(0) => axilWriteMaster,
          sAxiWriteSlaves(0)  => axilWriteSlave,
-         sAxiReadMasters(0)  => maskReadMaster,
+         sAxiReadMasters(0)  => axilReadMaster,
          sAxiReadSlaves(0)   => axilReadSlave,
          mAxiWriteMasters    => axilWriteMasters,
          mAxiWriteSlaves     => axilWriteSlaves,
@@ -502,16 +551,16 @@ begin
       generic map (
          TPD_G              => TPD_G,
          DEC_ERROR_RESP_G   => AXI_RESP_OK_C,  -- Can't respond with error to a memory mapped bus
-         NUM_SLAVE_SLOTS_G  => (APP4_INDEX_C-APP0_INDEX_C+1),
+         NUM_SLAVE_SLOTS_G  => (APP4_INDEX_C-APP1_INDEX_C+1),
          NUM_MASTER_SLOTS_G => 1,
          MASTERS_CONFIG_G   => APP_CROSSBAR_CONFIG_C)
       port map (
          axiClk              => axiClk,
          axiClkRst           => axiRst,
-         sAxiWriteMasters    => axilWriteMasters(APP4_INDEX_C downto APP0_INDEX_C),
-         sAxiWriteSlaves     => axilWriteSlaves(APP4_INDEX_C downto APP0_INDEX_C),
-         sAxiReadMasters     => axilReadMasters(APP4_INDEX_C downto APP0_INDEX_C),
-         sAxiReadSlaves      => axilReadSlaves(APP4_INDEX_C downto APP0_INDEX_C),
+         sAxiWriteMasters    => axilWriteMasters(APP4_INDEX_C downto APP1_INDEX_C),
+         sAxiWriteSlaves     => axilWriteSlaves(APP4_INDEX_C downto APP1_INDEX_C),
+         sAxiReadMasters     => axilReadMasters(APP4_INDEX_C downto APP1_INDEX_C),
+         sAxiReadSlaves      => axilReadSlaves(APP4_INDEX_C downto APP1_INDEX_C),
          mAxiWriteMasters(0) => mAxilWriteMaster,
          mAxiWriteSlaves(0)  => mAxilWriteSlave,
          mAxiReadMasters(0)  => mAxilReadMaster,

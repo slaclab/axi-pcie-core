@@ -49,18 +49,10 @@ architecture mapping of AxiPcieCrossbar is
 
 begin
 
-   ---------------------------------------------------
-   -- No resizing required for AXI DMA descriptor path
-   ---------------------------------------------------
-   axiWriteMasters(0) <= sAxiWriteMasters(0);
-   sAxiWriteSlaves(0) <= axiWriteSlaves(0);
-   axiReadMasters(0)  <= sAxiReadMasters(0);
-   sAxiReadSlaves(0)  <= axiReadSlaves(0);
-
    ----------------------  
    -- AXI Resizer Modules
    ----------------------  
-   GEN_RESIZE : for i in DMA_SIZE_G downto 1 generate
+   GEN_RESIZE : for i in DMA_SIZE_G downto 0 generate
 
       RESIZE_16B : if (AXI_PCIE_CONFIG_G.DATA_BYTES_C = 16) generate
          U_AxiResize : entity work.AxiPcie16BResize

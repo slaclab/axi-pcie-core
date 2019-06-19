@@ -78,10 +78,13 @@ architecture mapping of AxiPcieDma is
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
 
+   signal dmaWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0) := (others=>AXI_WRITE_MASTER_FORCE_C);
+   signal dmaWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0) := (others=>AXI_WRITE_SLAVE_FORCE_C);
+   
    signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
    signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
    signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
-   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);
+   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);   
 
    signal sAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
    signal sAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
@@ -165,11 +168,11 @@ begin
             axiReadMasters  => axiReadMasters,
             axiReadSlaves   => axiReadSlaves,
             axiWriteCtrl    => (others => AXI_CTRL_UNUSED_C),
-
-            axiWriteMasters(DMA_SIZE_G downto 1) => axiWriteMasters(DMA_SIZE_G downto 1),
-            axiWriteMasters(0)                   => open,  -- Unused Interface
-            axiWriteSlaves(DMA_SIZE_G downto 1)  => axiWriteSlaves(DMA_SIZE_G downto 1),
-            axiWriteSlaves(0)                    => AXI_WRITE_SLAVE_FORCE_C);  -- Unused Interface
+            axiWriteMasters => dmaWriteMasters,
+            axiWriteSlaves  => dmaWriteSlaves);
+         
+      axiWriteMasters(DMA_SIZE_G downto 1) <= dmaWriteMasters(DMA_SIZE_G downto 1);
+      dmaWriteSlaves(DMA_SIZE_G downto 1)  <= axiWriteSlaves(DMA_SIZE_G downto 1);
 
       GEN_AXIS_FIFO : for i in DMA_SIZE_G-1 downto 0 generate
 

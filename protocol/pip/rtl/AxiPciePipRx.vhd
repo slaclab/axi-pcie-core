@@ -23,15 +23,19 @@ use work.StdRtlPkg.all;
 use work.AxiPkg.all;
 use work.AxiStreamPkg.all;
 use work.SsiPkg.all;
+use work.AxiPciePkg.all;
 
 entity AxiPciePipRx is
    generic (
-      TPD_G             : time := 1 ns;
-      DMA_AXIS_CONFIG_G : AxiStreamConfigType);
+      TPD_G              : time     := 1 ns;
+      BURST_BYTES_G      : positive := 256;  -- Units of Bytes
+      PCIE_AXIS_CONFIG_G : AxiStreamConfigType);
    port (
       -- Clock and Reset
       axiClk           : in  sl;
       axiRst           : in  sl;
+      -- Debug
+      dropFrame        : out sl;
       -- AXI4 Interface
       pipIbWriteMaster : in  AxiWriteMasterType;
       pipIbWriteSlave  : out AxiWriteSlaveType;
@@ -42,8 +46,8 @@ end AxiPciePipRx;
 
 architecture rtl of AxiPciePipRx is
 
-   constant BYTE_WIDTH_C    : positive                     := DMA_AXIS_CONFIG_G.TDATA_BYTES_C;  -- AXI and AXIS matched at DMA before the AXI Interconnection
-   constant WSTRB_NOT_EOF_C : slv(BYTE_WIDTH_C-1 downto 0) := (others => '1');
+   constant BYTE_WIDTH_C      : positive                     := PCIE_AXIS_CONFIG_G.TDATA_BYTES_C;  -- AXI and AXIS matched at DMA before the AXI Interconnection
+   constant WSTRB_NOT_EOF_C   : slv(BYTE_WIDTH_C-1 downto 0) := (others => '1');
 
    type StateType is (
       ADDR_S,
@@ -52,6 +56,7 @@ architecture rtl of AxiPciePipRx is
 
    type RegType is record
       tValid          : sl;
+      dropFrame       : sl;
       tFirst          : sl;
       tLast           : sl;
       pipIbWriteSlave : AxiWriteSlaveType;
@@ -61,6 +66,7 @@ architecture rtl of AxiPciePipRx is
 
    constant REG_INIT_C : RegType := (
       tValid          => '0',
+      dropFrame       => '0',
       tFirst          => '0',
       tLast           => '0',
       pipIbWriteSlave => AXI_WRITE_SLAVE_INIT_C,
@@ -84,6 +90,7 @@ begin
       v.pipIbWriteSlave.awready := '0';
       v.pipIbWriteSlave.wready  := '0';
       v.obMasters(0).tValid     := '0';
+      v.dropFrame               := '0';
 
       -- Hand shaking
       if (pipIbWriteMaster.bready = '1') then
@@ -110,6 +117,9 @@ begin
                if (pipIbWriteMaster.awaddr(11 downto 0) = 0) and (obCtrl.pause = '0') then
                   -- Set the flag
                   v.tValid := '1';
+               else
+                  -- Set the flag
+                  v.dropFrame := '1';
                end if;
 
                -- Next state
@@ -135,13 +145,13 @@ begin
                   -- Advance the pipeline
                   v.obMasters(0) := r.obMasters(1);
                end if;
-               
+
                -- Check for SOF condition
                if (r.tFirst = '0') then
                   -- Set the flag
                   v.tFirst := '1';
                   -- Set SOF               
-                  ssiSetUserSof(DMA_AXIS_CONFIG_G, v.obMasters(1), '1');
+                  ssiSetUserSof(PCIE_AXIS_CONFIG_G, v.obMasters(1), '1');
                end if;
 
                -- Check for the EOF condition
@@ -167,7 +177,7 @@ begin
             -- Advance the pipeline
             v.obMasters(1).tValid := '0';
             v.obMasters(1).tLast  := '0';
-            v.obMasters(1).tUser  := (others => '0');            
+            v.obMasters(1).tUser  := (others => '0');
             v.obMasters(0)        := r.obMasters(1);
 
             -- Wait for the bus response hand shaking 
@@ -186,6 +196,7 @@ begin
       end case;
 
       -- Outputs
+      dropFrame               <= r.dropFrame;
       pipIbWriteSlave         <= r.pipIbWriteSlave;
       pipIbWriteSlave.awready <= v.pipIbWriteSlave.awready;
       pipIbWriteSlave.wready  <= v.pipIbWriteSlave.wready;
@@ -215,9 +226,9 @@ begin
          BRAM_EN_G           => true,
          FIFO_ADDR_WIDTH_G   => 9,
          FIFO_FIXED_THRESH_G => true,
-         FIFO_PAUSE_THRESH_G => 250,
-         SLAVE_AXI_CONFIG_G  => DMA_AXIS_CONFIG_G,
-         MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_G)
+         FIFO_PAUSE_THRESH_G => 511 - 2*(BURST_BYTES_G/BYTE_WIDTH_C),
+         SLAVE_AXI_CONFIG_G  => PCIE_AXIS_CONFIG_G,
+         MASTER_AXI_CONFIG_G => PCIE_AXIS_CONFIG_G)
       port map (
          -- Slave Port
          sAxisClk    => axiClk,

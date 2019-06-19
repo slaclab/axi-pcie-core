@@ -19,24 +19,51 @@ class AxiPipCore(pr.Device):
         super().__init__(description=description, **kwargs)
 
         for i in range(numLane):
+            
             self.add(pr.RemoteVariable(
-                name         = 'REMOTE_BAR0_BASE_ADDRESS',
-                offset       = 8*i,
-                bitSize      = 64,
+                name         = f'REMOTE_BAR0_BASE_ADDRESS[{i}]',
+                offset       = 0x00+8*i,
+                bitSize      = 32,
                 mode         = 'RW',
             )) 
             
+            self.add(pr.RemoteVariable(
+                name         = f'DepackEofeCnt[{i}]',
+                offset       = 0xF0,
+                bitSize      = 32,
+                mode         = 'RO',
+                pollInterval = 1,
+            ))        
+        
         self.add(pr.RemoteVariable(
-            name         = 'EnableTx',
-            offset       = 0x80,
-            bitSize      = numLane,
-            mode         = 'RW',
-        ))  
+            name         = 'DropFrameCnt',
+            offset       = 0xF0,
+            bitSize      = 32,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))        
 
         self.add(pr.RemoteVariable(
             name         = 'NUM_AXIS_G',
-            offset       = 0xFC,
+            offset       = 0xF4,
             bitSize      = 5,
-            mode         = 'RW',
+            mode         = 'RO',
         ))
         
+        self.add(pr.RemoteVariable(
+            name         = 'EnableTx',
+            offset       = 0xF8,
+            bitSize      = numLane,
+            mode         = 'RW',
+        ))  
+        
+        self.add(pr.RemoteCommand(   
+            name         = 'CountReset',
+            description  = 'Status counter reset',
+            offset       = 0xFC,
+            bitSize      = 1,
+            function     = pr.BaseCommand.touchOne
+        ))        
+        
+    def countReset(self):
+        self.CountReset()        

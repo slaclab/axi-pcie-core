@@ -166,9 +166,9 @@ architecture mapping of AxiPcieReg is
    signal maskWriteSlave  : AxiWriteSlaveType;
    signal maskReadMaster  : AxiReadMasterType;
    signal maskReadSlave   : AxiReadSlaveType;
-   
+
    signal muxWriteMaster : AxiWriteMasterType;
-   signal muxWriteSlave  : AxiWriteSlaveType;   
+   signal muxWriteSlave  : AxiWriteSlaveType;
 
    signal axilReadMaster  : AxiLiteReadMasterType;
    signal axilReadSlave   : AxiLiteReadSlaveType;
@@ -193,14 +193,13 @@ architecture mapping of AxiPcieReg is
    signal appReset     : sl;
    signal appResetSync : sl;
    signal appClkFreq   : slv(31 downto 0);
-   signal bar0BaseAddr : slv(63 downto 0)    := (others => '0');
 
 begin
 
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
    ---------------------------------------------------------------------------------------------   
-   process(appClkFreq, appResetSync, bar0BaseAddr)
+   process(appClkFreq, appResetSync)
       variable i : natural;
    begin
       -- Number of DMA lanes (defined by user)
@@ -270,12 +269,8 @@ begin
       -- Application Clock Frequency
       userValues(8) <= appClkFreq;
 
-      -- BAR0 base address
-      userValues(9)  <= bar0BaseAddr(31 downto 0);
-      userValues(10) <= bar0BaseAddr(63 downto 32);
-
       -- Set unused to zero
-      for i in 63 downto 11 loop
+      for i in 63 downto 9 loop
          userValues(i) <= x"00000000";
       end loop;
 
@@ -296,18 +291,6 @@ begin
 
       maskWriteMaster <= tmpWr;
       maskReadMaster  <= tmpRd;
-   end process;
-
-   -----------------------------
-   -- Get the local BAR0 Address
-   -----------------------------
-   process(axiClk)
-   begin
-      if rising_edge(axiClk) then
-         if (regReadMaster.arvalid = '1') and (maskReadSlave.arready = '1') then
-            bar0BaseAddr(63 downto 24) <= regReadMaster.araddr(63 downto 24) after TPD_G;
-         end if;
-      end if;
    end process;
 
    regWriteSlave <= maskWriteSlave;
@@ -550,7 +533,7 @@ begin
    U_APP_XBAR : entity work.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
-         DEC_ERROR_RESP_G   => AXI_RESP_OK_C,  -- Can't respond with error to a memory mapped bus
+         DEC_ERROR_RESP_G   => ite(ROGUE_SIM_EN_G, AXI_RESP_DECERR_C, AXI_RESP_OK_C),
          NUM_SLAVE_SLOTS_G  => (APP4_INDEX_C-APP1_INDEX_C+1),
          NUM_MASTER_SLOTS_G => 1,
          MASTERS_CONFIG_G   => APP_CROSSBAR_CONFIG_C)

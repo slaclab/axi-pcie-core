@@ -207,13 +207,6 @@ class PcieAxiVersion(axi.AxiVersion):
             pollInterval = 1
         ))
         
-        self.add(pr.RemoteVariable(
-            name         = 'BAR0_BASE_ADDRESS',
-            offset       = 0x400+(4*9),
-            bitSize      = 64,
-            mode         = 'RO',
-        ))        
-        
 class AxiPcieCore(pr.Device):
     def __init__(self,       
                  description = 'Base components of the PCIe firmware core',

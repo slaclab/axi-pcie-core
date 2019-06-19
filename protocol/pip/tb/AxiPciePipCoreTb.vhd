@@ -60,6 +60,7 @@ architecture testbed of AxiPciePipCoreTb is
    signal errorDet  : slv(APP_STREAMS_C-1 downto 0);
    signal enableTx  : slv(APP_STREAMS_C-1 downto 0);
    signal txBusy    : slv(APP_STREAMS_C-1 downto 0);
+   signal axiReady  : sl;
 
    signal axiWriteMaster : AxiWriteMasterType;
    signal axiWriteSlave  : AxiWriteSlaveType;
@@ -150,14 +151,13 @@ begin
          -- AXI4 Interfaces (axiClk domain)
          axiClk          => clk,
          axiRst          => rst,
+         axiReady        => axiReady,
          sAxiWriteMaster => axiWriteMaster,
          sAxiWriteSlave  => axiWriteSlave,
          mAxiWriteMaster => axiWriteMaster,
          mAxiWriteSlave  => axiWriteSlave);
 
-
-
-   comb : process (enableTx, errorDet, r, rst, txBusy) is
+   comb : process (axiReady, enableTx, errorDet, r, rst, txBusy) is
       variable v : RegType;
    begin
       -- Latch the current value   
@@ -167,7 +167,7 @@ begin
 
          -- Keep delay copies
          v.txBusy(i) := txBusy(i) or not(enableTx(i));
-         v.trig(i)   := not(r.txBusy(i)) and enableTx(i);
+         v.trig(i)   := not(r.txBusy(i)) and enableTx(i) and axiReady;
 
          -- Check for the packet completion 
          if (txBusy(i) = '1') and (r.txBusy(i) = '0') then
@@ -216,12 +216,9 @@ begin
 
 
       for i in APP_STREAMS_C-1 downto 0 loop
-         axiLiteBusSimWrite(clk, axilWriteMaster, axilWriteSlave, toSlv(i*8, 32), toSlv(i*4096, 32), true);  -- remoteBar0BaseAddr[i]
+         axiLiteBusSimWrite(clk, axilWriteMaster, axilWriteSlave, toSlv(i*8, 32), toSlv((i+1)*2**24, 32), true);  -- remoteBarBaseAddr[i]
       end loop;
-
-      wait for 7 us;
-
-      axiLiteBusSimWrite (clk, axilWriteMaster, axilWriteSlave, x"0000_0080", toSlv(2**APP_STREAMS_C-1, 32), true);  -- enableTx
+      axiLiteBusSimWrite (clk, axilWriteMaster, axilWriteSlave, x"0000_00F8", toSlv(2**APP_STREAMS_C-1, 32), true);  -- enableTx
 
    end process test;
 

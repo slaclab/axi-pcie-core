@@ -30,32 +30,26 @@ entity AxiPciePipTx is
       TPD_G              : time                   := 1 ns;
       BURST_BYTES_G      : positive               := 256;  -- Units of Bytes
       NUM_AXIS_G         : positive range 1 to 16 := 1;
-      DMA_AXIS_CONFIG_G : AxiStreamConfigType);
+      PCIE_AXIS_CONFIG_G : AxiStreamConfigType);
    port (
       -- Clock and Reset
-      axiClk           : in  sl;
-      axiRst           : in  sl;
+      axiClk            : in  sl;
+      axiRst            : in  sl;
       -- Configuration Interface
-      enableTx   : in  slv(NUM_AXIS_G-1 downto 0);
-      remoteBar0BaseAddr   : in  Slv64Array(NUM_AXIS_G-1 downto 0);
+      enableTx          : in  slv(NUM_AXIS_G-1 downto 0);
+      remoteBarBaseAddr : in  Slv32Array(NUM_AXIS_G-1 downto 0);
       -- AXI Stream Interface
-      pipObMaster      : in  AxiStreamMasterType;
-      pipObSlave       : out AxiStreamSlaveType;
+      pipObMaster       : in  AxiStreamMasterType;
+      pipObSlave        : out AxiStreamSlaveType;
       -- AXI4 Interface
-      pipObWriteMaster : out AxiWriteMasterType;
-      pipObWriteSlave  : in  AxiWriteSlaveType);
+      pipObWriteMaster  : out AxiWriteMasterType;
+      pipObWriteSlave   : in  AxiWriteSlaveType);
 end AxiPciePipTx;
 
 architecture rtl of AxiPciePipTx is
 
-   constant DMA_AXI_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
-      DATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,  -- Matches the AXIS stream
-      ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
-      LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
-
-   constant BYTE_WIDTH_C : positive        := DMA_AXIS_CONFIG_G.TDATA_BYTES_C;  -- AXI and AXIS matched at DMA before the AXI Interconnection
-   constant AXI_LEN_C    : slv(7 downto 0) := getAxiLen(DMA_AXI_CONFIG_C, BURST_BYTES_G);
+   constant BYTE_WIDTH_C : positive        := AXI_PCIE_CONFIG_C.DATA_BYTES_C;  -- AXI and AXIS matched at DMA before the AXI Interconnection
+   constant AXI_LEN_C    : slv(7 downto 0) := getAxiLen(AXI_PCIE_CONFIG_C, BURST_BYTES_G);
 
    type StateType is (
       IDLE_S,
@@ -73,7 +67,7 @@ architecture rtl of AxiPciePipTx is
    constant REG_INIT_C : RegType := (
       tReady           => '0',
       cnt              => x"00",
-      pipObWriteMaster => axiWriteMasterInit(DMA_AXI_CONFIG_C, '1', "01", "1111"),
+      pipObWriteMaster => axiWriteMasterInit(AXI_PCIE_CONFIG_C, '1', "01", "1111"),
       pipObSlave       => AXI_STREAM_SLAVE_INIT_C,
       state            => IDLE_S);
 
@@ -82,8 +76,8 @@ architecture rtl of AxiPciePipTx is
 
 begin
 
-   comb : process (axiRst, pipObMaster, pipObWriteSlave, r, remoteBar0BaseAddr,
-                   enableTx) is
+   comb : process (axiRst, enableTx, pipObMaster, pipObWriteSlave, r,
+                   remoteBarBaseAddr) is
       variable v   : RegType;
       variable idx : natural range 0 to 15;
    begin
@@ -112,8 +106,11 @@ begin
             -- Check if ready to move data
             if (pipObMaster.tValid = '1') then
 
-               -- Check for SOF and SW enabled the channel after setting the remote BAR0 address
-               if (ssiGetUserSof(DMA_AXIS_CONFIG_G, pipObMaster) = '1') and (enableTx(idx) = '1') then
+               -- Check for the enabled conditions
+               if (ssiGetUserSof(PCIE_AXIS_CONFIG_G, pipObMaster) = '1')  -- Check for SOF
+                             and (remoteBarBaseAddr(idx)(31 downto 24) /= 0)  -- Check for non-zero BAR base address
+                             and (remoteBarBaseAddr(idx)(23 downto 0) = 0)  -- Check for 16MB alignment
+                             and (enableTx(idx) = '1') then  -- Check for TX enabled
                   -- Next state
                   v.state := ADDR_S;
                else
@@ -128,19 +125,18 @@ begin
             if (v.pipObWriteMaster.awvalid = '0') then
 
                -- Send the address transaction
-               v.pipObWriteMaster.awvalid := '1';
-               v.pipObWriteMaster.awaddr  := remoteBar0BaseAddr(idx);
-               
-               -- Enforce 4kB alignment
-               v.pipObWriteMaster.awaddr(11 downto 0) := (others => '0');
-               
+               v.pipObWriteMaster.awvalid              := '1';
+               v.pipObWriteMaster.awaddr(31 downto 24) := remoteBarBaseAddr(idx)(31 downto 24);
+
+               -- Enforce PIP address space
+               v.pipObWriteMaster.awaddr(23 downto 16) := x"08";
+
                -- Set the stream index w.r.t. TDEST
                v.pipObWriteMaster.awaddr(15 downto 12) := pipObMaster.tDest(3 downto 0);
-               
-               -- Enforce Bar0 PIP address space
-               v.pipObWriteMaster.awaddr(23 downto 16) := x"08";               
-               
-               
+
+               -- Enforce 4kB alignment
+               v.pipObWriteMaster.awaddr(11 downto 0) := (others => '0');
+
                -- Set the flag
                v.tReady := '1';
 
@@ -192,7 +188,7 @@ begin
       pipObSlave              <= v.pipObSlave;
       pipObWriteMaster        <= r.pipObWriteMaster;
       pipObWriteMaster.bready <= '1';   -- Ignoring the bus response
-      pipObWriteMaster.awsize <= toSlv(log2(DMA_AXI_CONFIG_C.DATA_BYTES_C), 3);
+      pipObWriteMaster.awsize <= toSlv(log2(AXI_PCIE_CONFIG_C.DATA_BYTES_C), 3);
       pipObWriteMaster.awlen  <= AXI_LEN_C;
 
       -- Reset

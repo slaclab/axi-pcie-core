@@ -71,20 +71,22 @@ begin
       -- Latch the current value
       v := r;
 
-      -- Reset strobes
+      -- S_AXI Handshaking
       v.writeSlave.awready := '0';
       v.writeSlave.wready  := '0';
-
-      -- Hand shaking
       if (sAxiWriteMaster.bready = '1') then
          v.writeSlave.bvalid := '0';
       end if;
+
+      -- PIP Handshaking
       if (pipIbSlave.awready = '1') then
          v.writeMasters(1).awvalid := '0';
       end if;
       if (pipIbSlave.wready = '1') then
          v.writeMasters(1).wvalid := '0';
       end if;
+
+      -- REG Handshaking
       if (muxWriteSlave.awready = '1') then
          v.writeMasters(0).awvalid := '0';
       end if;
@@ -96,7 +98,7 @@ begin
       case (r.state) is
          ----------------------------------------------------------------------
          when ADDR_S =>
-            -- Check for access in user AXI [0008_0000:0008_FFFF]
+            -- Check for access in PIP address space [0008_0000:0008_FFFF]
             if (sAxiWriteMaster.awaddr(23 downto 16) = x"08") then
                v.idx := 1;
             else
@@ -104,7 +106,7 @@ begin
             end if;
 
             -- Check for address valid and bus response completed
-            if (sAxiWriteMaster.awvalid = '1') and (v.writeMasters(v.idx).awvalid = '0') and (v.writeMasters(v.idx).wvalid = '0') and (v.writeSlave.bvalid = '0') then
+            if (sAxiWriteMaster.awvalid = '1') and (v.writeMasters(v.idx).awvalid = '0') and (v.writeSlave.bvalid = '0') then
 
                -- Accept the transaction
                v.writeSlave.awready := '1';
@@ -115,10 +117,21 @@ begin
                -- Set the response ID
                v.writeSlave.bid := sAxiWriteMaster.awid;
 
-               -- Check for last AXI last transaction cycle
-               if (sAxiWriteMaster.wvalid = '1') and (sAxiWriteMaster.wlast = '1') then
-                  -- Send the bus response
-                  v.writeSlave.bvalid := '1';
+               -- Check for data with address valid cycle
+               if (sAxiWriteMaster.wvalid = '1') then
+
+                  -- Accept the transaction
+                  v.writeSlave.wready := '1';
+
+                  -- Check for last AXI last transaction cycle
+                  if (sAxiWriteMaster.wlast = '1') then
+                     -- Send the bus response
+                     v.writeSlave.bvalid := '1';
+                  else
+                     -- Next state
+                     v.state := DATA_S;
+                  end if;
+
                else
                   -- Next state
                   v.state := DATA_S;

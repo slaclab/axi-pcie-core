@@ -42,8 +42,8 @@ end AxiPcieRegWriteMux;
 architecture rtl of AxiPcieRegWriteMux is
 
    type StateType is (
-      ADDR_S,
-      DATA_S);
+      IDLE_S,
+      MOVE_S);
 
    type RegType is record
       idx          : natural range 0 to 1;
@@ -56,7 +56,7 @@ architecture rtl of AxiPcieRegWriteMux is
       idx          => 0,
       writeSlave   => AXI_WRITE_SLAVE_INIT_C,
       writeMasters => (others => AXI_WRITE_MASTER_INIT_C),
-      state        => ADDR_S);
+      state        => IDLE_S);
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -97,7 +97,7 @@ begin
       -- State Machine
       case (r.state) is
          ----------------------------------------------------------------------
-         when ADDR_S =>
+         when IDLE_S =>
             -- Check for access in PIP address space [0008_0000:0008_FFFF]
             if (sAxiWriteMaster.awaddr(23 downto 16) = x"08") then
                v.idx := 1;
@@ -105,58 +105,55 @@ begin
                v.idx := 0;
             end if;
 
-            -- Check for address valid and bus response completed
+            -- Check if new transaction and ready for transaction
             if (sAxiWriteMaster.awvalid = '1') and (v.writeMasters(v.idx).awvalid = '0') and (v.writeSlave.bvalid = '0') then
 
-               -- Accept the transaction
+               -- Accept the write address transaction
                v.writeSlave.awready := '1';
 
-               -- Forward the data
-               v.writeMasters(v.idx) := sAxiWriteMaster;
+               -- Write address channel
+               v.writeMasters(v.idx).awvalid  := sAxiWriteMaster.awvalid;
+               v.writeMasters(v.idx).awaddr   := sAxiWriteMaster.awaddr;
+               v.writeMasters(v.idx).awid     := sAxiWriteMaster.awid;
+               v.writeMasters(v.idx).awlen    := sAxiWriteMaster.awlen;
+               v.writeMasters(v.idx).awsize   := sAxiWriteMaster.awsize;
+               v.writeMasters(v.idx).awburst  := sAxiWriteMaster.awburst;
+               v.writeMasters(v.idx).awlock   := sAxiWriteMaster.awlock;
+               v.writeMasters(v.idx).awprot   := sAxiWriteMaster.awprot;
+               v.writeMasters(v.idx).awcache  := sAxiWriteMaster.awcache;
+               v.writeMasters(v.idx).awqos    := sAxiWriteMaster.awqos;
+               v.writeMasters(v.idx).awregion := sAxiWriteMaster.awregion;
 
                -- Set the response ID
                v.writeSlave.bid := sAxiWriteMaster.awid;
 
-               -- Check for data with address valid cycle
-               if (sAxiWriteMaster.wvalid = '1') then
-
-                  -- Accept the transaction
-                  v.writeSlave.wready := '1';
-
-                  -- Check for last AXI last transaction cycle
-                  if (sAxiWriteMaster.wlast = '1') then
-                     -- Send the bus response
-                     v.writeSlave.bvalid := '1';
-                  else
-                     -- Next state
-                     v.state := DATA_S;
-                  end if;
-
-               else
-                  -- Next state
-                  v.state := DATA_S;
-               end if;
+               -- Next state
+               v.state := MOVE_S;
 
             end if;
          ----------------------------------------------------------------------
-         when DATA_S =>
-            -- Check for address valid
+         when MOVE_S =>
+            -- Check if new transaction and ready for transaction
             if (sAxiWriteMaster.wvalid = '1') and (v.writeMasters(r.idx).wvalid = '0') then
 
-               -- Accept the transaction
+               -- Accept the write data transaction
                v.writeSlave.wready := '1';
 
-               -- Forward the data
-               v.writeMasters(r.idx) := sAxiWriteMaster;
+               -- Write data channel
+               v.writeMasters(r.idx).wdata  := sAxiWriteMaster.wdata;
+               v.writeMasters(r.idx).wlast  := sAxiWriteMaster.wlast;
+               v.writeMasters(r.idx).wvalid := sAxiWriteMaster.wvalid;
+               v.writeMasters(r.idx).wid    := sAxiWriteMaster.wid;
+               v.writeMasters(r.idx).wstrb  := sAxiWriteMaster.wstrb;
 
                -- Check for last AXI last transaction cycle
                if (sAxiWriteMaster.wlast = '1') then
 
                   -- Send the bus response
-                  v.writeSlave.bvalid := '1';
+                  v.writeSlave.bvalid := '1';  -- Only posted writes
 
                   -- Next state
-                  v.state := ADDR_S;
+                  v.state := IDLE_S;
 
                end if;
 
@@ -164,16 +161,18 @@ begin
       ----------------------------------------------------------------------
       end case;
 
-      -- Ignoring the bus response
-      v.writeMasters(1).bready := '1';
-      v.writeMasters(0).bready := '1';
-
-      -- Outputs
+      -- S_AXI Outputs
       sAxiWriteSlave         <= r.writeSlave;
       sAxiWriteSlave.awready <= v.writeSlave.awready;
       sAxiWriteSlave.wready  <= v.writeSlave.wready;
-      pipIbMaster            <= r.writeMasters(1);
-      muxWriteMaster         <= r.writeMasters(0);
+
+      -- PIP Outputs
+      pipIbMaster        <= r.writeMasters(1);
+      pipIbMaster.bready <= pipIbSlave.bvalid;  -- Only posted writes
+
+      -- REG Outputs
+      muxWriteMaster        <= r.writeMasters(0);
+      muxWriteMaster.bready <= muxWriteSlave.bvalid;  -- Only posted writes
 
       -- Reset
       if (axiRst = '1') then

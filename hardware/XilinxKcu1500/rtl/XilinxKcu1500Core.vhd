@@ -50,7 +50,7 @@ entity XilinxKcu1500Core is
       dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- PIP Interface [0x00080000:0008FFFF] (dmaClk domain)
+      -- PIP Interface [0x00080000:0009FFFF] (dmaClk domain)
       pipIbMaster    : out AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
       pipIbSlave     : in  AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
       pipObMaster    : in  AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;

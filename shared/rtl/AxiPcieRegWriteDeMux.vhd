@@ -98,8 +98,8 @@ begin
       case (r.state) is
          ----------------------------------------------------------------------
          when IDLE_S =>
-            -- Check for access in PIP address space [0008_0000:0008_FFFF]
-            if (sAxiWriteMaster.awaddr(23 downto 16) = x"08") then
+            -- Check for access in PIP address space [0008_0000:0009_FFFF]
+            if (sAxiWriteMaster.awaddr(23 downto 17) = b"0000_100") then
                v.idx := 1;
             else
                v.idx := 0;

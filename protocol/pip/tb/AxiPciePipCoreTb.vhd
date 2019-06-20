@@ -29,12 +29,13 @@ entity AxiPciePipCoreTb is end AxiPciePipCoreTb;
 
 architecture testbed of AxiPciePipCoreTb is
 
-   constant CLK_PERIOD_C      : time                := 10 ns;  -- 1 us makes it easy to count clock cycles in sim GUI
-   constant TPD_G             : time                := CLK_PERIOD_C/4;
-   constant PRBS_SEED_SIZE_C  : positive            := 32;
-   constant DMA_AXIS_CONFIG_C : AxiStreamConfigType := ssiAxiStreamConfig(8);
-   constant PKT_LEN_C         : slv(31 downto 0)    := x"000000FF";  -- PRBS TX packet length
-   constant APP_STREAMS_C     : positive            := 4;
+   constant CLK_PERIOD_C      : time                   := 10 ns;  -- 1 us makes it easy to count clock cycles in sim GUI
+   constant TPD_G             : time                   := CLK_PERIOD_C/4;
+   constant PRBS_SEED_SIZE_C  : positive               := 32;
+   constant DMA_AXIS_CONFIG_C : AxiStreamConfigType    := ssiAxiStreamConfig(8);
+   constant PKT_LEN_C         : slv(31 downto 0)       := x"000000FF";  -- PRBS TX packet length
+   constant BAR_BASE_ADDR_C   : Slv32Array(3 downto 0) := (0 => x"10000000", 1 => x"20000000", 2 => x"30000000", 3 => x"40000000");
+   constant APP_STREAMS_C     : positive               := 4;
 
    type RegType is record
       packetLength : Slv32Array(APP_STREAMS_C-1 downto 0);
@@ -213,10 +214,10 @@ begin
    begin
       wait until rst = '1';
       wait until rst = '0';
-
+      wait for 1 us;
 
       for i in APP_STREAMS_C-1 downto 0 loop
-         axiLiteBusSimWrite(clk, axilWriteMaster, axilWriteSlave, toSlv(i*8, 32), toSlv((i+1)*2**24, 32), true);  -- remoteBarBaseAddr[i]
+         axiLiteBusSimWrite(clk, axilWriteMaster, axilWriteSlave, toSlv(i*8, 32), BAR_BASE_ADDR_C(i), true);  -- remoteBarBaseAddr[i]
       end loop;
       axiLiteBusSimWrite (clk, axilWriteMaster, axilWriteSlave, x"0000_00F8", toSlv(2**APP_STREAMS_C-1, 32), true);  -- enableTx
 

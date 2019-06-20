@@ -80,31 +80,6 @@ architecture mapping of AxiPciePipCore is
       TUSER_BITS_C  => 8,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
-   type RegType is record
-      dropFrameCnt      : slv(31 downto 0);
-      depackEofeCnt     : Slv32Array(NUM_AXIS_G-1 downto 0);
-      cntRst            : sl;
-      enableTx          : slv(NUM_AXIS_G-1 downto 0);
-      remoteBarBaseAddr : Slv32Array(NUM_AXIS_G-1 downto 0);
-      axilReadSlave     : AxiLiteReadSlaveType;
-      axilWriteSlave    : AxiLiteWriteSlaveType;
-   end record;
-
-   constant REG_INIT_C : RegType := (
-      dropFrameCnt      => (others => '0'),
-      depackEofeCnt     => (others => (others => '0')),
-      cntRst            => '0',
-      enableTx          => (others => '0'),
-      remoteBarBaseAddr => (others => (others => '0')),
-      axilReadSlave     => AXI_LITE_READ_SLAVE_INIT_C,
-      axilWriteSlave    => AXI_LITE_WRITE_SLAVE_INIT_C);
-
-   signal r   : RegType := REG_INIT_C;
-   signal rin : RegType;
-
-   signal enableTxSync      : slv(NUM_AXIS_G-1 downto 0);
-   signal remoteBarBaseAddr : Slv32Array(NUM_AXIS_G-1 downto 0);
-
    signal ibAxisMasters : AxiStreamMasterArray(NUM_AXIS_G-1 downto 0);
    signal ibAxisSlaves  : AxiStreamSlaveArray(NUM_AXIS_G-1 downto 0);
 
@@ -129,123 +104,50 @@ architecture mapping of AxiPciePipCore is
    signal obAxisMasters : AxiStreamMasterArray(NUM_AXIS_G-1 downto 0);
    signal obAxisSlaves  : AxiStreamSlaveArray(NUM_AXIS_G-1 downto 0);
 
-   signal dropFrame     : sl;
-   signal dropFrameSync : sl;
+   signal rxFrame     : sl;
+   signal rxDropFrame : sl;
 
-   signal depackDebug    : Packetizer2DebugArray(NUM_AXIS_G-1 downto 0);
-   signal depackEofeSync : slv(NUM_AXIS_G-1 downto 0);
+   signal txFrame           : sl;
+   signal txDropFrame       : sl;
+   signal txAxiError        : sl;
+   signal enTx              : slv(NUM_AXIS_G-1 downto 0);
+   signal awcache           : slv(3 downto 0);
+   signal remoteBarBaseAddr : Slv32Array(NUM_AXIS_G-1 downto 0);
+
+   signal depackDebug : Packetizer2DebugArray(NUM_AXIS_G-1 downto 0);
 
 begin
 
-   axiReady <= depackDebug(0).initDone; -- Used to synchronize with simulation testbed
+   enableTx <= enTx;
 
-   --------------------- 
-   -- AXI Lite Interface
-   --------------------- 
-   comb : process (axilReadMaster, axilRst, axilWriteMaster, depackEofeSync,
-                   dropFrameSync, r) is
-      variable v      : RegType;
-      variable axilEp : AxiLiteEndPointType;
-   begin
-      -- Latch the current value
-      v := r;
-
-      -- Reset strobes
-      v.cntRst := '0';
-
-      -- Check for drop frame
-      if (dropFrameSync = '1') then
-         v.dropFrameCnt := r.dropFrameCnt + 1;
-      end if;
-
-      -- Check for EOFE on the depacker
-      for i in NUM_AXIS_G-1 downto 0 loop
-         if (depackEofeSync(i) = '1') then
-            v.depackEofeCnt(i) := r.depackEofeCnt(i) + 1;
-         end if;
-      end loop;
-
-      -- Check for counter reset
-      if (r.cntRst = '1') then
-         -- Reset counters
-         v.dropFrameCnt  := (others => '0');
-         v.depackEofeCnt := (others => (others => '0'));
-      end if;
-
-      --------------------------------------------------------------------------------------------
-      -- Determine the transaction type
-      --------------------------------------------------------------------------------------------
-      axiSlaveWaitTxn(axilEp, axilWriteMaster, axilReadMaster, v.axilWriteSlave, v.axilReadSlave);
-
-      -- Register Mapping
-      for i in NUM_AXIS_G-1 downto 0 loop  
-         axiSlaveRegister (axilEp, toSlv(i*8, 8), 0, v.remoteBarBaseAddr(i));-- [0x00:0x7F]
-         axiSlaveRegisterR(axilEp, toSlv(128+i*4, 8), 0, r.depackEofeCnt(i));-- [0x80:0xBF]
-      end loop;      
-      
-      axiSlaveRegisterR(axilEp, x"F0", 0, r.dropFrameCnt);
-      axiSlaveRegisterR(axilEp, x"F4", 0, toSlv(NUM_AXIS_G, 5));
-      axiSlaveRegister (axilEp, x"F8", 0, v.enableTx);
-      axiSlaveRegister (axilEp, x"FC", 0, v.cntRst);
-
-      -- Closeout the transaction
-      axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
-      --------------------------------------------------------------------------------------------
-
-      -- Outputs
-      axilWriteSlave <= r.axilWriteSlave;
-      axilReadSlave  <= r.axilReadSlave;
-      enableTx       <= r.enableTx;
-
-      -- Reset
-      if (axilRst = '1') then
-         v := REG_INIT_C;
-      end if;
-
-      -- Register the variable for next clock cycle
-      rin <= v;
-
-   end process comb;
-
-   seq : process (axilClk) is
-   begin
-      if (rising_edge(axilClk)) then
-         r <= rin after TPD_G;
-      end if;
-   end process seq;
-
-   U_dropFrame : entity work.SynchronizerOneShot
+   ------------------------------
+   -- AXI-Lite Control/Monitoring
+   ------------------------------
+   U_AxiPciePipReg : entity work.AxiPciePipReg
       generic map (
-         TPD_G => TPD_G)
+         TPD_G      => TPD_G,
+         NUM_AXIS_G => NUM_AXIS_G)
       port map (
-         clk     => axilClk,
-         dataIn  => dropFrame,
-         dataOut => dropFrameSync);
-
-   GEN_SYNC :
-   for i in (NUM_AXIS_G-1) downto 0 generate
-   
-      U_SynchronizerFifo : entity work.SynchronizerFifo
-         generic map (
-            TPD_G        => TPD_G,
-            DATA_WIDTH_G => 33)
-         port map (
-            wr_clk            => axilClk,
-            din(32)           => r.enableTx(i),
-            din(31 downto 0)  => r.remoteBarBaseAddr(i),
-            rd_clk            => axiClk,
-            dout(32)          => enableTxSync(i),
-            dout(31 downto 0) => remoteBarBaseAddr(i));
-
-      U_depackEofe : entity work.SynchronizerOneShot
-         generic map (
-            TPD_G => TPD_G)
-         port map (
-            clk     => axilClk,
-            dataIn  => depackDebug(i).eofe,
-            dataOut => depackEofeSync(i));
-            
-   end generate GEN_SYNC;
+         -- AXI4-Lite Interfaces (axilClk domain)
+         axilClk           => axilClk,
+         axilRst           => axilRst,
+         axilReadMaster    => axilReadMaster,
+         axilReadSlave     => axilReadSlave,
+         axilWriteMaster   => axilWriteMaster,
+         axilWriteSlave    => axilWriteSlave,
+         -- AXI4 Interfaces (axiClk domain)
+         axiClk            => axiClk,
+         axiRst            => axiRst,
+         rxDropFrame       => rxDropFrame,
+         txDropFrame       => txDropFrame,
+         rxFrame           => rxFrame,
+         txFrame           => txFrame,
+         txAxiError        => txAxiError,
+         depackDebug       => depackDebug,
+         enableTx          => enTx,
+         awcache           => awcache,
+         remoteBarBaseAddr => remoteBarBaseAddr,
+         axiReady          => axiReady);
 
    ------------------------------------
    -- Inbound AXI Stream to AXI4 Layers
@@ -349,8 +251,12 @@ begin
          axiClk            => axiClk,
          axiRst            => axiRst,
          -- Configuration Interface
-         enableTx          => enableTxSync,
+         enableTx          => enTx,
          remoteBarBaseAddr => remoteBarBaseAddr,
+         awcache           => awcache,
+         txFrame           => txFrame,
+         txDropFrame       => txDropFrame,
+         txAxiError        => txAxiError,
          -- AXI Stream Interface
          pipObMaster       => pipObMaster,
          pipObSlave        => pipObSlave,
@@ -372,7 +278,8 @@ begin
          axiClk           => axiClk,
          axiRst           => axiRst,
          -- Debugging
-         dropFrame        => dropFrame,
+         rxFrame          => rxFrame,
+         rxDropFrame      => rxDropFrame,
          -- AXI4 Interfaces
          pipIbWriteMaster => sAxiWriteMaster,
          pipIbWriteSlave  => sAxiWriteSlave,

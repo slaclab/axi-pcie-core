@@ -38,6 +38,10 @@ entity AxiPciePipTx is
       -- Configuration Interface
       enableTx          : in  slv(NUM_AXIS_G-1 downto 0);
       remoteBarBaseAddr : in  Slv32Array(NUM_AXIS_G-1 downto 0);
+      awcache           : in  slv(3 downto 0);
+      txFrame           : out sl;
+      txDropFrame       : out sl;
+      txAxiError        : out sl;
       -- AXI Stream Interface
       pipObMaster       : in  AxiStreamMasterType;
       pipObSlave        : out AxiStreamSlaveType;
@@ -48,15 +52,20 @@ end AxiPciePipTx;
 
 architecture rtl of AxiPciePipTx is
 
-   constant BYTE_WIDTH_C : positive        := AXI_PCIE_CONFIG_C.DATA_BYTES_C;  -- AXI and AXIS matched at DMA before the AXI Interconnection
-   constant AXI_LEN_C    : slv(7 downto 0) := getAxiLen(AXI_PCIE_CONFIG_C, BURST_BYTES_G);
+   constant BYTE_WIDTH_C        : positive        := AXI_PCIE_CONFIG_C.DATA_BYTES_C;  -- AXI and AXIS matched at DMA before the AXI Interconnection
+   constant AXI_TRANSPORT_LEN_C : slv(7 downto 0) := getAxiLen(AXI_PCIE_CONFIG_C, BURST_BYTES_G);
+   constant AXI_TERMINATE_LEN_C : slv(7 downto 0) := getAxiLen(AXI_PCIE_CONFIG_C, 1);
 
    type StateType is (
       IDLE_S,
       ADDR_S,
-      DATA_S);
+      DATA_S,
+      TERMINATE_S);
 
    type RegType is record
+      txAxiError       : sl;
+      txDropFrame      : sl;
+      txFrame          : sl;
       tReady           : sl;
       cnt              : slv(7 downto 0);
       pipObWriteMaster : AxiWriteMasterType;
@@ -65,6 +74,9 @@ architecture rtl of AxiPciePipTx is
    end record;
 
    constant REG_INIT_C : RegType := (
+      txAxiError       => '0',
+      txDropFrame      => '0',
+      txFrame          => '0',
       tReady           => '0',
       cnt              => x"00",
       pipObWriteMaster => axiWriteMasterInit(AXI_PCIE_CONFIG_C, '1', "01", "1111"),
@@ -76,7 +88,7 @@ architecture rtl of AxiPciePipTx is
 
 begin
 
-   comb : process (axiRst, enableTx, pipObMaster, pipObWriteSlave, r,
+   comb : process (awcache, axiRst, enableTx, pipObMaster, pipObWriteSlave, r,
                    remoteBarBaseAddr) is
       variable v   : RegType;
       variable idx : natural range 0 to 15;
@@ -88,6 +100,9 @@ begin
       idx := conv_integer(pipObMaster.tDest(3 downto 0));
 
       -- Reset strobes
+      v.txFrame     := '0';
+      v.txDropFrame := '0';
+
       v.pipObSlave.tReady := '0';
 
       -- Hand shaking
@@ -99,6 +114,9 @@ begin
          v.pipObWriteMaster.wlast  := '0';
       end if;
 
+      -- Update the AXI bus error flag
+      v.txAxiError := pipObWriteSlave.bvalid and uOr(pipObWriteSlave.bresp);
+
       -- State Machine
       case (r.state) is
          ----------------------------------------------------------------------
@@ -108,14 +126,18 @@ begin
 
                -- Check for the enabled conditions
                if (ssiGetUserSof(PCIE_AXIS_CONFIG_G, pipObMaster) = '1')  -- Check for SOF
-                             and (remoteBarBaseAddr(idx)(31 downto 24) /= 0)  -- Check for non-zero BAR base address
-                             and (remoteBarBaseAddr(idx)(23 downto 0) = 0)  -- Check for 16MB alignment
-                             and (enableTx(idx) = '1') then  -- Check for TX enabled
+                               and (remoteBarBaseAddr(idx)(31 downto 24) /= 0)  -- Check for non-zero BAR base address
+                               and (remoteBarBaseAddr(idx)(23 downto 0) = 0)  -- Check for 16MB alignment
+                               and (enableTx(idx) = '1') then  -- Check for TX enabled
+                  -- Set the flag
+                  v.txFrame := '1';
                   -- Next state
-                  v.state := ADDR_S;
+                  v.state   := ADDR_S;
                else
                   -- Blow off the data 
                   v.pipObSlave.tReady := '1';
+                  -- Set the flag
+                  v.txDropFrame       := pipObMaster.tLast;
                end if;
 
             end if;
@@ -168,28 +190,49 @@ begin
                end if;
 
                -- Check for last cycle of the transaction
-               if (r.cnt = AXI_LEN_C) then
+               if (r.cnt = AXI_TRANSPORT_LEN_C) then
                   -- Reset the counter
                   v.cnt                    := x"00";
                   -- Terminate the transaction
                   v.pipObWriteMaster.wlast := '1';
                   -- Next state
-                  v.state                  := IDLE_S;
+                  v.state                  := TERMINATE_S;
                else
                   -- Increment the counter
                   v.cnt := r.cnt + 1;
                end if;
 
             end if;
+         ----------------------------------------------------------------------
+         when TERMINATE_S =>
+            if (v.pipObWriteMaster.awvalid = '0') and (v.pipObWriteMaster.wvalid = '0') then
+               -- Send the address termination transaction
+               v.pipObWriteMaster.awvalid                        := '1';
+               v.pipObWriteMaster.awaddr(23 downto 16)           := x"09";
+               v.pipObWriteMaster.wvalid                         := '1';
+               v.pipObWriteMaster.wlast                          := '1';
+               v.pipObWriteMaster.wstrb(BYTE_WIDTH_C-1 downto 0) := toSlv(1, BYTE_WIDTH_C);
+               -- Next state
+               v.state                                           := IDLE_S;
+            end if;
       ----------------------------------------------------------------------
       end case;
 
       -- Outputs
-      pipObSlave              <= v.pipObSlave;
-      pipObWriteMaster        <= r.pipObWriteMaster;
-      pipObWriteMaster.bready <= '1';   -- Ignoring the bus response
-      pipObWriteMaster.awsize <= toSlv(log2(AXI_PCIE_CONFIG_C.DATA_BYTES_C), 3);
-      pipObWriteMaster.awlen  <= AXI_LEN_C;
+      txAxiError               <= r.txAxiError;
+      txDropFrame              <= r.txDropFrame;
+      txFrame                  <= r.txFrame;
+      pipObSlave               <= v.pipObSlave;
+      pipObWriteMaster         <= r.pipObWriteMaster;
+      pipObWriteMaster.bready  <= '1';  -- Ignoring the bus response
+      pipObWriteMaster.awsize  <= toSlv(log2(AXI_PCIE_CONFIG_C.DATA_BYTES_C), 3);
+      pipObWriteMaster.awcache <= awcache;
+
+      if (r.pipObWriteMaster.awaddr(23 downto 16) = x"08") then
+         pipObWriteMaster.awlen <= AXI_TRANSPORT_LEN_C;
+      else
+         pipObWriteMaster.awlen <= AXI_TERMINATE_LEN_C;
+      end if;
 
       -- Reset
       if (axiRst = '1') then

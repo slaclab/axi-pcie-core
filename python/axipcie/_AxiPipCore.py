@@ -36,7 +36,39 @@ class AxiPipCore(pr.Device):
             ))        
         
         self.add(pr.RemoteVariable(
-            name         = 'DropFrameCnt',
+            name         = 'RxFrameCnt',
+            offset       = 0xE0,
+            bitSize      = 32,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))     
+
+        self.add(pr.RemoteVariable(
+            name         = 'RxDropFrameCnt',
+            offset       = 0xE4,
+            bitSize      = 32,
+            mode         = 'RO',
+            pollInterval = 1,
+        )) 
+
+        self.add(pr.RemoteVariable(
+            name         = 'TxFrameCnt',
+            offset       = 0xE8,
+            bitSize      = 32,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))     
+
+        self.add(pr.RemoteVariable(
+            name         = 'TxDropFrameCnt',
+            offset       = 0xEC,
+            bitSize      = 32,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'TxAxiErrorCnt',
             offset       = 0xF0,
             bitSize      = 32,
             mode         = 'RO',
@@ -56,6 +88,14 @@ class AxiPipCore(pr.Device):
             bitSize      = numLane,
             mode         = 'RW',
         ))  
+        
+        self.add(pr.RemoteVariable(
+            name         = 'AxiWriteCache',
+            offset       = 0xF8,
+            bitSize      = 4,
+            bitOffset    = 16,
+            mode         = 'RW',
+        ))          
         
         self.add(pr.RemoteCommand(   
             name         = 'CountReset',

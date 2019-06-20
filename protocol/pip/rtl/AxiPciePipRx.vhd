@@ -35,7 +35,8 @@ entity AxiPciePipRx is
       axiClk           : in  sl;
       axiRst           : in  sl;
       -- Debug
-      dropFrame        : out sl;
+      rxFrame          : out sl;
+      rxDropFrame      : out sl;
       -- AXI4 Interface
       pipIbWriteMaster : in  AxiWriteMasterType;
       pipIbWriteSlave  : out AxiWriteSlaveType;
@@ -46,19 +47,18 @@ end AxiPciePipRx;
 
 architecture rtl of AxiPciePipRx is
 
-   constant BYTE_WIDTH_C      : positive                     := PCIE_AXIS_CONFIG_G.TDATA_BYTES_C;  -- AXI and AXIS matched at DMA before the AXI Interconnection
-   constant WSTRB_NOT_EOF_C   : slv(BYTE_WIDTH_C-1 downto 0) := (others => '1');
+   constant BYTE_WIDTH_C     : positive                     := PCIE_AXIS_CONFIG_G.TDATA_BYTES_C;  -- AXI and AXIS matched at DMA before the AXI Interconnection
+   constant WSTRB_NOT_LAST_C : slv(BYTE_WIDTH_C-1 downto 0) := (others => '1');
 
    type StateType is (
       ADDR_S,
       DATA_S,
-      RESP_S);
+      TERMINATE_S);
 
    type RegType is record
       tValid          : sl;
-      dropFrame       : sl;
+      rxDropFrame     : sl;
       tFirst          : sl;
-      tLast           : sl;
       pipIbWriteSlave : AxiWriteSlaveType;
       obMasters       : AxiStreamMasterArray(1 downto 0);
       state           : StateType;
@@ -66,9 +66,8 @@ architecture rtl of AxiPciePipRx is
 
    constant REG_INIT_C : RegType := (
       tValid          => '0',
-      dropFrame       => '0',
+      rxDropFrame     => '0',
       tFirst          => '0',
-      tLast           => '0',
       pipIbWriteSlave => AXI_WRITE_SLAVE_INIT_C,
       obMasters       => (others => AXI_STREAM_MASTER_INIT_C),
       state           => ADDR_S);
@@ -77,6 +76,10 @@ architecture rtl of AxiPciePipRx is
    signal rin : RegType;
 
    signal obCtrl : AxiStreamCtrlType;
+
+   attribute dont_touch           : string;
+   attribute dont_touch of r      : signal is "TRUE";
+   attribute dont_touch of obCtrl : signal is "TRUE";
 
 begin
 
@@ -90,7 +93,7 @@ begin
       v.pipIbWriteSlave.awready := '0';
       v.pipIbWriteSlave.wready  := '0';
       v.obMasters(0).tValid     := '0';
-      v.dropFrame               := '0';
+      v.rxDropFrame             := '0';
 
       -- Hand shaking
       if (pipIbWriteMaster.bready = '1') then
@@ -102,7 +105,7 @@ begin
          ----------------------------------------------------------------------
          when ADDR_S =>
             -- Check for address valid
-            if (pipIbWriteMaster.awvalid = '1') then
+            if (pipIbWriteMaster.awvalid = '1') and (v.pipIbWriteSlave.bvalid = '0') then
 
                -- Accept the transaction
                v.pipIbWriteSlave.awready := '1';
@@ -113,17 +116,30 @@ begin
                -- Set the TDEST w.r.t. Address[15:12]
                v.obMasters(1).tDest(3 downto 0) := pipIbWriteMaster.awaddr(15 downto 12);
 
-               -- Check for 4kB alignment and enough room in FIFO
-               if (pipIbWriteMaster.awaddr(11 downto 0) = 0) and (obCtrl.pause = '0') then
-                  -- Set the flag
+               -- Check for enough room in FIFO
+               if (obCtrl.pause = '0') then
+                  -- Set the flags
                   v.tValid := '1';
                else
-                  -- Set the flag
-                  v.dropFrame := '1';
+                  -- Set the flags
+                  v.tValid      := '0';
+                  v.rxDropFrame := '1';
                end if;
 
-               -- Next state
-               v.state := DATA_S;
+               -- Check for SOF condition
+               if (pipIbWriteMaster.awaddr(11 downto 0) = 0) then
+                  -- Set the SOF flag
+                  v.tFirst := '1';
+               end if;
+
+               -- Check for data
+               if (pipIbWriteMaster.awaddr(23 downto 16) = x"08") then
+                  -- Next state
+                  v.state := DATA_S;
+               else
+                  -- Next state
+                  v.state := TERMINATE_S;
+               end if;
 
             end if;
          ----------------------------------------------------------------------
@@ -134,9 +150,9 @@ begin
                -- Accept the transaction
                v.pipIbWriteSlave.wready := '1';
 
-               -- Check if moving data
+               -- Update the data bus
                if (r.tValid = '1') and (pipIbWriteMaster.wstrb(BYTE_WIDTH_C-1 downto 0) /= 0) then
-                  -- Update the data bus
+                  -- Move the data
                   v.obMasters(1).tValid                           := '1';
                   v.obMasters(1).tData(8*BYTE_WIDTH_C-1 downto 0) := pipIbWriteMaster.wdata(8*BYTE_WIDTH_C-1 downto 0);
                   v.obMasters(1).tKeep(BYTE_WIDTH_C-1 downto 0)   := pipIbWriteMaster.wstrb(BYTE_WIDTH_C-1 downto 0);
@@ -147,20 +163,17 @@ begin
                end if;
 
                -- Check for SOF condition
-               if (r.tFirst = '0') then
+               if (r.tFirst = '1') then
                   -- Set the flag
-                  v.tFirst := '1';
+                  v.tFirst := '0';
                   -- Set SOF               
                   ssiSetUserSof(PCIE_AXIS_CONFIG_G, v.obMasters(1), '1');
                end if;
 
                -- Check for the EOF condition
-               if (r.tLast = '0') and ((pipIbWriteMaster.wlast = '1') or (pipIbWriteMaster.wstrb(BYTE_WIDTH_C-1 downto 0) /= WSTRB_NOT_EOF_C)) then
-                  -- Set the flag
-                  v.tLast              := '1';
-                  v.tValid             := '0';
-                  -- Set the flag
-                  v.obMasters(1).tLast := '1';
+               if (pipIbWriteMaster.wlast = '1') or (pipIbWriteMaster.wstrb(BYTE_WIDTH_C-1 downto 0) /= WSTRB_NOT_LAST_C) then
+                  -- Reset the flag
+                  v.tValid := '0';
                end if;
 
                -- Check for last AXI last transaction cycle
@@ -168,35 +181,40 @@ begin
                   -- Send the bus response
                   v.pipIbWriteSlave.bvalid := '1';
                   -- Next state
-                  v.state                  := RESP_S;
+                  v.state                  := ADDR_S;
                end if;
 
             end if;
          ----------------------------------------------------------------------
-         when RESP_S =>
+         when TERMINATE_S =>
             -- Advance the pipeline
             v.obMasters(1).tValid := '0';
-            v.obMasters(1).tLast  := '0';
-            v.obMasters(1).tUser  := (others => '0');
             v.obMasters(0)        := r.obMasters(1);
 
-            -- Wait for the bus response hand shaking 
-            if (v.pipIbWriteSlave.bvalid = '0') then
+            -- Set the EOF
+            v.obMasters(0).tLast := '1';
 
-               -- Reset the flags
-               v.tValid := '0';
-               v.tFirst := '0';
-               v.tLast  := '0';
+            -- Check for address valid
+            if (pipIbWriteMaster.wvalid = '1') then
 
-               -- Next state
-               v.state := ADDR_S;
+               -- Accept the transaction
+               v.pipIbWriteSlave.wready := '1';
+
+               -- Check for last AXI last transaction cycle
+               if (pipIbWriteMaster.wlast = '1') then
+                  -- Send the bus response
+                  v.pipIbWriteSlave.bvalid := '1';
+                  -- Next state
+                  v.state                  := ADDR_S;
+               end if;
 
             end if;
       ----------------------------------------------------------------------
       end case;
 
       -- Outputs
-      dropFrame               <= r.dropFrame;
+      rxDropFrame             <= r.rxDropFrame;
+      rxFrame                 <= r.obMasters(0).tValid and r.obMasters(0).tLast;
       pipIbWriteSlave         <= r.pipIbWriteSlave;
       pipIbWriteSlave.awready <= v.pipIbWriteSlave.awready;
       pipIbWriteSlave.wready  <= v.pipIbWriteSlave.wready;

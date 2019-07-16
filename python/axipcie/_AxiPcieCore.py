@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 #-----------------------------------------------------------------------------
-# Title      : 
-#-----------------------------------------------------------------------------
-# File       : DataDev.py
-# Created    : 2017-04-03
-#-----------------------------------------------------------------------------
-# Description:
-# 
-#-----------------------------------------------------------------------------
 # This file is part of the 'axi-pcie-core'. It is subject to 
 # the license terms in the LICENSE.txt file found in the top-level directory 
 # of this distribution and at: 

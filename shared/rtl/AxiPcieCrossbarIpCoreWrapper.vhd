@@ -57,8 +57,8 @@ architecture mapping of AxiPcieCrossbarIpCoreWrapper is
          S00_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S00_AXI_AWVALID      : in  std_logic;
          S00_AXI_AWREADY      : out std_logic;
-         S00_AXI_WDATA        : in  std_logic_vector(127 downto 0);
-         S00_AXI_WSTRB        : in  std_logic_vector(15 downto 0);
+         S00_AXI_WDATA        : in  std_logic_vector(8*16-1 downto 0);
+         S00_AXI_WSTRB        : in  std_logic_vector(16-1 downto 0);
          S00_AXI_WLAST        : in  std_logic;
          S00_AXI_WVALID       : in  std_logic;
          S00_AXI_WREADY       : out std_logic;
@@ -78,7 +78,7 @@ architecture mapping of AxiPcieCrossbarIpCoreWrapper is
          S00_AXI_ARVALID      : in  std_logic;
          S00_AXI_ARREADY      : out std_logic;
          S00_AXI_RID          : out std_logic_vector(0 downto 0);
-         S00_AXI_RDATA        : out std_logic_vector(127 downto 0);
+         S00_AXI_RDATA        : out std_logic_vector(8*16-1 downto 0);
          S00_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S00_AXI_RLAST        : out std_logic;
          S00_AXI_RVALID       : out std_logic;
@@ -453,8 +453,8 @@ architecture mapping of AxiPcieCrossbarIpCoreWrapper is
          S00_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S00_AXI_AWVALID      : in  std_logic;
          S00_AXI_AWREADY      : out std_logic;
-         S00_AXI_WDATA        : in  std_logic_vector(127 downto 0);
-         S00_AXI_WSTRB        : in  std_logic_vector(15 downto 0);
+         S00_AXI_WDATA        : in  std_logic_vector(8*32-1 downto 0);
+         S00_AXI_WSTRB        : in  std_logic_vector(32-1 downto 0);
          S00_AXI_WLAST        : in  std_logic;
          S00_AXI_WVALID       : in  std_logic;
          S00_AXI_WREADY       : out std_logic;
@@ -474,7 +474,7 @@ architecture mapping of AxiPcieCrossbarIpCoreWrapper is
          S00_AXI_ARVALID      : in  std_logic;
          S00_AXI_ARREADY      : out std_logic;
          S00_AXI_RID          : out std_logic_vector(0 downto 0);
-         S00_AXI_RDATA        : out std_logic_vector(127 downto 0);
+         S00_AXI_RDATA        : out std_logic_vector(8*32-1 downto 0);
          S00_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S00_AXI_RLAST        : out std_logic;
          S00_AXI_RVALID       : out std_logic;
@@ -849,8 +849,8 @@ architecture mapping of AxiPcieCrossbarIpCoreWrapper is
          S00_AXI_AWQOS        : in  std_logic_vector(3 downto 0);
          S00_AXI_AWVALID      : in  std_logic;
          S00_AXI_AWREADY      : out std_logic;
-         S00_AXI_WDATA        : in  std_logic_vector(127 downto 0);
-         S00_AXI_WSTRB        : in  std_logic_vector(15 downto 0);
+         S00_AXI_WDATA        : in  std_logic_vector(8*64-1 downto 0);
+         S00_AXI_WSTRB        : in  std_logic_vector(64-1 downto 0);
          S00_AXI_WLAST        : in  std_logic;
          S00_AXI_WVALID       : in  std_logic;
          S00_AXI_WREADY       : out std_logic;
@@ -870,7 +870,7 @@ architecture mapping of AxiPcieCrossbarIpCoreWrapper is
          S00_AXI_ARVALID      : in  std_logic;
          S00_AXI_ARREADY      : out std_logic;
          S00_AXI_RID          : out std_logic_vector(0 downto 0);
-         S00_AXI_RDATA        : out std_logic_vector(127 downto 0);
+         S00_AXI_RDATA        : out std_logic_vector(8*64-1 downto 0);
          S00_AXI_RRESP        : out std_logic_vector(1 downto 0);
          S00_AXI_RLAST        : out std_logic;
          S00_AXI_RVALID       : out std_logic;
@@ -1253,8 +1253,8 @@ begin
             S00_AXI_AWQOS        => sAxiWriteMasters(0).awqos,
             S00_AXI_AWVALID      => sAxiWriteMasters(0).awvalid,
             S00_AXI_AWREADY      => sAxiWriteSlaves(0).awready,
-            S00_AXI_WDATA        => sAxiWriteMasters(0).wdata(127 downto 0),
-            S00_AXI_WSTRB        => sAxiWriteMasters(0).wstrb(15 downto 0),
+            S00_AXI_WDATA        => sAxiWriteMasters(0).wdata(8*16-1 downto 0),
+            S00_AXI_WSTRB        => sAxiWriteMasters(0).wstrb(16-1 downto 0),
             S00_AXI_WLAST        => sAxiWriteMasters(0).wlast,
             S00_AXI_WVALID       => sAxiWriteMasters(0).wvalid,
             S00_AXI_WREADY       => sAxiWriteSlaves(0).wready,
@@ -1274,7 +1274,7 @@ begin
             S00_AXI_ARVALID      => sAxiReadMasters(0).arvalid,
             S00_AXI_ARREADY      => sAxiReadSlaves(0).arready,
             S00_AXI_RID          => sAxiReadSlaves(0).rid(0 downto 0),
-            S00_AXI_RDATA        => sAxiReadSlaves(0).rdata(127 downto 0),
+            S00_AXI_RDATA        => sAxiReadSlaves(0).rdata(8*16-1 downto 0),
             S00_AXI_RRESP        => sAxiReadSlaves(0).rresp,
             S00_AXI_RLAST        => sAxiReadSlaves(0).rlast,
             S00_AXI_RVALID       => sAxiReadSlaves(0).rvalid,
@@ -1660,8 +1660,8 @@ begin
             S00_AXI_AWQOS        => sAxiWriteMasters(0).awqos,
             S00_AXI_AWVALID      => sAxiWriteMasters(0).awvalid,
             S00_AXI_AWREADY      => sAxiWriteSlaves(0).awready,
-            S00_AXI_WDATA        => sAxiWriteMasters(0).wdata(127 downto 0),
-            S00_AXI_WSTRB        => sAxiWriteMasters(0).wstrb(15 downto 0),
+            S00_AXI_WDATA        => sAxiWriteMasters(0).wdata(8*32-1 downto 0),
+            S00_AXI_WSTRB        => sAxiWriteMasters(0).wstrb(32-1 downto 0),
             S00_AXI_WLAST        => sAxiWriteMasters(0).wlast,
             S00_AXI_WVALID       => sAxiWriteMasters(0).wvalid,
             S00_AXI_WREADY       => sAxiWriteSlaves(0).wready,
@@ -1681,7 +1681,7 @@ begin
             S00_AXI_ARVALID      => sAxiReadMasters(0).arvalid,
             S00_AXI_ARREADY      => sAxiReadSlaves(0).arready,
             S00_AXI_RID          => sAxiReadSlaves(0).rid(0 downto 0),
-            S00_AXI_RDATA        => sAxiReadSlaves(0).rdata(127 downto 0),
+            S00_AXI_RDATA        => sAxiReadSlaves(0).rdata(8*32-1 downto 0),
             S00_AXI_RRESP        => sAxiReadSlaves(0).rresp,
             S00_AXI_RLAST        => sAxiReadSlaves(0).rlast,
             S00_AXI_RVALID       => sAxiReadSlaves(0).rvalid,
@@ -2067,8 +2067,8 @@ begin
             S00_AXI_AWQOS        => sAxiWriteMasters(0).awqos,
             S00_AXI_AWVALID      => sAxiWriteMasters(0).awvalid,
             S00_AXI_AWREADY      => sAxiWriteSlaves(0).awready,
-            S00_AXI_WDATA        => sAxiWriteMasters(0).wdata(127 downto 0),
-            S00_AXI_WSTRB        => sAxiWriteMasters(0).wstrb(15 downto 0),
+            S00_AXI_WDATA        => sAxiWriteMasters(0).wdata(8*64-1 downto 0),
+            S00_AXI_WSTRB        => sAxiWriteMasters(0).wstrb(64-1 downto 0),
             S00_AXI_WLAST        => sAxiWriteMasters(0).wlast,
             S00_AXI_WVALID       => sAxiWriteMasters(0).wvalid,
             S00_AXI_WREADY       => sAxiWriteSlaves(0).wready,
@@ -2088,7 +2088,7 @@ begin
             S00_AXI_ARVALID      => sAxiReadMasters(0).arvalid,
             S00_AXI_ARREADY      => sAxiReadSlaves(0).arready,
             S00_AXI_RID          => sAxiReadSlaves(0).rid(0 downto 0),
-            S00_AXI_RDATA        => sAxiReadSlaves(0).rdata(127 downto 0),
+            S00_AXI_RDATA        => sAxiReadSlaves(0).rdata(8*64-1 downto 0),
             S00_AXI_RRESP        => sAxiReadSlaves(0).rresp,
             S00_AXI_RLAST        => sAxiReadSlaves(0).rlast,
             S00_AXI_RVALID       => sAxiReadSlaves(0).rvalid,

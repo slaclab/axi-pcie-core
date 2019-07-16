@@ -49,86 +49,40 @@ architecture mapping of AxiPcieCrossbar is
 
 begin
 
-   ---------------------------------------------------
-   -- No resizing required for AXI DMA descriptor path
-   ---------------------------------------------------
+   -------------------------------------------------------------------------------
+   -- No resizing required for AXI DMA read descriptor path and the PIP write path
+   -------------------------------------------------------------------------------
    axiWriteMasters(0) <= sAxiWriteMasters(0);
    sAxiWriteSlaves(0) <= axiWriteSlaves(0);
    axiReadMasters(0)  <= sAxiReadMasters(0);
-   sAxiReadSlaves(0)  <= axiReadSlaves(0);
+   sAxiReadSlaves(0) <= axiReadSlaves(0);
 
    ----------------------  
    -- AXI Resizer Modules
    ----------------------  
-   GEN_RESIZE : for i in DMA_SIZE_G downto 1 generate
+   GEN_VEC : for i in DMA_SIZE_G downto 1 generate
+   
+      U_Resizer : entity work.AxiPcieResizer
+         generic map(
+            TPD_G             => TPD_G,
+            AXI_DMA_CONFIG_G  => AXI_DMA_CONFIG_G,
+            AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G)
+         port map(   
+            -- Clock and reset
+            axiClk          => axiClk,
+            axiRst          => axiRst,
+            -- Slave Port
+            sAxiReadMaster  => sAxiReadMasters(i),
+            sAxiReadSlave   => sAxiReadSlaves(i),
+            sAxiWriteMaster => sAxiWriteMasters(i),
+            sAxiWriteSlave  => sAxiWriteSlaves(i),
+            -- Master Port
+            mAxiReadMaster  => axiReadMasters(i),
+            mAxiReadSlave   => axiReadSlaves(i),
+            mAxiWriteMaster => axiWriteMasters(i),
+            mAxiWriteSlave  => axiWriteSlaves(i));
 
-      RESIZE_16B : if (AXI_PCIE_CONFIG_G.DATA_BYTES_C = 16) generate
-         U_AxiResize : entity work.AxiPcie16BResize
-            generic map(
-               TPD_G             => TPD_G,
-               AXI_DMA_CONFIG_G  => AXI_DMA_CONFIG_G,
-               AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G)
-            port map(
-               -- Clock and reset
-               axiClk          => axiClk,
-               axiRst          => axiRst,
-               -- Slave Port
-               sAxiReadMaster  => sAxiReadMasters(i),
-               sAxiReadSlave   => sAxiReadSlaves(i),
-               sAxiWriteMaster => sAxiWriteMasters(i),
-               sAxiWriteSlave  => sAxiWriteSlaves(i),
-               -- Master Port
-               mAxiReadMaster  => axiReadMasters(i),
-               mAxiReadSlave   => axiReadSlaves(i),
-               mAxiWriteMaster => axiWriteMasters(i),
-               mAxiWriteSlave  => axiWriteSlaves(i));
-      end generate;
-
-      RESIZE_32B : if (AXI_PCIE_CONFIG_G.DATA_BYTES_C = 32) generate
-         U_AxiResize : entity work.AxiPcie32BResize
-            generic map(
-               TPD_G             => TPD_G,
-               AXI_DMA_CONFIG_G  => AXI_DMA_CONFIG_G,
-               AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G)
-            port map(
-               -- Clock and reset
-               axiClk          => axiClk,
-               axiRst          => axiRst,
-               -- Slave Port
-               sAxiReadMaster  => sAxiReadMasters(i),
-               sAxiReadSlave   => sAxiReadSlaves(i),
-               sAxiWriteMaster => sAxiWriteMasters(i),
-               sAxiWriteSlave  => sAxiWriteSlaves(i),
-               -- Master Port
-               mAxiReadMaster  => axiReadMasters(i),
-               mAxiReadSlave   => axiReadSlaves(i),
-               mAxiWriteMaster => axiWriteMasters(i),
-               mAxiWriteSlave  => axiWriteSlaves(i));
-      end generate;
-
-      RESIZE_64B : if (AXI_PCIE_CONFIG_G.DATA_BYTES_C = 64) generate
-         U_AxiResize : entity work.AxiPcie64BResize
-            generic map(
-               TPD_G             => TPD_G,
-               AXI_DMA_CONFIG_G  => AXI_DMA_CONFIG_G,
-               AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G)
-            port map(
-               -- Clock and reset
-               axiClk          => axiClk,
-               axiRst          => axiRst,
-               -- Slave Port
-               sAxiReadMaster  => sAxiReadMasters(i),
-               sAxiReadSlave   => sAxiReadSlaves(i),
-               sAxiWriteMaster => sAxiWriteMasters(i),
-               sAxiWriteSlave  => sAxiWriteSlaves(i),
-               -- Master Port
-               mAxiReadMaster  => axiReadMasters(i),
-               mAxiReadSlave   => axiReadSlaves(i),
-               mAxiWriteMaster => axiWriteMasters(i),
-               mAxiWriteSlave  => axiWriteSlaves(i));
-      end generate;
-
-   end generate;
+   end generate GEN_VEC;
 
    -------------------
    -- AXI XBAR IP Core

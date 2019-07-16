@@ -50,7 +50,12 @@ entity XilinxKcu1500Core is
       dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- Application AXI-Lite Interfaces [0x00080000:0x00FFFFFF] (appClk domain)
+      -- PIP Interface [0x00080000:0009FFFF] (dmaClk domain)
+      pipIbMaster    : out AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave     : in  AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+      pipObMaster    : in  AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+      pipObSlave     : out AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+      -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk         : in  sl;
       appRst         : in  sl;
       appReadMaster  : out AxiLiteReadMasterType;
@@ -112,6 +117,11 @@ architecture mapping of XilinxKcu1500Core is
    signal phyWriteMaster : AxiLiteWriteMasterType;
    signal phyWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
 
+   signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+   signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+   signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+   signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+
    signal sysClock    : sl;
    signal sysReset    : sl;
    signal systemReset : sl;
@@ -161,6 +171,7 @@ begin
    -- AXI PCIe PHY
    ---------------   
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
+
       U_AxiPciePhy : entity work.XilinxKcu1500PciePhyWrapper
          generic map (
             TPD_G => TPD_G)
@@ -190,8 +201,18 @@ begin
             pciRxN         => pciRxN,
             pciTxP         => pciTxP,
             pciTxN         => pciTxN);
+
+      intPipObMaster <= pipObMaster;
+      pipObSlave     <= intPipObSlave;
+
+      pipIbMaster   <= intPipIbMaster;
+      intPipIbSlave <= pipIbSlave;
+
    end generate;
+
    SIM_PCIE : if (ROGUE_SIM_EN_G) generate
+
+      -- Generate local 250 MHz clock
       U_sysClock : entity work.ClkRst
          generic map (
             CLK_PERIOD_G      => 4 ns,  -- 250 MHz
@@ -200,6 +221,11 @@ begin
          port map (
             clkP => sysClock,
             rst  => sysReset);
+
+      -- Loopback PIP interface
+      pipIbMaster <= pipObMaster;
+      pipObSlave  <= pipIbSlave;
+
    end generate;
 
    ---------------
@@ -224,6 +250,8 @@ begin
          regReadSlave        => regReadSlave,
          regWriteMaster      => regWriteMaster,
          regWriteSlave       => regWriteSlave,
+         pipIbMaster         => intPipIbMaster,
+         pipIbSlave          => intPipIbSlave,
          -- DMA AXI-Lite Interfaces
          dmaCtrlReadMasters  => dmaCtrlReadMasters,
          dmaCtrlReadSlaves   => dmaCtrlReadSlaves,
@@ -305,6 +333,8 @@ begin
          axiReadSlave     => dmaReadSlave,
          axiWriteMaster   => dmaWriteMaster,
          axiWriteSlave    => dmaWriteSlave,
+         pipObMaster      => intPipObMaster,
+         pipObSlave       => intPipObSlave,
          -- AXI4-Lite Interfaces
          axilReadMasters  => dmaCtrlReadMasters,
          axilReadSlaves   => dmaCtrlReadSlaves,

@@ -45,6 +45,8 @@ entity AxiPcieDma is
       axiReadSlave     : in  AxiReadSlaveType;
       axiWriteMaster   : out AxiWriteMasterType;
       axiWriteSlave    : in  AxiWriteSlaveType;
+      pipObMaster      : in  AxiWriteMasterType                 := AXI_WRITE_MASTER_INIT_C;
+      pipObSlave       : out AxiWriteSlaveType                  := AXI_WRITE_SLAVE_FORCE_C;
       -- AXI4-Lite Interfaces (axiClk domain)
       axilReadMasters  : in  AxiLiteReadMasterArray(2 downto 0);
       axilReadSlaves   : out AxiLiteReadSlaveArray(2 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_OK_C);
@@ -76,17 +78,13 @@ architecture mapping of AxiPcieDma is
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
 
-   -- AXI DMA descriptor  
-   constant AXI_DESC_CONFIG_C : AxiConfigType             := (
-      ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
-      DATA_BYTES_C => ite((AXI_PCIE_CONFIG_C.ADDR_WIDTH_C <= 32) or (DMA_AXI_CONFIG_C.DATA_BYTES_C = 8), 8, 16),  -- 64-bits wide if address space <= 32-bits ELSE 128b wide for 64-bit support
-      ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
-      LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
-
+   signal dmaWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0) := (others=>AXI_WRITE_MASTER_FORCE_C);
+   signal dmaWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0) := (others=>AXI_WRITE_SLAVE_FORCE_C);
+   
    signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
    signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
    signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
-   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);
+   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);   
 
    signal sAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
    signal sAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
@@ -103,6 +101,12 @@ architecture mapping of AxiPcieDma is
 begin
 
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
+
+      ----------------------------------------
+      -- Map PIP Interface to AXI[index=0]
+      ----------------------------------------
+      axiWriteMasters(0) <= pipObMaster;
+      pipObSlave         <= axiWriteSlaves(0);
 
       ----------------
       -- AXI PCIe XBAR
@@ -132,19 +136,18 @@ begin
       -----------
       U_V2Gen : entity work.AxiStreamDmaV2
          generic map (
-            TPD_G             => TPD_G,
-            DESC_AWIDTH_G     => 12,    -- 4096 entries
-            DESC_ARB_G        => DESC_ARB_G,
-            AXIL_BASE_ADDR_G  => x"00000000",
-            AXI_READY_EN_G    => true,  -- Using "Packet FIFO" option in AXI Interconnect IP core
-            AXIS_READY_EN_G   => false,
-            AXIS_CONFIG_G     => INT_DMA_AXIS_CONFIG_C,
-            AXI_DESC_CONFIG_G => AXI_DESC_CONFIG_C,
-            AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
-            CHAN_COUNT_G      => DMA_SIZE_G,
-            RD_PIPE_STAGES_G  => 1,
-            BURST_BYTES_G     => 256,  -- 256B chucks (prevent out of ordering PCIe TLP)
-            RD_PEND_THRESH_G  => 1)
+            TPD_G            => TPD_G,
+            DESC_AWIDTH_G    => 12,     -- 4096 entries
+            DESC_ARB_G       => DESC_ARB_G,
+            AXIL_BASE_ADDR_G => x"00000000",
+            AXI_READY_EN_G   => true,  -- Using "Packet FIFO" option in AXI Interconnect IP core
+            AXIS_READY_EN_G  => false,
+            AXIS_CONFIG_G    => INT_DMA_AXIS_CONFIG_C,
+            AXI_DMA_CONFIG_G => DMA_AXI_CONFIG_C,
+            CHAN_COUNT_G     => DMA_SIZE_G,
+            RD_PIPE_STAGES_G => 1,
+            BURST_BYTES_G    => 256,  -- 256B chucks (prevent out of ordering PCIe TLP)
+            RD_PEND_THRESH_G => 1)
          port map (
             -- Clock/Reset
             axiClk          => axiClk,
@@ -164,9 +167,12 @@ begin
             -- AXI Interfaces, 0 = Desc, 1-CHAN_COUNT_G = DMA
             axiReadMasters  => axiReadMasters,
             axiReadSlaves   => axiReadSlaves,
-            axiWriteMasters => axiWriteMasters,
-            axiWriteSlaves  => axiWriteSlaves,
-            axiWriteCtrl    => (others => AXI_CTRL_UNUSED_C));
+            axiWriteCtrl    => (others => AXI_CTRL_UNUSED_C),
+            axiWriteMasters => dmaWriteMasters,
+            axiWriteSlaves  => dmaWriteSlaves);
+         
+      axiWriteMasters(DMA_SIZE_G downto 1) <= dmaWriteMasters(DMA_SIZE_G downto 1);
+      dmaWriteSlaves(DMA_SIZE_G downto 1)  <= axiWriteSlaves(DMA_SIZE_G downto 1);
 
       GEN_AXIS_FIFO : for i in DMA_SIZE_G-1 downto 0 generate
 

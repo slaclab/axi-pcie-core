@@ -21,6 +21,7 @@ set_property board_part xilinx.com:kc705:part0:1.5 [current_project]
 # loadRuckusTcl "$::DIR_PATH/../../shared"
 loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieDma.vhd"
 loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieReg.vhd"
+loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieRegWriteDeMux.vhd"
 
 # Load local Source Code and Constraints
 loadSource      -dir  "$::DIR_PATH/rtl"

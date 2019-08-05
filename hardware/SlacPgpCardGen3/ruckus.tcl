@@ -18,6 +18,7 @@ if { [VersionCheck 2018.2] < 0 } {exit -1}
 # loadRuckusTcl "$::DIR_PATH/../../shared"
 loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieDma.vhd"
 loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieReg.vhd"
+loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieRegWriteDeMux.vhd"
 
 # Load local Source Code and Constraints
 loadSource      -dir "$::DIR_PATH/rtl"

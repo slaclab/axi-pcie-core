@@ -8,6 +8,8 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {ddrClkP[0]}] -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {userClkP}]
+
 #######################
 # DDR[0]: Constraints #
 #######################

@@ -147,8 +147,10 @@ progDone = PROM_PRI._progDone
 
 # Check for secondary PROM
 if (promType == 'SPIx8'):
-    # Load the secondary MCS file
-    PROM_SEC.LoadMcsFile(sec)  
+    # Check if the primary MCS failed
+    if PROM_PRI._progDone: 
+        # Load the secondary MCS file
+        PROM_SEC.LoadMcsFile(sec)  
     # Update the programing done flag
     progDone = PROM_PRI._progDone and PROM_SEC._progDone
 

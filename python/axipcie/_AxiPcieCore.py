@@ -243,7 +243,8 @@ class AxiPcieCore(pr.Device):
                     name         = f'AxiMicronN25Q[{i}]',
                     offset       =  0x40000 + (i * 0x10000),
                     expand       =  False,                                    
-                    hidden       =  True,                                    
+                    addrMode     =  True, # True = 32-bit Address Mode
+                    hidden       =  True,
                 ))
                 
         # DMA AXI Stream Inbound Monitor        

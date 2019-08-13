@@ -15,6 +15,7 @@
 *.bin
 *.ld
 *.str
+__pycache__*
 
 # OS files
 .DS_Store

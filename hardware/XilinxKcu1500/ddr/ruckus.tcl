@@ -5,8 +5,13 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 loadSource           -dir "$::DIR_PATH/rtl"
 loadSource           -dir "$::DIR_PATH/ip/misc"
 loadSource -sim_only -dir "$::DIR_PATH/tb"
-loadIpCore           -dir "$::DIR_PATH/ip"
 loadConstraints      -dir "$::DIR_PATH/xdc"
+
+if { $::env(VIVADO_VERSION) <= 2018.3 } {
+   loadIpCore -dir "$::DIR_PATH/ip/2018.3"
+} else {
+   loadIpCore -dir "$::DIR_PATH/ip/2019.1"
+}
 
 # Load the User port naming
 loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0_user_mapping.xdc"

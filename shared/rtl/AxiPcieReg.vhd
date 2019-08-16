@@ -378,6 +378,7 @@ begin
       generic map (
          TPD_G           => TPD_G,
          BUILD_INFO_G    => BUILD_INFO_G,
+         DEVICE_ID_G     => DRIVER_TYPE_ID_G,
          CLK_PERIOD_G    => (1.0/DMA_CLK_FREQ_C),
          EN_DEVICE_DNA_G => EN_DEVICE_DNA_G,
          XIL_DEVICE_G    => XIL_DEVICE_G,

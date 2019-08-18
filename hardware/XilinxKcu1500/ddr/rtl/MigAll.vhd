@@ -26,22 +26,23 @@ use unisim.vcomponents.all;
 
 entity MigAll is
    generic (
-      TPD_G : time := 1 ns);
+      TPD_G      : time                  := 1 ns;
+      NUM_LANE_G : positive range 1 to 4 := 4);
    port (
       extRst          : in    sl := '0';
       -- AXI MEM Interface
-      axiClk          : out   slv(3 downto 0);
-      axiRst          : out   slv(3 downto 0);
-      axiReady        : out   slv(3 downto 0);
-      axiWriteMasters : in    AxiWriteMasterArray(3 downto 0);
-      axiWriteSlaves  : out   AxiWriteSlaveArray(3 downto 0);
-      axiReadMasters  : in    AxiReadMasterArray(3 downto 0);
-      axiReadSlaves   : out   AxiReadSlaveArray(3 downto 0);
+      axiClk          : out   slv(NUM_LANE_G-1 downto 0);
+      axiRst          : out   slv(NUM_LANE_G-1 downto 0);
+      axiReady        : out   slv(NUM_LANE_G-1 downto 0);
+      axiWriteMasters : in    AxiWriteMasterArray(NUM_LANE_G-1 downto 0);
+      axiWriteSlaves  : out   AxiWriteSlaveArray(NUM_LANE_G-1 downto 0);
+      axiReadMasters  : in    AxiReadMasterArray(NUM_LANE_G-1 downto 0);
+      axiReadSlaves   : out   AxiReadSlaveArray(NUM_LANE_G-1 downto 0);
       -- DDR Ports
-      ddrClkP         : in    slv(3 downto 0);
-      ddrClkN         : in    slv(3 downto 0);
-      ddrOut          : out   DdrOutArray(3 downto 0);
-      ddrInOut        : inout DdrInOutArray(3 downto 0));
+      ddrClkP         : in    slv(NUM_LANE_G-1 downto 0);
+      ddrClkN         : in    slv(NUM_LANE_G-1 downto 0);
+      ddrOut          : out   DdrOutArray(NUM_LANE_G-1 downto 0);
+      ddrInOut        : inout DdrInOutArray(NUM_LANE_G-1 downto 0));
 end MigAll;
 
 architecture mapping of MigAll is
@@ -73,67 +74,73 @@ begin
    -----------------
    -- MIG[1] IP Core
    -----------------         
-   U_Mig1 : entity work.Mig1
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         extRst         => extRst,
-         -- AXI MEM Interface
-         axiClk         => axiClk(1),
-         axiRst         => axiRst(1),
-         axiReady       => axiReady(1),
-         axiWriteMaster => axiWriteMasters(1),
-         axiWriteSlave  => axiWriteSlaves(1),
-         axiReadMaster  => axiReadMasters(1),
-         axiReadSlave   => axiReadSlaves(1),
-         -- DDR Ports
-         ddrClkP        => ddrClkP(1),
-         ddrClkN        => ddrClkN(1),
-         ddrOut         => ddrOut(1),
-         ddrInOut       => ddrInOut(1));
+   GEN_MIG1 : if (NUM_LANE_G >= 2) generate
+      U_Mig1 : entity work.Mig1
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            extRst         => extRst,
+            -- AXI MEM Interface
+            axiClk         => axiClk(1),
+            axiRst         => axiRst(1),
+            axiReady       => axiReady(1),
+            axiWriteMaster => axiWriteMasters(1),
+            axiWriteSlave  => axiWriteSlaves(1),
+            axiReadMaster  => axiReadMasters(1),
+            axiReadSlave   => axiReadSlaves(1),
+            -- DDR Ports
+            ddrClkP        => ddrClkP(1),
+            ddrClkN        => ddrClkN(1),
+            ddrOut         => ddrOut(1),
+            ddrInOut       => ddrInOut(1));
+   end generate;
 
    -----------------
    -- MIG[2] IP Core
    -----------------         
-   U_Mig2 : entity work.Mig2
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         extRst         => extRst,
-         -- AXI MEM Interface
-         axiClk         => axiClk(2),
-         axiRst         => axiRst(2),
-         axiReady       => axiReady(2),
-         axiWriteMaster => axiWriteMasters(2),
-         axiWriteSlave  => axiWriteSlaves(2),
-         axiReadMaster  => axiReadMasters(2),
-         axiReadSlave   => axiReadSlaves(2),
-         -- DDR Ports
-         ddrClkP        => ddrClkP(2),
-         ddrClkN        => ddrClkN(2),
-         ddrOut         => ddrOut(2),
-         ddrInOut       => ddrInOut(2));
+   GEN_MIG2 : if (NUM_LANE_G >= 3) generate
+      U_Mig2 : entity work.Mig2
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            extRst         => extRst,
+            -- AXI MEM Interface
+            axiClk         => axiClk(2),
+            axiRst         => axiRst(2),
+            axiReady       => axiReady(2),
+            axiWriteMaster => axiWriteMasters(2),
+            axiWriteSlave  => axiWriteSlaves(2),
+            axiReadMaster  => axiReadMasters(2),
+            axiReadSlave   => axiReadSlaves(2),
+            -- DDR Ports
+            ddrClkP        => ddrClkP(2),
+            ddrClkN        => ddrClkN(2),
+            ddrOut         => ddrOut(2),
+            ddrInOut       => ddrInOut(2));
+   end generate;
 
    -----------------
    -- MIG[3] IP Core
    -----------------
-   U_Mig3 : entity work.Mig3
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         extRst         => extRst,
-         -- AXI MEM Interface
-         axiClk         => axiClk(3),
-         axiRst         => axiRst(3),
-         axiReady       => axiReady(3),
-         axiWriteMaster => axiWriteMasters(3),
-         axiWriteSlave  => axiWriteSlaves(3),
-         axiReadMaster  => axiReadMasters(3),
-         axiReadSlave   => axiReadSlaves(3),
-         -- DDR Ports
-         ddrClkP        => ddrClkP(3),
-         ddrClkN        => ddrClkN(3),
-         ddrOut         => ddrOut(3),
-         ddrInOut       => ddrInOut(3));
+   GEN_MIG3 : if (NUM_LANE_G >= 4) generate
+      U_Mig3 : entity work.Mig3
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            extRst         => extRst,
+            -- AXI MEM Interface 
+            axiClk         => axiClk(3),
+            axiRst         => axiRst(3),
+            axiReady       => axiReady(3),
+            axiWriteMaster => axiWriteMasters(3),
+            axiWriteSlave  => axiWriteSlaves(3),
+            axiReadMaster  => axiReadMasters(3),
+            axiReadSlave   => axiReadSlaves(3),
+            -- DDR Ports
+            ddrClkP        => ddrClkP(3),
+            ddrClkN        => ddrClkN(3),
+            ddrOut         => ddrOut(3),
+            ddrInOut       => ddrInOut(3));
+   end generate;
 
 end mapping;

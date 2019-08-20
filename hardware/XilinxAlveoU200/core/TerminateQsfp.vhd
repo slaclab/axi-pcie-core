@@ -70,6 +70,7 @@ architecture mapping of TerminateQsfp is
 
    signal unusedGtClk : Slv2Array(1 downto 0);
    signal refClk      : slv(3 downto 0);
+   signal refClkBufg  : slv(3 downto 0);
    signal refClkFreq  : Slv32Array(3 downto 0);
 
    attribute dont_touch                : string;
@@ -129,7 +130,17 @@ begin
 
    end generate GEN_VEC;
 
-   GEN_FREQ_MON : for i in 1 downto 0 generate
+   GEN_FREQ_MON : for i in 3 downto 0 generate
+
+      U_BUFG : BUFG_GT
+         port map (
+            I       => refClk(i),
+            CE      => '1',
+            CEMASK  => '1',
+            CLR     => '0',
+            CLRMASK => '1',
+            DIV     => "000",           -- Divide-by-1
+            O       => refClkBufg(i));
 
       U_appClkFreq : entity work.SyncClockFreq
          generic map (
@@ -141,13 +152,13 @@ begin
             -- Frequency Measurement (locClk domain)
             freqOut => refClkFreq(i),
             -- Clocks
-            clkIn   => refClk(i),
+            clkIn   => refClkBufg(i),
             locClk  => axilClk,
             refClk  => axilClk);
 
    end generate GEN_FREQ_MON;
 
-   comb : process (axilReadMaster, axilRst, axilWriteMaster, r, refClk) is
+   comb : process (axilReadMaster, axilRst, axilWriteMaster, r, refClkFreq) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndPointType;
    begin
@@ -158,10 +169,10 @@ begin
       axiSlaveWaitTxn(axilEp, axilWriteMaster, axilReadMaster, v.axilWriteSlave, v.axilReadSlave);
 
       -- Map the read registers
-      axiSlaveRegisterR(axilEp, x"0", 0, refClk(0));
-      axiSlaveRegisterR(axilEp, x"4", 0, refClk(1));
-      axiSlaveRegisterR(axilEp, x"8", 0, refClk(3));
-      axiSlaveRegisterR(axilEp, x"C", 0, refClk(2));
+      axiSlaveRegisterR(axilEp, x"0", 0, refClkFreq(0));
+      axiSlaveRegisterR(axilEp, x"4", 0, refClkFreq(1));
+      axiSlaveRegisterR(axilEp, x"8", 0, refClkFreq(3));
+      axiSlaveRegisterR(axilEp, x"C", 0, refClkFreq(2));
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);

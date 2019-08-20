@@ -10,12 +10,6 @@
 
 # set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_Core}]
 
-######################
-# FLASH: Constraints #
-######################
-
-set_property -dict { PACKAGE_PIN AM26 IOSTANDARD LVCMOS18 } [get_ports { emcClk }]
-
 ##########
 # System #
 ##########
@@ -70,14 +64,15 @@ set_false_path -to [get_pins -hier *sync_reg[0]/D]
 ######################################
 # BITSTREAM: .bit file Configuration #
 ######################################
-set_property CONFIG_VOLTAGE 1.8                      [current_design]
-set_property CFGBVS GND                              [current_design]
-set_property BITSTREAM.GENERAL.COMPRESS TRUE         [current_design]
-set_property CONFIG_MODE SPIx4                       [current_design]
-set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4         [current_design]
-set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN div-1 [current_design]
-set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES      [current_design]
-set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup       [current_design]
-set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR Yes     [current_design]
-set_property BITSTREAM.STARTUP.LCK_CYCLE NoWait      [current_design]
-set_property BITSTREAM.STARTUP.MATCH_CYCLE NoWait    [current_design]
+set_property CONFIG_VOLTAGE 1.8                        [current_design]
+# set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable  [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS TRUE           [current_design]
+set_property CONFIG_MODE SPIx4                         [current_design]
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4           [current_design]
+set_property BITSTREAM.CONFIG.CONFIGRATE 85.0          [current_design]
+set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN disable [current_design]
+set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES        [current_design]
+set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup         [current_design]
+set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR Yes       [current_design]
+set_property BITSTREAM.STARTUP.LCK_CYCLE NoWait        [current_design]
+set_property BITSTREAM.STARTUP.MATCH_CYCLE NoWait      [current_design]

@@ -66,19 +66,18 @@ entity XilinxAlveoU200Core is
       --  Top Level Ports
       -------------------      
       -- System Ports
-      emcClk         : in  sl;
       userClkP       : in  sl;
       userClkN       : in  sl;
       -- QSFP[0] Ports
       qsfp0RstL      : out sl;
       qsfp0LpMode    : out sl;
       qsfp0ModSelL   : out sl;
-      qsfp0ModPrsL   : in  sl := '0';
+      qsfp0ModPrsL   : in  sl                    := '0';
       -- QSFP[1] Ports
       qsfp1RstL      : out sl;
       qsfp1LpMode    : out sl;
       qsfp1ModSelL   : out sl;
-      qsfp1ModPrsL   : in  sl := '0';
+      qsfp1ModPrsL   : in  sl                    := '0';
       -- PCIe Ports 
       pciRstL        : in  sl;
       pciRefClkP     : in  sl;
@@ -130,9 +129,6 @@ architecture mapping of XilinxAlveoU200Core is
    signal di       : slv(3 downto 0);
    signal do       : slv(3 downto 0);
    signal sck      : sl;
-
-   signal eos      : sl;
-   signal userCclk : sl;
 
 begin
 
@@ -280,7 +276,7 @@ begin
          CFGCLK    => open,  -- 1-bit output: Configuration main clock output
          CFGMCLK   => open,  -- 1-bit output: Configuration internal oscillator clock output
          DI        => di,  -- 4-bit output: Allow receiving on the D[3:0] input pins
-         EOS       => eos,  -- 1-bit output: Active high output signal indicating the End Of Startup.
+         EOS       => open,  -- 1-bit output: Active high output signal indicating the End Of Startup.
          PREQ      => open,  -- 1-bit output: PROGRAM request to fabric output
          DO        => do,  -- 4-bit input: Allows control of the D[3:0] pin outputs
          DTS       => "1110",  -- 4-bit input: Allows tristate of the D[3:0] pins
@@ -290,7 +286,7 @@ begin
          GTS       => '0',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
          KEYCLEARB => '0',  -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
          PACK      => '0',  -- 1-bit input: PROGRAM acknowledge input
-         USRCCLKO  => userCclk,         -- 1-bit input: User CCLK input
+         USRCCLKO  => sck,              -- 1-bit input: User CCLK input
          USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
          USRDONEO  => '1',  -- 1-bit input: User DONE pin output control
          USRDONETS => '0');  -- 1-bit input: User DONE 3-state enable output
@@ -298,8 +294,6 @@ begin
    do          <= "111" & bootMosi(0);
    bootMiso(0) <= di(1);
    sck         <= uOr(bootSck);
-
-   userCclk <= emcClk when(eos = '0') else sck;
 
    ---------------
    -- AXI PCIe DMA

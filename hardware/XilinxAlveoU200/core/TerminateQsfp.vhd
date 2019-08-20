@@ -19,6 +19,7 @@ use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
 use work.StdRtlPkg.all;
+use work.AxiLitePkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -77,7 +78,7 @@ architecture mapping of TerminateQsfp is
 begin
 
    -- Unused QSFP Port
-   U_QSFP0 : entity work.Gthe3ChannelDummy
+   U_QSFP0 : entity work.Gtye4ChannelDummy
       generic map (
          TPD_G   => TPD_G,
          WIDTH_G => 4)
@@ -89,7 +90,7 @@ begin
          gtTxN  => qsfp0TxN);
 
    -- Unused QSFP Port
-   U_QSFP1 : entity work.Gthe3ChannelDummy
+   U_QSFP1 : entity work.Gtye4ChannelDummy
       generic map (
          TPD_G   => TPD_G,
          WIDTH_G => 4)
@@ -144,12 +145,11 @@ begin
             locClk  => axilClk,
             refClk  => axilClk);
 
-   end generate GEN_VEC;
+   end generate GEN_FREQ_MON;
 
    comb : process (axilReadMaster, axilRst, axilWriteMaster, r, refClk) is
-      variable v        : RegType;
-      variable varRdReq : AxiReadDmaReqType;
-      variable axilEp   : AxiLiteEndPointType;
+      variable v      : RegType;
+      variable axilEp : AxiLiteEndPointType;
    begin
       -- Latch the current value
       v := r;

@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
--- File       : XilinxKcu1500Core.vhd
+-- File       : XilinxAlveoU200Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for Xilinx KCU1500 board (PCIe GEN3 x 8 lanes)
--- https://www.xilinx.com/products/boards-and-kits/kcu1500.html
+-- Description: AXI PCIe Core for Xilinx Alveo U200 board (PCIe GEN3 x 16 lanes)
+-- https://www.xilinx.com/products/boards-and-kits/alveo/u200.html
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the 
@@ -28,7 +28,7 @@ use work.AxiPciePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity XilinxKcu1500Core is
+entity XilinxAlveoU200Core is
    generic (
       TPD_G                : time                        := 1 ns;
       ROGUE_SIM_EN_G       : boolean                     := false;
@@ -79,23 +79,17 @@ entity XilinxKcu1500Core is
       qsfp1LpMode    : out sl;
       qsfp1ModSelL   : out sl;
       qsfp1ModPrsL   : in  sl := '0';
-      -- Boot Memory Ports 
-      flashCsL       : out sl;
-      flashMosi      : out sl;
-      flashMiso      : in  sl;
-      flashHoldL     : out sl;
-      flashWp        : out sl;
       -- PCIe Ports 
       pciRstL        : in  sl;
       pciRefClkP     : in  sl;
       pciRefClkN     : in  sl;
-      pciRxP         : in  slv(7 downto 0);
-      pciRxN         : in  slv(7 downto 0);
-      pciTxP         : out slv(7 downto 0);
-      pciTxN         : out slv(7 downto 0));
-end XilinxKcu1500Core;
+      pciRxP         : in  slv(15 downto 0);
+      pciRxN         : in  slv(15 downto 0);
+      pciTxP         : out slv(15 downto 0);
+      pciTxN         : out slv(15 downto 0));
+end XilinxAlveoU200Core;
 
-architecture mapping of XilinxKcu1500Core is
+architecture mapping of XilinxAlveoU200Core is
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -172,7 +166,7 @@ begin
    ---------------   
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
-      U_AxiPciePhy : entity work.XilinxKcu1500PciePhyWrapper
+      U_AxiPciePhy : entity work.XilinxAlveoU200PciePhyWrapper
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -238,7 +232,7 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          BUILD_INFO_G         => BUILD_INFO_G,
          XIL_DEVICE_G         => "ULTRASCALE",
-         BOOT_PROM_G          => "SPIx8",
+         BOOT_PROM_G          => "SPIx4",
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DMA_SIZE_G           => DMA_SIZE_G)
@@ -277,12 +271,6 @@ begin
          spiSck              => bootSck,
          spiMosi             => bootMosi,
          spiMiso             => bootMiso);
-
-   flashCsL    <= bootCsL(1);
-   flashMosi   <= bootMosi(1);
-   bootMiso(1) <= flashMiso;
-   flashHoldL  <= '1';
-   flashWp     <= '1';
 
    U_STARTUPE3 : STARTUPE3
       generic map (

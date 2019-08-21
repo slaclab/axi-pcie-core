@@ -68,16 +68,13 @@ entity XilinxAlveoU200Core is
       -- System Ports
       userClkP       : in  sl;
       userClkN       : in  sl;
-      -- QSFP[0] Ports
-      qsfp0RstL      : out sl;
-      qsfp0LpMode    : out sl;
-      qsfp0ModSelL   : out sl;
-      qsfp0ModPrsL   : in  sl                    := '0';
-      -- QSFP[1] Ports
-      qsfp1RstL      : out sl;
-      qsfp1LpMode    : out sl;
-      qsfp1ModSelL   : out sl;
-      qsfp1ModPrsL   : in  sl                    := '0';
+      -- QSFP[1:0] Ports
+      qsfpFs         : out Slv2Array(1 downto 0);
+      qsfpRefClkRst  : out slv(1 downto 0);
+      qsfpRstL       : out slv(1 downto 0);
+      qsfpLpMode     : out slv(1 downto 0);
+      qsfpModSelL    : out slv(1 downto 0);
+      qsfpModPrsL    : in  slv(1 downto 0);
       -- PCIe Ports 
       pciRstL        : in  sl;
       pciRefClkP     : in  sl;
@@ -115,12 +112,13 @@ architecture mapping of XilinxAlveoU200Core is
    signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
 
-   signal sysClock    : sl;
-   signal sysReset    : sl;
-   signal systemReset : sl;
-   signal cardReset   : sl;
-   signal userClock   : sl;
-   signal dmaIrq      : sl;
+   signal sysClock     : sl;
+   signal sysReset     : sl;
+   signal systemReset  : sl;
+   signal systemResetL : sl;
+   signal cardReset    : sl;
+   signal userClock    : sl;
+   signal dmaIrq       : sl;
 
    signal bootCsL  : slv(1 downto 0);
    signal bootSck  : slv(1 downto 0);
@@ -142,7 +140,8 @@ begin
          rstIn  => systemReset,
          rstOut => dmaRst);
 
-   systemReset <= sysReset or cardReset;
+   systemReset  <= sysReset or cardReset;
+   systemResetL <= not(systemReset);
 
    U_IBUFDS : IBUFDS
       port map(
@@ -150,12 +149,11 @@ begin
          IB => userClkN,
          O  => userClk156);
 
-   qsfp0RstL    <= not(systemReset);
-   qsfp1RstL    <= not(systemReset);
-   qsfp0LpMode  <= '0';
-   qsfp1LpMode  <= '0';
-   qsfp0ModSelL <= '1';
-   qsfp1ModSelL <= '1';
+   qsfpFs        <= (others => "11");  -- 161.1328125 MHzFS[1:0] = 1X -> CLK1A/1B: 161.1328125 MHz 1.8V LVDS
+   qsfpRefClkRst <= "00";               -- SI5335A-B06201-GM/Reset pin
+   qsfpRstL      <= (others => systemResetL);
+   qsfpLpMode    <= "00";
+   qsfpModSelL   <= "11";
 
    ---------------
    -- AXI PCIe PHY

@@ -8,7 +8,7 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-# set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_Core}]
+set_property USER_SLR_ASSIGNMENT SLR1 [get_cells {U_Core}]
 
 ##########
 # System #
@@ -21,19 +21,25 @@ set_property -dict { PACKAGE_PIN AV19  IOSTANDARD DIFF_SSTL12 } [get_ports { use
 # QSFP[0] ports located in the core area #
 ##########################################
 
-set_property -dict { PACKAGE_PIN BE17 IOSTANDARD LVCMOS12 } [get_ports { qsfp0RstL }];
-set_property -dict { PACKAGE_PIN BD18 IOSTANDARD LVCMOS12 } [get_ports { qsfp0LpMode }];
-set_property -dict { PACKAGE_PIN BE20 IOSTANDARD LVCMOS12 } [get_ports { qsfp0ModPrsL }];
-set_property -dict { PACKAGE_PIN BE16 IOSTANDARD LVCMOS12 } [get_ports { qsfp0ModSelL }];
+set_property -dict { PACKAGE_PIN AT20 IOSTANDARD LVCMOS12 } [get_ports { qsfpFs[0][0] }];
+set_property -dict { PACKAGE_PIN AU22 IOSTANDARD LVCMOS12 } [get_ports { qsfpFs[0][1] }];
+set_property -dict { PACKAGE_PIN AT22 IOSTANDARD LVCMOS12 } [get_ports { qsfpRefClkRst[0] }];
+set_property -dict { PACKAGE_PIN BE17 IOSTANDARD LVCMOS12 } [get_ports { qsfpRstL[0] }];
+set_property -dict { PACKAGE_PIN BD18 IOSTANDARD LVCMOS12 } [get_ports { qsfpLpMode[0] }];
+set_property -dict { PACKAGE_PIN BE20 IOSTANDARD LVCMOS12 } [get_ports { qsfpModPrsL[0] }];
+set_property -dict { PACKAGE_PIN BE16 IOSTANDARD LVCMOS12 } [get_ports { qsfpModSelL[0] }];
 
 ##########################################
 # QSFP[1] ports located in the core area #
 ##########################################
 
-set_property -dict { PACKAGE_PIN BC18 IOSTANDARD LVCMOS12 } [get_ports { qsfp1RstL }];
-set_property -dict { PACKAGE_PIN AV22 IOSTANDARD LVCMOS12 } [get_ports { qsfp1LpMode }];
-set_property -dict { PACKAGE_PIN BC19 IOSTANDARD LVCMOS12 } [get_ports { qsfp1ModPrsL }];
-set_property -dict { PACKAGE_PIN AY20 IOSTANDARD LVCMOS12 } [get_ports { qsfp1ModSelL }];
+set_property -dict { PACKAGE_PIN AR22 IOSTANDARD LVCMOS12 } [get_ports { qsfpFs[1][0] }];
+set_property -dict { PACKAGE_PIN AU20 IOSTANDARD LVCMOS12 } [get_ports { qsfpFs[1][1] }];
+set_property -dict { PACKAGE_PIN AR21 IOSTANDARD LVCMOS12 } [get_ports { qsfpRefClkRst[1] }];
+set_property -dict { PACKAGE_PIN BC18 IOSTANDARD LVCMOS12 } [get_ports { qsfpRstL[1] }];
+set_property -dict { PACKAGE_PIN AV22 IOSTANDARD LVCMOS12 } [get_ports { qsfpLpMode[1] }];
+set_property -dict { PACKAGE_PIN BC19 IOSTANDARD LVCMOS12 } [get_ports { qsfpModPrsL[1] }];
+set_property -dict { PACKAGE_PIN AY20 IOSTANDARD LVCMOS12 } [get_ports { qsfpModSelL[1] }];
 
 ####################
 # PCIe Constraints #

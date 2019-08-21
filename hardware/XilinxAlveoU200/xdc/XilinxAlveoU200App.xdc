@@ -8,23 +8,14 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-
-# set_property	PACKAGE_PIN	AT22		[get_ports 	QSFP0_REFCLK_RESET	] ; 
-# set_property	IOSTANDARD		LVCMOS12	[get_ports 	QSFP0_REFCLK_RESET	] ; 
-# set_property	PACKAGE_PIN	AR21		[get_ports 	QSFP1_REFCLK_RESET	] ; 
-# set_property	IOSTANDARD		LVCMOS12	[get_ports 	QSFP1_REFCLK_RESET	] ; 
-
-# set_property	PACKAGE_PIN	AL21		[get_ports 	SW_SET1_FPGA	] ; 
-# set_property	IOSTANDARD		LVCMOS12	[get_ports 	SW_SET1_FPGA	] ; 
-
 ###########
 # QSFP[0] #
 ###########
 
-set_property PACKAGE_PIN K11 [get_ports { qsfp0RefClkP[0] }] ;# 156.25 MHz
-set_property PACKAGE_PIN K10 [get_ports { qsfp0RefClkN[0] }] ;# 156.25 MHz
-set_property PACKAGE_PIN M11 [get_ports { qsfp0RefClkP[1] }] ;# ????
-set_property PACKAGE_PIN M10 [get_ports { qsfp0RefClkN[1] }] ;# ????
+set_property PACKAGE_PIN K11 [get_ports { qsfp0RefClkP[0] }] ;# 161.1328125 MHz 
+set_property PACKAGE_PIN K10 [get_ports { qsfp0RefClkN[0] }] ;# 161.1328125 MHz
+set_property PACKAGE_PIN M11 [get_ports { qsfp0RefClkP[1] }] ;# 156.25 MHz
+set_property PACKAGE_PIN M10 [get_ports { qsfp0RefClkN[1] }] ;# 156.25 MHz
 
 set_property PACKAGE_PIN N9 [get_ports { qsfp0TxP[0] }]
 set_property PACKAGE_PIN N8 [get_ports { qsfp0TxN[0] }]
@@ -50,10 +41,10 @@ set_property PACKAGE_PIN K1 [get_ports { qsfp0RxN[3] }]
 # QSFP[1] #
 ###########
 
-set_property PACKAGE_PIN P11 [get_ports { qsfp1RefClkP[0] }] ;# 156.25 MHz
-set_property PACKAGE_PIN P10 [get_ports { qsfp1RefClkN[0] }] ;# 156.25 MHz
-set_property PACKAGE_PIN T11 [get_ports { qsfp1RefClkP[1] }] ;# ????
-set_property PACKAGE_PIN T10 [get_ports { qsfp1RefClkN[1] }] ;# ????
+set_property PACKAGE_PIN P11 [get_ports { qsfp1RefClkP[0] }] ;# 161.1328125 MHz 
+set_property PACKAGE_PIN P10 [get_ports { qsfp1RefClkN[0] }] ;# 161.1328125 MHz 
+set_property PACKAGE_PIN T11 [get_ports { qsfp1RefClkP[1] }] ;# 156.25 MHz
+set_property PACKAGE_PIN T10 [get_ports { qsfp1RefClkN[1] }] ;# 156.25 MHz
 
 set_property PACKAGE_PIN U9 [get_ports { qsfp1TxP[0] }]
 set_property PACKAGE_PIN U8 [get_ports { qsfp1TxN[0] }]
@@ -79,11 +70,11 @@ set_property PACKAGE_PIN P1 [get_ports { qsfp1RxN[3] }]
 # Clocks #
 ##########
 
-create_clock -period 6.400 -name qsfp0RefClkP0 [get_ports {qsfp0RefClkP[0]}]
-create_clock -period 3.200 -name qsfp0RefClkP1 [get_ports {qsfp0RefClkP[1]}]
+create_clock -period 6.206 -name qsfp0RefClkP0 [get_ports {qsfp0RefClkP[0]}]
+create_clock -period 6.400 -name qsfp0RefClkP1 [get_ports {qsfp0RefClkP[1]}]
 
-create_clock -period 6.400 -name qsfp1RefClkP0 [get_ports {qsfp1RefClkP[0]}]
-create_clock -period 3.200 -name qsfp1RefClkP1 [get_ports {qsfp1RefClkP[1]}]
+create_clock -period 6.206 -name qsfp1RefClkP0 [get_ports {qsfp1RefClkP[0]}]
+create_clock -period 6.400 -name qsfp1RefClkP1 [get_ports {qsfp1RefClkP[1]}]
 
 set_clock_groups -asynchronous -group [get_clocks {dmaClk}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP0}]
 set_clock_groups -asynchronous -group [get_clocks {dmaClk}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP1}]

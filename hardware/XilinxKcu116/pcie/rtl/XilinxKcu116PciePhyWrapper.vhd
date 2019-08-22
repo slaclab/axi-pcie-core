@@ -15,6 +15,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
 
 use work.StdRtlPkg.all;
 use work.AxiPkg.all;
@@ -175,6 +177,18 @@ architecture mapping of XilinxKcu116PciePhyWrapper is
    signal sAxilAwaddr : slv(31 downto 0);
    signal sAxilAraddr : slv(31 downto 0);
 
+   type IrqStateType is (
+      SI_IDLE,
+      SI_SET,
+      SI_SYNC0,
+      SI_SERV,
+      SI_CLR,
+      SI_SYNC1);
+   signal irqState  : IrqStateType := SI_IDLE;
+   signal irqTimer  : slv(31 downto 0);
+   signal usrIrqReq : sl;
+   signal usrIrqAck : sl;
+
 begin
 
    axiClk <= clk;
@@ -187,10 +201,60 @@ begin
          rstIn  => rstL,
          rstOut => axiRst);
 
+   process (clk)
+   begin
+      if rising_edge(clk) then
+         if (rstL = '0') then
+            irqState  <= SI_IDLE         after TPD_G;
+            irqTimer  <= (others => '0') after TPD_G;
+            usrIrqReq <= '0'             after TPD_G;
+         else
+            ----------------------------------------------
+            case irqState is
+               ----------------------------------------------
+               when SI_IDLE =>
+                  if (dmaIrq = '1')then
+                     usrIrqReq <= '1'    after TPD_G;
+                     irqState  <= SI_SET after TPD_G;
+                  end if;
+               ----------------------------------------------
+               when SI_SET =>
+                  if (usrIrqAck = '1') then
+                     irqState <= SI_SYNC0 after TPD_G;
+                  end if;
+               ----------------------------------------------
+               when SI_SYNC0 =>
+                  if (usrIrqAck = '0') then
+                     irqState <= SI_SERV after TPD_G;
+                  end if;
+               ----------------------------------------------
+               when SI_SERV =>
+                  irqTimer <= irqTimer + 1 after TPD_G;
+                  if (dmaIrq = '0') or (irqTimer = 250000000) then
+                     irqTimer  <= (others => '0') after TPD_G;
+                     usrIrqReq <= '0'             after TPD_G;
+                     irqState  <= SI_CLR          after TPD_G;
+                  end if;
+               ----------------------------------------------
+               when SI_CLR =>
+                  if (usrIrqAck = '1') then
+                     irqState <= SI_SYNC1 after TPD_G;
+                  end if;
+               ----------------------------------------------
+               when SI_SYNC1 =>
+                  if (usrIrqAck = '0') then
+                     irqState <= SI_IDLE after TPD_G;
+                  end if;
+            ----------------------------------------------
+            end case;
+         end if;
+      end if;
+   end process;
+
    ------------------
    -- Clock and Reset
    ------------------
-   U_IBUFDS_GTE3 : IBUFDS_GTE4
+   U_IBUFDS : IBUFDS_GTE4
       generic map (
          REFCLK_EN_TX_PATH  => '0',
          REFCLK_HROW_CK_SEL => "00",    -- 2'b00: ODIV2 = O
@@ -217,8 +281,8 @@ begin
          user_lnk_up     => open,
          cfg_ltssm_state => open,
          -- Interrupt Interface
-         usr_irq_req(0)  => dmaIrq,
-         usr_irq_ack(0)  => open,  -- Action Item: Unclear if there needs to be handshaking with existing AxisDMAv2's IRQ.  Need to determine if a FSM between the usr_irq_req/usr_irq_ack to dmaIrq is need???
+         usr_irq_req(0)  => usrIrqReq,
+         usr_irq_ack(0)  => usrIrqAck,
          interrupt_out   => open,
          -- Slave AXI4 Interface
          s_axib_awid     => dmaWriteMaster.awid(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0),

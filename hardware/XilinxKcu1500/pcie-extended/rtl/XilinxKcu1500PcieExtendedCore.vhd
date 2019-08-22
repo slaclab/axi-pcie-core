@@ -54,7 +54,7 @@ entity XilinxKcu1500PcieExtendedCore is
       pipIbSlave     : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       pipObMaster    : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
       pipObSlave     : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
-      -- Application AXI-Lite Interfaces [0x00080000:0x00FFFFFF] (appClk domain)
+      -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk         : in  sl                    := '0';
       appRst         : in  sl                    := '1';
       appReadMaster  : out AxiLiteReadMasterType;

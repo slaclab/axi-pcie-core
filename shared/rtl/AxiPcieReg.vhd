@@ -56,7 +56,7 @@ entity AxiPcieReg is
       phyReadSlave        : in  AxiLiteReadSlaveType;
       phyWriteMaster      : out AxiLiteWriteMasterType;
       phyWriteSlave       : in  AxiLiteWriteSlaveType;
-      -- Application AXI-Lite Interfaces [0x00080000:0x00FFFFFF] (appClk domain)
+      -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk              : in  sl;
       appRst              : in  sl;
       appReadMaster       : out AxiLiteReadMasterType;

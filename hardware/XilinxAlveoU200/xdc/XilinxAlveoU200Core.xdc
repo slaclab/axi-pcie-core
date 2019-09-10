@@ -45,6 +45,40 @@ set_property -dict { PACKAGE_PIN AY20 IOSTANDARD LVCMOS12 } [get_ports { qsfpMod
 # PCIe Constraints #
 ####################
 
+set_property PACKAGE_PIN AF2 [get_ports {pciTxP[15]}]
+set_property PACKAGE_PIN AG4 [get_ports {pciTxP[14]}]
+set_property PACKAGE_PIN AH2 [get_ports {pciTxP[13]}]
+set_property PACKAGE_PIN AJ4 [get_ports {pciTxP[12]}]
+set_property PACKAGE_PIN AK2 [get_ports {pciTxP[11]}]
+set_property PACKAGE_PIN AL4 [get_ports {pciTxP[10]}]
+set_property PACKAGE_PIN AM2 [get_ports {pciTxP[9]}]
+set_property PACKAGE_PIN AN4 [get_ports {pciTxP[8]}]
+set_property PACKAGE_PIN AP2 [get_ports {pciTxP[7]}]
+set_property PACKAGE_PIN AR4 [get_ports {pciTxP[6]}]
+set_property PACKAGE_PIN AT2 [get_ports {pciTxP[5]}]
+set_property PACKAGE_PIN AU4 [get_ports {pciTxP[4]}]
+set_property PACKAGE_PIN AV2 [get_ports {pciTxP[3]}]
+set_property PACKAGE_PIN AW4 [get_ports {pciTxP[2]}]
+set_property PACKAGE_PIN BA2 [get_ports {pciTxP[1]}]
+set_property PACKAGE_PIN BC2 [get_ports {pciTxP[0]}]
+
+set_property PACKAGE_PIN AF7 [get_ports {pciTxP[15]}]
+set_property PACKAGE_PIN AG9 [get_ports {pciTxP[14]}]
+set_property PACKAGE_PIN AH7 [get_ports {pciTxP[13]}]
+set_property PACKAGE_PIN AJ9 [get_ports {pciTxP[12]}]
+set_property PACKAGE_PIN AK7 [get_ports {pciTxP[11]}]
+set_property PACKAGE_PIN AL9 [get_ports {pciTxP[10]}]
+set_property PACKAGE_PIN AM7 [get_ports {pciTxP[9]}]
+set_property PACKAGE_PIN AN9 [get_ports {pciTxP[8]}]
+set_property PACKAGE_PIN AP7 [get_ports {pciTxP[7]}]
+set_property PACKAGE_PIN AR9 [get_ports {pciTxP[6]}]
+set_property PACKAGE_PIN AT7 [get_ports {pciTxP[5]}]
+set_property PACKAGE_PIN AU9 [get_ports {pciTxP[4]}]
+set_property PACKAGE_PIN AV7 [get_ports {pciTxP[3]}]
+set_property PACKAGE_PIN BB5 [get_ports {pciTxP[2]}]
+set_property PACKAGE_PIN BD5 [get_ports {pciTxP[1]}]
+set_property PACKAGE_PIN BF5 [get_ports {pciTxP[0]}]
+
 set_property PACKAGE_PIN AM11 [get_ports {pciRefClkP}]; # 100 MHz
 set_property PACKAGE_PIN AM10 [get_ports {pciRefClkN}]; # 100 MHz
 

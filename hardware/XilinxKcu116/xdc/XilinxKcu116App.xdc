@@ -60,11 +60,11 @@ set_property PACKAGE_PIN G4 [get_ports sfpTxN[3]]
 set_property PACKAGE_PIN F2 [get_ports sfpRxP[3]]
 set_property PACKAGE_PIN F1 [get_ports sfpRxN[3]]
 
+set_property PACKAGE_PIN P7 [get_ports sfpCleanRecClkP]
+set_property PACKAGE_PIN P6 [get_ports sfpCleanRecClkN]
+
 set_property PACKAGE_PIN M7 [get_ports sfpRefClkP]
 set_property PACKAGE_PIN M6 [get_ports sfpRefClkN]
-
-set_property PACKAGE_PIN M7 [get_ports sfpCleanRecClkP]
-set_property PACKAGE_PIN M6 [get_ports sfpCleanRecClkN]
 
 set_property -dict { PACKAGE_PIN R22 IOSTANDARD LVDS } [get_ports { sfpRecClkP }]
 set_property -dict { PACKAGE_PIN R23 IOSTANDARD LVDS } [get_ports { sfpRecClkN }]
@@ -105,11 +105,11 @@ set_property PACKAGE_PIN B6 [get_ports fmcTxN[3]]
 set_property PACKAGE_PIN A4 [get_ports fmcRxP[3]]
 set_property PACKAGE_PIN A3 [get_ports fmcRxN[3]]
 
-set_property PACKAGE_PIN K7 [get_ports sfpRefClkP[0]]
-set_property PACKAGE_PIN K6 [get_ports sfpRefClkN[0]]
+set_property PACKAGE_PIN K7 [get_ports fmcHpcRefClkP[0]]
+set_property PACKAGE_PIN K6 [get_ports fmcHpcRefClkN[0]]
 
-set_property PACKAGE_PIN H7 [get_ports sfpRefClkP[1]]
-set_property PACKAGE_PIN H6 [get_ports sfpRefClkN[1]]
+set_property PACKAGE_PIN H7 [get_ports fmcHpcRefClkP[1]]
+set_property PACKAGE_PIN H6 [get_ports fmcHpcRefClkN[1]]
 
 set_property -dict { PACKAGE_PIN AB21 IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { fmcHpcClkP }]
 set_property -dict { PACKAGE_PIN AC21 IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { fmcHpcClkN }]
@@ -170,8 +170,8 @@ set_property -dict { IOSTANDARD LVCMOS18 } [get_ports { fmcHpcLaN[*] }]
 # Timing Constraints
 ####################
 
-create_clock -name sfpRefClkP -period  6.400 [get_ports {sfpClk156P}]
+create_clock -name sfpRefClkP -period  6.400 [get_ports {sfpRefClkP}]
 create_clock -name clk125P    -period  8.000 [get_ports {clk125P}]
 create_clock -name clk74P     -period 13.468 [get_ports {clk74P}]
 
-set_clock_groups -asynchronous -group [get_clocks {dmaClk}] -group [get_clocks -include_generated_clocks {sfpClk156P}]
+set_clock_groups -asynchronous -group [get_clocks {dmaClk}] -group [get_clocks -include_generated_clocks {sfpRefClkP}]

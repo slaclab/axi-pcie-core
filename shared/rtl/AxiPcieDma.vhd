@@ -27,16 +27,17 @@ use work.AxiPciePkg.all;
 
 entity AxiPcieDma is
    generic (
-      TPD_G                : time                        := 1 ns;
-      ROGUE_SIM_EN_G       : boolean                     := false;
-      ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
-      ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
-      SIMULATION_G         : boolean                     := false;
-      DMA_SIZE_G           : positive range 1 to 8       := 1;
-      DMA_AXIS_CONFIG_G    : AxiStreamConfigType         := ssiAxiStreamConfig(16);
-      INT_PIPE_STAGES_G    : natural range 0 to 1        := 1;
-      PIPE_STAGES_G        : natural range 0 to 1        := 1;
-      DESC_ARB_G           : boolean                     := true);
+      TPD_G                : time                         := 1 ns;
+      ROGUE_SIM_EN_G       : boolean                      := false;
+      ROGUE_SIM_PORT_NUM_G : positive range 1024 to 49151 := 8000;
+      ROGUE_SIM_CH_COUNT_G : positive range 1 to 256      := 256;
+      SIMULATION_G         : boolean                      := false;
+      DMA_BURST_BYTES_G    : positive range 256 to 4096   := 256;
+      DMA_SIZE_G           : positive range 1 to 8        := 1;
+      DMA_AXIS_CONFIG_G    : AxiStreamConfigType          := ssiAxiStreamConfig(16);
+      INT_PIPE_STAGES_G    : natural range 0 to 1         := 1;
+      PIPE_STAGES_G        : natural range 0 to 1         := 1;
+      DESC_ARB_G           : boolean                      := true);
    port (
       axiClk           : in  sl;
       axiRst           : in  sl;
@@ -78,13 +79,13 @@ architecture mapping of AxiPcieDma is
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
 
-   signal dmaWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0) := (others=>AXI_WRITE_MASTER_FORCE_C);
-   signal dmaWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0) := (others=>AXI_WRITE_SLAVE_FORCE_C);
-   
+   signal dmaWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0) := (others => AXI_WRITE_MASTER_FORCE_C);
+   signal dmaWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0)  := (others => AXI_WRITE_SLAVE_FORCE_C);
+
    signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
    signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
    signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
-   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);   
+   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);
 
    signal sAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
    signal sAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
@@ -146,7 +147,7 @@ begin
             AXI_DMA_CONFIG_G => DMA_AXI_CONFIG_C,
             CHAN_COUNT_G     => DMA_SIZE_G,
             RD_PIPE_STAGES_G => 1,
-            BURST_BYTES_G    => 256,  -- 256B chucks (prevent out of ordering PCIe TLP)
+            BURST_BYTES_G    => DMA_BURST_BYTES_G,
             RD_PEND_THRESH_G => 1)
          port map (
             -- Clock/Reset
@@ -170,7 +171,7 @@ begin
             axiWriteCtrl    => (others => AXI_CTRL_UNUSED_C),
             axiWriteMasters => dmaWriteMasters,
             axiWriteSlaves  => dmaWriteSlaves);
-         
+
       axiWriteMasters(DMA_SIZE_G downto 1) <= dmaWriteMasters(DMA_SIZE_G downto 1);
       dmaWriteSlaves(DMA_SIZE_G downto 1)  <= axiWriteSlaves(DMA_SIZE_G downto 1);
 

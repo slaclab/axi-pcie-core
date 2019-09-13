@@ -24,11 +24,11 @@ set_property -dict { PACKAGE_PIN H11 IOSTANDARD LVCMOS33 } [get_ports { gpioDip[
 set_property -dict { PACKAGE_PIN H9  IOSTANDARD LVCMOS33 } [get_ports { gpioDip[2] }]
 set_property -dict { PACKAGE_PIN J9  IOSTANDARD LVCMOS33 } [get_ports { gpioDip[3] }]
 
-set_property -dict { PACKAGE_PIN G12 IOSTANDARD LVDS } [get_ports { clk125P }]
-set_property -dict { PACKAGE_PIN F12 IOSTANDARD LVDS } [get_ports { clk125N }]
+set_property -dict { PACKAGE_PIN G12 IOSTANDARD LVDS_25 } [get_ports { clk125P }]
+set_property -dict { PACKAGE_PIN F12 IOSTANDARD LVDS_25 } [get_ports { clk125N }]
 
-set_property -dict { PACKAGE_PIN D11 IOSTANDARD LVDS } [get_ports { clk74P }]
-set_property -dict { PACKAGE_PIN D10 IOSTANDARD LVDS } [get_ports { clk74N }]
+set_property -dict { PACKAGE_PIN D11 IOSTANDARD LVDS_25 } [get_ports { clk74P }]
+set_property -dict { PACKAGE_PIN D10 IOSTANDARD LVDS_25 } [get_ports { clk74N }]
 
 set_property -dict { PACKAGE_PIN J23 IOSTANDARD LVDS } [get_ports { smaClkP }]
 set_property -dict { PACKAGE_PIN J24 IOSTANDARD LVDS } [get_ports { smaClkN }]

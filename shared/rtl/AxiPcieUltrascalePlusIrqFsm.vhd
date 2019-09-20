@@ -2,7 +2,7 @@
 -- File       : AxiPcieUltrascalePlusIrqFsm.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: Ultrascale+ IRQ FSM 
+-- Description: AXI PCIe Ultrascale+ IRQ FSM 
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the 
@@ -69,8 +69,8 @@ begin
          ----------------------------------------------------------------------
          when IDLE_S =>
             if (dmaIrq = '1')then
-               usrIrqReq := '1';
-               v.state   := SET_S;
+               v.usrIrqReq := '1';
+               v.state     := SET_S;
             end if;
          ----------------------------------------------------------------------
          when SET_S =>
@@ -84,8 +84,8 @@ begin
             end if;
          ----------------------------------------------------------------------
          when SERV_S =>
-            irqTimer := irqTimer + 1;
-            if (dmaIrq = '0') or (irqTimer = 250000000) then
+            v.irqTimer := v.irqTimer + 1;
+            if (dmaIrq = '0') or (r.irqTimer = 250000000) then
                v.irqTimer  := (others => '0');
                v.usrIrqReq := '0';
                v.state     := CLR_S;

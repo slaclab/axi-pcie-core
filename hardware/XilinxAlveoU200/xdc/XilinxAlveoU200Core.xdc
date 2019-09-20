@@ -227,8 +227,12 @@ set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets {U_Core/userClk156}]
 ######################################
 # BITSTREAM: .bit file Configuration #
 ######################################
+
+# ------------------------------------------------------------------------
+# https://www.xilinx.com/Attachment/u200_bitstream_constraints.xdc
+# ------------------------------------------------------------------------
 set_property CONFIG_VOLTAGE 1.8                        [current_design]
-# set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable  [current_design]
+set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable    [current_design]
 set_property BITSTREAM.GENERAL.COMPRESS TRUE           [current_design]
 set_property CONFIG_MODE SPIx4                         [current_design]
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4           [current_design]
@@ -237,5 +241,4 @@ set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN disable [current_design]
 set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES        [current_design]
 set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup         [current_design]
 set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR Yes       [current_design]
-set_property BITSTREAM.STARTUP.LCK_CYCLE NoWait        [current_design]
-set_property BITSTREAM.STARTUP.MATCH_CYCLE NoWait      [current_design]
+# ------------------------------------------------------------------------

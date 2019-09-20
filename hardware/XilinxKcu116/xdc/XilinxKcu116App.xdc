@@ -71,19 +71,21 @@ set_property -dict { PACKAGE_PIN R23 IOSTANDARD LVDS } [get_ports { sfpRecClkN }
 
 ##############################################################################
 
-set_property -dict { PACKAGE_PIN T24  IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { ethPhyClkP   }]
-set_property -dict { PACKAGE_PIN U24  IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { ethPhyClkN   }]
-set_property -dict { PACKAGE_PIN U26  IOSTANDARD LVDS                        } [get_ports { ethPhyTxP    }]
-set_property -dict { PACKAGE_PIN V26  IOSTANDARD LVDS                        } [get_ports { ethPhyTxN    }]
-set_property -dict { PACKAGE_PIN N24  IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { ethPhyRxP    }]
-set_property -dict { PACKAGE_PIN P24  IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { ethPhyRxN    }]
-set_property -dict { PACKAGE_PIN U25  IOSTANDARD LVCMOS18                    } [get_ports { ethPhyMdc    }]
-set_property -dict { PACKAGE_PIN P25  IOSTANDARD LVCMOS18                    } [get_ports { ethPhyMdio   }]
-set_property -dict { PACKAGE_PIN R25  IOSTANDARD LVCMOS18                    } [get_ports { ethPhyIrqN   }]
-set_property -dict { PACKAGE_PIN AA23 IOSTANDARD LVCMOS18                    } [get_ports { ethPhyRstN   }]
+set_property -dict { PACKAGE_PIN P25  IOSTANDARD LVCMOS18       } [get_ports { phyMdio  }]
+set_property -dict { PACKAGE_PIN U25  IOSTANDARD LVCMOS18       } [get_ports { phyMdc   }]
+set_property -dict { PACKAGE_PIN R25  IOSTANDARD LVCMOS18       } [get_ports { phyIrqN  }]
+set_property -dict { PACKAGE_PIN N24  IOSTANDARD DIFF_HSTL_I_18 } [get_ports { sgmiiTxP }]
+set_property -dict { PACKAGE_PIN U26  IOSTANDARD DIFF_HSTL_I_18 } [get_ports { sgmiiRxP }]
+set_property -dict { PACKAGE_PIN T24  IOSTANDARD LVDS           } [get_ports { phyClkP  }]
+set_property -dict { PACKAGE_PIN AA23 IOSTANDARD LVCMOS18       } [get_ports { phyRstN  }]
+
+# # Placement - put SGMII ETH close in clock region of the 625MHz clock;
+# #             otherwise it is difficult to meet timing.
+# create_pblock SGMII_ETH_BLK
+# add_cells_to_pblock [get_pblocks SGMII_ETH_BLK] [get_cells U_SgmiiEth/U_1GigE]
+# resize_pblock       [get_pblocks SGMII_ETH_BLK] -add {CLOCKREGION_X0Y1:CLOCKREGION_X0Y1}
 
 ##############################################################################
-
 
 set_property PACKAGE_PIN F7 [get_ports fmcTxP[0]]
 set_property PACKAGE_PIN F6 [get_ports fmcTxN[0]]

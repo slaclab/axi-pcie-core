@@ -177,15 +177,6 @@ architecture mapping of XilinxKcu116PciePhyWrapper is
    signal sAxilAwaddr : slv(31 downto 0);
    signal sAxilAraddr : slv(31 downto 0);
 
-   type IrqStateType is (
-      SI_IDLE,
-      SI_SET,
-      SI_SYNC0,
-      SI_SERV,
-      SI_CLR,
-      SI_SYNC1);
-   signal irqState  : IrqStateType := SI_IDLE;
-   signal irqTimer  : slv(31 downto 0);
    signal usrIrqReq : sl;
    signal usrIrqAck : sl;
 
@@ -201,55 +192,17 @@ begin
          rstIn  => rstL,
          rstOut => axiRst);
 
-   process (clk)
-   begin
-      if rising_edge(clk) then
-         if (rstL = '0') then
-            irqState  <= SI_IDLE         after TPD_G;
-            irqTimer  <= (others => '0') after TPD_G;
-            usrIrqReq <= '0'             after TPD_G;
-         else
-            ----------------------------------------------
-            case irqState is
-               ----------------------------------------------
-               when SI_IDLE =>
-                  if (dmaIrq = '1')then
-                     usrIrqReq <= '1'    after TPD_G;
-                     irqState  <= SI_SET after TPD_G;
-                  end if;
-               ----------------------------------------------
-               when SI_SET =>
-                  if (usrIrqAck = '1') then
-                     irqState <= SI_SYNC0 after TPD_G;
-                  end if;
-               ----------------------------------------------
-               when SI_SYNC0 =>
-                  if (usrIrqAck = '0') then
-                     irqState <= SI_SERV after TPD_G;
-                  end if;
-               ----------------------------------------------
-               when SI_SERV =>
-                  irqTimer <= irqTimer + 1 after TPD_G;
-                  if (dmaIrq = '0') or (irqTimer = 250000000) then
-                     irqTimer  <= (others => '0') after TPD_G;
-                     usrIrqReq <= '0'             after TPD_G;
-                     irqState  <= SI_CLR          after TPD_G;
-                  end if;
-               ----------------------------------------------
-               when SI_CLR =>
-                  if (usrIrqAck = '1') then
-                     irqState <= SI_SYNC1 after TPD_G;
-                  end if;
-               ----------------------------------------------
-               when SI_SYNC1 =>
-                  if (usrIrqAck = '0') then
-                     irqState <= SI_IDLE after TPD_G;
-                  end if;
-            ----------------------------------------------
-            end case;
-         end if;
-      end if;
-   end process;
+   U_IRQ_FSM : entity work.AxiPcieUltrascalePlusIrqFsm
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- Clock and Reset
+         clk       => clk,
+         rstL      => rstL,
+         -- Interrupt Interface
+         dmaIrq    => dmaIrq,
+         usrIrqAck => usrIrqAck,
+         usrIrqReq => usrIrqReq);
 
    ------------------
    -- Clock and Reset

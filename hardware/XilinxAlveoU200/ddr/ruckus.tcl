@@ -4,7 +4,6 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 # Load source code
 loadSource           -dir "$::DIR_PATH/rtl"
 loadIpCore           -dir "$::DIR_PATH/ip"
-loadSource           -dir "$::DIR_PATH/ip/misc"
 loadSource -sim_only -dir "$::DIR_PATH/tb"
 loadConstraints      -dir "$::DIR_PATH/xdc"
 

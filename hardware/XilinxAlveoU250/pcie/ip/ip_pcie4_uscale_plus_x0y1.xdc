@@ -65,13 +65,13 @@
 # Pipe Clock   - 125 MHz (Gen1) : 250 MHz (Gen2/Gen3/Gen4)
 #
 # Family       - virtexuplus
-# Part         - xcu200
+# Part         - xcu250
 # Package      - fsgd2104
-# Speed grade  - -2
-# PCIe Block   - X1Y2
+# Speed grade  - -2L
+# PCIe Block   - X0Y1
 # Xilinx BNo   - 15
 #
-# Xilinx Reference Board is AU200
+# Xilinx Reference Board is AU250
 #
 # MSI-X TYPE - HARD
 #

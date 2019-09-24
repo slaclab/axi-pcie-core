@@ -37,6 +37,8 @@ entity AxiPcieDma is
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType          := ssiAxiStreamConfig(16);
       INT_PIPE_STAGES_G    : natural range 0 to 1         := 1;
       PIPE_STAGES_G        : natural range 0 to 1         := 1;
+      DESC_SYNTH_MODE_G    : string                       := "inferred";
+      DESC_MEMORY_TYPE_G   : string                       := "block";
       DESC_ARB_G           : boolean                      := true);
    port (
       axiClk           : in  sl;
@@ -137,18 +139,20 @@ begin
       -----------
       U_V2Gen : entity work.AxiStreamDmaV2
          generic map (
-            TPD_G            => TPD_G,
-            DESC_AWIDTH_G    => 12,     -- 4096 entries
-            DESC_ARB_G       => DESC_ARB_G,
-            AXIL_BASE_ADDR_G => x"00000000",
-            AXI_READY_EN_G   => true,  -- Using "Packet FIFO" option in AXI Interconnect IP core
-            AXIS_READY_EN_G  => false,
-            AXIS_CONFIG_G    => INT_DMA_AXIS_CONFIG_C,
-            AXI_DMA_CONFIG_G => DMA_AXI_CONFIG_C,
-            CHAN_COUNT_G     => DMA_SIZE_G,
-            RD_PIPE_STAGES_G => 1,
-            BURST_BYTES_G    => DMA_BURST_BYTES_G,
-            RD_PEND_THRESH_G => 1)
+            TPD_G              => TPD_G,
+            DESC_AWIDTH_G      => 12,   -- 4096 entries
+            DESC_ARB_G         => DESC_ARB_G,
+            DESC_SYNTH_MODE_G  => DESC_SYNTH_MODE_G,
+            DESC_MEMORY_TYPE_G => DESC_MEMORY_TYPE_G,
+            AXIL_BASE_ADDR_G   => x"00000000",
+            AXI_READY_EN_G     => true,  -- Using "Packet FIFO" option in AXI Interconnect IP core
+            AXIS_READY_EN_G    => false,
+            AXIS_CONFIG_G      => INT_DMA_AXIS_CONFIG_C,
+            AXI_DMA_CONFIG_G   => DMA_AXI_CONFIG_C,
+            CHAN_COUNT_G       => DMA_SIZE_G,
+            RD_PIPE_STAGES_G   => 1,
+            BURST_BYTES_G      => DMA_BURST_BYTES_G,
+            RD_PEND_THRESH_G   => 1)
          port map (
             -- Clock/Reset
             axiClk          => axiClk,

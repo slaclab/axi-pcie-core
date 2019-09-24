@@ -1,6 +1,6 @@
 # axi-pcie-core
 
-This GIT repository  intended to be a submodule of another project.  
+This GIT repository is intended to be a common firmware library submodule used by many other applications.
 
 Example: https://github.com/slaclab/pgp-pcie-apps/tree/master/firmware/submodules
 
@@ -57,6 +57,8 @@ $ cat /proc/data_dev0
 <!--- ######################################################## -->
 
 # How to reprogram the PCIe firmware via Rogue software
+
+Note: This update script will only work if the axi-pcie-core firmware already loaded in FPGA and won't work if the factory default is still loaded.  Use the JTAG interface and Vivado Hardware Manager to load the axi-pcie-core firmware for the first time.
 
 1) Setup the rogue environment
 ```

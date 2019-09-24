@@ -1,8 +1,12 @@
 # axi-pcie-core
 
+This GIT repository  intended to be a submodule of another project.  
+
+Example: https://github.com/slaclab/pgp-pcie-apps/tree/master/firmware/submodules
+
 <!--- ######################################################## -->
 
-# Before you clone the GIT repository
+# Before you clone the GIT repository as a submodule in another repo
 
 1) Create a github account:
 > https://github.com/
@@ -15,11 +19,6 @@
 
 4) Setup for large filesystems on github
 ``` $ git lfs install```
-
-<!--- ######################################################## -->
-
-# Clone the GIT repository (however, this git repo intended to be a submodule of another project)
-``` $ git clone --recursive git@github.com:slaclab/axi-pcie-core```
 
 <!--- ######################################################## -->
 

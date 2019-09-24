@@ -64,7 +64,7 @@ entity AlphaDataKu3Core is
       dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- Application AXI-Lite Interfaces [0x00080000:0x00FFFFFF] (appClk domain)
+      -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk         : in  sl;
       appRst         : in  sl;
       appReadMaster  : out AxiLiteReadMasterType;

@@ -57,6 +57,8 @@ set_property PACKAGE_PIN AF1 [get_ports {pciExtRxN[0]}]
 set_property PACKAGE_PIN AM11 [get_ports {pciExtRefClkP}]; # 100 MHz
 set_property PACKAGE_PIN AM10 [get_ports {pciExtRefClkN}]; # 100 MHz
 
+set_property -dict { PACKAGE_PIN AR26 IOSTANDARD LVCMOS18 } [get_ports {pciRstL}]
+
 ##########
 # Clocks #
 ##########
@@ -65,3 +67,8 @@ create_clock -period 10.000 -name pciExtRefClkP [get_ports {pciExtRefClkP}]
 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciExtRefClkP}] -group [get_clocks -include_generated_clocks {pciRefClkP}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciExtRefClkP}] -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {emcClk}]
+
+set_false_path -from [get_ports {pciRstL}]
+set_false_path -through [get_nets {U_ExtendedCore/REAL_PCIE.U_AxiPciePhy/U_AxiPcie/inst/inst/cfg_max*}]
+
+set_property HIGH_PRIORITY true [get_nets {U_ExtendedCore/REAL_PCIE.U_AxiPciePhy/U_AxiPcie/inst/pcie3_ip_i/inst/gt_top_i/phy_clk_i/CLK_USERCLK}]

@@ -4,7 +4,7 @@
 
 ## The frequency of the input clock is as per GUI selected input clock period
 
-create_clock -period 3.332 [get_ports c0_sys_clk_p]
+create_clock -period 3.333 [get_ports c0_sys_clk_p]
 
 
 ## Below pin LOC constraints are for system clock and system reset and

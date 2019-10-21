@@ -308,6 +308,21 @@ begin
    SIM_PCIE : if (ROGUE_SIM_EN_G) generate
 
       GEN_VEC : for i in DMA_SIZE_G-1 downto 0 generate
+         -------------------------------------------------------
+         -- DMA.LANE.TDEST Mapping:
+         -------------------------------------------------------
+         -- DMA[Lane=0][TDEST=0] maps to TCP ports ROGUE_SIM_PORT_NUM_G+2
+         -- DMA[Lane=0][TDEST=1] maps to TCP ports ROGUE_SIM_PORT_NUM_G+3
+         -- DMA[Lane=0][TDEST=2] maps to TCP ports ROGUE_SIM_PORT_NUM_G+4
+         -- .....
+         -- .....
+         -- DMA[Lane=0][TDEST=255] maps to TCP ports ROGUE_SIM_PORT_NUM_G+512
+         -- DMA[Lane=1][TDEST=0] maps to TCP ports ROGUE_SIM_PORT_NUM_G+514
+         -- DMA[Lane=1][TDEST=1] maps to TCP ports ROGUE_SIM_PORT_NUM_G+516
+         -- .....
+         -- .....         
+         -------------------------------------------------------         
+         
          U_DMA_LANE : entity work.RogueTcpStreamWrap
             generic map (
                TPD_G         => TPD_G,

@@ -312,8 +312,8 @@ begin
          -- DMA.LANE.TDEST Mapping:
          -------------------------------------------------------
          -- DMA[Lane=0][TDEST=0] maps to TCP ports ROGUE_SIM_PORT_NUM_G+2
-         -- DMA[Lane=0][TDEST=1] maps to TCP ports ROGUE_SIM_PORT_NUM_G+3
-         -- DMA[Lane=0][TDEST=2] maps to TCP ports ROGUE_SIM_PORT_NUM_G+4
+         -- DMA[Lane=0][TDEST=1] maps to TCP ports ROGUE_SIM_PORT_NUM_G+4
+         -- DMA[Lane=0][TDEST=2] maps to TCP ports ROGUE_SIM_PORT_NUM_G+6
          -- .....
          -- .....
          -- DMA[Lane=0][TDEST=255] maps to TCP ports ROGUE_SIM_PORT_NUM_G+512

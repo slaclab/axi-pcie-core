@@ -19,13 +19,15 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-use work.StdRtlPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiPkg.all;
-use work.AxiStreamPkg.all;
-use work.SsiPkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiLitePkg.all;
+use surf.AxiPkg.all;
+use surf.AxiStreamPkg.all;
+use surf.SsiPkg.all;
 use work.AxiPciePkg.all;
-use work.AxiStreamPacketizer2Pkg.all;
+use surf.AxiStreamPacketizer2Pkg.all;
 
 entity AxiPciePipCore is
    generic (
@@ -156,7 +158,7 @@ begin
    GEN_IB :
    for i in (NUM_AXIS_G-1) downto 0 generate
 
-      U_IbResize : entity work.AxiStreamResize
+      U_IbResize : entity surf.AxiStreamResize
          generic map (
             -- General Configurations
             TPD_G               => TPD_G,
@@ -174,7 +176,7 @@ begin
             mAxisMaster => ibAxisMasters(i),
             mAxisSlave  => ibAxisSlaves(i));
 
-      U_PacketizerV2 : entity work.AxiStreamPacketizer2
+      U_PacketizerV2 : entity surf.AxiStreamPacketizer2
          generic map (
             TPD_G                => TPD_G,
             BRAM_EN_G            => true,
@@ -193,7 +195,7 @@ begin
             mAxisMaster => packetizerMasters(i),
             mAxisSlave  => packetizerSlaves(i));
 
-      BURST_RESIZE_FIFO : entity work.AxiStreamFifoV2
+      BURST_RESIZE_FIFO : entity surf.AxiStreamFifoV2
          generic map (
             -- General Configurations
             TPD_G               => TPD_G,
@@ -225,7 +227,7 @@ begin
 
    end generate GEN_IB;
 
-   U_AxiStreamMux : entity work.AxiStreamMux
+   U_AxiStreamMux : entity surf.AxiStreamMux
       generic map (
          TPD_G        => TPD_G,
          NUM_SLAVES_G => NUM_AXIS_G)
@@ -287,7 +289,7 @@ begin
          pipIbMaster      => pipIbMaster,
          pipIbSlave       => pipIbSlave);
 
-   U_AxiStreamDeMux : entity work.AxiStreamDeMux
+   U_AxiStreamDeMux : entity surf.AxiStreamDeMux
       generic map (
          TPD_G         => TPD_G,
          NUM_MASTERS_G => NUM_AXIS_G)
@@ -305,7 +307,7 @@ begin
    GEN_OB :
    for i in (NUM_AXIS_G-1) downto 0 generate
 
-      BURST_RESIZE_FIFO : entity work.AxiStreamFifoV2
+      BURST_RESIZE_FIFO : entity surf.AxiStreamFifoV2
          generic map (
             -- General Configurations
             TPD_G               => TPD_G,
@@ -330,7 +332,7 @@ begin
             mAxisMaster => depacketizerMasters(i),
             mAxisSlave  => depacketizerSlaves(i));
 
-      U_Depacketizer : entity work.AxiStreamDepacketizer2
+      U_Depacketizer : entity surf.AxiStreamDepacketizer2
          generic map (
             TPD_G                => TPD_G,
             BRAM_EN_G            => true,
@@ -350,7 +352,7 @@ begin
             mAxisMaster => obAxisMasters(i),
             mAxisSlave  => obAxisSlaves(i));
 
-      U_ObResize : entity work.AxiStreamResize
+      U_ObResize : entity surf.AxiStreamResize
          generic map (
             -- General Configurations
             TPD_G               => TPD_G,

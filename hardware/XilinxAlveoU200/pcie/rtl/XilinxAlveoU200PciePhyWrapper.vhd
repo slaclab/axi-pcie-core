@@ -18,9 +18,11 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
 
-use work.StdRtlPkg.all;
-use work.AxiPkg.all;
-use work.AxiLitePkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiPkg.all;
+use surf.AxiLitePkg.all;
 use work.AxiPciePkg.all;
 
 library unisim;
@@ -190,7 +192,7 @@ architecture mapping of XilinxAlveoU200PciePhyWrapper is
 begin
 
    axiClk <= clk;
-   U_Rst : entity work.RstPipeline
+   U_Rst : entity surf.RstPipeline
       generic map (
          TPD_G     => TPD_G,
          INV_RST_G => true)

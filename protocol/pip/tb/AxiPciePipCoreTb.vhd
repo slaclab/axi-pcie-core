@@ -18,12 +18,14 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
 
-use work.StdRtlPkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
 use work.BuildInfoPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiPkg.all;
-use work.AxiStreamPkg.all;
-use work.SsiPkg.all;
+use surf.AxiLitePkg.all;
+use surf.AxiPkg.all;
+use surf.AxiStreamPkg.all;
+use surf.SsiPkg.all;
 
 entity AxiPciePipCoreTb is end AxiPciePipCoreTb;
 
@@ -79,7 +81,7 @@ architecture testbed of AxiPciePipCoreTb is
 
 begin
 
-   U_ClkRst : entity work.ClkRst
+   U_ClkRst : entity surf.ClkRst
       generic map (
          CLK_PERIOD_G      => CLK_PERIOD_C,
          RST_START_DELAY_G => 0 ns,  -- Wait this long into simulation before asserting reset
@@ -91,7 +93,7 @@ begin
    GEN_VEC :
    for i in 0 to APP_STREAMS_C-1 generate
 
-      U_SsiPrbsTx : entity work.SsiPrbsTx
+      U_SsiPrbsTx : entity surf.SsiPrbsTx
          generic map (
             TPD_G                      => TPD_G,
             AXI_EN_G                   => '0',
@@ -110,7 +112,7 @@ begin
             trig         => r.trig(i),
             busy         => txBusy(i));
 
-      U_SsiPrbsRx : entity work.SsiPrbsRx
+      U_SsiPrbsRx : entity surf.SsiPrbsRx
          generic map (
             TPD_G                     => TPD_G,
             GEN_SYNC_FIFO_G           => true,

@@ -16,9 +16,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.StdRtlPkg.all;
-use work.AxiPkg.all;
-use work.AxiLitePkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiPkg.all;
+use surf.AxiLitePkg.all;
 use work.AxiPciePkg.all;
 
 library unisim;
@@ -185,7 +187,7 @@ begin
          O     => pciRefClk,
          ODIV2 => open);        
 
-   U_RstSync0 : entity work.RstSync
+   U_RstSync0 : entity surf.RstSync
       generic map (
          TPD_G          => TPD_G,
          IN_POLARITY_G  => '0',
@@ -204,7 +206,7 @@ begin
 
    rst <= not(rstL);
 
-   U_RstSync1 : entity work.RstSync
+   U_RstSync1 : entity surf.RstSync
       generic map (
          TPD_G          => TPD_G,
          IN_POLARITY_G  => '1',
@@ -217,7 +219,7 @@ begin
    ---------------------------------------- 
    -- Synchronize the AXI-Lite transactions
    ---------------------------------------- 
-   U_AxiLiteAsync : entity work.AxiLiteAsync
+   U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
          TPD_G => TPD_G)
       port map (

@@ -18,7 +18,9 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-use work.StdRtlPkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -58,7 +60,7 @@ architecture mapping of TerminateQsfp is
 begin
 
    -- Unused QSFP Port
-   U_QSFP0 : entity work.Gthe3ChannelDummy
+   U_QSFP0 : entity surf.Gthe3ChannelDummy
       generic map (
          TPD_G   => TPD_G,
          WIDTH_G => 4)
@@ -70,7 +72,7 @@ begin
          gtTxN  => qsfp0TxN);
 
    -- Unused QSFP Port
-   U_QSFP1 : entity work.Gthe3ChannelDummy
+   U_QSFP1 : entity surf.Gthe3ChannelDummy
       generic map (
          TPD_G   => TPD_G,
          WIDTH_G => 4)

@@ -130,7 +130,7 @@ begin
 
    end generate GEN_VEC;
 
-   U_AxiPciePipCore : entity work.AxiPciePipCore
+   U_AxiPciePipCore : entity axi_pcie_core.AxiPciePipCore
       generic map (
          TPD_G             => TPD_G,
          NUM_AXIS_G        => APP_STREAMS_C,

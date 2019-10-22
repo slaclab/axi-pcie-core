@@ -46,7 +46,7 @@ architecture mapping of AxiPcieResizer is
 begin
 
    RESIZE_16B : if (AXI_PCIE_CONFIG_G.DATA_BYTES_C = 16) generate
-      U_AxiResize : entity work.AxiPcie16BResize
+      U_AxiResize : entity axi_pcie_core.AxiPcie16BResize
          generic map(
             TPD_G             => TPD_G,
             AXI_DMA_CONFIG_G  => AXI_DMA_CONFIG_G,
@@ -68,7 +68,7 @@ begin
    end generate;
 
    RESIZE_32B : if (AXI_PCIE_CONFIG_G.DATA_BYTES_C = 32) generate
-      U_AxiResize : entity work.AxiPcie32BResize
+      U_AxiResize : entity axi_pcie_core.AxiPcie32BResize
          generic map(
             TPD_G             => TPD_G,
             AXI_DMA_CONFIG_G  => AXI_DMA_CONFIG_G,
@@ -90,7 +90,7 @@ begin
    end generate;
 
    RESIZE_64B : if (AXI_PCIE_CONFIG_G.DATA_BYTES_C = 64) generate
-      U_AxiResize : entity work.AxiPcie64BResize
+      U_AxiResize : entity axi_pcie_core.AxiPcie64BResize
          generic map(
             TPD_G             => TPD_G,
             AXI_DMA_CONFIG_G  => AXI_DMA_CONFIG_G,

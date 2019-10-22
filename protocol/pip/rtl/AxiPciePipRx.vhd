@@ -25,7 +25,9 @@ use surf.StdRtlPkg.all;
 use surf.AxiPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.SsiPkg.all;
-use work.AxiPciePkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPciePipRx is
    generic (

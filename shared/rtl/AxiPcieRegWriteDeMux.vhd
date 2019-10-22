@@ -22,7 +22,9 @@ use ieee.std_logic_unsigned.all;
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiPkg.all;
-use work.AxiPciePkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPcieRegWriteMux is
    generic (

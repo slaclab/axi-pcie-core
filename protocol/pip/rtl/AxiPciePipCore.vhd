@@ -26,7 +26,9 @@ use surf.AxiLitePkg.all;
 use surf.AxiPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.SsiPkg.all;
-use work.AxiPciePkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 use surf.AxiStreamPacketizer2Pkg.all;
 
 entity AxiPciePipCore is
@@ -125,7 +127,7 @@ begin
    ------------------------------
    -- AXI-Lite Control/Monitoring
    ------------------------------
-   U_AxiPciePipReg : entity work.AxiPciePipReg
+   U_AxiPciePipReg : entity axi_pcie_core.AxiPciePipReg
       generic map (
          TPD_G      => TPD_G,
          NUM_AXIS_G => NUM_AXIS_G)
@@ -242,7 +244,7 @@ begin
          mAxisMaster  => pipObMaster,
          mAxisSlave   => pipObSlave);
 
-   U_AxiPciePipTx : entity work.AxiPciePipTx
+   U_AxiPciePipTx : entity axi_pcie_core.AxiPciePipTx
       generic map (
          TPD_G              => TPD_G,
          NUM_AXIS_G         => NUM_AXIS_G,
@@ -270,7 +272,7 @@ begin
    -- Outbound AXI4 to AXI Stream Layers
    -------------------------------------
 
-   U_AxiPciePipRx : entity work.AxiPciePipRx
+   U_AxiPciePipRx : entity axi_pcie_core.AxiPciePipRx
       generic map (
          TPD_G              => TPD_G,
          BURST_BYTES_G      => BURST_BYTES_C,

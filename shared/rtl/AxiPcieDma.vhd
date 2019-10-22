@@ -25,7 +25,9 @@ use surf.SsiPkg.all;
 use surf.AxiPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
-use work.AxiPciePkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPcieDma is
    generic (
@@ -113,7 +115,7 @@ begin
       ----------------
       -- AXI PCIe XBAR
       -----------------
-      U_XBAR : entity work.AxiPcieCrossbar
+      U_XBAR : entity axi_pcie_core.AxiPcieCrossbar
          generic map (
             TPD_G             => TPD_G,
             AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,

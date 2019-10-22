@@ -22,7 +22,9 @@ use surf.StdRtlPkg.all;
 use surf.AxiPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiLitePkg.all;
-use work.AxiPciePkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 use surf.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
@@ -303,7 +305,7 @@ begin
    -------------------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
-      U_AxiPcieRegWriteMux : entity work.AxiPcieRegWriteMux
+      U_AxiPcieRegWriteMux : entity axi_pcie_core.AxiPcieRegWriteMux
          generic map (
             TPD_G => TPD_G)
          port map (

@@ -25,7 +25,9 @@ use surf.StdRtlPkg.all;
 use surf.AxiPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
-use work.AxiPciePkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -131,7 +133,7 @@ begin
    -- AXI PCIe PHY
    ---------------   
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
-      U_AxiPciePhy : entity work.AxiPgpCardG3PciePhyWrapper
+      U_AxiPciePhy : entity axi_pcie_core.AxiPgpCardG3PciePhyWrapper
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -175,7 +177,7 @@ begin
    ---------------
    -- AXI PCIe REG
    --------------- 
-   U_REG : entity work.AxiPcieReg
+   U_REG : entity axi_pcie_core.AxiPcieReg
       generic map (
          TPD_G                => TPD_G,
          ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,
@@ -239,7 +241,7 @@ begin
    ---------------
    -- AXI PCIe DMA
    ---------------   
-   U_AxiPcieDma : entity work.AxiPcieDma
+   U_AxiPcieDma : entity axi_pcie_core.AxiPcieDma
       generic map (
          TPD_G                => TPD_G,
          ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,

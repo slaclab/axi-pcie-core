@@ -21,7 +21,9 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiPkg.all;
-use work.MigPkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.MigPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;

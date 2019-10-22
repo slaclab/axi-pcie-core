@@ -16,12 +16,12 @@ if { [VersionCheck 2018.2] < 0 } {exit -1}
 # 7-Series PCIe IP core appear to not support 40-bit address (even with 64-bit enabled)
 #######################################################################################
 # loadRuckusTcl "$::DIR_PATH/../../shared"
-loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieDma.vhd"
-loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieReg.vhd"
-loadSource -path "$::DIR_PATH/../../shared/rtl/AxiPcieRegWriteDeMux.vhd"
+loadSource -lib axi_pcie_core -path "$::DIR_PATH/../../shared/rtl/AxiPcieDma.vhd"
+loadSource -lib axi_pcie_core -path "$::DIR_PATH/../../shared/rtl/AxiPcieReg.vhd"
+loadSource -lib axi_pcie_core -path "$::DIR_PATH/../../shared/rtl/AxiPcieRegWriteDeMux.vhd"
 
 # Load local Source Code and Constraints
-loadSource      -dir "$::DIR_PATH/rtl"
+loadSource -lib axi_pcie_core      -dir "$::DIR_PATH/rtl"
 loadConstraints -dir "$::DIR_PATH/xdc"
 
 # Load the primary PCIe core

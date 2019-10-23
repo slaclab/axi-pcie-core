@@ -293,6 +293,8 @@ begin
          DMA_SIZE_G           => DMA_SIZE_G,
          DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
+         DESC_SYNTH_MODE_G    => "xpm",
+         DESC_MEMORY_TYPE_G   => "uram",
          DESC_ARB_G           => false)  -- Round robin to help with timing
       port map (
          axiClk           => sysClock,

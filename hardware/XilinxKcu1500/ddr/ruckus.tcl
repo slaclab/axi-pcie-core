@@ -5,6 +5,7 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 loadSource           -dir "$::DIR_PATH/rtl"
 loadSource -sim_only -dir "$::DIR_PATH/tb"
 loadConstraints      -dir "$::DIR_PATH/xdc"
+loadIpCore           -dir "$::DIR_PATH/ip"
 
 if { $::env(VIVADO_VERSION) <= 2018.3 } {
    loadIpCore -dir "$::DIR_PATH/ip/2018.3"

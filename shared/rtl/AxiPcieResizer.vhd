@@ -21,6 +21,8 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiPkg.all;
 
+library axi_pcie_core;
+
 entity AxiPcieResizer is
    generic (
       TPD_G             : time := 1 ns;

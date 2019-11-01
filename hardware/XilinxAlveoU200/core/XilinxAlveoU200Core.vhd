@@ -41,6 +41,7 @@ entity XilinxAlveoU200Core is
       BUILD_INFO_G         : BuildInfoType;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
+      DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (
       ------------------------      
@@ -307,7 +308,10 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
          DMA_SIZE_G           => DMA_SIZE_G,
+         DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
+         DESC_SYNTH_MODE_G    => "xpm",
+         DESC_MEMORY_TYPE_G   => "uram",
          DESC_ARB_G           => false)  -- Round robin to help with timing
       port map (
          axiClk           => sysClock,

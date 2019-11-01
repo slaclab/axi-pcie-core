@@ -3,15 +3,18 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Load source code
 loadSource -lib axi_pcie_core           -dir "$::DIR_PATH/rtl"
-loadSource -lib axi_pcie_core           -dir "$::DIR_PATH/ip/misc"
 loadSource -lib axi_pcie_core -sim_only -dir "$::DIR_PATH/tb"
-loadConstraints      -dir "$::DIR_PATH/xdc"
+loadConstraints                         -dir "$::DIR_PATH/xdc"
 
 if { $::env(VIVADO_VERSION) <= 2018.3 } {
    loadIpCore -dir "$::DIR_PATH/ip/2018.3"
 } else {
    loadIpCore -dir "$::DIR_PATH/ip/2019.1"
 }
+
+# Add MigClkConvt
+loadIpCore -path "$::DIR_PATH/ip/MigClkConvt.xci"
+loadSource -sim_only -lib axi_infrastructure_v1_1_0 -fileType {Verilog Header} -path "$::DIR_PATH/ip/axi_infrastructure_v1_1_0.vh"
 
 # Load the User port naming
 loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Mig0_user_mapping.xdc"

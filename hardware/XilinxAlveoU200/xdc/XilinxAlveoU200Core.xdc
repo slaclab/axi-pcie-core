@@ -45,6 +45,134 @@ set_property -dict { PACKAGE_PIN AY20 IOSTANDARD LVCMOS12 } [get_ports { qsfpMod
 # PCIe Constraints #
 ####################
 
+set_property PACKAGE_PIN BC1 [get_ports {pciRxN[15]}]
+
+set_property PACKAGE_PIN BA1 [get_ports {pciRxN[14]}]
+
+set_property PACKAGE_PIN AW3 [get_ports {pciRxN[13]}]
+
+set_property PACKAGE_PIN AV1 [get_ports {pciRxN[12]}]
+
+set_property PACKAGE_PIN BC2 [get_ports {pciRxP[15]}]
+
+set_property PACKAGE_PIN BA2 [get_ports {pciRxP[14]}]
+
+set_property PACKAGE_PIN AW4 [get_ports {pciRxP[13]}]
+
+set_property PACKAGE_PIN AV2 [get_ports {pciRxP[12]}]
+
+set_property PACKAGE_PIN BF4 [get_ports {pciTxN[15]}]
+
+set_property PACKAGE_PIN BD4 [get_ports {pciTxN[14]}]
+
+set_property PACKAGE_PIN BB4 [get_ports {pciTxN[13]}]
+
+set_property PACKAGE_PIN AV6 [get_ports {pciTxN[12]}]
+
+set_property PACKAGE_PIN BF5 [get_ports {pciTxP[15]}]
+
+set_property PACKAGE_PIN BD5 [get_ports {pciTxP[14]}]
+
+set_property PACKAGE_PIN BB5 [get_ports {pciTxP[13]}]
+
+set_property PACKAGE_PIN AV7 [get_ports {pciTxP[12]}]
+
+set_property PACKAGE_PIN AU3 [get_ports {pciRxN[11]}]
+
+set_property PACKAGE_PIN AT1 [get_ports {pciRxN[10]}]
+
+set_property PACKAGE_PIN AR3 [get_ports {pciRxN[9]}]
+
+set_property PACKAGE_PIN AP1 [get_ports {pciRxN[8]}]
+
+set_property PACKAGE_PIN AU4 [get_ports {pciRxP[11]}]
+
+set_property PACKAGE_PIN AT2 [get_ports {pciRxP[10]}]
+
+set_property PACKAGE_PIN AR4 [get_ports {pciRxP[9]}]
+
+set_property PACKAGE_PIN AP2 [get_ports {pciRxP[8]}]
+
+set_property PACKAGE_PIN AU8 [get_ports {pciTxN[11]}]
+
+set_property PACKAGE_PIN AT6 [get_ports {pciTxN[10]}]
+
+set_property PACKAGE_PIN AR8 [get_ports {pciTxN[9]}]
+
+set_property PACKAGE_PIN AP6 [get_ports {pciTxN[8]}]
+
+set_property PACKAGE_PIN AU9 [get_ports {pciTxP[11]}]
+
+set_property PACKAGE_PIN AT7 [get_ports {pciTxP[10]}]
+
+set_property PACKAGE_PIN AR9 [get_ports {pciTxP[9]}]
+
+set_property PACKAGE_PIN AP7 [get_ports {pciTxP[8]}]
+
+set_property PACKAGE_PIN AN3 [get_ports {pciRxN[7]}]
+
+set_property PACKAGE_PIN AM1 [get_ports {pciRxN[6]}]
+
+set_property PACKAGE_PIN AL3 [get_ports {pciRxN[5]}]
+
+set_property PACKAGE_PIN AK1 [get_ports {pciRxN[4]}]
+
+set_property PACKAGE_PIN AN4 [get_ports {pciRxP[7]}]
+
+set_property PACKAGE_PIN AM2 [get_ports {pciRxP[6]}]
+
+set_property PACKAGE_PIN AL4 [get_ports {pciRxP[5]}]
+
+set_property PACKAGE_PIN AK2 [get_ports {pciRxP[4]}]
+
+set_property PACKAGE_PIN AN8 [get_ports {pciTxN[7]}]
+
+set_property PACKAGE_PIN AM6 [get_ports {pciTxN[6]}]
+
+set_property PACKAGE_PIN AL8 [get_ports {pciTxN[5]}]
+
+set_property PACKAGE_PIN AK6 [get_ports {pciTxN[4]}]
+
+set_property PACKAGE_PIN AN9 [get_ports {pciTxP[7]}]
+
+set_property PACKAGE_PIN AM7 [get_ports {pciTxP[6]}]
+
+set_property PACKAGE_PIN AL9 [get_ports {pciTxP[5]}]
+
+set_property PACKAGE_PIN AK7 [get_ports {pciTxP[4]}]
+
+set_property PACKAGE_PIN AJ3 [get_ports {pciRxN[3]}]
+
+set_property PACKAGE_PIN AH1 [get_ports {pciRxN[2]}]
+
+set_property PACKAGE_PIN AG3 [get_ports {pciRxN[1]}]
+
+set_property PACKAGE_PIN AF1 [get_ports {pciRxN[0]}]
+
+set_property PACKAGE_PIN AJ4 [get_ports {pciRxP[3]}]
+
+set_property PACKAGE_PIN AH2 [get_ports {pciRxP[2]}]
+
+set_property PACKAGE_PIN AG4 [get_ports {pciRxP[1]}]
+
+set_property PACKAGE_PIN AF2 [get_ports {pciRxP[0]}]
+
+set_property PACKAGE_PIN AJ8 [get_ports {pciTxN[3]}]
+
+set_property PACKAGE_PIN AH6 [get_ports {pciTxN[2]}]
+
+set_property PACKAGE_PIN AG8 [get_ports {pciTxN[1]}]
+
+set_property PACKAGE_PIN AF6 [get_ports {pciTxN[0]}]
+
+set_property PACKAGE_PIN AJ9 [get_ports {pciTxP[3]}]
+
+set_property PACKAGE_PIN AH7 [get_ports {pciTxP[2]}]
+
+set_property PACKAGE_PIN AG9 [get_ports {pciTxP[1]}]
+
+set_property PACKAGE_PIN AF7 [get_ports {pciTxP[0]}]
+
 set_property PACKAGE_PIN AM11 [get_ports {pciRefClkP}]; # 100 MHz
 set_property PACKAGE_PIN AM10 [get_ports {pciRefClkN}]; # 100 MHz
 
@@ -99,8 +227,12 @@ set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets {U_Core/userClk156}]
 ######################################
 # BITSTREAM: .bit file Configuration #
 ######################################
+
+# ------------------------------------------------------------------------
+# https://www.xilinx.com/Attachment/u200_bitstream_constraints.xdc
+# ------------------------------------------------------------------------
 set_property CONFIG_VOLTAGE 1.8                        [current_design]
-# set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable  [current_design]
+set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable    [current_design]
 set_property BITSTREAM.GENERAL.COMPRESS TRUE           [current_design]
 set_property CONFIG_MODE SPIx4                         [current_design]
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4           [current_design]
@@ -109,5 +241,4 @@ set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN disable [current_design]
 set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES        [current_design]
 set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup         [current_design]
 set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR Yes       [current_design]
-set_property BITSTREAM.STARTUP.LCK_CYCLE NoWait        [current_design]
-set_property BITSTREAM.STARTUP.MATCH_CYCLE NoWait      [current_design]
+# ------------------------------------------------------------------------

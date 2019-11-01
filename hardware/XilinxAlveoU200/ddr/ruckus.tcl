@@ -3,10 +3,9 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Load source code
 loadSource -lib axi_pcie_core           -dir "$::DIR_PATH/rtl"
-loadIpCore           -dir "$::DIR_PATH/ip"
-loadSource -lib axi_pcie_core           -dir "$::DIR_PATH/ip/misc"
+loadIpCore                              -dir "$::DIR_PATH/ip"
 loadSource -lib axi_pcie_core -sim_only -dir "$::DIR_PATH/tb"
-loadConstraints      -dir "$::DIR_PATH/xdc"
+loadConstraints                         -dir "$::DIR_PATH/xdc"
 
 # Load the User port naming
 loadConstraints -path "$::DIR_PATH/xdc/XilinxAlveoU200Mig0_user_mapping.xdc"

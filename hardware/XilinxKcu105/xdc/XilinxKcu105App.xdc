@@ -35,6 +35,18 @@ set_property PACKAGE_PIN P5 [get_ports sfpClk156N]
 set_property -dict { PACKAGE_PIN J24 IOSTANDARD LVCMOS18 } [get_ports { fmcScl }]
 set_property -dict { PACKAGE_PIN J25 IOSTANDARD LVCMOS18 } [get_ports { fmcSda }]
 
+set_property -dict { PACKAGE_PIN AK17 IOSTANDARD DIFF_SSTL12_DCI ODT RTT_48 } [get_ports { sysClk300P }]
+set_property -dict { PACKAGE_PIN AK16 IOSTANDARD DIFF_SSTL12_DCI ODT RTT_48 } [get_ports { sysClk300N }]
+
+set_property PACKAGE_PIN R4 [get_ports { smaTxP }]
+set_property PACKAGE_PIN R3 [get_ports { smaTxN }]
+
+set_property PACKAGE_PIN P2 [get_ports { smaRxP }]
+set_property PACKAGE_PIN P1 [get_ports { smaRxN }]
+
+set_property PACKAGE_PIN V6 [get_ports { smaClkP }]
+set_property PACKAGE_PIN V5 [get_ports { smaClkN }]
+
 ##############################################################################
 
 set_property PACKAGE_PIN H11 [get_ports { fmcHpcLaP[0] }]

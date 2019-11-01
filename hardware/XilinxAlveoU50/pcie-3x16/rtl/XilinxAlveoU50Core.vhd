@@ -19,11 +19,15 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-use work.StdRtlPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiStreamPkg.all;
-use work.AxiPkg.all;
-use work.AxiPciePkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiLitePkg.all;
+use surf.AxiStreamPkg.all;
+use surf.AxiPkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -126,7 +130,7 @@ begin
 
    dmaClk <= sysClock;
 
-   U_Rst : entity work.RstPipeline
+   U_Rst : entity surf.RstPipeline
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -148,7 +152,7 @@ begin
    ---------------   
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
-      U_AxiPciePhy : entity work.XilinxAlveoU50PciePhyWrapper
+      U_AxiPciePhy : entity axi_pcie_core.XilinxAlveoU50PciePhyWrapper
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -189,7 +193,7 @@ begin
    SIM_PCIE : if (ROGUE_SIM_EN_G) generate
 
       -- Generate local 250 MHz clock
-      U_sysClock : entity work.ClkRst
+      U_sysClock : entity surf.ClkRst
          generic map (
             CLK_PERIOD_G      => 4 ns,  -- 250 MHz
             RST_START_DELAY_G => 0 ns,
@@ -207,7 +211,7 @@ begin
    ---------------
    -- AXI PCIe REG
    --------------- 
-   U_REG : entity work.AxiPcieReg
+   U_REG : entity axi_pcie_core.AxiPcieReg
       generic map (
          TPD_G                => TPD_G,
          ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,
@@ -284,7 +288,7 @@ begin
    ---------------
    -- AXI PCIe DMA
    ---------------   
-   U_AxiPcieDma : entity work.AxiPcieDma
+   U_AxiPcieDma : entity axi_pcie_core.AxiPcieDma
       generic map (
          TPD_G                => TPD_G,
          ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,

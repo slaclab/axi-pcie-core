@@ -21,11 +21,13 @@ use ieee.std_logic_arith.all;
 
 library surf;
 use surf.StdRtlPkg.all;
-use work.BuildInfoPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.SsiPkg.all;
+
+library ruckus;
+use ruckus.BuildInfoPkg.all;
 
 entity AxiPciePipCoreTb is end AxiPciePipCoreTb;
 

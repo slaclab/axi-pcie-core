@@ -30,6 +30,8 @@ use axi_pcie_core.AxiPciePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
+library axi_pcie_core; 
+
 entity XilinxKcu116PciePhyWrapper is
    generic (
       TPD_G : time := 1 ns);
@@ -196,7 +198,7 @@ begin
          rstIn  => rstL,
          rstOut => axiRst);
 
-   U_IRQ_FSM : entity work.AxiPcieUltrascalePlusIrqFsm
+   U_IRQ_FSM : entity axi_pcie_core.AxiPcieUltrascalePlusIrqFsm
       generic map (
          TPD_G => TPD_G)
       port map (

@@ -16,11 +16,11 @@ if { [info exists ::env(OVERRIDE_SUBMODULE_LOCKS)] != 1 || $::env(OVERRIDE_SUBMO
 if { [VersionCheck 2018.3] < 0 } {exit -1}
 
 # Load Source Code
-loadSource -dir "$::DIR_PATH/rtl"
+loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
 loadRuckusTcl "$::DIR_PATH/../protocol/pip"
 
 # loadIpCore -dir "$::DIR_PATH/ip"
-loadSource -dir "$::DIR_PATH/ip"
+loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip"
 
 # Skip the utilization check during placement
 set_param place.skipUtilizationCheck 1

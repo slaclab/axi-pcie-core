@@ -16,12 +16,16 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.StdRtlPkg.all;
-use work.AxiPkg.all;
-use work.AxiStreamPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiPciePkg.all;
-use work.AxiMicronP30Pkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiPkg.all;
+use surf.AxiStreamPkg.all;
+use surf.AxiLitePkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
+use surf.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
    generic (
@@ -301,7 +305,7 @@ begin
    -------------------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
-      U_AxiPcieRegWriteMux : entity work.AxiPcieRegWriteMux
+      U_AxiPcieRegWriteMux : entity axi_pcie_core.AxiPcieRegWriteMux
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -317,7 +321,7 @@ begin
             muxWriteMaster  => muxWriteMaster,
             muxWriteSlave   => muxWriteSlave);
 
-      U_AxiToAxiLite : entity work.AxiToAxiLite
+      U_AxiToAxiLite : entity surf.AxiToAxiLite
          generic map (
             TPD_G           => TPD_G,
             EN_SLAVE_RESP_G => false)
@@ -336,7 +340,7 @@ begin
    end generate;
 
    SIM_PCIE : if (ROGUE_SIM_EN_G) generate
-      U_TcpToAxiLite : entity work.RogueTcpMemoryWrap
+      U_TcpToAxiLite : entity surf.RogueTcpMemoryWrap
          generic map (
             TPD_G      => TPD_G,
             PORT_NUM_G => ROGUE_SIM_PORT_NUM_G+0)
@@ -352,7 +356,7 @@ begin
    --------------------
    -- AXI-Lite Crossbar
    --------------------
-   U_XBAR : entity work.AxiLiteCrossbar
+   U_XBAR : entity surf.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
          DEC_ERROR_RESP_G   => ite(ROGUE_SIM_EN_G, AXI_RESP_DECERR_C, AXI_RESP_OK_C),
@@ -374,7 +378,7 @@ begin
    --------------------------
    -- AXI-Lite Version Module
    --------------------------   
-   U_Version : entity work.AxiVersion
+   U_Version : entity surf.AxiVersion
       generic map (
          TPD_G           => TPD_G,
          BUILD_INFO_G    => BUILD_INFO_G,
@@ -401,7 +405,7 @@ begin
    -----------------------------        
    GEN_BPI : if (BOOT_PROM_G = "BPI") and (not ROGUE_SIM_EN_G) generate
 
-      U_BootProm : entity work.AxiMicronP30Reg
+      U_BootProm : entity surf.AxiMicronP30Reg
          generic map (
             TPD_G          => TPD_G,
             AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
@@ -453,7 +457,7 @@ begin
 
       GEN_VEC : for i in 1 downto 0 generate
 
-         U_BootProm : entity work.AxiMicronN25QCore
+         U_BootProm : entity surf.AxiMicronN25QCore
             generic map (
                TPD_G          => TPD_G,
                AXI_CLK_FREQ_G => DMA_CLK_FREQ_C,        -- units of Hz
@@ -531,7 +535,7 @@ begin
    --------------------------------------   
    -- Combine APP AXI-Lite buses together
    --------------------------------------   
-   U_APP_XBAR : entity work.AxiLiteCrossbar
+   U_APP_XBAR : entity surf.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
          DEC_ERROR_RESP_G   => ite(ROGUE_SIM_EN_G, AXI_RESP_DECERR_C, AXI_RESP_OK_C),
@@ -553,7 +557,7 @@ begin
    ----------------------------------
    -- Map the AXI-Lite to Application
    ----------------------------------               
-   U_AxiLiteAsync : entity work.AxiLiteAsync
+   U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
          TPD_G           => TPD_G,
          COMMON_CLK_G    => false,
@@ -576,13 +580,13 @@ begin
 
    appReset <= cardResetIn or appRst;
 
-   U_AppResetSync : entity work.Synchronizer
+   U_AppResetSync : entity surf.Synchronizer
       port map (
          clk     => axiClk,
          dataIn  => appReset,
          dataOut => appResetSync);
 
-   U_appClkFreq : entity work.SyncClockFreq
+   U_appClkFreq : entity surf.SyncClockFreq
       generic map (
          TPD_G          => TPD_G,
          REF_CLK_FREQ_G => DMA_CLK_FREQ_C,

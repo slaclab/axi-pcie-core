@@ -16,7 +16,7 @@ if { $::env(PRJ_PART) != "XCKU060-FFVA1156-2-E" } {
 set_property board_part alpha-data.com:adm-pcie3-ku3:part0:1.0 [current_project]
 
 # Load local Source Code and Constraints
-loadSource      -dir  "$::DIR_PATH/rtl"
+loadSource      -lib axi_pcie-core -dir  "$::DIR_PATH/rtl"
 loadConstraints -path "$::DIR_PATH/xdc/AlphaDataKu3Core.xdc"
 loadConstraints -path "$::DIR_PATH/xdc/AlphaDataKu3App.xdc"
 

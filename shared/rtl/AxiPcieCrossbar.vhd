@@ -16,8 +16,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.StdRtlPkg.all;
-use work.AxiPkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiPkg.all;
+
+library axi_pcie_core;
 
 entity AxiPcieCrossbar is
    generic (
@@ -62,7 +66,7 @@ begin
    ----------------------  
    GEN_VEC : for i in DMA_SIZE_G downto 1 generate
    
-      U_Resizer : entity work.AxiPcieResizer
+      U_Resizer : entity axi_pcie_core.AxiPcieResizer
          generic map(
             TPD_G             => TPD_G,
             AXI_DMA_CONFIG_G  => AXI_DMA_CONFIG_G,
@@ -87,7 +91,7 @@ begin
    -------------------
    -- AXI XBAR IP Core
    -------------------
-   U_AxiXbar : entity work.AxiPcieCrossbarIpCoreWrapper
+   U_AxiXbar : entity axi_pcie_core.AxiPcieCrossbarIpCoreWrapper
       generic map(
          TPD_G             => TPD_G,
          AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G)

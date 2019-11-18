@@ -2,11 +2,11 @@
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Load local Source Code and Constraints
-loadSource -dir  "$::DIR_PATH/rtl"
+loadSource -lib axi_pcie_core -dir  "$::DIR_PATH/rtl"
 
 # loadIpCore -path "$::DIR_PATH/ip/XilinxAlveoU200PciePhy.xci"
 
-loadSource -path "$::DIR_PATH/ip/XilinxAlveoU200PciePhy.dcp"
+loadSource -lib axi_pcie_core -path "$::DIR_PATH/ip/XilinxAlveoU200PciePhy.dcp"
 
 loadConstraints -path "$::DIR_PATH/ip/ip_pcie4_uscale_plus_x1y2.xdc"
 set_property PROCESSING_ORDER {EARLY}                           [get_files {ip_pcie4_uscale_plus_x1y2.xdc}]

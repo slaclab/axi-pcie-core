@@ -2,9 +2,9 @@
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Load source code
-loadSource           -dir "$::DIR_PATH/rtl"
-loadSource -sim_only -dir "$::DIR_PATH/tb"
-loadConstraints      -dir "$::DIR_PATH/xdc"
+loadSource -lib axi_pcie_core           -dir "$::DIR_PATH/rtl"
+loadSource -lib axi_pcie_core -sim_only -dir "$::DIR_PATH/tb"
+loadConstraints                         -dir "$::DIR_PATH/xdc"
 
 if { $::env(VIVADO_VERSION) <= 2018.3 } {
    loadIpCore -dir "$::DIR_PATH/ip/2018.3"

@@ -181,7 +181,7 @@ begin
       U_PacketizerV2 : entity surf.AxiStreamPacketizer2
          generic map (
             TPD_G                => TPD_G,
-            BRAM_EN_G            => true,
+            MEMORY_TYPE_G        => "block",
             REG_EN_G             => true,
             CRC_MODE_G           => "FULL",
             CRC_POLY_G           => x"04C11DB7",
@@ -207,7 +207,7 @@ begin
             VALID_THOLD_G       => (BURST_BYTES_C/PACKETIZER_AXIS_CONFIG_C.TDATA_BYTES_C),
             VALID_BURST_MODE_G  => true,
             -- FIFO configurations
-            BRAM_EN_G           => true,
+            MEMORY_TYPE_G       => "block",
             GEN_SYNC_FIFO_G     => false,
             FIFO_ADDR_WIDTH_G   => 9,
             INT_WIDTH_SELECT_G  => "CUSTOM",
@@ -316,7 +316,7 @@ begin
             INT_PIPE_STAGES_G   => 1,
             PIPE_STAGES_G       => 1,
             -- FIFO configurations
-            BRAM_EN_G           => true,
+            MEMORY_TYPE_G       => "block",
             GEN_SYNC_FIFO_G     => false,
             FIFO_ADDR_WIDTH_G   => 9,
             -- AXI Stream Port Configurations
@@ -337,7 +337,7 @@ begin
       U_Depacketizer : entity surf.AxiStreamDepacketizer2
          generic map (
             TPD_G                => TPD_G,
-            BRAM_EN_G            => true,
+            MEMORY_TYPE_G        => "block",
             REG_EN_G             => true,
             CRC_MODE_G           => "FULL",
             CRC_POLY_G           => x"04C11DB7",

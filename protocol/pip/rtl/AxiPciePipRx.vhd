@@ -245,7 +245,7 @@ begin
          TPD_G               => TPD_G,
          SLAVE_READY_EN_G    => false,  -- Using pause
          GEN_SYNC_FIFO_G     => true,
-         BRAM_EN_G           => true,
+         MEMORY_TYPE_G       => "block",
          FIFO_ADDR_WIDTH_G   => 9,
          FIFO_FIXED_THRESH_G => true,
          FIFO_PAUSE_THRESH_G => 511 - 2*(BURST_BYTES_G/BYTE_WIDTH_C),

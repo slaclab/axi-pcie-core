@@ -16,7 +16,7 @@ if { $::env(PRJ_PART) != "xcku115-flvb2104-2-e" } {
 set_property board_part {xilinx.com:kcu1500:part0:1.1} [current_project]
 
 # Load local Source Code and Constraints
-loadSource      -dir  "$::DIR_PATH/rtl"
+loadSource -lib axi_pcie_core -dir  "$::DIR_PATH/rtl"
 loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500Core.xdc"
 loadConstraints -path "$::DIR_PATH/xdc/XilinxKcu1500App.xdc"
 

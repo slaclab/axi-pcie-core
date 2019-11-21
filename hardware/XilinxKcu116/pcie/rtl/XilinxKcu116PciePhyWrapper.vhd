@@ -18,13 +18,19 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
 
-use work.StdRtlPkg.all;
-use work.AxiPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiPciePkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiPkg.all;
+use surf.AxiLitePkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
+
+library axi_pcie_core; 
 
 entity XilinxKcu116PciePhyWrapper is
    generic (
@@ -183,7 +189,7 @@ architecture mapping of XilinxKcu116PciePhyWrapper is
 begin
 
    axiClk <= clk;
-   U_Rst : entity work.RstPipeline
+   U_Rst : entity surf.RstPipeline
       generic map (
          TPD_G     => TPD_G,
          INV_RST_G => true)
@@ -192,7 +198,7 @@ begin
          rstIn  => rstL,
          rstOut => axiRst);
 
-   U_IRQ_FSM : entity work.AxiPcieUltrascalePlusIrqFsm
+   U_IRQ_FSM : entity axi_pcie_core.AxiPcieUltrascalePlusIrqFsm
       generic map (
          TPD_G => TPD_G)
       port map (

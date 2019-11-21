@@ -18,12 +18,16 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-use work.StdRtlPkg.all;
-use work.SsiPkg.all;
-use work.AxiPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiStreamPkg.all;
-use work.AxiPciePkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.SsiPkg.all;
+use surf.AxiPkg.all;
+use surf.AxiLitePkg.all;
+use surf.AxiStreamPkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPcieDma is
    generic (
@@ -70,7 +74,7 @@ architecture mapping of AxiPcieDma is
       TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
       TDEST_BITS_C  => 8,
       TID_BITS_C    => 0,
-      TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
+      TKEEP_MODE_C  => TKEEP_COUNT_C,   -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
@@ -114,7 +118,7 @@ begin
       ----------------
       -- AXI PCIe XBAR
       -----------------
-      U_XBAR : entity work.AxiPcieCrossbar
+      U_XBAR : entity axi_pcie_core.AxiPcieCrossbar
          generic map (
             TPD_G             => TPD_G,
             AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
@@ -137,10 +141,10 @@ begin
       -----------
       -- DMA Core
       -----------
-      U_V2Gen : entity work.AxiStreamDmaV2
+      U_V2Gen : entity surf.AxiStreamDmaV2
          generic map (
             TPD_G              => TPD_G,
-            DESC_AWIDTH_G      => 12,   -- 4096 entries
+            DESC_AWIDTH_G      => 12,    -- 4096 entries
             DESC_ARB_G         => DESC_ARB_G,
             DESC_SYNTH_MODE_G  => DESC_SYNTH_MODE_G,
             DESC_MEMORY_TYPE_G => DESC_MEMORY_TYPE_G,
@@ -182,7 +186,7 @@ begin
       GEN_AXIS_FIFO : for i in DMA_SIZE_G-1 downto 0 generate
 
          -- Help with timing
-         U_AxisRst : entity work.RstPipeline
+         U_AxisRst : entity surf.RstPipeline
             generic map (
                TPD_G     => TPD_G,
                INV_RST_G => false)
@@ -194,7 +198,7 @@ begin
          --------------------------
          -- Inbound AXI Stream FIFO
          --------------------------
-         U_IbFifo : entity work.AxiStreamFifoV2
+         U_IbFifo : entity surf.AxiStreamFifoV2
             generic map (
                -- General Configurations
                TPD_G               => TPD_G,
@@ -203,7 +207,7 @@ begin
                SLAVE_READY_EN_G    => true,
                VALID_THOLD_G       => 1,
                -- FIFO configurations
-               BRAM_EN_G           => true,
+               MEMORY_TYPE_G       => "block",
                GEN_SYNC_FIFO_G     => true,
                FIFO_ADDR_WIDTH_G   => 9,
                -- AXI Stream Port Configurations
@@ -224,7 +228,7 @@ begin
          ---------------------------
          -- Outbound AXI Stream FIFO
          ---------------------------
-         U_ObFifo : entity work.AxiStreamFifoV2
+         U_ObFifo : entity surf.AxiStreamFifoV2
             generic map (
                TPD_G               => TPD_G,
                INT_PIPE_STAGES_G   => INT_PIPE_STAGES_G,
@@ -232,7 +236,7 @@ begin
                SLAVE_READY_EN_G    => false,
                VALID_THOLD_G       => 1,
                -- FIFO configurations
-               BRAM_EN_G           => true,
+               MEMORY_TYPE_G       => "block",
                GEN_SYNC_FIFO_G     => true,
                FIFO_ADDR_WIDTH_G   => 9,
                FIFO_FIXED_THRESH_G => true,
@@ -258,7 +262,7 @@ begin
       ----------------------------------
       -- Monitor the Inbound DMA streams
       ----------------------------------
-      DMA_AXIS_MON_IB : entity work.AxiStreamMonAxiL
+      DMA_AXIS_MON_IB : entity surf.AxiStreamMonAxiL
          generic map(
             TPD_G            => TPD_G,
             COMMON_CLK_G     => true,
@@ -282,7 +286,7 @@ begin
       -----------------------------------
       -- Monitor the Outbound DMA streams
       -----------------------------------
-      DMA_AXIS_MON_OB : entity work.AxiStreamMonAxiL
+      DMA_AXIS_MON_OB : entity surf.AxiStreamMonAxiL
          generic map(
             TPD_G            => TPD_G,
             COMMON_CLK_G     => true,
@@ -322,8 +326,8 @@ begin
          -- .....
          -- .....         
          -------------------------------------------------------         
-         
-         U_DMA_LANE : entity work.RogueTcpStreamWrap
+
+         U_DMA_LANE : entity surf.RogueTcpStreamWrap
             generic map (
                TPD_G         => TPD_G,
                PORT_NUM_G    => (ROGUE_SIM_PORT_NUM_G + i*512 + 2),

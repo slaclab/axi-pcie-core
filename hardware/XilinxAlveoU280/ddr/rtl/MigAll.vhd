@@ -16,9 +16,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.StdRtlPkg.all;
-use work.AxiPkg.all;
-use work.MigPkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiPkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.MigPkg.all;
 
 entity MigAll is
    generic (
@@ -48,7 +52,7 @@ begin
    -----------------
    -- MIG[0] IP Core
    -----------------         
-   U_Mig0 : entity work.Mig0
+   U_Mig0 : entity axi_pcie_core.Mig0
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -71,7 +75,7 @@ begin
    -- MIG[1] IP Core
    -----------------         
    GEN_MIG1 : if (NUM_LANE_G >= 2) generate
-      U_Mig1 : entity work.Mig1
+      U_Mig1 : entity axi_pcie_core.Mig1
          generic map (
             TPD_G => TPD_G)
          port map (

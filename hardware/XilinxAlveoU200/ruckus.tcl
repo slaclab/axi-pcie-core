@@ -16,7 +16,7 @@ if { $::env(PRJ_PART) != "XCU200-FSGD2104-2-E" } {
 set_property board_part xilinx.com:au200:part0:1.0 [current_project]
 
 # Load local Source Code and Constraints
-loadSource      -dir  "$::DIR_PATH/core"
+loadSource -lib axi_pcie_core      -dir  "$::DIR_PATH/core"
 loadConstraints -path "$::DIR_PATH/xdc/XilinxAlveoU200Core.xdc"
 loadConstraints -path "$::DIR_PATH/xdc/XilinxAlveoU200App.xdc"
 

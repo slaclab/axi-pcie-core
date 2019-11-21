@@ -16,10 +16,14 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-use work.StdRtlPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiPkg.all;
-use work.MigPkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiLitePkg.all;
+use surf.AxiPkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.MigPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -52,7 +56,7 @@ begin
    -----------------
    -- MIG[0] IP Core
    -----------------         
-   U_Mig0 : entity work.Mig0
+   U_Mig0 : entity axi_pcie_core.Mig0
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -75,7 +79,7 @@ begin
    -- MIG[1] IP Core
    -----------------         
    GEN_MIG1 : if (NUM_LANE_G >= 2) generate
-      U_Mig1 : entity work.Mig1
+      U_Mig1 : entity axi_pcie_core.Mig1
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -99,7 +103,7 @@ begin
    -- MIG[2] IP Core
    -----------------         
    GEN_MIG2 : if (NUM_LANE_G >= 3) generate
-      U_Mig2 : entity work.Mig2
+      U_Mig2 : entity axi_pcie_core.Mig2
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -123,7 +127,7 @@ begin
    -- MIG[3] IP Core
    -----------------
    GEN_MIG3 : if (NUM_LANE_G >= 4) generate
-      U_Mig3 : entity work.Mig3
+      U_Mig3 : entity axi_pcie_core.Mig3
          generic map (
             TPD_G => TPD_G)
          port map (

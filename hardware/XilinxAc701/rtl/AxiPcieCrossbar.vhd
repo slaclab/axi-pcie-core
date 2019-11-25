@@ -16,10 +16,11 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiPkg.all;
+
+library axi_pcie_core;
 
 entity AxiPcieCrossbar is
    generic (

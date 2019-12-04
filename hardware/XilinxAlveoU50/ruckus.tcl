@@ -11,7 +11,7 @@ loadRuckusTcl "$::DIR_PATH/../../shared"
 set_property target_language Verilog [current_project]
 
 # Check for valid FPGA part number
-if { $::env(PRJ_PART) != "XCU50-FSVH2104-2L-E" } {
+if { $::env(PRJ_PART) != "XCU50-FSVH2104-2-E" } {
    puts "\n\nERROR: PRJ_PART was not defined as XCU50-FSVH2104-2L-E in the Makefile\n\n"; exit -1
 }
 

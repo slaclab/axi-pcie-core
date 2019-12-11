@@ -66,6 +66,7 @@ architecture mapping of AxiPcieGpuAsyncControl is
       completedSize     : slv(31 downto 0);
       completedMeta     : slv(31 downto 0);
       cntRst            : sl;
+      rxTrigger         : sl;
       enableTx          : sl;
       enableRx          : sl;
       awcache           : slv(3 downto 0);
@@ -85,6 +86,7 @@ architecture mapping of AxiPcieGpuAsyncControl is
       completedSize     => (others => '0'),
       completedMeta     => (others => '0'),
       cntRst            => '0',
+      rxTrigger         => '0',
       enableTx          => '0',
       enableRx          => '0',
       awcache           => (others => '0'),
@@ -157,6 +159,7 @@ begin
       axiSlaveRegister (axilEp, x"000", 0, v.remoteDmaAddr(0)); 
       axiSlaveRegister (axilEp, x"004", 0, v.remoteDmaSize(0));
 
+      axiWrDetect      (axilEp, x"010", v.rxTrigger);
       axiSlaveRegister (axilEp, x"010", 0, v.completedSize(0));
       axiSlaveRegister (axilEp, x"014", 0, v.completedMeta(0));
 
@@ -180,16 +183,18 @@ begin
          when IDLE_S =>
 
             if dmaWrDescReq.valid = '1' then
-               v.state := MOVE_S;
+               v.dmaWrDescAck.dropEn  := not r.enableRx;
+               v.dmaWrDescAck.maxSize := r.remoteDmaSize(0);
+               v.dmaWrDescAck.contEn  := '0';
+               v.dmaWrDescAck.buffId  := toSlv(0,32); -- Channel ID
 
-               v.dmaWrDescAck.valid      := '1';
-               v.dmaWrDescAck.dropEn     := not r.enableRx;
-               v.dmaWrDescAck.maxSize    := r.remoteDmaSize(0);
-               v.dmaWrDescAck.contEn     := '0';
-               v.dmaWrDescAck.buffId     := toSlv(0,32); -- Channel ID
+               v.dmaWrDescAck.address(31 downto 0) := r.remoteDmaAddr(0);
 
-               v.dmaWrDescAck.address(31 downto 0)  := remoteDmaAddr(0);
-
+               if r.rxTrigger = '1' or r.enableRx = '0' then
+                  v.rxTrigger          := '0';
+                  v.dmaWrDescAck.valid := '1';
+                  v.state              := MOVE_S;
+               end if;
             end if;
 
          when MOVE_S =>
@@ -197,13 +202,13 @@ begin
             if dmaWrDescRet.valid = '1' then
                v.dmaWrDescRetAck := '1';
 
-               v.completedSize := r.dmaWrDescRet.size;
+               v.completedSize := dmaWrDescRet.size;
 
-               v.completedMeta(31 downto 24) := r.dmaWrDescRet.firstUser;
-               v.completedMeta(23 downto 16) := r.dmaWrDescRet.lastUser;
+               v.completedMeta(31 downto 24) := dmaWrDescRet.firstUser;
+               v.completedMeta(23 downto 16) := dmaWrDescRet.lastUser;
                v.completedMeta(15 downto 4)  := (others => '0');
-               v.completedMeta(3)            := r.dmaWrDescRet.continue;
-               v.completedMeta(2 downto 0)   := r.dmaWrDescRet.result;
+               v.completedMeta(3)            := dmaWrDescRet.continue;
+               v.completedMeta(2 downto 0)   := dmaWrDescRet.result;
 
                -- act on buff id
                --dmaWrDescRet.buffId

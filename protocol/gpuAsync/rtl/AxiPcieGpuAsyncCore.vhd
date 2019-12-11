@@ -99,7 +99,7 @@ begin
          -- AXI4 Interfaces (axiClk domain)
          axiClk            => axiClk,
          axiRst            => axiRst,
-         axiCache          => awCache,
+         awCache           => awCache,
          dmaWrDescReq      => dmaWrDescReq,
          dmaWrDescAck      => dmaWrDescAck,
          dmaWrDescRet      => dmaWrDescRet,

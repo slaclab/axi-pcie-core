@@ -72,27 +72,19 @@ architecture mapping of AxiPcieGpuAsyncCore is
    signal dmaWrDescRet    : AxiWriteDmaDescRetType;
    signal dmaWrDescRetAck : sl;
 
+   signal awCache         : slv(3 downto 0);
+
    signal sAxisMasterInt  : AxiStreamMasterType;
    signal sAxisSlaveInt   : AxiStreamSlaveType;
    signal mAxisMasterInt  : AxiStreamMasterType;
    signal mAxisSlaveInt   : AxiStreamSlaveType;
-
-   signal remoteDmaAddr   : Slv32Array(NUM_CHAN_G-1 downto 0);
-   signal remoteDmaSize   : Slv32Array(NUM_CHAN_G-1 downto 0);
-   signal enableTx        : sl;
-   signal enableRx        : sl;
-   signal awcache         : slv(3 downto 0);
-
-   signal rxFrame         : sl;
-   signal txFrame         : sl;
-   signal txAxiError      : sl;
 
 begin
 
    ------------------------------
    -- AXI-Lite Control/Monitoring
    ------------------------------
-   U_AxiPcieGpuAsyncReg : entity work.AxiPcieGpuAsyncReg
+   U_AxiPcieGpuAsyncControl : entity work.AxiPcieGpuAsyncControl
       generic map (
          TPD_G      => TPD_G,
          NUM_CHAN_G => NUM_CHAN_G)
@@ -107,33 +99,7 @@ begin
          -- AXI4 Interfaces (axiClk domain)
          axiClk            => axiClk,
          axiRst            => axiRst,
-         rxFrame           => rxFrame,
-         txFrame           => txFrame,
-         txAxiError        => txAxiError,
-         enableTx          => enableTx,
-         enableRx          => enableRx,
-         awcache           => awcache,
-         remoteDmaSize     => remoteDmaSize,
-         remoteDmaAddr     => remoteDmaAddr);
-
-   ------------------------------------
-   -- Coordination
-   ------------------------------------
-
-   U_Control: entity work.AxiPcieGpuAsyncControl
-      generic map (
-         TPD_G      => TPD_G,
-         NUM_CHAN_G => NUM_CHAN_G)
-      port map (
-         axiClk            => axiClk,
-         axiRst            => axiRst,
-         remoteDmaAddr     => remoteDmaAddr,
-         remoteDmaSize     => remoteDmaSize,
-         enableTx          => enableTx,
-         enableRx          => enableRx,
-         rxFrame           => rxFrame,
-         txFrame           => txFrame,
-         txAxiError        => txAxiError,
+         axiCache          => awCache,
          dmaWrDescReq      => dmaWrDescReq,
          dmaWrDescAck      => dmaWrDescAck,
          dmaWrDescRet      => dmaWrDescRet,
@@ -168,7 +134,6 @@ begin
    U_DmaWrite: entity work.AxiStreamDmaV2Write
       generic map (
          TPD_G             => TPD_G,
-         META_ENABLE_G     => true,
          AXI_READY_EN_G    => true,
          AXIS_CONFIG_G     => PCIE_AXIS_CONFIG_C,
          AXI_CONFIG_G      => AXI_PCIE_CONFIG_C)

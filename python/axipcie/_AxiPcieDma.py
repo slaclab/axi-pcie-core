@@ -14,7 +14,7 @@ def createAxiPcieDmaStreams(driverPath, streamMap, host='localhost', basePort=80
     for lane, dests in streamMap.items():
         for dest in dests:
             if driverPath != 'sim':                
-                d[lane][dest] = rogue.hardware.axi.AxiStreamDma(driverPath, (0x100*lane)|dest)
+                d[lane][dest] = rogue.hardware.axi.AxiStreamDma(driverPath, (0x100*lane)|dest, True)
             else:
                 d[lane][dest] = rogue.interfaces.stream.TcpClient(host, (basePort+2)+(512*lane)+2*dest)
     return d

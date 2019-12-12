@@ -60,10 +60,10 @@ args = parser.parse_args()
 with pcie.AxiPcieRoot(args.dev, pollEn=False) as root:
     
     # Read all the variables
-    base.ReadAll()
+    root.ReadAll()
 
     # Create useful pointers
-    AxiVersion = base.AxiPcieCore.AxiVersion
+    AxiVersion = root.AxiPcieCore.AxiVersion
 
     if args.type is None:
         promType   = AxiVersion.BOOT_PROM_G.getDisp()
@@ -72,11 +72,11 @@ with pcie.AxiPcieRoot(args.dev, pollEn=False) as root:
 
     # Case on PROM type
     if (promType == 'BPI'):
-        PROM_PRI = base.AxiPcieCore.AxiMicronP30
+        PROM_PRI = root.AxiPcieCore.AxiMicronP30
     elif (promType == 'SPIx8') or (promType == 'SPIx4'):
-        PROM_PRI = base.AxiPcieCore.AxiMicronN25Q[0]
+        PROM_PRI = root.AxiPcieCore.AxiMicronN25Q[0]
         if (promType == 'SPIx8'):
-            PROM_SEC = base.AxiPcieCore.AxiMicronN25Q[1]
+            PROM_SEC = root.AxiPcieCore.AxiMicronN25Q[1]
     else:
         raise ValueError(f'Invalid promType' )
 

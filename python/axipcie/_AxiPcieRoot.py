@@ -1,6 +1,6 @@
 import axipcie as pcie
 
-import pyrogue
+import pyrogue as pr
 import rogue
 
 class AxiPcieRoot(pr.Root):
@@ -10,6 +10,6 @@ class AxiPcieRoot(pr.Root):
         memMap = rogue.hardware.axi.AxiMemMap(dev)
 
         self.add(pcie.AxiPcieCore(
-            mbase = memMap,
+            memBase = memMap,
             useBpi = True,
             useSpi = True))

@@ -160,8 +160,8 @@ begin
       axiSlaveRegister (axilEp, x"004", 0, v.remoteDmaSize(0));
 
       axiWrDetect      (axilEp, x"010", v.rxTrigger);
-      axiSlaveRegister (axilEp, x"010", 0, v.completedSize(0));
-      axiSlaveRegister (axilEp, x"014", 0, v.completedMeta(0));
+      axiSlaveRegister (axilEp, x"010", 0, v.completedSize);
+      axiSlaveRegister (axilEp, x"014", 0, v.completedMeta);
 
       axiSlaveRegisterR(axilEp, x"0E0", 0, r.rxFrameCnt);
       axiSlaveRegisterR(axilEp, x"0E8", 0, r.txFrameCnt);

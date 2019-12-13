@@ -18,25 +18,6 @@ class AxiGpuAsyncCore(pr.Device):
                  **kwargs):
         super().__init__(description=description, **kwargs)
 
-#        for i in range(numChan):
-#            
-#            self.add(pr.RemoteVariable(
-#                name         = f'RemoteDmaAddress[{i}]',
-#                offset       = 0x000+8*i,
-#                bitSize      = 32,
-#                mode         = 'RW',
-#                pollInterval = 1,
-#            )) 
-#            
-#            self.add(pr.RemoteVariable(
-#                name         = f'RmoteDmaSize[{i}]',
-#                offset       = 0x080+4*i,
-#                bitSize      = 32,
-#                mode         = 'RW',
-#                pollInterval = 1,
-#            ))        
-
-
         self.add(pr.RemoteVariable(
             name         = 'RemoteDmaAddress[0]',
             offset       = 0x000,
@@ -46,21 +27,28 @@ class AxiGpuAsyncCore(pr.Device):
         )) 
 
         self.add(pr.RemoteVariable(
-            name         = 'RemoteMetaAddress[0]',
+            name         = 'RemoteDmaSize[0]',
             offset       = 0x004,
-            bitSize      = 32,
-            mode         = 'RW',
-            pollInterval = 1,
-        )) 
-
-        self.add(pr.RemoteVariable(
-            name         = 'RmoteDmaSize[{i}]',
-            offset       = 0x008,
             bitSize      = 32,
             mode         = 'RW',
             pollInterval = 1,
         ))        
 
+        self.add(pr.RemoteVariable(
+            name         = 'CompletedSize[0]',
+            offset       = 0x010,
+            bitSize      = 32,
+            mode         = 'RW',
+            pollInterval = 1,
+        ))        
+
+        self.add(pr.RemoteVariable(
+            name         = 'CompletedMeta[0]',
+            offset       = 0x014,
+            bitSize      = 32,
+            mode         = 'RW',
+            pollInterval = 1,
+        ))        
 
         self.add(pr.RemoteVariable(
             name         = 'RxFrameCnt',

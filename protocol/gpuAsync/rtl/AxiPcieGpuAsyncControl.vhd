@@ -18,18 +18,18 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-use work.StdRtlPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiPkg.all;
-use work.AxiStreamPkg.all;
-use work.SsiPkg.all;
-use work.AxiPciePkg.all;
-use work.AxiDmaPkg.all;
+use surf.StdRtlPkg.all;
+use surf.AxiLitePkg.all;
+use surf.AxiPkg.all;
+use surf.AxiStreamPkg.all;
+use surf.SsiPkg.all;
+use surf.AxiPciePkg.all;
+use surf.AxiDmaPkg.all;
 
 entity AxiPcieGpuAsyncControl is
    generic (
-      TPD_G      : time                   := 1 ns;
-      NUM_CHAN_G : positive range 1 to 4  := 1);
+      TPD_G            : time          := 1 ns;
+      DMA_AXI_CONFIG_G : AxiConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
       axilClk           : in  sl;
@@ -45,37 +45,47 @@ entity AxiPcieGpuAsyncControl is
 
       -- Config
       awCache           : out slv(3 downto 0);
+      arCache           : out slv(3 downto 0);
 
       -- DMA Write Engine
       dmaWrDescReq      : in  AxiWriteDmaDescReqType;
       dmaWrDescAck      : out AxiWriteDmaDescAckType;
       dmaWrDescRet      : in  AxiWriteDmaDescRetType;
-      dmaWrDescRetAck   : out sl);
+      dmaWrDescRetAck   : out sl;
+   
+      -- DMA Read Engine
+      dmaRdDescReq      : out AxiReadDmaDescReqType;
+      dmaRdDescAck      : in  sl;
+      dmaRdDescRet      : in  AxiReadDmaDescRetType;
+      dmaRdDescRetAck   : out sl);
 
 end AxiPcieGpuAsyncControl;
 
 architecture mapping of AxiPcieGpuAsyncControl is
 
-   type StateType is ( IDLE_S, MOVE_S);
+   type StateType is ( IDLE_S, WRITE_S, READ_S);
 
    type RegType is record
       state             : StateType;
       rxFrameCnt        : slv(31 downto 0);
       txFrameCnt        : slv(31 downto 0);
       axiErrorCnt       : slv(31 downto 0);
-      completedSize     : slv(31 downto 0);
-      completedMeta     : slv(31 downto 0);
       cntRst            : sl;
-      rxTrigger         : sl;
-      enableTx          : sl;
-      enableRx          : sl;
       awcache           : slv(3 downto 0);
-      remoteDmaAddr     : Slv32Array(NUM_CHAN_G-1 downto 0);
-      remoteDmaSize     : Slv32Array(NUM_CHAN_G-1 downto 0);
+      arcache           : slv(3 downto 0);
+      enableWrite       : sl;
+      remoteWriteAddr   : slv(31 downto 0);
+      remoteWriteSize   : slv(31 downto 0);
+      remoteWriteStart  : sl;
+      remoteReadAddr    : slv(31 downto 0);
+      remoteReadSize    : slv(31 downto 0);
+      remoteReadStart   : sl;
       readSlave         : AxiLiteReadSlaveType;
       writeSlave        : AxiLiteWriteSlaveType;
       dmaWrDescAck      : AxiWriteDmaDescAckType;
       dmaWrDescRetAck   : sl;
+      dmaRdDescReq      : AxiReadDmaDescReqType;
+      dmaRdDescRetAck   : sl;
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -83,19 +93,23 @@ architecture mapping of AxiPcieGpuAsyncControl is
       rxFrameCnt        => (others => '0'),
       txFrameCnt        => (others => '0'),
       axiErrorCnt       => (others => '0'),
-      completedSize     => (others => '0'),
-      completedMeta     => (others => '0'),
       cntRst            => '0',
-      rxTrigger         => '0',
-      enableTx          => '0',
-      enableRx          => '0',
       awcache           => (others => '0'),
-      remoteDmaAddr     => (others => (others => '0')),
-      remoteDmaSize     => (others => (others => '0')),
+      arcache           => (others => '0'),
+      enableWrite       => '0',
+      remoteWriteAddr   => (others => '0'),
+      remoteWriteSize   => (others => '0'),
+      remoteWriteStart  => '0',
+      remoteReadAddr    => (others => '0'),
+      remoteReadSize    => (others => '0'),
+      remoteReadStart   => '0',
       readSlave         => AXI_LITE_READ_SLAVE_INIT_C,
       writeSlave        => AXI_LITE_WRITE_SLAVE_INIT_C,
       dmaWrDescAck      => AXI_WRITE_DMA_DESC_ACK_INIT_C,
-      dmaWrDescRetAck   => '0');
+      dmaWrDescRetAck   => '0',
+      dmaRdDescReq      => AXI_READ_DMA_DESC_REQ_INIT_C,
+      dmaRdDescRetAck   => '0'
+   );
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -107,7 +121,7 @@ architecture mapping of AxiPcieGpuAsyncControl is
 
 begin
 
-   U_AxiLiteAsync : entity work.AxiLiteAsync
+   U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
          TPD_G           => TPD_G,
          COMMON_CLK_G    => false,
@@ -132,7 +146,7 @@ begin
    --------------------- 
    -- State Machine
    --------------------- 
-   comb : process (axiRst, r, readMaster, writeMaster, dmaWrDescReq, dmaWrDescRet ) is
+   comb : process (axiRst, r, readMaster, writeMaster, dmaWrDescReq, dmaWrDescRet, dmaRdDescAck, dmaRdDescRet ) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndPointType;
    begin
@@ -142,7 +156,9 @@ begin
       -- Reset strobes
       v.cntRst             := '0';
       v.dmaWrDescAck.valid := '0';
+      v.dmaRdDescReq.valid := '0';
       v.dmaWrDescRetAck    := '0';
+      v.dmaRdDescRetAck    := '0';
 
       -- Reset counters
       if (r.cntRst = '1') then
@@ -156,22 +172,24 @@ begin
       --------------------------------------------------------------------------------------------
       axiSlaveWaitTxn(axilEp, writeMaster, readMaster, v.writeSlave, v.readSlave);
 
-      axiSlaveRegister (axilEp, x"000", 0, v.remoteDmaAddr(0)); 
-      axiSlaveRegister (axilEp, x"004", 0, v.remoteDmaSize(0));
+      axiSlaveRegister (axilEp, x"000", 0, v.remoteWriteAddr); 
+      axiSlaveRegister (axilEp, x"004", 0, v.remoteWriteSize);
+      axiWrDetect      (axilEp, x"00C",    v.remotewriteStart);
 
-      axiWrDetect      (axilEp, x"010", v.rxTrigger);
-      axiSlaveRegister (axilEp, x"010", 0, v.completedSize);
-      axiSlaveRegister (axilEp, x"014", 0, v.completedMeta);
+      axiSlaveRegister (axilEp, x"010", 0, v.remoteReadAddr); 
+      axiSlaveRegister (axilEp, x"014", 0, v.remoteReadSize);
+      axiWrDetect      (axilEp, x"014",    v.remoteReadStart);
 
       axiSlaveRegisterR(axilEp, x"0E0", 0, r.rxFrameCnt);
       axiSlaveRegisterR(axilEp, x"0E8", 0, r.txFrameCnt);
       axiSlaveRegisterR(axilEp, x"0F0", 0, r.axiErrorCnt);
 
-      axiSlaveRegisterR(axilEp, x"0F4", 0, toSlv(NUM_CHAN_G, 5));
-      axiSlaveRegister (axilEp, x"0F8", 0, v.enableTx);
-      axiSlaveRegister (axilEp, x"0F8", 1, v.enableRx);
+      axiSlaveRegister (axilEp, x"0F8", 0,  v.enableWrite);
+      axiSlaveRegister (axilEp, x"0F8", 8,  v.arcache);
       axiSlaveRegister (axilEp, x"0F8", 16, v.awcache);
-      axiSlaveRegister (axilEp, x"0FC", 0, v.cntRst);
+      axiSlaveRegisterR(axilEp, x"0F8", 24, toSlv(DMA_AXI_CONFIG_G.DATA_BYTES_C,8));
+
+      axiSlaveRegister (axilEp, x"0FC", 0,  v.cntRst);
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.writeSlave, v.readSlave, AXI_RESP_DECERR_C);
@@ -183,32 +201,39 @@ begin
          when IDLE_S =>
 
             if dmaWrDescReq.valid = '1' then
-               v.dmaWrDescAck.dropEn  := not r.enableRx;
-               v.dmaWrDescAck.maxSize := r.remoteDmaSize(0);
-               v.dmaWrDescAck.contEn  := '0';
-               v.dmaWrDescAck.buffId  := toSlv(0,32); -- Channel ID
+               v.dmaWrDescAck.dropEn     := not r.enableWrite;
+               v.dmaWrDescAck.maxSize    := r.remoteWriteSize;
+               v.dmaWrDescAck.contEn     := '0';
+               v.dmaWrDescAck.buffId     := toSlv(0,32); -- Channel ID
+               v.dmaWrDescAck.metaEnable := '1';
 
-               v.dmaWrDescAck.address(31 downto 0) := r.remoteDmaAddr(0);
+               v.dmaWrDescAck.metaAddr(31 downto 0) := r.remoteWriteAddr;
+               v.dmaWrDescAck.address(31 downto 0)  := r.remoteWriteAddr + DMA_AXI_CONFIG_G.DATA_BYTES_C;
 
-               if r.rxTrigger = '1' or r.enableRx = '0' then
-                  v.rxTrigger          := '0';
+               if r.remoteWriteStart = '1' or r.enableWrite = '0' then
+                  v.remoteWriteStart   := '0';
                   v.dmaWrDescAck.valid := '1';
-                  v.state              := MOVE_S;
+                  v.state              := WRITE_S;
                end if;
+
+            elsif r.remoteReadStart = '1' then
+               v.remoteReadStart         := '0';
+               v.dmaRdDescReq.valid      := '1';
+               v.dmaRdDescReq.address    := r.remoteReadAddr;
+               v.dmaRdDescReq.buffId     := toSlv(0,32);
+               v.dmaRdDescReq.firstUser  := (others=>'0');
+               v.dmaRdDescReq.lastUser   := (others=>'0');
+               v.dmaRdDescReq.size       := r.remoteReadSize;
+               v.dmaRdDescReq.continue   := '0';
+               v.dmaRdDescReq.id         := (others=>'0');
+               v.dmaRdDescReq.dest       := (others=>'0');
+               v.state                   := READ_S;
             end if;
 
-         when MOVE_S =>
+         when WRITE_S =>
 
             if dmaWrDescRet.valid = '1' then
                v.dmaWrDescRetAck := '1';
-
-               v.completedSize := dmaWrDescRet.size;
-
-               v.completedMeta(31 downto 24) := dmaWrDescRet.firstUser;
-               v.completedMeta(23 downto 16) := dmaWrDescRet.lastUser;
-               v.completedMeta(15 downto 4)  := (others => '0');
-               v.completedMeta(3)            := dmaWrDescRet.continue;
-               v.completedMeta(2 downto 0)   := dmaWrDescRet.result;
 
                -- act on buff id
                --dmaWrDescRet.buffId
@@ -221,14 +246,32 @@ begin
 
                v.state := IDLE_S;
             end if;
+
+         when READ_S =>
+
+            if dmaRdDescRet.valid = '1' then
+               v.dmaRdDescRetAck := '1';
+
+               if dmaRdDescRet.result /= "000" then
+                  v.axiErrorCnt := r.axiErrorCnt + 1;
+               end if;
+
+               v.txFrameCnt := r.txFrameCnt + 1;
+
+               v.state := IDLE_S;
+            end if;
+
       end case;
 
       -- Outputs
       awCache         <= r.awCache;
+      arCache         <= r.awCache;
       writeSlave      <= r.writeSlave;
       readSlave       <= r.readSlave;
       dmaWrDescAck    <= r.dmaWrDescAck;
       dmaWrDescRetAck <= r.dmaWrDescRetAck;
+      dmaRdDescReq    <= r.dmaRdDescReq;
+      dmaRdDescRetAck <= r.dmaRdDescRetAck;
 
       -- Reset
       if (axiRst = '1') then

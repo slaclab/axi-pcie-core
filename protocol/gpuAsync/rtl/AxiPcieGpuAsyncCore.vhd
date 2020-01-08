@@ -18,14 +18,14 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-use work.StdRtlPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiPkg.all;
-use work.AxiStreamPkg.all;
-use work.SsiPkg.all;
-use work.AxiPciePkg.all;
-use work.AxiDmaPkg.all;
-use work.AxiStreamPacketizer2Pkg.all;
+use surf.StdRtlPkg.all;
+use surf.AxiLitePkg.all;
+use surf.AxiPkg.all;
+use surf.AxiStreamPkg.all;
+use surf.SsiPkg.all;
+use surf.AxiPciePkg.all;
+use surf.AxiDmaPkg.all;
+use surf.AxiStreamPacketizer2Pkg.all;
 
 entity AxiPcieGpuAsyncCore is
    generic (
@@ -50,10 +50,11 @@ entity AxiPcieGpuAsyncCore is
       -- AXI4 Interfaces (axiClk domain)
       axiClk          : in  sl;
       axiRst          : in  sl;
-      sAxiWriteMaster : in  AxiWriteMasterType;
-      sAxiWriteSlave  : out AxiWriteSlaveType;
-      mAxiWriteMaster : out AxiWriteMasterType;
-      mAxiWriteSlave  : in  AxiWriteSlaveType);
+      axiWriteMaster  : out AxiWriteMasterType;
+      axiWriteSlave   : in  AxiWriteSlaveType;
+      axiReadMaster   : out AxiReadMasterType;
+      axiReadSlave    : in  AxiReadSlaveType);
+
 end AxiPcieGpuAsyncCore;
 
 architecture mapping of AxiPcieGpuAsyncCore is
@@ -72,7 +73,13 @@ architecture mapping of AxiPcieGpuAsyncCore is
    signal dmaWrDescRet    : AxiWriteDmaDescRetType;
    signal dmaWrDescRetAck : sl;
 
+   signal dmaRdDescReq    : AxiReadDmaDescReqType;
+   signal dmaRdDescAck    : sl;
+   signal dmaRdDescRet    : AxiReadDmaDescRetType;
+   signal dmaRdDescRetAck : sl;
+
    signal awCache         : slv(3 downto 0);
+   signal arCache         : slv(3 downto 0);
 
    signal sAxisMasterInt  : AxiStreamMasterType;
    signal sAxisSlaveInt   : AxiStreamSlaveType;
@@ -84,32 +91,34 @@ begin
    ------------------------------
    -- AXI-Lite Control/Monitoring
    ------------------------------
-   U_AxiPcieGpuAsyncControl : entity work.AxiPcieGpuAsyncControl
-      generic map (
-         TPD_G      => TPD_G,
-         NUM_CHAN_G => NUM_CHAN_G)
+   U_AxiPcieGpuAsyncControl : entity axi_pcie_core.AxiPcieGpuAsyncControl
+      generic map ( 
+         TPD_G            => TPD_G,
+         DMA_AXI_CONFIG_G => AXI_PCIE_CONFIG_C)
       port map (
-         -- AXI4-Lite Interfaces (axilClk domain)
          axilClk           => axilClk,
          axilRst           => axilRst,
          axilReadMaster    => axilReadMaster,
          axilReadSlave     => axilReadSlave,
          axilWriteMaster   => axilWriteMaster,
          axilWriteSlave    => axilWriteSlave,
-         -- AXI4 Interfaces (axiClk domain)
          axiClk            => axiClk,
          axiRst            => axiRst,
          awCache           => awCache,
          dmaWrDescReq      => dmaWrDescReq,
          dmaWrDescAck      => dmaWrDescAck,
          dmaWrDescRet      => dmaWrDescRet,
-         dmaWrDescRetAck   => dmaWrDescRetAck);
+         dmaWrDescRetAck   => dmaWrDescRetAck,
+         dmaRdDescReq      => dmaRdDescReq,
+         dmaRdDescAck      => dmaRdDescAck,
+         dmaRdDescRet      => dmaRdDescRet,
+         dmaRdDescRetAck   => dmaRdDescRetAck);
 
    ------------------------------------
    -- Stream receiver to GPU DMA
    ------------------------------------
 
-   AxisRxFifo : entity work.AxiStreamFifoV2
+   AxisRxFifo : entity surf.AxiStreamFifoV2
       generic map (
          -- General Configurations
          TPD_G               => TPD_G,
@@ -131,7 +140,7 @@ begin
          mAxisMaster => sAxisMasterInt,
          mAxisSlave  => sAxisSlaveInt);
 
-   U_DmaWrite: entity work.AxiStreamDmaV2Write
+   U_DmaWrite: entity surf.AxiStreamDmaV2Write
       generic map (
          TPD_G             => TPD_G,
          AXI_READY_EN_G    => true,
@@ -147,19 +156,34 @@ begin
          axiCache        => awCache,
          axisMaster      => sAxisMasterInt,
          axisSlave       => sAxisSlaveInt,
-         axiWriteMaster  => mAxiWriteMaster,
-         axiWriteSlave   => mAxiWriteSlave);
+         axiWriteMaster  => axiWriteMaster,
+         axiWriteSlave   => axiWriteSlave);
 
    ------------------------------------
    -- Stream transmitter from GPU DMA
    ------------------------------------
 
-   --sAxiWriteMaster : in  AxiWriteMasterType;
-   sAxiWriteSlave <= AXI_WRITE_SLAVE_INIT_C;
-   mAxisMasterInt <= AXI_STREAM_MASTER_INIT_C;
-   --mAxisSlaveInt,
+   U_DmaRead: entity surf.AxiStreamDmaV2Read
+      generic map (
+         TPD_G           => TPD_G,
+         AXIS_READY_EN_G => true,
+         AXIS_CONFIG_G   => PCIE_AXIS_CONFIG_C,
+         AXI_CONFIG_G    => AXI_PCIE_CONFIG_C)
+      port map (
+         axiClk          => axiClk,
+         axiRst          => axiRst,
+         dmaRdDescReq    => dmaRdDescReq,
+         dmaRdDescAck    => dmaRdDescAck,
+         dmaRdDescRet    => dmaRdDescRet,
+         dmaRdDescRetAck => dmaRdDescRetAck,
+         axiCache        => arCache,
+         axisMaster      => mAxisMasterInt,
+         axisSlave       => mAxisSlaveInt,
+         axisCtrl        => AXI_STREAM_CTRL_INIT_C,
+         axiReadMaster   => axiReadMaster,
+         axiReadSlave    => axiReadSlave);
 
-   AxisTxFifo : entity work.AxiStreamFifoV2
+   AxisTxFifo : entity surf.AxiStreamFifoV2
       generic map (
          TPD_G               => TPD_G,
          INT_PIPE_STAGES_G   => 1,

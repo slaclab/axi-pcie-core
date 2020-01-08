@@ -19,13 +19,17 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-use work.StdRtlPkg.all;
-use work.AxiLitePkg.all;
-use work.AxiPkg.all;
-use work.AxiStreamPkg.all;
-use work.SsiPkg.all;
-use work.AxiPciePkg.all;
-use work.AxiStreamPacketizer2Pkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiLitePkg.all;
+use surf.AxiPkg.all;
+use surf.AxiStreamPkg.all;
+use surf.SsiPkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
+use surf.AxiStreamPacketizer2Pkg.all;
 
 entity AxiPciePipReg is
    generic (
@@ -97,7 +101,7 @@ begin
 
    axiReady <= depackDebug(0).initDone;  -- Used to synchronize with simulation testbed
 
-   U_AxiLiteAsync : entity work.AxiLiteAsync
+   U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
          TPD_G           => TPD_G,
          COMMON_CLK_G    => false,

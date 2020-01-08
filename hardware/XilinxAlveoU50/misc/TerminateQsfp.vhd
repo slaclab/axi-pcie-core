@@ -18,8 +18,10 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-use work.StdRtlPkg.all;
-use work.AxiLitePkg.all;
+
+library surf;
+use surf.StdRtlPkg.all;
+use surf.AxiLitePkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -72,7 +74,7 @@ architecture mapping of TerminateQsfp is
 begin
 
    -- Unused QSFP Port
-   U_QSFP : entity work.Gtye4ChannelDummy
+   U_QSFP : entity surf.Gtye4ChannelDummy
       generic map (
          TPD_G   => TPD_G,
          WIDTH_G => 4)
@@ -111,7 +113,7 @@ begin
             DIV     => "000",           -- Divide-by-1
             O       => refClkBufg(i));
 
-      U_appClkFreq : entity work.SyncClockFreq
+      U_appClkFreq : entity surf.SyncClockFreq
          generic map (
             TPD_G          => TPD_G,
             REF_CLK_FREQ_G => AXIL_CLK_FREQ_G,

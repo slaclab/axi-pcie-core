@@ -11,8 +11,8 @@ loadRuckusTcl "$::DIR_PATH/../../shared"
 set_property target_language Verilog [current_project]
 
 # Check for valid FPGA part number
-if { $::env(PRJ_PART) != "XCU50-FSVH2104-2L-E" } {
-   puts "\n\nERROR: PRJ_PART was not defined as XCU50-FSVH2104-2L-E in the Makefile\n\n"; exit -1
+if { $::env(PRJ_PART) != "XCU50-FSVH2104-2-E" } {
+   puts "\n\nERROR: PRJ_PART was not defined as XCU50-FSVH2104-2-E in the Makefile\n\n"; exit -1
 }
 
 # Set the board part
@@ -27,9 +27,9 @@ if { [info exists ::env(BUILD_PCIE_GEN4)] != 1 || $::env(BUILD_PCIE_GEN4) == 0 }
 }
 
 # Load local Source Code and Constraints
-loadSource      -dir  "$::DIR_PATH/misc"
-loadConstraints -path "$::DIR_PATH/xdc/XilinxAlveoU50Core.xdc"
-loadConstraints -path "$::DIR_PATH/xdc/XilinxAlveoU50App.xdc"
+loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/misc"
+loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU50Core.xdc"
+loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU50App.xdc"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/${pcieType}"

@@ -18,14 +18,17 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
+library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiPkg.all;
 use surf.AxiStreamPkg.all;
 use surf.SsiPkg.all;
-use surf.AxiPciePkg.all;
 use surf.AxiDmaPkg.all;
 use surf.AxiStreamPacketizer2Pkg.all;
+
+library axi_pcie_core;
+use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPcieGpuAsyncCore is
    generic (
@@ -125,7 +128,6 @@ begin
          INT_PIPE_STAGES_G   => 1,
          PIPE_STAGES_G       => 1,
          SLAVE_READY_EN_G    => true,
-         BRAM_EN_G           => true,
          GEN_SYNC_FIFO_G     => false,
          FIFO_ADDR_WIDTH_G   => 9,
          SLAVE_AXI_CONFIG_G  => DMA_AXIS_CONFIG_G,
@@ -189,7 +191,6 @@ begin
          INT_PIPE_STAGES_G   => 1,
          PIPE_STAGES_G       => 1,
          SLAVE_READY_EN_G    => true,
-         BRAM_EN_G           => true,
          GEN_SYNC_FIFO_G     => false,
          FIFO_ADDR_WIDTH_G   => 9,
          SLAVE_AXI_CONFIG_G  => PCIE_AXIS_CONFIG_C,

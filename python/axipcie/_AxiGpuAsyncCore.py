@@ -13,106 +13,179 @@ import pyrogue              as pr
         
 class AxiGpuAsyncCore(pr.Device):
     def __init__(self,       
-                 numChan     = 1,
+                 maxBuffers  = 4,
                  description = 'Container for the GPUAsync core registers',
                  **kwargs):
         super().__init__(description=description, **kwargs)
 
         self.add(pr.RemoteVariable(
-            name         = 'RemoteDmaAddress[0]',
-            offset       = 0x000,
-            bitSize      = 32,
-            mode         = 'RW',
-            pollInterval = 1,
-        )) 
-
-        self.add(pr.RemoteVariable(
-            name         = 'RemoteDmaSize[0]',
+            name         = 'AxiReadCache',
             offset       = 0x004,
-            bitSize      = 32,
-            mode         = 'RW',
-            pollInterval = 1,
-        ))        
-
-        self.add(pr.RemoteVariable(
-            name         = 'CompletedSize[0]',
-            offset       = 0x010,
-            bitSize      = 32,
-            mode         = 'RW',
-            pollInterval = 1,
-        ))        
-
-        self.add(pr.RemoteVariable(
-            name         = 'CompletedMeta[0]',
-            offset       = 0x014,
-            bitSize      = 32,
-            mode         = 'RW',
-            pollInterval = 1,
-        ))        
-
-        self.add(pr.RemoteVariable(
-            name         = 'RxFrameCnt',
-            offset       = 0x0E0,
-            bitSize      = 32,
-            mode         = 'RO',
-            pollInterval = 1,
-        ))     
-
-        self.add(pr.RemoteVariable(
-            name         = 'TxFrameCnt',
-            offset       = 0x0E8,
-            bitSize      = 32,
-            mode         = 'RO',
-            pollInterval = 1,
-        ))     
-
-        self.add(pr.RemoteVariable(
-            name         = 'TxAxiErrorCnt',
-            offset       = 0x0F0,
-            bitSize      = 32,
-            mode         = 'RO',
-            pollInterval = 1,
-        ))        
-
-        self.add(pr.RemoteVariable(
-            name         = 'NumChan',
-            offset       = 0x0F4,
-            bitSize      = 5,
-            mode         = 'RO',
-        ))
-        
-        self.add(pr.RemoteVariable(
-            name         = 'EnableTx',
-            offset       = 0x0F8,
-            bitSize      = 1,
+            bitSize      = 4,
             bitOffset    = 0,
-            mode         = 'RW',
-        ))  
-
-        self.add(pr.RemoteVariable(
-            name         = 'EnableRx',
-            offset       = 0x0F8,
-            bitSize      = 1,
-            bitOffset    = 1,
-            mode         = 'RW',
-        ))  
+            mode         = 'RO',
+        ))          
 
         self.add(pr.RemoteVariable(
             name         = 'AxiWriteCache',
-            offset       = 0x0F8,
+            offset       = 0x004,
             bitSize      = 4,
-            bitOffset    = 16,
-            mode         = 'RW',
+            bitOffset    = 8,
+            mode         = 'RO',
         ))          
-        
+
+        self.add(pr.RemoteVariable(
+            name         = 'BusWidth',
+            offset       = 0x004,
+            bitSize      = 8,
+            bitOffset    = 16,
+            disp         = '{}',
+            mode         = 'RO',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'MaxBuffers',
+            offset       = 0x004,
+            bitSize      = 5,
+            bitOffset    = 24,
+            disp         = '{}',
+            mode         = 'RO',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'BufferCount',
+            offset       = 0x008,
+            bitSize      = 8,
+            bitOffset    = 0,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'BufferEnable',
+            offset       = 0x008,
+            bitSize      = 1,
+            bitOffset    = 8,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'RxFrameCnt',
+            offset       = 0x010,
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'TxFrameCnt',
+            offset       = 0x014,
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'WriteAxiErrorCnt',
+            offset       = 0x018,
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'ReadAxiErrorCnt',
+            offset       = 0x01C,
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
         self.add(pr.RemoteCommand(   
             name         = 'CountReset',
             description  = 'Status counter reset',
-            offset       = 0x0FC,
+            offset       = 0x020,
             bitSize      = 1,
             function     = pr.BaseCommand.touchOne
-        ))        
-        
+        ))
+
+
+        for i in range(maxBuffers):
+
+            self.add(pr.RemoteVariable(
+                name         = f'RemoteWriteAddress[{i}]',
+                offset       = 0x100 + i*16,
+                bitSize      = 32,
+                mode         = 'RO',
+                pollInterval = 1,
+            )) 
+
+            self.add(pr.RemoteVariable(
+                name         = f'RemoteWriteSize[{i}]',
+                offset       = 0x108 + i*16,
+                bitSize      = 32,
+                mode         = 'RO',
+                pollInterval = 1,
+            )) 
+
+            self.add(pr.RemoteVariable(
+                name         = f'RemoteReadAddress[{i}]',
+                offset       = 0x200 + i*16,
+                bitSize      = 32,
+                mode         = 'RO',
+                pollInterval = 1,
+            )) 
+
+            self.add(pr.RemoteVariable(
+                name         = f'RemoteReadSize[{i}]',
+                offset       = 0x400 + i*4,
+                bitSize      = 32,
+                mode         = 'RO',
+                pollInterval = 1,
+            )) 
+
+            self.add(pr.RemoteVariable(
+                name         = f'TotLatency[{i}]',
+                offset       = 0x500 + i*16,
+                bitSize      = 32,
+                disp         = '{}',
+                mode         = 'RO',
+                pollInterval = 1,
+            )) 
+
+            self.add(pr.RemoteVariable(
+                name         = f'GpuLatency[{i}]',
+                offset       = 0x504 + i*16,
+                bitSize      = 32,
+                disp         = '{}',
+                mode         = 'RO',
+                pollInterval = 1,
+            )) 
+
+            self.add(pr.RemoteVariable(
+                name         = f'WrLatency[{i}]',
+                offset       = 0x508 + i*16,
+                bitSize      = 32,
+                disp         = '{}',
+                mode         = 'RO',
+                pollInterval = 1,
+            )) 
+
+            self.add(pr.RemoteVariable(
+                name         = f'RdLatency[{i}]',
+                offset       = 0x50C + i*16,
+                bitSize      = 32,
+                disp         = '{}',
+                mode         = 'RO',
+                pollInterval = 1,
+            )) 
+
     def countReset(self):
         self.CountReset()        
 

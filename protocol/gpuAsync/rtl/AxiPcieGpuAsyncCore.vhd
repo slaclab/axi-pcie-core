@@ -196,8 +196,8 @@ begin
          SLAVE_AXI_CONFIG_G  => PCIE_AXIS_CONFIG_C,
          MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_G)
       port map (
-         sAxisClk    => axisClk,
-         sAxisRst    => axisRst,
+         sAxisClk    => axiClk,
+         sAxisRst    => axiRst,
          sAxisMaster => mAxisMasterInt,
          sAxisSlave  => mAxisSlaveInt,
          mAxisClk    => axisClk,

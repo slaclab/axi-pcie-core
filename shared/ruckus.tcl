@@ -17,10 +17,18 @@ if { [VersionCheck 2018.3] < 0 } {exit -1}
 
 # Load Source Code
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
+loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip"
 loadRuckusTcl "$::DIR_PATH/../protocol/pip"
 
-# loadIpCore -dir "$::DIR_PATH/ip"
-loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip"
+# loadIpCore -dir "$::DIR_PATH/ip/AxiPcie16BCrossbarIpCore"
+# loadIpCore -dir "$::DIR_PATH/ip/AxiPcie32BCrossbarIpCore"
+# loadIpCore -dir "$::DIR_PATH/ip/AxiPcie64BCrossbarIpCore"
+# loadIpCore -dir "$::DIR_PATH/ip/AxiPcieResize"
+
+loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcie16BCrossbarIpCore"
+loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcie32BCrossbarIpCore"
+loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcie64BCrossbarIpCore"
+loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcieResize"
 
 # Skip the utilization check during placement
 set_param place.skipUtilizationCheck 1

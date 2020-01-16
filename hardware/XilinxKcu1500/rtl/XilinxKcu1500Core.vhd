@@ -59,6 +59,11 @@ entity XilinxKcu1500Core is
       pipIbSlave     : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       pipObMaster    : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
       pipObSlave     : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      -- User General Purpose AXI4 Interfaces (dmaClk domain)
+      usrReadMaster  : in  AxiReadMasterType     := AXI_READ_MASTER_INIT_C;
+      usrReadSlave   : out AxiReadSlaveType      := AXI_READ_SLAVE_FORCE_C;
+      usrWriteMaster : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      usrWriteSlave  : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk         : in  sl                    := '0';
       appRst         : in  sl                    := '1';
@@ -77,12 +82,12 @@ entity XilinxKcu1500Core is
       qsfp0RstL      : out sl;
       qsfp0LpMode    : out sl;
       qsfp0ModSelL   : out sl;
-      qsfp0ModPrsL   : in  sl := '0';
+      qsfp0ModPrsL   : in  sl                    := '0';
       -- QSFP[1] Ports
       qsfp1RstL      : out sl;
       qsfp1LpMode    : out sl;
       qsfp1ModSelL   : out sl;
-      qsfp1ModPrsL   : in  sl := '0';
+      qsfp1ModPrsL   : in  sl                    := '0';
       -- Boot Memory Ports 
       flashCsL       : out sl;
       flashMosi      : out sl;
@@ -332,13 +337,19 @@ begin
       port map (
          axiClk           => sysClock,
          axiRst           => sysReset,
-         -- AXI4 Interfaces (
+         -- DMA AXI4 Interfaces (
          axiReadMaster    => dmaReadMaster,
          axiReadSlave     => dmaReadSlave,
          axiWriteMaster   => dmaWriteMaster,
          axiWriteSlave    => dmaWriteSlave,
+         -- PIP AXI4 Interfaces
          pipObMaster      => intPipObMaster,
          pipObSlave       => intPipObSlave,
+         -- User General Purpose AXI4 Interfaces
+         usrReadMaster    => usrReadMaster,
+         usrReadSlave     => usrReadSlave,
+         usrWriteMaster   => usrWriteMaster,
+         usrWriteSlave    => usrWriteSlave,
          -- AXI4-Lite Interfaces
          axilReadMasters  => dmaCtrlReadMasters,
          axilReadSlaves   => dmaCtrlReadSlaves,

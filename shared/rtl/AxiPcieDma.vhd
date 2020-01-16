@@ -45,15 +45,22 @@ entity AxiPcieDma is
       DESC_MEMORY_TYPE_G   : string                       := "block";
       DESC_ARB_G           : boolean                      := true);
    port (
+      -- Clock and Reset
       axiClk           : in  sl;
       axiRst           : in  sl;
-      -- AXI4 Interfaces (axiClk domain)
+      -- PCIe AXI4 Interfaces (axiClk domain)
       axiReadMaster    : out AxiReadMasterType;
       axiReadSlave     : in  AxiReadSlaveType;
       axiWriteMaster   : out AxiWriteMasterType;
       axiWriteSlave    : in  AxiWriteSlaveType;
+      -- PIP AXI4 Interfaces (axiClk domain)
       pipObMaster      : in  AxiWriteMasterType                 := AXI_WRITE_MASTER_INIT_C;
       pipObSlave       : out AxiWriteSlaveType                  := AXI_WRITE_SLAVE_FORCE_C;
+      -- User General Purpose AXI4 Interfaces (axiClk domain)
+      usrReadMaster    : in  AxiReadMasterType                  := AXI_READ_MASTER_INIT_C;
+      usrReadSlave     : out AxiReadSlaveType                   := AXI_READ_SLAVE_FORCE_C;
+      usrWriteMaster   : in  AxiWriteMasterType                 := AXI_WRITE_MASTER_INIT_C;
+      usrWriteSlave    : out AxiWriteSlaveType                  := AXI_WRITE_SLAVE_FORCE_C;
       -- AXI4-Lite Interfaces (axiClk domain)
       axilReadMasters  : in  AxiLiteReadMasterArray(2 downto 0);
       axilReadSlaves   : out AxiLiteReadSlaveArray(2 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_OK_C);
@@ -74,7 +81,7 @@ architecture mapping of AxiPcieDma is
       TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
       TDEST_BITS_C  => 8,
       TID_BITS_C    => 0,
-      TKEEP_MODE_C  => TKEEP_COUNT_C,   -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
+      TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
@@ -85,13 +92,15 @@ architecture mapping of AxiPcieDma is
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
 
-   signal dmaWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0) := (others => AXI_WRITE_MASTER_FORCE_C);
-   signal dmaWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0)  := (others => AXI_WRITE_SLAVE_FORCE_C);
+   signal dmaReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
+   signal dmaReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
+   signal dmaWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
+   signal dmaWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);
 
-   signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
-   signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
-   signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
-   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);
+   signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G+1 downto 0);
+   signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G+1 downto 0);
+   signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G+1 downto 0);
+   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G+1 downto 0);
 
    signal sAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
    signal sAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
@@ -108,12 +117,6 @@ architecture mapping of AxiPcieDma is
 begin
 
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
-
-      ----------------------------------------
-      -- Map PIP Interface to AXI[index=0]
-      ----------------------------------------
-      axiWriteMasters(0) <= pipObMaster;
-      pipObSlave         <= axiWriteSlaves(0);
 
       ----------------
       -- AXI PCIe XBAR
@@ -144,7 +147,7 @@ begin
       U_V2Gen : entity surf.AxiStreamDmaV2
          generic map (
             TPD_G              => TPD_G,
-            DESC_AWIDTH_G      => 12,    -- 4096 entries
+            DESC_AWIDTH_G      => 12,   -- 4096 entries
             DESC_ARB_G         => DESC_ARB_G,
             DESC_SYNTH_MODE_G  => DESC_SYNTH_MODE_G,
             DESC_MEMORY_TYPE_G => DESC_MEMORY_TYPE_G,
@@ -174,14 +177,39 @@ begin
             mAxisSlaves     => mAxisSlaves,
             mAxisCtrl       => mAxisCtrl,
             -- AXI Interfaces, 0 = Desc, 1-CHAN_COUNT_G = DMA
-            axiReadMasters  => axiReadMasters,
-            axiReadSlaves   => axiReadSlaves,
+            axiReadMasters  => dmaReadMasters,
+            axiReadSlaves   => dmaReadSlaves,
             axiWriteCtrl    => (others => AXI_CTRL_UNUSED_C),
             axiWriteMasters => dmaWriteMasters,
             axiWriteSlaves  => dmaWriteSlaves);
 
+      ------------------------------------------------------------------------
+      -- axi[0].[read]  = DMA descriptor's AXI read
+      -- axi[0].[write] = Outbound PIP interface
+      -- axi[DMA_SIZE_G:1].[read/write] = Mapped to DMA_SIZE_G DMA lanes
+      -- axi[DMA_SIZE_G+1].[read/write] = User General Purpose
+      ------------------------------------------------------------------------
+
+      -- Map the DMA descriptor's AXI read
+      axiReadMasters(0) <= dmaReadMasters(0);
+      dmaReadSlaves(0)  <= axiReadSlaves(0);
+
+      -- Map PIP Interface
+      axiWriteMasters(0) <= pipObMaster;
+      pipObSlave         <= axiWriteSlaves(0);
+      dmaWriteSlaves(0)  <= AXI_WRITE_SLAVE_FORCE_C;  -- Terminate unused write bus
+
+      -- Map DMA AXI interfaces
+      axiReadMasters(DMA_SIZE_G downto 1)  <= dmaReadMasters(DMA_SIZE_G downto 1);
+      dmaReadSlaves(DMA_SIZE_G downto 1)   <= axiReadSlaves(DMA_SIZE_G downto 1);
       axiWriteMasters(DMA_SIZE_G downto 1) <= dmaWriteMasters(DMA_SIZE_G downto 1);
       dmaWriteSlaves(DMA_SIZE_G downto 1)  <= axiWriteSlaves(DMA_SIZE_G downto 1);
+
+      -- Map User General Purpose AXI interfaces
+      axiReadMasters(DMA_SIZE_G+1)  <= usrReadMaster;
+      usrReadSlave                  <= axiReadSlaves(DMA_SIZE_G+1);
+      axiWriteMasters(DMA_SIZE_G+1) <= usrWriteMaster;
+      usrWriteSlave                 <= axiWriteSlaves(DMA_SIZE_G+1);
 
       GEN_AXIS_FIFO : for i in DMA_SIZE_G-1 downto 0 generate
 

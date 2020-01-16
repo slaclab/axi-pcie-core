@@ -16,9 +16,9 @@ if { $::env(PRJ_PART) != "XCU250-FIGD2104-2L-E" } {
 set_property board_part xilinx.com:au250:part0:1.0 [current_project]
 
 # Load local Source Code and Constraints
-loadSource      -dir  "$::DIR_PATH/core"
-loadConstraints -path "$::DIR_PATH/xdc/XilinxAlveoU250Core.xdc"
-loadConstraints -path "$::DIR_PATH/xdc/XilinxAlveoU250App.xdc"
+loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/core"
+loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU250Core.xdc"
+loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU250App.xdc"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/pcie"

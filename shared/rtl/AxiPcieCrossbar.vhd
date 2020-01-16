@@ -30,13 +30,14 @@ entity AxiPcieCrossbar is
       AXI_PCIE_CONFIG_G : AxiConfigType;
       DMA_SIZE_G        : positive range 1 to 8 := 1);
    port (
+      -- Clock and reset
       axiClk           : in  sl;
       axiRst           : in  sl;
       -- Slaves
-      sAxiWriteMasters : in  AxiWriteMasterArray(DMA_SIZE_G downto 0);
-      sAxiWriteSlaves  : out AxiWriteSlaveArray(DMA_SIZE_G downto 0);
-      sAxiReadMasters  : in  AxiReadMasterArray(DMA_SIZE_G downto 0);
-      sAxiReadSlaves   : out AxiReadSlaveArray(DMA_SIZE_G downto 0);
+      sAxiWriteMasters : in  AxiWriteMasterArray(DMA_SIZE_G+1 downto 0);
+      sAxiWriteSlaves  : out AxiWriteSlaveArray(DMA_SIZE_G+1 downto 0);
+      sAxiReadMasters  : in  AxiReadMasterArray(DMA_SIZE_G+1 downto 0);
+      sAxiReadSlaves   : out AxiReadSlaveArray(DMA_SIZE_G+1 downto 0);
       -- Master
       mAxiWriteMaster  : out AxiWriteMasterType;
       mAxiWriteSlave   : in  AxiWriteSlaveType;
@@ -46,10 +47,10 @@ end AxiPcieCrossbar;
 
 architecture mapping of AxiPcieCrossbar is
 
-   signal axiWriteMasters : AxiWriteMasterArray(8 downto 0) := (others => AXI_WRITE_MASTER_FORCE_C);
-   signal axiWriteSlaves  : AxiWriteSlaveArray(8 downto 0)  := (others => AXI_WRITE_SLAVE_FORCE_C);
-   signal axiReadMasters  : AxiReadMasterArray(8 downto 0)  := (others => AXI_READ_MASTER_FORCE_C);
-   signal axiReadSlaves   : AxiReadSlaveArray(8 downto 0)   := (others => AXI_READ_SLAVE_FORCE_C);
+   signal axiWriteMasters : AxiWriteMasterArray(9 downto 0) := (others => AXI_WRITE_MASTER_FORCE_C);
+   signal axiWriteSlaves  : AxiWriteSlaveArray(9 downto 0)  := (others => AXI_WRITE_SLAVE_FORCE_C);
+   signal axiReadMasters  : AxiReadMasterArray(9 downto 0)  := (others => AXI_READ_MASTER_FORCE_C);
+   signal axiReadSlaves   : AxiReadSlaveArray(9 downto 0)   := (others => AXI_READ_SLAVE_FORCE_C);
 
 begin
 
@@ -59,19 +60,19 @@ begin
    axiWriteMasters(0) <= sAxiWriteMasters(0);
    sAxiWriteSlaves(0) <= axiWriteSlaves(0);
    axiReadMasters(0)  <= sAxiReadMasters(0);
-   sAxiReadSlaves(0) <= axiReadSlaves(0);
+   sAxiReadSlaves(0)  <= axiReadSlaves(0);
 
    ----------------------  
    -- AXI Resizer Modules
    ----------------------  
    GEN_VEC : for i in DMA_SIZE_G downto 1 generate
-   
+
       U_Resizer : entity axi_pcie_core.AxiPcieResizer
          generic map(
             TPD_G             => TPD_G,
             AXI_DMA_CONFIG_G  => AXI_DMA_CONFIG_G,
             AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G)
-         port map(   
+         port map(
             -- Clock and reset
             axiClk          => axiClk,
             axiRst          => axiRst,
@@ -88,13 +89,22 @@ begin
 
    end generate GEN_VEC;
 
+   --------------------------------------------------------------
+   -- No resizing required for User General Purpose AXI Interface
+   --------------------------------------------------------------
+   axiWriteMasters(DMA_SIZE_G+1) <= sAxiWriteMasters(DMA_SIZE_G+1);
+   sAxiWriteSlaves(DMA_SIZE_G+1) <= axiWriteSlaves(DMA_SIZE_G+1);
+   axiReadMasters(DMA_SIZE_G+1)  <= sAxiReadMasters(DMA_SIZE_G+1);
+   sAxiReadSlaves(DMA_SIZE_G+1)  <= axiReadSlaves(DMA_SIZE_G+1);
+
    -------------------
    -- AXI XBAR IP Core
    -------------------
    U_AxiXbar : entity axi_pcie_core.AxiPcieCrossbarIpCoreWrapper
       generic map(
          TPD_G             => TPD_G,
-         AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G)
+         AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_G,
+         DMA_SIZE_G        => DMA_SIZE_G)
       port map(
          -- Clock and reset
          axiClk           => axiClk,

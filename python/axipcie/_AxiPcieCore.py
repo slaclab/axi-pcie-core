@@ -59,7 +59,7 @@ class AxiPcieCore(pr.Device):
                 ))
                 
         # DMA AXI Stream Inbound Monitor        
-        self.add(axi.AxiStreamMonitoring(            
+        self.add(axi.AxiStreamMonAxiL(            
             name        = 'DmaIbAxisMon', 
             offset      = 0x60000, 
             numberLanes = numDmaLanes,
@@ -67,7 +67,7 @@ class AxiPcieCore(pr.Device):
         ))        
 
         # DMA AXI Stream Outbound Monitor        
-        self.add(axi.AxiStreamMonitoring(            
+        self.add(axi.AxiStreamMonAxiL(            
             name        = 'DmaObAxisMon', 
             offset      = 0x70000, 
             numberLanes = numDmaLanes,

@@ -67,7 +67,7 @@ architecture mapping of AxiPcieGpuAsyncCore is
       TDATA_BYTES_C => AXI_PCIE_CONFIG_C.DATA_BYTES_C,  -- Match the AXI and AXIS widths for M_AXI port
       TDEST_BITS_C  => 8,
       TID_BITS_C    => 8,
-      TKEEP_MODE_C  => TKEEP_COMP_C,
+      TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
       TUSER_BITS_C  => 8,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 

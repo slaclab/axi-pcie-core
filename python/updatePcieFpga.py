@@ -56,112 +56,95 @@ parser.add_argument(
 
 # Get the arguments
 args = parser.parse_args()
+
+with pcie.AxiPcieRoot(args.dev, pollEn=False) as root:
     
-# Set base
-base = pr.Root(name='PcieTop',description='')
+    # Read all the variables
+    root.ReadAll()
 
-# Create the stream interface
-memMap = rogue.hardware.axi.AxiMemMap(args.dev)
+    # Create useful pointers
+    AxiVersion = root.AxiPcieCore.AxiVersion
 
-# Add Base Device
-base.add(pcie.AxiPcieCore(
-    memBase = memMap,
-    useBpi  = True,
-    useSpi  = True,
-))
-
-# Start the system
-base.start(pollEn=False)
-
-# Read all the variables
-base.ReadAll()
-
-# Create useful pointers
-AxiVersion = base.AxiPcieCore.AxiVersion
-
-if args.type is None:
-    promType   = AxiVersion.BOOT_PROM_G.getDisp()
-else:
-    promType   = args.type
-
-# Case on PROM type
-if (promType == 'BPI'):
-    PROM_PRI = base.AxiPcieCore.AxiMicronP30
-elif (promType == 'SPIx8') or (promType == 'SPIx4'):
-    PROM_PRI = base.AxiPcieCore.AxiMicronN25Q[0]
-    if (promType == 'SPIx8'):
-        PROM_SEC = base.AxiPcieCore.AxiMicronN25Q[1]
-else:
-    raise ValueError(f'Invalid promType' )
-
-# Printout Current AxiVersion status
-print('#########################################')
-print('Current Firmware Loaded on the PCIe card:')
-print('#########################################')
-AxiVersion.printStatus()
-print('#########################################')
-
-# Get a list of images, using .mcs first
-imgLst = odict()
-
-rawLst = glob.glob('{}/*.mcs*'.format(args.path))
-for l in rawLst:
-
-    # Determine suffix
-    if '.mcs.gz' in l:
-        suff = 'mcs.gz'
+    if args.type is None:
+        promType   = AxiVersion.BOOT_PROM_G.getDisp()
     else:
-        suff = 'mcs'
+        promType   = args.type
 
-    # Get basename
-    l = l.replace('_primary.mcs.gz','')
-    l = l.replace('_secondary.mcs.gz','')
-    l = l.replace('_primary.mcs','')
-    l = l.replace('_secondary.mcs','')
-    l = l.replace('.mcs.gz','')    
-    l = l.replace('.mcs','')
+    # Case on PROM type
+    if (promType == 'BPI'):
+        PROM_PRI = root.AxiPcieCore.AxiMicronP30
+    elif (promType == 'SPIx8') or (promType == 'SPIx4'):
+        PROM_PRI = root.AxiPcieCore.AxiMicronN25Q[0]
+        if (promType == 'SPIx8'):
+            PROM_SEC = root.AxiPcieCore.AxiMicronN25Q[1]
+    else:
+        raise ValueError(f'Invalid promType' )
 
-    # Store entry
-    imgLst[l] = suff
+    # Printout Current AxiVersion status
+    print('#########################################')
+    print('Current Firmware Loaded on the PCIe card:')
+    print('#########################################')
+    AxiVersion.printStatus()
+    print('#########################################')
 
-# Sort list
-imgLst = odict(sorted(imgLst.items(), key=lambda x: x[0]))
+    # Get a list of images, using .mcs first
+    imgLst = odict()
 
-for i,l in enumerate(imgLst.items()):
-    print('{} : {}'.format(i,l[0]))
+    rawLst = glob.glob('{}/*.mcs*'.format(args.path))
+    for l in rawLst:
 
-idx = int(input('Enter image to program into the PCIe card\'s PROM: '))
+        # Determine suffix
+        if '.mcs.gz' in l:
+            suff = 'mcs.gz'
+        else:
+            suff = 'mcs'
 
-ent = list(imgLst.items())[idx]
-if (promType == 'SPIx8'):
-    pri = ent[0] + '_primary.' + ent[1]
-    sec = ent[0] + '_secondary.' + ent[1]
-else:
-    pri = ent[0] + '.' + ent[1]
-    
-# Load the primary MCS file
-PROM_PRI.LoadMcsFile(pri)  
+        # Get basename
+        l = l.replace('_primary.mcs.gz','')
+        l = l.replace('_secondary.mcs.gz','')
+        l = l.replace('_primary.mcs','')
+        l = l.replace('_secondary.mcs','')
+        l = l.replace('.mcs.gz','')    
+        l = l.replace('.mcs','')
 
-# Update the programing done flag
-progDone = PROM_PRI._progDone
+        # Store entry
+        imgLst[l] = suff
 
-# Check for secondary PROM
-if (promType == 'SPIx8'):
-    # Check if the primary MCS failed
-    if PROM_PRI._progDone: 
-        # Load the secondary MCS file
-        PROM_SEC.LoadMcsFile(sec)  
+    # Sort list
+    imgLst = odict(sorted(imgLst.items(), key=lambda x: x[0]))
+
+    for i,l in enumerate(imgLst.items()):
+        print('{} : {}'.format(i,l[0]))
+
+    idx = int(input('Enter image to program into the PCIe card\'s PROM: '))
+
+    ent = list(imgLst.items())[idx]
+    if (promType == 'SPIx8'):
+        pri = ent[0] + '_primary.' + ent[1]
+        sec = ent[0] + '_secondary.' + ent[1]
+    else:
+        pri = ent[0] + '.' + ent[1]
+
+    # Load the primary MCS file
+    PROM_PRI.LoadMcsFile(pri)  
+
     # Update the programing done flag
-    progDone = PROM_PRI._progDone and PROM_SEC._progDone
+    progDone = PROM_PRI._progDone
 
-# Check if programming was successful
-if (progDone):
-    print('\nReloading FPGA firmware from PROM ....')
-    AxiVersion.FpgaReload()
-    print('\nPlease reboot the computer')
-else:
-    print('Failed to program FPGA')
-    
-# Close out
-base.stop()
-exit()
+    # Check for secondary PROM
+    if (promType == 'SPIx8'):
+        # Check if the primary MCS failed
+        if PROM_PRI._progDone: 
+            # Load the secondary MCS file
+            PROM_SEC.LoadMcsFile(sec)  
+        # Update the programing done flag
+        progDone = PROM_PRI._progDone and PROM_SEC._progDone
+
+    # Check if programming was successful
+    if (progDone):
+        print('\nReloading FPGA firmware from PROM ....')
+        AxiVersion.FpgaReload()
+        print('\nPlease reboot the computer')
+    else:
+        print('Failed to program FPGA')
+

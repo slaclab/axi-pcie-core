@@ -16,9 +16,20 @@
 
 import pyrogue as pr
 import os
+import importlib
+
 baseDir = os.path.dirname(os.path.realpath(__file__))
+
+print(f"Basedir = {baseDir}")
 pr.addLibraryPath(baseDir + '/..')
-pr.addLibraryPath(baseDir + '/../../../surf/python')
+
+# First see if surf is already in the python path
+try:
+    import surf
+
+# Otherwise assume it is relative in a standard development directory structure
+except:
+    pr.addLibraryPath(baseDir + '/../../../surf/python')
 
 import sys
 import glob
@@ -42,9 +53,18 @@ if __name__ == "__main__":
     ) 
 
     parser.add_argument(
+        "--package", 
+        type     = str,
+        default  = None,
+        required = False,
+        help     = "path to images",
+    )  
+
+    parser.add_argument(
         "--path", 
         type     = str,
-        required = True,
+        default  = None,
+        required = False,
         help     = "path to images",
     )  
 
@@ -58,9 +78,18 @@ if __name__ == "__main__":
 
     # Get the arguments
     args = parser.parse_args()
-        
+
+    if args.package is not None:
+        BasePackage = importlib.import_module(args.package)
+        args.path = BasePackage.ImageDir
+
+    if args.path is None:
+        print("\nInvalid images directory, use --path or --package args\n")
+        parser.print_help()
+        exit()
+
     # Set base
-    base = pr.Root(name='PcieTop',description='')
+    base = pr.Root(name='PcieTop',description='',pollEn=False)
 
     # Create the stream interface
     memMap = rogue.hardware.axi.AxiMemMap(args.dev)
@@ -73,7 +102,7 @@ if __name__ == "__main__":
     ))
 
     # Start the system
-    base.start(pollEn=False)
+    base.start()
 
     # Read all the variables
     base.ReadAll()

@@ -16,9 +16,20 @@
 
 import pyrogue as pr
 import os
+import importlib
+
 baseDir = os.path.dirname(os.path.realpath(__file__))
-pr.addLibraryPath(baseDir)
-pr.addLibraryPath(baseDir + '/../../surf/python')
+
+print(f"Basedir = {baseDir}")
+pr.addLibraryPath(baseDir + '/..')
+
+# First see if surf is already in the python path
+try:
+    import surf
+
+# Otherwise assume it is relative in a standard development directory structure
+except:
+    pr.addLibraryPath(baseDir + '/../../../surf/python')
 
 import sys
 import glob
@@ -26,44 +37,78 @@ import argparse
 import rogue.hardware.axi
 import axipcie as pcie
 from collections import OrderedDict as odict
-    
-# Set the argument parser
-parser = argparse.ArgumentParser()
 
-# Add arguments
-parser.add_argument(
-    "--dev", 
-    type     = str,
-    required = False,
-    default  = "/dev/datadev_0",
-    help     = "path to device",
-) 
+if __name__ == "__main__": 
 
-parser.add_argument(
-    "--path", 
-    type     = str,
-    required = True,
-    help     = "path to images",
-)  
+    # Set the argument parser
+    parser = argparse.ArgumentParser()
 
-parser.add_argument(
-    "--type", 
-    type     = str,
-    default  = None,
-    required = False,
-    help     = "prom type",
-)  
+    # Add arguments
+    parser.add_argument(
+        "--dev", 
+        type     = str,
+        required = False,
+        default  = "/dev/datadev_0",
+        help     = "path to device",
+    ) 
 
-# Get the arguments
-args = parser.parse_args()
+    parser.add_argument(
+        "--package", 
+        type     = str,
+        default  = None,
+        required = False,
+        help     = "path to images",
+    )  
 
-with pcie.AxiPcieRoot(args.dev, pollEn=False) as root:
-    
+    parser.add_argument(
+        "--path", 
+        type     = str,
+        default  = None,
+        required = False,
+        help     = "path to images",
+    )  
+
+    parser.add_argument(
+        "--type", 
+        type     = str,
+        default  = None,
+        required = False,
+        help     = "prom type",
+    )  
+
+    # Get the arguments
+    args = parser.parse_args()
+
+    if args.package is not None:
+        BasePackage = importlib.import_module(args.package)
+        args.path = BasePackage.ImageDir
+
+    if args.path is None:
+        print("\nInvalid images directory, use --path or --package args\n")
+        parser.print_help()
+        exit()
+
+    # Set base
+    base = pr.Root(name='PcieTop',description='',pollEn=False)
+
+    # Create the stream interface
+    memMap = rogue.hardware.axi.AxiMemMap(args.dev)
+
+    # Add Base Device
+    base.add(pcie.AxiPcieCore(
+        memBase = memMap,
+        useBpi  = True,
+        useSpi  = True,
+    ))
+
+    # Start the system
+    base.start()
+
     # Read all the variables
-    root.ReadAll()
+    base.ReadAll()
 
     # Create useful pointers
-    AxiVersion = root.AxiPcieCore.AxiVersion
+    AxiVersion = base.AxiPcieCore.AxiVersion
 
     if args.type is None:
         promType   = AxiVersion.BOOT_PROM_G.getDisp()
@@ -72,13 +117,13 @@ with pcie.AxiPcieRoot(args.dev, pollEn=False) as root:
 
     # Case on PROM type
     if (promType == 'BPI'):
-        PROM_PRI = root.AxiPcieCore.AxiMicronP30
+        PROM_PRI = base.AxiPcieCore.AxiMicronP30
     elif (promType == 'SPIx8') or (promType == 'SPIx4'):
-        PROM_PRI = root.AxiPcieCore.AxiMicronN25Q[0]
+        PROM_PRI = base.AxiPcieCore.AxiMicronN25Q[0]
         if (promType == 'SPIx8'):
-            PROM_SEC = root.AxiPcieCore.AxiMicronN25Q[1]
+            PROM_SEC = base.AxiPcieCore.AxiMicronN25Q[1]
     else:
-        raise ValueError(f'Invalid promType' )
+        raise ValueError('Invalid promType')
 
     # Printout Current AxiVersion status
     print('#########################################')
@@ -124,7 +169,7 @@ with pcie.AxiPcieRoot(args.dev, pollEn=False) as root:
         sec = ent[0] + '_secondary.' + ent[1]
     else:
         pri = ent[0] + '.' + ent[1]
-
+        
     # Load the primary MCS file
     PROM_PRI.LoadMcsFile(pri)  
 
@@ -147,4 +192,7 @@ with pcie.AxiPcieRoot(args.dev, pollEn=False) as root:
         print('\nPlease reboot the computer')
     else:
         print('Failed to program FPGA')
-
+        
+    # Close out
+    base.stop()
+    exit()

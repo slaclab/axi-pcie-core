@@ -66,9 +66,9 @@ set_property PACKAGE_PIN H6 [get_ports { sfpRefClkP[1] }] ;# 371.428571 MHz
 set_property PACKAGE_PIN H5 [get_ports { sfpRefClkN[1] }] ;# 371.428571 MHz
 
 set_property PACKAGE_PIN F6 [get_ports { sfpTxP }]
-set_property PACKAGE_PIN F5 [get_ports { sfpRxP }]
-set_property PACKAGE_PIN E4 [get_ports { sfpRxN }]
-set_property PACKAGE_PIN E3 [get_ports { sfpTxN }]
+set_property PACKAGE_PIN F5 [get_ports { sfpTxN }]
+set_property PACKAGE_PIN E4 [get_ports { sfpRxP }]
+set_property PACKAGE_PIN E3 [get_ports { sfpRxN }]
 
 #############
 # QSFP[1:0] #

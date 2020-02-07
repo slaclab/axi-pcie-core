@@ -2,9 +2,6 @@
 #-----------------------------------------------------------------------------
 # Title      : BPI/SPIx4/SPIx8 Prom Update
 #-----------------------------------------------------------------------------
-# File       : updatePcieFpga.py
-# Created    : 2018-06-22
-#-----------------------------------------------------------------------------
 # This file is part of the 'axi-pcie-core'. It is subject to 
 # the license terms in the LICENSE.txt file found in the top-level directory 
 # of this distribution and at: 

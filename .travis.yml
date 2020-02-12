@@ -1,0 +1,87 @@
+# This will run on Travis' 'new' container-based infrastructure
+sudo: true
+
+# Setup for Ubuntu Bionic (18.04)
+dist: bionic
+
+language:
+  - python
+
+python:
+  - 3.6
+
+# Environment variables
+env:
+  global:
+    - PACKAGE_DIR: $HOME/packages
+    - DOXYFILE: $TRAVIS_BUILD_DIR/Doxyfile
+    - MINICONDA_DIR: $PACKAGE_DIR/miniconda
+
+# Install dependencies
+addons:
+  apt:
+    packages:
+      - python3
+
+stages:
+    - name: deploy_dev
+      if: branch = pre-release AND tag IS blank AND NOT (type = pull_request)
+    - name: deploy_tag
+      if: tag IS present
+
+# Generate and deploy documentation
+jobs:
+  include:
+    - &deploy-conda-stage       # Conda for linux
+      stage: deploy_dev
+      name: "Deploy Conda"
+      env: CONDA_TOKEN=$CONDA_UPLOAD_TOKEN_DEV
+      before_install:
+        # Prepare folders
+        - mkdir -p $MINICONDA_DIR
+        # Bring all the tags
+        - git pull --unshallow
+        - git pull
+        # on OSX rogue needs an older version of the MacOS SDK
+        - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+            git clone https://github.com/phracker/MacOSX-SDKs;
+            sudo mv MacOSX-SDKs/MacOSX10.9.sdk /opt/;
+            export CONDA_BUILD_SYSROOT=/opt/MacOSX10.9.sdk;
+            export CONDA_BUILD=1;
+          fi
+
+      install:
+        # Install Anaconda for the right architecture (linux or osx)
+        - cd $MINICONDA_DIR
+        - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+            wget -O miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh;
+          else
+            wget -O miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh;
+          fi
+        - bash miniconda.sh -b -p $HOME/miniconda
+        - export PATH="$HOME/miniconda/bin:$PATH"
+        - hash -r
+        - conda config --set always_yes yes
+        - conda install conda-build anaconda-client conda-verify
+        - conda update -q conda conda-build
+
+      before_script:
+        # Go back to top directory
+        - cd $TRAVIS_BUILD_DIR
+
+      script:
+        # Build conda package
+        - travis_wait 60 conda build --debug conda-recipe --output-folder bld-dir -c tidair-tag -c conda-forge
+
+      after_success:
+        # Upload conda package
+        - anaconda -t $CONDA_TOKEN upload bld-dir/`echo $TRAVIS_OS_NAME`-64/*.tar.bz2
+
+    - <<: *deploy-conda-stage   # Conda for MacOS
+      os: osx
+      language: ruby  # osx does not support language=python
+
+    - <<: *deploy-conda-stage   # Conda for Linux
+      stage: deploy_tag
+      env: CONDA_TOKEN=$CONDA_UPLOAD_TOKEN_TAG
+

@@ -1,0 +1,29 @@
+package: 
+  name: axi_pcie_core
+  version: {{ GIT_DESCRIBE_TAG }}
+
+source:
+   path: ..
+
+build:
+   number: {{ GIT_DESCRIBE_NUMBER|int }}
+
+requirements:
+   build:
+     - python
+     - rogue
+     - git
+     - gitpython
+     - numpy
+
+   run:
+     - python
+     - rogue
+     - numpy
+
+about:
+   home: https://github.com/slaclab/axi-pcie-core
+   license: SLAC Open License
+   license_file: LICENSE.txt
+   summary: RCE Generation 3 Firmware Library
+

@@ -1,5 +1,5 @@
 package: 
-  name: axipcie
+  name: axi_pcie_core
   version: {{ GIT_DESCRIBE_TAG }}
 
 source:

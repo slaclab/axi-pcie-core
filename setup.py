@@ -12,7 +12,7 @@ with open('python/axipcie/__init__.py','a') as vf:
     vf.write(f'\n__version__="{ver}"\n')
 
 setup (
-   name='axipcie',
+   name='axi_pcie_core',
    version=ver,
    packages=['axipcie', ],
    package_dir={'':'python'},

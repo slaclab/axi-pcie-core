@@ -18,15 +18,16 @@ import importlib
 baseDir = os.path.dirname(os.path.realpath(__file__))
 
 print(f"Basedir = {baseDir}")
-pr.addLibraryPath(baseDir + '/..')
 
-# First see if surf is already in the python path
+# First see if surf and axipcie are already in the python path
 try:
     import surf
+    import axipcie
 
 # Otherwise assume it is relative in a standard development directory structure
 except:
-    pr.addLibraryPath(baseDir + '/../../../surf/python')
+    pr.addLibraryPath(baseDir + '/../python')
+    pr.addLibraryPath(baseDir + '/../../surf/python')
 
 import sys
 import glob

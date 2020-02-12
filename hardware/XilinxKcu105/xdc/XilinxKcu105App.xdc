@@ -8,16 +8,16 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-set_property -dict { PACKAGE_PIN AN8 IOSTANDARD LVCMOS18 } [get_ports { extRst }]
+set_property -dict { PACKAGE_PIN AN8 } [get_ports { extRst }]
 
-set_property -dict { PACKAGE_PIN AP8 IOSTANDARD LVCMOS18 } [get_ports { led[0] }]
-set_property -dict { PACKAGE_PIN H23 IOSTANDARD LVCMOS18 } [get_ports { led[1] }]
-set_property -dict { PACKAGE_PIN P20 IOSTANDARD LVCMOS18 } [get_ports { led[2] }]
-set_property -dict { PACKAGE_PIN P21 IOSTANDARD LVCMOS18 } [get_ports { led[3] }]
-set_property -dict { PACKAGE_PIN N22 IOSTANDARD LVCMOS18 } [get_ports { led[4] }]
-set_property -dict { PACKAGE_PIN M22 IOSTANDARD LVCMOS18 } [get_ports { led[5] }]
-set_property -dict { PACKAGE_PIN R23 IOSTANDARD LVCMOS18 } [get_ports { led[6] }]
-set_property -dict { PACKAGE_PIN P23 IOSTANDARD LVCMOS18 } [get_ports { led[7] }]
+set_property -dict { PACKAGE_PIN AP8 } [get_ports { led[0] }]
+set_property -dict { PACKAGE_PIN H23 } [get_ports { led[1] }]
+set_property -dict { PACKAGE_PIN P20 } [get_ports { led[2] }]
+set_property -dict { PACKAGE_PIN P21 } [get_ports { led[3] }]
+set_property -dict { PACKAGE_PIN N22 } [get_ports { led[4] }]
+set_property -dict { PACKAGE_PIN M22 } [get_ports { led[5] }]
+set_property -dict { PACKAGE_PIN R23 } [get_ports { led[6] }]
+set_property -dict { PACKAGE_PIN P23 } [get_ports { led[7] }]
 
 set_property PACKAGE_PIN W4 [get_ports sfpTxP[1]]
 set_property PACKAGE_PIN W3 [get_ports sfpTxN[1]]
@@ -32,20 +32,26 @@ set_property PACKAGE_PIN T1 [get_ports sfpRxN[0]]
 set_property PACKAGE_PIN P6 [get_ports sfpClk156P]
 set_property PACKAGE_PIN P5 [get_ports sfpClk156N]
 
-set_property -dict { PACKAGE_PIN J24 IOSTANDARD LVCMOS18 } [get_ports { fmcScl }]
-set_property -dict { PACKAGE_PIN J25 IOSTANDARD LVCMOS18 } [get_ports { fmcSda }]
+set_property -dict { PACKAGE_PIN J24 } [get_ports { fmcScl }]
+set_property -dict { PACKAGE_PIN J25 } [get_ports { fmcSda }]
 
 set_property -dict { PACKAGE_PIN AK17 IOSTANDARD DIFF_SSTL12_DCI ODT RTT_48 } [get_ports { sysClk300P }]
 set_property -dict { PACKAGE_PIN AK16 IOSTANDARD DIFF_SSTL12_DCI ODT RTT_48 } [get_ports { sysClk300N }]
 
-set_property PACKAGE_PIN R4 [get_ports { smaTxP }]
-set_property PACKAGE_PIN R3 [get_ports { smaTxN }]
+set_property PACKAGE_PIN R4 [get_ports { smaMgtTxP }]
+set_property PACKAGE_PIN R3 [get_ports { smaMgtTxN }]
 
-set_property PACKAGE_PIN P2 [get_ports { smaRxP }]
-set_property PACKAGE_PIN P1 [get_ports { smaRxN }]
+set_property PACKAGE_PIN P2 [get_ports { smaMgtRxP }]
+set_property PACKAGE_PIN P1 [get_ports { smaMgtRxN }]
 
-set_property PACKAGE_PIN V6 [get_ports { smaClkP }]
-set_property PACKAGE_PIN V5 [get_ports { smaClkN }]
+set_property PACKAGE_PIN V6 [get_ports { smaMgtClkP }]
+set_property PACKAGE_PIN V5 [get_ports { smaMgtClkN }]
+
+set_property PACKAGE_PIN D23 [get_ports { smaUserClkP }]
+set_property PACKAGE_PIN C23 [get_ports { smaUserClkN }]
+
+set_property PACKAGE_PIN H27 [get_ports { smaUserGpioP }]
+set_property PACKAGE_PIN G27 [get_ports { smaUserGpioN }]
 
 ##############################################################################
 

@@ -32,10 +32,10 @@ entity AxiPcieCrossbar is
       axiClk           : in  sl;
       axiRst           : in  sl;
       -- Slaves
-      sAxiWriteMasters : in  AxiWriteMasterArray(DMA_SIZE_G downto 0);
-      sAxiWriteSlaves  : out AxiWriteSlaveArray(DMA_SIZE_G downto 0);
-      sAxiReadMasters  : in  AxiReadMasterArray(DMA_SIZE_G downto 0);
-      sAxiReadSlaves   : out AxiReadSlaveArray(DMA_SIZE_G downto 0);
+      sAxiWriteMasters : in  AxiWriteMasterArray(DMA_SIZE_G+1 downto 0);
+      sAxiWriteSlaves  : out AxiWriteSlaveArray(DMA_SIZE_G+1 downto 0);
+      sAxiReadMasters  : in  AxiReadMasterArray(DMA_SIZE_G+1 downto 0);
+      sAxiReadSlaves   : out AxiReadSlaveArray(DMA_SIZE_G+1 downto 0);
       -- Master
       mAxiWriteMaster  : out AxiWriteMasterType;
       mAxiWriteSlave   : in  AxiWriteSlaveType;
@@ -58,6 +58,16 @@ begin
       axiReadMasters(i)  <= sAxiReadMasters(i);
       sAxiReadSlaves(i)  <= axiReadSlaves(i);
    end generate;
+
+   -- --------------------------------------------------------------
+   -- -- No resizing required for User General Purpose AXI Interface
+   -- --------------------------------------------------------------
+   -- axiWriteMasters(DMA_SIZE_G+1) <= sAxiWriteMasters(DMA_SIZE_G+1);
+   -- sAxiWriteSlaves(DMA_SIZE_G+1) <= axiWriteSlaves(DMA_SIZE_G+1);
+   -- axiReadMasters(DMA_SIZE_G+1)  <= sAxiReadMasters(DMA_SIZE_G+1);
+   -- sAxiReadSlaves(DMA_SIZE_G+1)  <= axiReadSlaves(DMA_SIZE_G+1);
+   sAxiWriteSlaves(DMA_SIZE_G+1) <= AXI_WRITE_SLAVE_FORCE_C;
+   sAxiReadSlaves(DMA_SIZE_G+1)  <= AXI_READ_SLAVE_FORCE_C;
 
    -------------------
    -- AXI XBAR IP Core

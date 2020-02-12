@@ -25,5 +25,5 @@ about:
    home: https://github.com/slaclab/axi-pcie-core
    license: SLAC Open License
    license_file: LICENSE.txt
-   summary: RCE Generation 3 Firmware Library
+   summary: AXI PCIE Core Library
 

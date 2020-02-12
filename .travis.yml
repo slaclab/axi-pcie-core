@@ -25,8 +25,7 @@ addons:
 
 stages:
     - name: deploy_dev
-      if: branch = conda_package AND tag IS blank AND NOT (type = pull_request)
-      #if: branch = pre-release AND tag IS blank AND NOT (type = pull_request)
+      if: branch = pre-release AND tag IS blank AND NOT (type = pull_request)
     - name: deploy_tag
       if: tag IS present
 

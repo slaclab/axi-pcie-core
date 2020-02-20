@@ -22,6 +22,7 @@ addons:
   apt:
     packages:
       - python3
+      - flake8
 
 stages:
     - name: deploy_dev
@@ -68,6 +69,8 @@ jobs:
       before_script:
         # Go back to top directory
         - cd $TRAVIS_BUILD_DIR
+        - python3 -m compileall -f python/
+        - flake8 --count python/
 
       script:
         # Build conda package

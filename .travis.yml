@@ -42,7 +42,10 @@ jobs:
       script:
         - python3 -m compileall -f python/
         - flake8 --count python/
-  
+        
+    - <<: *linter_stage
+      stage: linter_run
+ 
     - &deploy-conda-stage       # Conda for linux
       stage: deploy_dev
       name: "Deploy Conda"

@@ -22,6 +22,7 @@ addons:
   apt:
     packages:
       - python3
+      - flake8
 
 stages:
     - name: deploy_dev
@@ -32,6 +33,16 @@ stages:
 # Generate and deploy documentation
 jobs:
   include:
+  
+    - &linter-stage
+      stage: linter_stage
+      name: "Linter and Code Checking"
+      before_script:
+        - cd $TRAVIS_BUILD_DIR      
+      script:
+        - python3 -m compileall -f python/
+        - flake8 --count python/
+         
     - &deploy-conda-stage       # Conda for linux
       stage: deploy_dev
       name: "Deploy Conda"
@@ -81,6 +92,9 @@ jobs:
     #os: osx
     #language: ruby  # osx does not support language=python
 
+    - <<: *linter-stage
+      stage: linter_tag
+      
     - <<: *deploy-conda-stage   # Conda for Linux
       stage: deploy_tag
       env: CONDA_TOKEN=$CONDA_UPLOAD_TOKEN_TAG

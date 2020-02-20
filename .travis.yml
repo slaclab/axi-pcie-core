@@ -4,11 +4,6 @@ sudo: true
 # Setup for Ubuntu Bionic (18.04)
 dist: bionic
 
-# Blacklist
-branches:
-  except:
-    - gh-pages
-    
 language:
   - python
 
@@ -38,6 +33,16 @@ stages:
 # Generate and deploy documentation
 jobs:
   include:
+  
+    - &linter_stage
+      stage: linter
+      name: "Linter and Code Checking"
+      before_script:
+        - cd $TRAVIS_BUILD_DIR      
+      script:
+        - python3 -m compileall -f python/
+        - flake8 --count python/
+  
     - &deploy-conda-stage       # Conda for linux
       stage: deploy_dev
       name: "Deploy Conda"
@@ -74,8 +79,6 @@ jobs:
       before_script:
         # Go back to top directory
         - cd $TRAVIS_BUILD_DIR
-        - python3 -m compileall -f python/
-        - flake8 --count python/
 
       script:
         # Build conda package

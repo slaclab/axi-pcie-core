@@ -1,17 +1,17 @@
 #-----------------------------------------------------------------------------
-# This file is part of the 'axi-pcie-core'. It is subject to 
-# the license terms in the LICENSE.txt file found in the top-level directory 
-# of this distribution and at: 
-#    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
-# No part of the 'axi-pcie-core', including this file, may be 
-# copied, modified, propagated, or distributed except according to the terms 
+# This file is part of the 'axi-pcie-core'. It is subject to
+# the license terms in the LICENSE.txt file found in the top-level directory
+# of this distribution and at:
+#    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+# No part of the 'axi-pcie-core', including this file, may be
+# copied, modified, propagated, or distributed except according to the terms
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
 
 import pyrogue              as pr
-        
+
 class AxiGpuAsyncCore(pr.Device):
-    def __init__(self,       
+    def __init__(self,
                  maxBuffers  = 4,
                  description = 'Container for the GPUAsync core registers',
                  **kwargs):
@@ -23,7 +23,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 4,
             bitOffset    = 0,
             mode         = 'RO',
-        ))          
+        ))
 
         self.add(pr.RemoteVariable(
             name         = 'AxiWriteCache',
@@ -31,7 +31,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 4,
             bitOffset    = 8,
             mode         = 'RO',
-        ))          
+        ))
 
         self.add(pr.RemoteVariable(
             name         = 'BusWidth',
@@ -106,7 +106,7 @@ class AxiGpuAsyncCore(pr.Device):
             pollInterval = 1,
         ))
 
-        self.add(pr.RemoteCommand(   
+        self.add(pr.RemoteCommand(
             name         = 'CountReset',
             description  = 'Status counter reset',
             offset       = 0x020,
@@ -123,7 +123,7 @@ class AxiGpuAsyncCore(pr.Device):
                 bitSize      = 32,
                 mode         = 'RO',
                 pollInterval = 1,
-            )) 
+            ))
 
             self.add(pr.RemoteVariable(
                 name         = f'RemoteWriteSize[{i}]',
@@ -131,7 +131,7 @@ class AxiGpuAsyncCore(pr.Device):
                 bitSize      = 32,
                 mode         = 'RO',
                 pollInterval = 1,
-            )) 
+            ))
 
             self.add(pr.RemoteVariable(
                 name         = f'RemoteReadAddress[{i}]',
@@ -139,7 +139,7 @@ class AxiGpuAsyncCore(pr.Device):
                 bitSize      = 32,
                 mode         = 'RO',
                 pollInterval = 1,
-            )) 
+            ))
 
             self.add(pr.RemoteVariable(
                 name         = f'RemoteReadSize[{i}]',
@@ -147,7 +147,7 @@ class AxiGpuAsyncCore(pr.Device):
                 bitSize      = 32,
                 mode         = 'RO',
                 pollInterval = 1,
-            )) 
+            ))
 
             self.add(pr.RemoteVariable(
                 name         = f'TotLatency[{i}]',
@@ -156,7 +156,7 @@ class AxiGpuAsyncCore(pr.Device):
                 disp         = '{}',
                 mode         = 'RO',
                 pollInterval = 1,
-            )) 
+            ))
 
             self.add(pr.RemoteVariable(
                 name         = f'GpuLatency[{i}]',
@@ -165,7 +165,7 @@ class AxiGpuAsyncCore(pr.Device):
                 disp         = '{}',
                 mode         = 'RO',
                 pollInterval = 1,
-            )) 
+            ))
 
             self.add(pr.RemoteVariable(
                 name         = f'WrLatency[{i}]',
@@ -174,7 +174,7 @@ class AxiGpuAsyncCore(pr.Device):
                 disp         = '{}',
                 mode         = 'RO',
                 pollInterval = 1,
-            )) 
+            ))
 
             self.add(pr.RemoteVariable(
                 name         = f'RdLatency[{i}]',
@@ -183,8 +183,7 @@ class AxiGpuAsyncCore(pr.Device):
                 disp         = '{}',
                 mode         = 'RO',
                 pollInterval = 1,
-            )) 
+            ))
 
     def countReset(self):
-        self.CountReset()        
-
+        self.CountReset()

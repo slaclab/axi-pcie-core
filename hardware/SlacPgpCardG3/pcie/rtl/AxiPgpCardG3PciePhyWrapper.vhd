@@ -5,11 +5,11 @@
 -- Description: PgpCardG3 Wrapper for AXI PCIe Core
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -49,14 +49,14 @@ entity AxiPgpCardG3PciePhyWrapper is
       phyWriteSlave  : out AxiLiteWriteSlaveType;
       -- Interrupt Interface
       dmaIrq         : in  sl;
-      -- PCIe Ports 
+      -- PCIe Ports
       pciRstL        : in  sl;
       pciRefClkP     : in  sl;
       pciRefClkN     : in  sl;
       pciRxP         : in  slv(3 downto 0);
       pciRxN         : in  slv(3 downto 0);
       pciTxP         : out slv(3 downto 0);
-      pciTxN         : out slv(3 downto 0));  
+      pciTxN         : out slv(3 downto 0));
 end AxiPgpCardG3PciePhyWrapper;
 
 architecture mapping of AxiPgpCardG3PciePhyWrapper is
@@ -172,7 +172,7 @@ architecture mapping of AxiPgpCardG3PciePhyWrapper is
    signal sysClk      : sl;
    signal sysRst      : sl;
    signal mmcmLock    : sl;
-   
+
 begin
 
    axiClk <= clk;
@@ -187,17 +187,17 @@ begin
          IB    => pciRefClkN,
          CEB   => '0',
          O     => pciRefClk,
-         ODIV2 => open);        
+         ODIV2 => open);
 
    U_RstSync0 : entity surf.RstSync
       generic map (
          TPD_G          => TPD_G,
          IN_POLARITY_G  => '0',
-         OUT_POLARITY_G => '0') 
+         OUT_POLARITY_G => '0')
       port map (
          clk      => clk,
          asyncRst => pciRstL,
-         syncRst  => pciRstLSync);               
+         syncRst  => pciRstLSync);
 
    process(clk)
    begin
@@ -212,15 +212,15 @@ begin
       generic map (
          TPD_G          => TPD_G,
          IN_POLARITY_G  => '1',
-         OUT_POLARITY_G => '1') 
+         OUT_POLARITY_G => '1')
       port map (
          clk      => sysClk,
          asyncRst => rst,
-         syncRst  => sysRst);    
+         syncRst  => sysRst);
 
-   ---------------------------------------- 
+   ----------------------------------------
    -- Synchronize the AXI-Lite transactions
-   ---------------------------------------- 
+   ----------------------------------------
    U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
          TPD_G => TPD_G)
@@ -238,7 +238,7 @@ begin
          mAxiReadMaster  => sysReadMaster,
          mAxiReadSlave   => sysReadSlave,
          mAxiWriteMaster => sysWriteMaster,
-         mAxiWriteSlave  => sysWriteSlave); 
+         mAxiWriteSlave  => sysWriteSlave);
 
    -------------------
    -- AXI PCIe IP Core
@@ -305,7 +305,7 @@ begin
          m_axi_wvalid      => regWriteMaster.wvalid,
          m_axi_wready      => regWriteSlave.wready,
          -- m_axi_bresp    => regWriteSlave.bresp(1 downto 0),
-         m_axi_bresp       => AXI_RESP_OK_C, -- Always respond OK   
+         m_axi_bresp       => AXI_RESP_OK_C, -- Always respond OK
          m_axi_bvalid      => regWriteSlave.bvalid,
          m_axi_bready      => regWriteMaster.bready,
          m_axi_araddr      => regReadMaster.araddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
@@ -319,7 +319,7 @@ begin
          m_axi_arcache     => regReadMaster.arcache,
          m_axi_rdata       => regReadSlave.rdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
          -- m_axi_rresp    => regReadSlave.rresp(1 downto 0),
-         m_axi_rresp       => AXI_RESP_OK_C, -- Always respond OK   
+         m_axi_rresp       => AXI_RESP_OK_C, -- Always respond OK
          m_axi_rlast       => regReadSlave.rlast,
          m_axi_rvalid      => regReadSlave.rvalid,
          m_axi_rready      => regReadMaster.rready,

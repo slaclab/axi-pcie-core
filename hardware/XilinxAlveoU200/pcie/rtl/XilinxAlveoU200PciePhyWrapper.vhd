@@ -5,11 +5,11 @@
 -- Description: Wrapper for AXI PCIe Core
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ use axi_pcie_core.AxiPciePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-library axi_pcie_core; 
+library axi_pcie_core;
 
 entity XilinxAlveoU200PciePhyWrapper is
    generic (
@@ -53,7 +53,7 @@ entity XilinxAlveoU200PciePhyWrapper is
       phyWriteSlave  : out AxiLiteWriteSlaveType;
       -- Interrupt Interface
       dmaIrq         : in  sl;
-      -- PCIe Ports 
+      -- PCIe Ports
       pciRstL        : in  sl;
       pciRefClkP     : in  sl;
       pciRefClkN     : in  sl;
@@ -228,7 +228,7 @@ begin
    -------------------
    U_AxiPcie : XilinxAlveoU200PciePhy
       port map (
-         -- Clocks and Resets         
+         -- Clocks and Resets
          sys_clk         => refClk,
          sys_clk_gt      => refClkGt,
          sys_rst_n       => pciRstL,
@@ -290,7 +290,7 @@ begin
          m_axib_wready   => regWriteSlave.wready,
          m_axib_bid      => regWriteSlave.bid(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0),
          -- m_axi_bresp         => regWriteSlave.bresp(1 downto 0),
-         m_axib_bresp    => AXI_RESP_OK_C,  -- Always respond OK   
+         m_axib_bresp    => AXI_RESP_OK_C,  -- Always respond OK
          m_axib_bvalid   => regWriteSlave.bvalid,
          m_axib_bready   => regWriteMaster.bready,
          m_axib_araddr   => regReadMaster.araddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
@@ -305,7 +305,7 @@ begin
          m_axib_rid      => regReadSlave.rid(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0),
          m_axib_rdata    => regReadSlave.rdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
          -- m_axi_rresp         => regReadSlave.rresp(1 downto 0),
-         m_axib_rresp    => AXI_RESP_OK_C,  -- Always respond OK    
+         m_axib_rresp    => AXI_RESP_OK_C,  -- Always respond OK
          m_axib_rlast    => regReadSlave.rlast,
          m_axib_rvalid   => regReadSlave.rvalid,
          m_axib_rready   => regReadMaster.rready,

@@ -24,7 +24,7 @@ loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU250App.xdc"
 loadRuckusTcl "$::DIR_PATH/pcie"
 
 #######################################################################################
-# Note: The hardware/XilinxAlveoU250/ddr is not included in this ruckus.tcl.  
+# Note: The hardware/XilinxAlveoU250/ddr is not included in this ruckus.tcl.
 #       You can use your user ruckus.tcl script to load
 #       either of these "optional" modules into your firmware target
 #######################################################################################

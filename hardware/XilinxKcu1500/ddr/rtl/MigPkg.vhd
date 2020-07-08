@@ -5,11 +5,11 @@
 -- Description: Package file for MIG Core
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -30,7 +30,7 @@ package MigPkg is
       ADDR_WIDTH_C => 32,               -- 4GB per MIG interface (16GB total)
       DATA_BYTES_C => 64,               -- 512-bit data interface
       ID_BITS_C    => 4,                -- Up to 16 IDS
-      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface  
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface
 
    -- DDR Port Types
    type DdrOutType is record

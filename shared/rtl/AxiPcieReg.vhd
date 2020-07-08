@@ -5,11 +5,11 @@
 -- Description: AXI-Lite Crossbar and Register Access
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -70,7 +70,7 @@ entity AxiPcieReg is
       -- Application Force reset
       cardResetIn         : in  sl;
       cardResetOut        : out sl;
-      -- BPI Boot Memory Ports 
+      -- BPI Boot Memory Ports
       bpiAddr             : out slv(28 downto 0);
       bpiAdv              : out sl;
       bpiClk              : out sl;
@@ -81,7 +81,7 @@ entity AxiPcieReg is
       bpiTri              : out sl;
       bpiDin              : out slv(15 downto 0);
       bpiDout             : in  slv(15 downto 0)   := x"FFFF";
-      -- SPI Boot Memory Ports 
+      -- SPI Boot Memory Ports
       spiCsL              : out slv(1 downto 0);
       spiSck              : out slv(1 downto 0);
       spiMosi             : out slv(1 downto 0);
@@ -202,7 +202,7 @@ begin
 
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
-   ---------------------------------------------------------------------------------------------   
+   ---------------------------------------------------------------------------------------------
    process(appClkFreq, appResetSync)
       variable i : natural;
    begin
@@ -260,11 +260,11 @@ begin
          when others             => userValues(6)(7 downto 4) <= x"F";
       end case;
 
-      -- Application Reset 
+      -- Application Reset
       userValues(6)(1) <= ite(DMA_AXIS_CONFIG_G.TSTRB_EN_C, '1', '0');
       userValues(6)(0) <= appResetSync;
 
-      -- PCIE PHY AXI Configuration   
+      -- PCIE PHY AXI Configuration
       userValues(7)(31 downto 24) <= toSlv(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C, 8);
       userValues(7)(23 downto 16) <= toSlv(AXI_PCIE_CONFIG_C.DATA_BYTES_C, 8);
       userValues(7)(15 downto 8)  <= toSlv(AXI_PCIE_CONFIG_C.ID_BITS_C, 8);
@@ -300,7 +300,7 @@ begin
    regWriteSlave <= maskWriteSlave;
    regReadSlave  <= maskReadSlave;
 
-   -------------------------          
+   -------------------------
    -- AXI-to-AXI-Lite Bridge
    -------------------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
@@ -377,7 +377,7 @@ begin
 
    --------------------------
    -- AXI-Lite Version Module
-   --------------------------   
+   --------------------------
    U_Version : entity surf.AxiVersion
       generic map (
          TPD_G           => TPD_G,
@@ -400,9 +400,9 @@ begin
          -- Optional: user values
          userValues     => userValues);
 
-   -----------------------------         
+   -----------------------------
    -- AXI-Lite Boot Flash Module
-   -----------------------------        
+   -----------------------------
    GEN_BPI : if (BOOT_PROM_G = "BPI") and (not ROGUE_SIM_EN_G) generate
 
       U_BootProm : entity surf.AxiMicronP30Reg
@@ -410,7 +410,7 @@ begin
             TPD_G          => TPD_G,
             AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
          port map (
-            -- FLASH Interface 
+            -- FLASH Interface
             flashAddr      => bpiAddress,
             flashAdv       => bpiAdv,
             flashClk       => bpiClk,
@@ -468,7 +468,7 @@ begin
                sck            => spiSck(i),
                mosi           => spiMosi(i),
                miso           => spiMiso(i),
-               -- Shared SPI Interface 
+               -- Shared SPI Interface
                busyIn         => spiBusyIn(i),
                busyOut        => spiBusyOut(i),
                -- AXI-Lite Register Interface
@@ -532,9 +532,9 @@ begin
    phyReadMaster                <= axilReadMasters(PHY_INDEX_C);
    axilReadSlaves(PHY_INDEX_C)  <= phyReadSlave;
 
-   --------------------------------------   
+   --------------------------------------
    -- Combine APP AXI-Lite buses together
-   --------------------------------------   
+   --------------------------------------
    U_APP_XBAR : entity surf.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
@@ -556,7 +556,7 @@ begin
 
    ----------------------------------
    -- Map the AXI-Lite to Application
-   ----------------------------------               
+   ----------------------------------
    U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
          TPD_G           => TPD_G,

@@ -6,11 +6,11 @@
 -- https://confluence.slac.stanford.edu/display/AIRTRACK/PC_260_101_03_C03
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -44,9 +44,9 @@ entity AxiPciePgpCardG3Core is
       INT_PIPE_STAGES_G    : natural range 0 to 1        := 0;
       PIPE_STAGES_G        : natural range 0 to 1        := 0);
    port (
-      ------------------------      
+      ------------------------
       --  Top Level Interfaces
-      ------------------------    
+      ------------------------
       -- DMA Interfaces (dmaClk domain)
       dmaClk         : out   sl;        -- 125 MHz
       dmaRst         : out   sl;
@@ -64,7 +64,7 @@ entity AxiPciePgpCardG3Core is
       -------------------
       --  Top Level Ports
       -------------------
-      -- Boot Memory Ports 
+      -- Boot Memory Ports
       flashAddr      : out   slv(28 downto 0);
       flashData      : inout slv(15 downto 0);
       flashAdv       : out   sl;
@@ -73,7 +73,7 @@ entity AxiPciePgpCardG3Core is
       flashCeL       : out   sl;
       flashOeL       : out   sl;
       flashWeL       : out   sl;
-      -- PCIe Ports 
+      -- PCIe Ports
       pciRstL        : in    sl;
       pciRefClkP     : in    sl;
       pciRefClkN     : in    sl;
@@ -131,7 +131,7 @@ begin
 
    ---------------
    -- AXI PCIe PHY
-   ---------------   
+   ---------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
       U_AxiPciePhy : entity axi_pcie_core.AxiPgpCardG3PciePhyWrapper
          generic map (
@@ -154,7 +154,7 @@ begin
             phyWriteSlave  => phyWriteSlave,
             -- Interrupt Interface
             dmaIrq         => dmaIrq,
-            -- PCIe Ports 
+            -- PCIe Ports
             pciRstL        => pciRstL,
             pciRefClkP     => pciRefClkP,
             pciRefClkN     => pciRefClkN,
@@ -176,7 +176,7 @@ begin
 
    ---------------
    -- AXI PCIe REG
-   --------------- 
+   ---------------
    U_REG : entity axi_pcie_core.AxiPcieReg
       generic map (
          TPD_G                => TPD_G,
@@ -206,7 +206,7 @@ begin
          phyReadSlave        => phyReadSlave,
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
-         -- (Optional) Application AXI-Lite Interfaces      
+         -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,
          appReadMaster       => appReadMaster,
@@ -216,7 +216,7 @@ begin
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset,
-         -- Boot Memory Ports 
+         -- Boot Memory Ports
          bpiAddr             => flashAddr,
          bpiAdv              => flashAdv,
          bpiClk              => flashClk,
@@ -235,12 +235,12 @@ begin
             O  => flashDout(i),         -- Buffer output
             IO => flashData(i),  -- Buffer inout port (connect directly to top-level port)
             I  => flashDin(i),          -- Buffer input
-            T  => flashTri);  -- 3-state enable input, high=input, low=output     
+            T  => flashTri);  -- 3-state enable input, high=input, low=output
    end generate GEN_IOBUF;
 
    ---------------
    -- AXI PCIe DMA
-   ---------------   
+   ---------------
    U_AxiPcieDma : entity axi_pcie_core.AxiPcieDma
       generic map (
          TPD_G                => TPD_G,
@@ -249,7 +249,7 @@ begin
          ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
          DMA_SIZE_G           => DMA_SIZE_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_C,
-         DESC_ARB_G           => false,  -- Round robin to help with timing      
+         DESC_ARB_G           => false,  -- Round robin to help with timing
          INT_PIPE_STAGES_G    => INT_PIPE_STAGES_G,
          PIPE_STAGES_G        => PIPE_STAGES_G)
       port map (

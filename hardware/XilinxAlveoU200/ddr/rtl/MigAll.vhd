@@ -5,11 +5,11 @@
 -- Description: Wrapper for the MIG core
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -51,7 +51,7 @@ begin
 
    -----------------
    -- MIG[0] IP Core
-   -----------------         
+   -----------------
    U_Mig0 : entity axi_pcie_core.Mig0
       generic map (
          TPD_G => TPD_G)
@@ -73,7 +73,7 @@ begin
 
    -----------------
    -- MIG[1] IP Core
-   -----------------         
+   -----------------
    GEN_MIG1 : if (NUM_LANE_G >= 2) generate
       U_Mig1 : entity axi_pcie_core.Mig1
          generic map (
@@ -97,7 +97,7 @@ begin
 
    -----------------
    -- MIG[2] IP Core
-   -----------------         
+   -----------------
    GEN_MIG2 : if (NUM_LANE_G >= 3) generate
       U_Mig2 : entity axi_pcie_core.Mig2
          generic map (
@@ -128,7 +128,7 @@ begin
             TPD_G => TPD_G)
          port map (
             extRst         => extRst,
-            -- AXI MEM Interface 
+            -- AXI MEM Interface
             axiClk         => axiClk(3),
             axiRst         => axiRst(3),
             axiReady       => axiReady(3),

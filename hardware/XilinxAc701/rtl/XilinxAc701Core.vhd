@@ -6,11 +6,11 @@
 -- https://www.xilinx.com/products/boards-and-kits/ac701.html
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -45,9 +45,9 @@ entity XilinxAc701Core is
       INT_PIPE_STAGES_G    : natural range 0 to 1        := 1;
       PIPE_STAGES_G        : natural range 0 to 1        := 1);
    port (
-      ------------------------      
+      ------------------------
       --  Top Level Interfaces
-      ------------------------    
+      ------------------------
       -- DMA Interfaces (dmaClk domain)
       dmaClk          : out sl;         -- 125 MHz
       dmaRst          : out sl;
@@ -65,14 +65,14 @@ entity XilinxAc701Core is
       appWriteSlave   : in  AxiLiteWriteSlaveType;
       -------------------
       --  Top Level Ports
-      -------------------       
+      -------------------
       -- System Ports
       emcClk          : in  sl;
       -- Boot Memory Ports
       bootCsL         : out sl;
       bootMosi        : out sl;
       bootMiso        : in  sl;
-      -- PCIe Ports 
+      -- PCIe Ports
       pciRstL         : in  sl;
       pciRefClkP      : in  sl;
       pciRefClkN      : in  sl;
@@ -134,7 +134,7 @@ begin
 
    ---------------
    -- AXI PCIe PHY
-   ---------------   
+   ---------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
       U_AxiPciePhy : entity axi_pcie_core.XilinxAc701PciePhyWrapper
          generic map (
@@ -157,7 +157,7 @@ begin
             phyWriteSlave  => phyWriteSlave,
             -- Interrupt Interface
             dmaIrq         => dmaIrq,
-            -- PCIe Ports 
+            -- PCIe Ports
             pciRstL        => pciRstL,
             pciRefClkP     => pciRefClkP,
             pciRefClkN     => pciRefClkN,
@@ -179,7 +179,7 @@ begin
 
    ---------------
    -- AXI PCIe REG
-   --------------- 
+   ---------------
    U_REG : entity axi_pcie_core.AxiPcieReg
       generic map (
          TPD_G                => TPD_G,
@@ -209,7 +209,7 @@ begin
          phyReadSlave        => phyReadSlave,
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
-         -- (Optional) Application AXI-Lite Interfaces      
+         -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,
          appReadMaster       => appReadMaster,
@@ -219,7 +219,7 @@ begin
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset,
-         -- SPI Boot Memory Ports 
+         -- SPI Boot Memory Ports
          spiCsL              => csL,
          spiSck              => sck,
          spiMosi             => mosi,
@@ -246,13 +246,13 @@ begin
          USRCCLKO  => userCclk,         -- 1-bit input: User CCLK input
          USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
          USRDONEO  => '1',  -- 1-bit input: User DONE pin output control
-         USRDONETS => '1');  -- 1-bit input: User DONE 3-state enable output              
+         USRDONETS => '1');  -- 1-bit input: User DONE 3-state enable output
 
    userCclk <= emcClk when(eos = '0') else sck(0);
 
    ---------------
    -- AXI PCIe DMA
-   ---------------   
+   ---------------
    U_AxiPcieDma : entity axi_pcie_core.AxiPcieDma
       generic map (
          TPD_G                => TPD_G,

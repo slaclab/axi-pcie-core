@@ -6,11 +6,11 @@
 -- https://www.xilinx.com/products/boards-and-kits/kcu1500.html
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -44,7 +44,7 @@ entity XilinxKcu1500Core is
       DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (
-      ------------------------      
+      ------------------------
       --  Top Level Interfaces
       ------------------------
       userClk156      : out sl;
@@ -75,7 +75,7 @@ entity XilinxKcu1500Core is
       appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
-      -------------------      
+      -------------------
       -- System Ports
       emcClk          : in  sl;
       userClkP        : in  sl;
@@ -90,13 +90,13 @@ entity XilinxKcu1500Core is
       qsfp1LpMode     : out sl;
       qsfp1ModSelL    : out sl;
       qsfp1ModPrsL    : in  sl                    := '0';
-      -- Boot Memory Ports 
+      -- Boot Memory Ports
       flashCsL        : out sl;
       flashMosi       : out sl;
       flashMiso       : in  sl;
       flashHoldL      : out sl;
       flashWp         : out sl;
-      -- PCIe Ports 
+      -- PCIe Ports
       pciRstL         : in  sl;
       pciRefClkP      : in  sl;
       pciRefClkN      : in  sl;
@@ -180,7 +180,7 @@ begin
 
    ---------------
    -- AXI PCIe PHY
-   ---------------   
+   ---------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
       U_AxiPciePhy : entity axi_pcie_core.XilinxKcu1500PciePhyWrapper
@@ -204,7 +204,7 @@ begin
             phyWriteSlave  => phyWriteSlave,
             -- Interrupt Interface
             dmaIrq         => dmaIrq,
-            -- PCIe Ports 
+            -- PCIe Ports
             pciRstL        => pciRstL,
             pciRefClkP     => pciRefClkP,
             pciRefClkN     => pciRefClkN,
@@ -241,7 +241,7 @@ begin
 
    ---------------
    -- AXI PCIe REG
-   --------------- 
+   ---------------
    U_REG : entity axi_pcie_core.AxiPcieReg
       generic map (
          TPD_G                => TPD_G,
@@ -283,7 +283,7 @@ begin
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset,
-         -- SPI Boot Memory Ports 
+         -- SPI Boot Memory Ports
          spiCsL              => bootCsL,
          spiSck              => bootSck,
          spiMosi             => bootMosi,
@@ -326,7 +326,7 @@ begin
 
    ---------------
    -- AXI PCIe DMA
-   ---------------   
+   ---------------
    U_AxiPcieDma : entity axi_pcie_core.AxiPcieDma
       generic map (
          TPD_G                => TPD_G,

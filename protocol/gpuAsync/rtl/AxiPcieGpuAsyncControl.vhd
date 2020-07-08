@@ -5,11 +5,11 @@
 -- Description: Support for GpuDirectAsync like data transport to/from a GPU
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -56,7 +56,7 @@ entity AxiPcieGpuAsyncControl is
       dmaWrDescAck      : out AxiWriteDmaDescAckType;
       dmaWrDescRet      : in  AxiWriteDmaDescRetType;
       dmaWrDescRetAck   : out sl;
-   
+
       -- DMA Read Engine
       dmaRdDescReq      : out AxiReadDmaDescReqType;
       dmaRdDescAck      : in  sl;
@@ -177,9 +177,9 @@ begin
          mAxiWriteSlave  => writeSlave);
 
 
-   --------------------- 
+   ---------------------
    -- State Machine
-   --------------------- 
+   ---------------------
    comb : process (axiRst, r, readMaster, writeMaster, dmaWrDescReq, dmaWrDescRet, dmaRdDescAck, dmaRdDescRet ) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndPointType;
@@ -267,7 +267,7 @@ begin
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.writeSlave, v.readSlave, AXI_RESP_DECERR_C);
-      --------------------------------------------------------------------------------------------   
+      --------------------------------------------------------------------------------------------
 
       -- rx State Machine
       case r.rxState is
@@ -331,7 +331,7 @@ begin
             end if;
       end case;
 
-      --------------------------------------------------------------------------------------------   
+      --------------------------------------------------------------------------------------------
 
       -- tx State Machine
       case r.txState is
@@ -384,7 +384,7 @@ begin
 
       end case;
 
-      --------------------------------------------------------------------------------------------   
+      --------------------------------------------------------------------------------------------
       -- Outputs
       awCache         <= r.awCache;
       arCache         <= r.awCache;

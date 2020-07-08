@@ -10,7 +10,7 @@ if { [info exists ::env(OVERRIDE_SUBMODULE_LOCKS)] != 1 || $::env(OVERRIDE_SUBMO
    puts "OVERRIDE_SUBMODULE_LOCKS != 0"
    puts "Ignoring the submodule locks in axi-pcie-core/ruckus.tcl"
    puts "*********************************************************\n\n"
-}   
+}
 
 # Check for version 2018.3 of Vivado (or later)
 if { [VersionCheck 2018.3] < 0 } {exit -1}

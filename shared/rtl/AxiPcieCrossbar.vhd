@@ -5,11 +5,11 @@
 -- Description: AXI DMA Crossbar
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -62,9 +62,9 @@ begin
    axiReadMasters(0)  <= sAxiReadMasters(0);
    sAxiReadSlaves(0)  <= axiReadSlaves(0);
 
-   ----------------------  
+   ----------------------
    -- AXI Resizer Modules
-   ----------------------  
+   ----------------------
    GEN_VEC : for i in DMA_SIZE_G downto 1 generate
 
       U_Resizer : entity axi_pcie_core.AxiPcieResizer

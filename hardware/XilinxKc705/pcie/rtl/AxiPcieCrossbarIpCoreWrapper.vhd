@@ -5,11 +5,11 @@
 -- Description: AXI DMA Crossbar IP Core Wrapper
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -811,7 +811,7 @@ begin
          S08_AXI_RLAST        => sAxiReadSlaves(8).rlast,
          S08_AXI_RVALID       => sAxiReadSlaves(8).rvalid,
          S08_AXI_RREADY       => sAxiReadMasters(8).rready,
-         -- MASTER         
+         -- MASTER
          M00_AXI_ARESET_OUT_N => open,
          M00_AXI_ACLK         => axiClk,
          M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),

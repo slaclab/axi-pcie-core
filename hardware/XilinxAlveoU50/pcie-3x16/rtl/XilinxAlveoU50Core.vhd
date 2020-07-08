@@ -47,40 +47,41 @@ entity XilinxAlveoU50Core is
       ------------------------      
       --  Top Level Interfaces
       ------------------------
-      userClk156     : out sl;
+      userClk156      : out sl;
       -- DMA Interfaces  (dmaClk domain)
-      dmaClk         : out sl;
-      dmaRst         : out sl;
-      dmaObMasters   : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaClk          : out sl;
+      dmaRst          : out sl;
+      dmaBuffGrpPause : out slv(7 downto 0);
+      dmaObMasters    : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- PIP Interface [0x00080000:0009FFFF] (dmaClk domain)
-      pipIbMaster    : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipIbSlave     : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
-      pipObMaster    : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipObSlave     : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipIbMaster     : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave      : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipObMaster     : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipObSlave      : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk         : in  sl                    := '0';
-      appRst         : in  sl                    := '1';
-      appReadMaster  : out AxiLiteReadMasterType;
-      appReadSlave   : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      appWriteMaster : out AxiLiteWriteMasterType;
-      appWriteSlave  : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      appClk          : in  sl                    := '0';
+      appRst          : in  sl                    := '1';
+      appReadMaster   : out AxiLiteReadMasterType;
+      appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      appWriteMaster  : out AxiLiteWriteMasterType;
+      appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------      
       -- System Ports
-      userClkP       : in  sl;
-      userClkN       : in  sl;
+      userClkP        : in  sl;
+      userClkN        : in  sl;
       -- PCIe Ports 
-      pciRstL        : in  sl;
-      pciRefClkP     : in  slv(1 downto 0);
-      pciRefClkN     : in  slv(1 downto 0);
-      pciRxP         : in  slv(15 downto 0);
-      pciRxN         : in  slv(15 downto 0);
-      pciTxP         : out slv(15 downto 0);
-      pciTxN         : out slv(15 downto 0));
+      pciRstL         : in  sl;
+      pciRefClkP      : in  slv(1 downto 0);
+      pciRefClkN      : in  slv(1 downto 0);
+      pciRxP          : in  slv(15 downto 0);
+      pciRxN          : in  slv(15 downto 0);
+      pciTxP          : out slv(15 downto 0);
+      pciTxN          : out slv(15 downto 0));
 end XilinxAlveoU50Core;
 
 architecture mapping of XilinxAlveoU50Core is
@@ -298,8 +299,7 @@ begin
          DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DESC_SYNTH_MODE_G    => "xpm",
-         DESC_MEMORY_TYPE_G   => "uram",
-         DESC_ARB_G           => false)  -- Round robin to help with timing
+         DESC_MEMORY_TYPE_G   => "uram")
       port map (
          axiClk           => sysClock,
          axiRst           => sysReset,
@@ -317,6 +317,7 @@ begin
          axilWriteSlaves  => dmaCtrlWriteSlaves,
          -- DMA Interfaces
          dmaIrq           => dmaIrq,
+         dmaBuffGrpPause  => dmaBuffGrpPause,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,
          dmaIbMasters     => dmaIbMasters,

@@ -40,6 +40,7 @@ entity AxiPciePgpCardG3Core is
       ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
       BUILD_INFO_G         : BuildInfoType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
+      DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
       DMA_SIZE_G           : positive range 1 to 8       := 1;
       INT_PIPE_STAGES_G    : natural range 0 to 1        := 0;
       PIPE_STAGES_G        : natural range 0 to 1        := 0);
@@ -48,39 +49,40 @@ entity AxiPciePgpCardG3Core is
       --  Top Level Interfaces
       ------------------------    
       -- DMA Interfaces (dmaClk domain)
-      dmaClk         : out   sl;        -- 125 MHz
-      dmaRst         : out   sl;
-      dmaObMasters   : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves    : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters   : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves    : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaClk          : out   sl;       -- 125 MHz
+      dmaRst          : out   sl;
+      dmaBuffGrpPause : out   slv(7 downto 0);
+      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk         : in    sl;
-      appRst         : in    sl;
-      appReadMaster  : out   AxiLiteReadMasterType;
-      appReadSlave   : in    AxiLiteReadSlaveType;
-      appWriteMaster : out   AxiLiteWriteMasterType;
-      appWriteSlave  : in    AxiLiteWriteSlaveType;
+      appClk          : in    sl;
+      appRst          : in    sl;
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType;
       -------------------
       --  Top Level Ports
       -------------------
       -- Boot Memory Ports 
-      flashAddr      : out   slv(28 downto 0);
-      flashData      : inout slv(15 downto 0);
-      flashAdv       : out   sl;
-      flashClk       : out   sl;
-      flashRstL      : out   sl;
-      flashCeL       : out   sl;
-      flashOeL       : out   sl;
-      flashWeL       : out   sl;
+      flashAddr       : out   slv(28 downto 0);
+      flashData       : inout slv(15 downto 0);
+      flashAdv        : out   sl;
+      flashClk        : out   sl;
+      flashRstL       : out   sl;
+      flashCeL        : out   sl;
+      flashOeL        : out   sl;
+      flashWeL        : out   sl;
       -- PCIe Ports 
-      pciRstL        : in    sl;
-      pciRefClkP     : in    sl;
-      pciRefClkN     : in    sl;
-      pciRxP         : in    slv(3 downto 0);
-      pciRxN         : in    slv(3 downto 0);
-      pciTxP         : out   slv(3 downto 0);
-      pciTxN         : out   slv(3 downto 0));
+      pciRstL         : in    sl;
+      pciRefClkP      : in    sl;
+      pciRefClkN      : in    sl;
+      pciRxP          : in    slv(3 downto 0);
+      pciRxN          : in    slv(3 downto 0);
+      pciTxP          : out   slv(3 downto 0);
+      pciTxN          : out   slv(3 downto 0));
 end AxiPciePgpCardG3Core;
 
 architecture mapping of AxiPciePgpCardG3Core is
@@ -248,8 +250,8 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
          DMA_SIZE_G           => DMA_SIZE_G,
-         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_C,
-         DESC_ARB_G           => false,  -- Round robin to help with timing      
+         DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
+         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          INT_PIPE_STAGES_G    => INT_PIPE_STAGES_G,
          PIPE_STAGES_G        => PIPE_STAGES_G)
       port map (
@@ -267,6 +269,7 @@ begin
          axilWriteSlaves  => dmaCtrlWriteSlaves,
          -- DMA Interfaces
          dmaIrq           => dmaIrq,
+         dmaBuffGrpPause  => dmaBuffGrpPause,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,
          dmaIbMasters     => dmaIbMasters,

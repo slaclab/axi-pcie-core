@@ -251,7 +251,7 @@ begin
          ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
          DMA_SIZE_G           => DMA_SIZE_G,
          DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
-         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
+         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_C,
          INT_PIPE_STAGES_G    => INT_PIPE_STAGES_G,
          PIPE_STAGES_G        => PIPE_STAGES_G)
       port map (

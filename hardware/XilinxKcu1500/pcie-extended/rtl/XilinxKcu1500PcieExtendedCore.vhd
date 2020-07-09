@@ -41,41 +41,43 @@ entity XilinxKcu1500PcieExtendedCore is
       BUILD_INFO_G         : BuildInfoType;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000001";
+      DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (
       ------------------------
       --  Top Level Interfaces
       ------------------------
       -- DMA Interfaces  (dmaClk domain)
-      dmaClk         : out sl;
-      dmaRst         : out sl;
-      dmaObMasters   : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaClk          : out sl;
+      dmaRst          : out sl;
+      dmaBuffGrpPause : out slv(7 downto 0);
+      dmaObMasters    : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- PIP Interface [0x00080000:0009FFFF] (dmaClk domain)
-      pipIbMaster    : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipIbSlave     : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
-      pipObMaster    : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipObSlave     : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipIbMaster     : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave      : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipObMaster     : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipObSlave      : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk         : in  sl                    := '0';
-      appRst         : in  sl                    := '1';
-      appReadMaster  : out AxiLiteReadMasterType;
-      appReadSlave   : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      appWriteMaster : out AxiLiteWriteMasterType;
-      appWriteSlave  : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      appClk          : in  sl                    := '0';
+      appRst          : in  sl                    := '1';
+      appReadMaster   : out AxiLiteReadMasterType;
+      appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      appWriteMaster  : out AxiLiteWriteMasterType;
+      appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
       -- Extended PCIe Ports
-      pciRstL        : in  sl;
-      pciExtRefClkP  : in  sl;
-      pciExtRefClkN  : in  sl;
-      pciExtRxP      : in  slv(7 downto 0);
-      pciExtRxN      : in  slv(7 downto 0);
-      pciExtTxP      : out slv(7 downto 0);
-      pciExtTxN      : out slv(7 downto 0));
+      pciRstL         : in  sl;
+      pciExtRefClkP   : in  sl;
+      pciExtRefClkN   : in  sl;
+      pciExtRxP       : in  slv(7 downto 0);
+      pciExtRxN       : in  slv(7 downto 0);
+      pciExtTxP       : out slv(7 downto 0);
+      pciExtTxN       : out slv(7 downto 0));
 end XilinxKcu1500PcieExtendedCore;
 
 architecture mapping of XilinxKcu1500PcieExtendedCore is
@@ -242,8 +244,8 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
          DMA_SIZE_G           => DMA_SIZE_G,
-         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
-         DESC_ARB_G           => false)  -- Round robin to help with timing
+         DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
+         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G)
       port map (
          axiClk           => sysClock,
          axiRst           => sysReset,
@@ -261,6 +263,7 @@ begin
          axilWriteSlaves  => dmaCtrlWriteSlaves,
          -- DMA Interfaces
          dmaIrq           => dmaIrq,
+         dmaBuffGrpPause  => dmaBuffGrpPause,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,
          dmaIbMasters     => dmaIbMasters,

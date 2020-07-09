@@ -43,7 +43,7 @@ entity AxiPcieDma is
       PIPE_STAGES_G        : natural range 0 to 1         := 1;
       DESC_SYNTH_MODE_G    : string                       := "inferred";
       DESC_MEMORY_TYPE_G   : string                       := "block";
-      DESC_ARB_G           : boolean                      := true);
+      DESC_ARB_G           : boolean                      := false);  -- false = Round robin to help with timing
    port (
       -- Clock and Reset
       axiClk           : in  sl;
@@ -68,6 +68,7 @@ entity AxiPcieDma is
       axilWriteSlaves  : out AxiLiteWriteSlaveArray(2 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_OK_C);
       -- DMA Interfaces (axiClk domain)
       dmaIrq           : out sl                                 := '0';
+      dmaBuffGrpPause  : out slv(7 downto 0)                    := (others => '0');
       dmaObMasters     : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaObSlaves      : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       dmaIbMasters     : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
@@ -80,7 +81,7 @@ architecture mapping of AxiPcieDma is
       TSTRB_EN_C    => false,
       TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
       TDEST_BITS_C  => 8,
-      TID_BITS_C    => 0,
+      TID_BITS_C    => 3,
       TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
@@ -170,6 +171,7 @@ begin
             axilWriteMaster => axilWriteMasters(0),
             axilWriteSlave  => axilWriteSlaves(0),
             interrupt       => dmaIrq,
+            buffGrpPause    => dmaBuffGrpPause,
             -- AXI Stream Interface
             sAxisMasters    => sAxisMasters,
             sAxisSlaves     => sAxisSlaves,

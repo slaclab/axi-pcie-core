@@ -81,7 +81,7 @@ architecture mapping of AxiPcieDma is
       TSTRB_EN_C    => false,
       TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
       TDEST_BITS_C  => 8,
-      TID_BITS_C    => 0,
+      TID_BITS_C    => 3,
       TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);

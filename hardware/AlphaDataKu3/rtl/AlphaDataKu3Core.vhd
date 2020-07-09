@@ -21,11 +21,11 @@
 --
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -56,42 +56,44 @@ entity AlphaDataKu3Core is
       BUILD_INFO_G         : BuildInfoType;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
+      DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (
-      ------------------------      
+      ------------------------
       --  Top Level Interfaces
       ------------------------
       -- DMA Interfaces  (dmaClk domain)
-      dmaClk         : out sl;
-      dmaRst         : out sl;
-      dmaObMasters   : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves    : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters   : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves    : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaClk          : out sl;
+      dmaRst          : out sl;
+      dmaBuffGrpPause : out slv(7 downto 0);
+      dmaObMasters    : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk         : in  sl;
-      appRst         : in  sl;
-      appReadMaster  : out AxiLiteReadMasterType;
-      appReadSlave   : in  AxiLiteReadSlaveType;
-      appWriteMaster : out AxiLiteWriteMasterType;
-      appWriteSlave  : in  AxiLiteWriteSlaveType;
+      appClk          : in  sl;
+      appRst          : in  sl;
+      appReadMaster   : out AxiLiteReadMasterType;
+      appReadSlave    : in  AxiLiteReadSlaveType;
+      appWriteMaster  : out AxiLiteWriteMasterType;
+      appWriteSlave   : in  AxiLiteWriteSlaveType;
       -------------------
       --  Top Level Ports
-      -------------------      
+      -------------------
       -- QSFP[0] Ports
-      qsfp0RstL      : out sl;
-      qsfp0LpMode    : out sl;
+      qsfp0RstL       : out sl;
+      qsfp0LpMode     : out sl;
       -- QSFP[1] Ports
-      qsfp1RstL      : out sl;
-      qsfp1LpMode    : out sl;
-      -- PCIe Ports 
-      pciRstL        : in  sl;
-      pciRefClkP     : in  sl;
-      pciRefClkN     : in  sl;
-      pciRxP         : in  slv(7 downto 0);
-      pciRxN         : in  slv(7 downto 0);
-      pciTxP         : out slv(7 downto 0);
-      pciTxN         : out slv(7 downto 0));
+      qsfp1RstL       : out sl;
+      qsfp1LpMode     : out sl;
+      -- PCIe Ports
+      pciRstL         : in  sl;
+      pciRefClkP      : in  sl;
+      pciRefClkN      : in  sl;
+      pciRxP          : in  slv(7 downto 0);
+      pciRxN          : in  slv(7 downto 0);
+      pciTxP          : out slv(7 downto 0);
+      pciTxN          : out slv(7 downto 0));
 end AlphaDataKu3Core;
 
 architecture mapping of AlphaDataKu3Core is
@@ -143,7 +145,7 @@ begin
 
    ---------------
    -- AXI PCIe PHY
-   ---------------   
+   ---------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
       U_AxiPciePhy : entity axi_pcie_core.AlphaDataKu3PciePhyWrapper
          generic map (
@@ -166,7 +168,7 @@ begin
             phyWriteSlave  => phyWriteSlave,
             -- Interrupt Interface
             dmaIrq         => dmaIrq,
-            -- PCIe Ports 
+            -- PCIe Ports
             pciRstL        => pciRstL,
             pciRefClkP     => pciRefClkP,
             pciRefClkN     => pciRefClkN,
@@ -188,7 +190,7 @@ begin
 
    ---------------
    -- AXI PCIe REG
-   --------------- 
+   ---------------
    U_REG : entity axi_pcie_core.AxiPcieReg
       generic map (
          TPD_G                => TPD_G,
@@ -231,7 +233,7 @@ begin
 
    ---------------
    -- AXI PCIe DMA
-   ---------------   
+   ---------------
    U_AxiPcieDma : entity axi_pcie_core.AxiPcieDma
       generic map (
          TPD_G                => TPD_G,
@@ -239,8 +241,8 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
          DMA_SIZE_G           => DMA_SIZE_G,
-         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
-         DESC_ARB_G           => false)  -- Round robin to help with timing
+         DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
+         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G)
       port map (
          axiClk           => sysClock,
          axiRst           => sysReset,
@@ -256,6 +258,7 @@ begin
          axilWriteSlaves  => dmaCtrlWriteSlaves,
          -- DMA Interfaces
          dmaIrq           => dmaIrq,
+         dmaBuffGrpPause  => dmaBuffGrpPause,
          dmaObMasters     => dmaObMasters,
          dmaObSlaves      => dmaObSlaves,
          dmaIbMasters     => dmaIbMasters,

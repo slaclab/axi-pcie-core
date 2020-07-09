@@ -5,11 +5,11 @@
 -- Description: AXI DMA Crossbar IP Core Wrapper
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'axi-pcie-core', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'axi-pcie-core', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ entity AxiPcie16BCrossbarIpCoreWrapper is
    generic (
       TPD_G             : time := 1 ns;
       AXI_PCIE_CONFIG_G : AxiConfigType;
-      DMA_SIZE_G        : positive range 1 to 8 := 1); 
+      DMA_SIZE_G        : positive range 1 to 8 := 1);
    port (
       -- Clock and reset
       axiClk           : in  sl;
@@ -447,7 +447,7 @@ architecture mapping of AxiPcie16BCrossbarIpCoreWrapper is
          S09_AXI_RLAST        : out std_logic;
          S09_AXI_RVALID       : out std_logic;
          S09_AXI_RREADY       : in  std_logic;
-         -- MASTER 
+         -- MASTER
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -853,7 +853,7 @@ architecture mapping of AxiPcie16BCrossbarIpCoreWrapper is
          S08_AXI_RLAST        : out std_logic;
          S08_AXI_RVALID       : out std_logic;
          S08_AXI_RREADY       : in  std_logic;
-         -- MASTER 
+         -- MASTER
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -1219,7 +1219,7 @@ architecture mapping of AxiPcie16BCrossbarIpCoreWrapper is
          S07_AXI_RLAST        : out std_logic;
          S07_AXI_RVALID       : out std_logic;
          S07_AXI_RREADY       : in  std_logic;
-         -- MASTER 
+         -- MASTER
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -1545,7 +1545,7 @@ architecture mapping of AxiPcie16BCrossbarIpCoreWrapper is
          S06_AXI_RLAST        : out std_logic;
          S06_AXI_RVALID       : out std_logic;
          S06_AXI_RREADY       : in  std_logic;
-         -- MASTER 
+         -- MASTER
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -1831,7 +1831,7 @@ architecture mapping of AxiPcie16BCrossbarIpCoreWrapper is
          S05_AXI_RLAST        : out std_logic;
          S05_AXI_RVALID       : out std_logic;
          S05_AXI_RREADY       : in  std_logic;
-         -- MASTER 
+         -- MASTER
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -2077,7 +2077,7 @@ architecture mapping of AxiPcie16BCrossbarIpCoreWrapper is
          S04_AXI_RLAST        : out std_logic;
          S04_AXI_RVALID       : out std_logic;
          S04_AXI_RREADY       : in  std_logic;
-         -- MASTER 
+         -- MASTER
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -2283,7 +2283,7 @@ architecture mapping of AxiPcie16BCrossbarIpCoreWrapper is
          S03_AXI_RLAST        : out std_logic;
          S03_AXI_RVALID       : out std_logic;
          S03_AXI_RREADY       : in  std_logic;
-         -- MASTER 
+         -- MASTER
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -2449,7 +2449,7 @@ architecture mapping of AxiPcie16BCrossbarIpCoreWrapper is
          S02_AXI_RLAST        : out std_logic;
          S02_AXI_RVALID       : out std_logic;
          S02_AXI_RREADY       : in  std_logic;
-         -- MASTER 
+         -- MASTER
          M00_AXI_ARESET_OUT_N : out std_logic;
          M00_AXI_ACLK         : in  std_logic;
          M00_AXI_AWID         : out std_logic_vector(3 downto 0);
@@ -2489,7 +2489,7 @@ architecture mapping of AxiPcie16BCrossbarIpCoreWrapper is
          M00_AXI_RLAST        : in  std_logic;
          M00_AXI_RVALID       : in  std_logic;
          M00_AXI_RREADY       : out std_logic);
-   end component;   
+   end component;
 
    signal axiRstL : sl;
 
@@ -2902,7 +2902,7 @@ begin
             S09_AXI_RLAST        => sAxiReadSlaves(9).rlast,
             S09_AXI_RVALID       => sAxiReadSlaves(9).rvalid,
             S09_AXI_RREADY       => sAxiReadMasters(9).rready,
-            -- MASTER         
+            -- MASTER
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => axiClk,
             M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),
@@ -3309,7 +3309,7 @@ begin
             S08_AXI_RLAST        => sAxiReadSlaves(8).rlast,
             S08_AXI_RVALID       => sAxiReadSlaves(8).rvalid,
             S08_AXI_RREADY       => sAxiReadMasters(8).rready,
-            -- MASTER         
+            -- MASTER
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => axiClk,
             M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),
@@ -3676,7 +3676,7 @@ begin
             S07_AXI_RLAST        => sAxiReadSlaves(7).rlast,
             S07_AXI_RVALID       => sAxiReadSlaves(7).rvalid,
             S07_AXI_RREADY       => sAxiReadMasters(7).rready,
-            -- MASTER         
+            -- MASTER
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => axiClk,
             M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),
@@ -4003,7 +4003,7 @@ begin
             S06_AXI_RLAST        => sAxiReadSlaves(6).rlast,
             S06_AXI_RVALID       => sAxiReadSlaves(6).rvalid,
             S06_AXI_RREADY       => sAxiReadMasters(6).rready,
-            -- MASTER         
+            -- MASTER
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => axiClk,
             M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),
@@ -4290,7 +4290,7 @@ begin
             S05_AXI_RLAST        => sAxiReadSlaves(5).rlast,
             S05_AXI_RVALID       => sAxiReadSlaves(5).rvalid,
             S05_AXI_RREADY       => sAxiReadMasters(5).rready,
-            -- MASTER         
+            -- MASTER
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => axiClk,
             M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),
@@ -4537,7 +4537,7 @@ begin
             S04_AXI_RLAST        => sAxiReadSlaves(4).rlast,
             S04_AXI_RVALID       => sAxiReadSlaves(4).rvalid,
             S04_AXI_RREADY       => sAxiReadMasters(4).rready,
-            -- MASTER         
+            -- MASTER
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => axiClk,
             M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),
@@ -4744,7 +4744,7 @@ begin
             S03_AXI_RLAST        => sAxiReadSlaves(3).rlast,
             S03_AXI_RVALID       => sAxiReadSlaves(3).rvalid,
             S03_AXI_RREADY       => sAxiReadMasters(3).rready,
-            -- MASTER         
+            -- MASTER
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => axiClk,
             M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),
@@ -4911,7 +4911,7 @@ begin
             S02_AXI_RLAST        => sAxiReadSlaves(2).rlast,
             S02_AXI_RVALID       => sAxiReadSlaves(2).rvalid,
             S02_AXI_RREADY       => sAxiReadMasters(2).rready,
-            -- MASTER         
+            -- MASTER
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => axiClk,
             M00_AXI_AWID         => mAxiWriteMaster.awid(3 downto 0),

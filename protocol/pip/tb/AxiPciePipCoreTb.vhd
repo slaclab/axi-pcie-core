@@ -5,11 +5,11 @@
 -- Description: Simulation Testbed for testing the FPGA module
 -------------------------------------------------------------------------------
 -- This file is part of 'Camera link gateway'.
--- It is subject to the license terms in the LICENSE.txt file found in the 
--- top-level directory of this distribution and at: 
---    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
--- No part of 'Camera link gateway', including this file, 
--- may be copied, modified, propagated, or distributed except according to 
+-- It is subject to the license terms in the LICENSE.txt file found in the
+-- top-level directory of this distribution and at:
+--    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+-- No part of 'Camera link gateway', including this file,
+-- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
@@ -165,7 +165,7 @@ begin
    comb : process (axiReady, enableTx, errorDet, r, rst, txBusy) is
       variable v : RegType;
    begin
-      -- Latch the current value   
+      -- Latch the current value
       v := r;
 
       for i in 0 to APP_STREAMS_C-1 loop
@@ -174,7 +174,7 @@ begin
          v.txBusy(i) := txBusy(i) or not(enableTx(i));
          v.trig(i)   := not(r.txBusy(i)) and enableTx(i) and axiReady;
 
-         -- Check for the packet completion 
+         -- Check for the packet completion
          if (txBusy(i) = '1') and (r.txBusy(i) = '0') then
             -- Sweeping the packet size size
             v.packetLength(i) := r.packetLength(i) + 1;
@@ -185,7 +185,7 @@ begin
       -- OR all the error detected bits
       v.errorDet := uOr(errorDet);
 
-      -- Reset      
+      -- Reset
       if (rst = '1') then
          v := REG_INIT_C;
       end if;
@@ -198,7 +198,7 @@ begin
             report "Simulation Failed!" severity failure;
       end if;
 
-      -- Register the variable for next clock cycle      
+      -- Register the variable for next clock cycle
       rin <= v;
 
    end process comb;

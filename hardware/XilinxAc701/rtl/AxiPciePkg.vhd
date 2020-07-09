@@ -33,7 +33,7 @@ package AxiPciePkg is
       TSTRB_EN_C    => false,
       TDATA_BYTES_C => 8,              -- 64-bit data interface
       TDEST_BITS_C  => 8,
-      TID_BITS_C    => 0,
+      TID_BITS_C    => 3,
       TKEEP_MODE_C  => TKEEP_COMP_C,
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);

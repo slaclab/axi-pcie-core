@@ -14,6 +14,7 @@ import surf.devices.micron  as micron
 import surf.xilinx          as xil
 
 import axipcie
+import click
 
 class AxiPcieCore(pr.Device):
     """This class maps to axi-pcie-core/shared/rtl/AxiPcieReg.vhd"""
@@ -21,9 +22,11 @@ class AxiPcieCore(pr.Device):
                  description = 'Base components of the PCIe firmware core',
                  useBpi      = False,
                  useSpi      = False,
-                 numDmaLanes = 8,
+                 numDmaLanes = 1,
                  **kwargs):
         super().__init__(description=description, **kwargs)
+
+        self.numDmaLanes = numDmaLanes
 
         # PCI PHY status
         self.add(xil.AxiPciePhy(
@@ -60,7 +63,7 @@ class AxiPcieCore(pr.Device):
         self.add(axi.AxiStreamMonAxiL(
             name        = 'DmaIbAxisMon',
             offset      = 0x60000,
-            numberLanes = numDmaLanes,
+            numberLanes = self.numDmaLanes,
             expand      = False,
         ))
 
@@ -68,6 +71,17 @@ class AxiPcieCore(pr.Device):
         self.add(axi.AxiStreamMonAxiL(
             name        = 'DmaObAxisMon',
             offset      = 0x70000,
-            numberLanes = numDmaLanes,
+            numberLanes = self.numDmaLanes,
             expand      = False,
         ))
+
+    def _start(self):
+        super()._start()
+        DMA_SIZE_G = self.AxiVersion.DMA_SIZE_G.get()
+        if ( self.numDmaLanes > DMA_SIZE_G ):
+            errMsg = f"""
+                {self.path}.numDmaLanes = {self.numDmaLanes} > {self.path}.AxiVersion.DMA_SIZE_G = {DMA_SIZE_G}
+                Please update {self.path}.numDmaLanes value (maybe a bug or typo in your code)
+                """
+            click.secho(errMsg, bg='red')
+            raise ValueError(errMsg)

@@ -16,7 +16,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
@@ -91,7 +90,7 @@ architecture mapping of Mig3 is
          c0_ddr4_s_axi_ctrl_rdata   : out   std_logic_vector(31 downto 0);
          c0_ddr4_s_axi_ctrl_rresp   : out   std_logic_vector(1 downto 0);
          c0_ddr4_interrupt          : out   std_logic;
-         c0_ddr4_s_axi_awid         : in    std_logic_vector(3 downto 0);
+         c0_ddr4_s_axi_awid         : in    std_logic_vector(7 downto 0);
          c0_ddr4_s_axi_awaddr       : in    std_logic_vector(33 downto 0);
          c0_ddr4_s_axi_awlen        : in    std_logic_vector(7 downto 0);
          c0_ddr4_s_axi_awsize       : in    std_logic_vector(2 downto 0);
@@ -108,10 +107,10 @@ architecture mapping of Mig3 is
          c0_ddr4_s_axi_wvalid       : in    std_logic;
          c0_ddr4_s_axi_wready       : out   std_logic;
          c0_ddr4_s_axi_bready       : in    std_logic;
-         c0_ddr4_s_axi_bid          : out   std_logic_vector(3 downto 0);
+         c0_ddr4_s_axi_bid          : out   std_logic_vector(7 downto 0);
          c0_ddr4_s_axi_bresp        : out   std_logic_vector(1 downto 0);
          c0_ddr4_s_axi_bvalid       : out   std_logic;
-         c0_ddr4_s_axi_arid         : in    std_logic_vector(3 downto 0);
+         c0_ddr4_s_axi_arid         : in    std_logic_vector(7 downto 0);
          c0_ddr4_s_axi_araddr       : in    std_logic_vector(33 downto 0);
          c0_ddr4_s_axi_arlen        : in    std_logic_vector(7 downto 0);
          c0_ddr4_s_axi_arsize       : in    std_logic_vector(2 downto 0);
@@ -126,7 +125,7 @@ architecture mapping of Mig3 is
          c0_ddr4_s_axi_rlast        : out   std_logic;
          c0_ddr4_s_axi_rvalid       : out   std_logic;
          c0_ddr4_s_axi_rresp        : out   std_logic_vector(1 downto 0);
-         c0_ddr4_s_axi_rid          : out   std_logic_vector(3 downto 0);
+         c0_ddr4_s_axi_rid          : out   std_logic_vector(7 downto 0);
          c0_ddr4_s_axi_rdata        : out   std_logic_vector(511 downto 0);
          sys_rst                    : in    std_logic
          );
@@ -190,7 +189,7 @@ begin
          c0_ddr4_s_axi_ctrl_rdata   => open,
          c0_ddr4_s_axi_ctrl_rresp   => open,
          c0_ddr4_interrupt          => open,
-         c0_ddr4_s_axi_awid         => ddrWriteMaster.awid(3 downto 0),
+         c0_ddr4_s_axi_awid         => ddrWriteMaster.awid(7 downto 0),
          c0_ddr4_s_axi_awaddr       => ddrWriteMaster.awaddr(33 downto 0),
          c0_ddr4_s_axi_awlen        => ddrWriteMaster.awlen(7 downto 0),
          c0_ddr4_s_axi_awsize       => ddrWriteMaster.awsize(2 downto 0),
@@ -207,10 +206,10 @@ begin
          c0_ddr4_s_axi_wvalid       => ddrWriteMaster.wvalid,
          c0_ddr4_s_axi_wready       => ddrWriteSlave.wready,
          c0_ddr4_s_axi_bready       => ddrWriteMaster.bready,
-         c0_ddr4_s_axi_bid          => ddrWriteSlave.bid(3 downto 0),
+         c0_ddr4_s_axi_bid          => ddrWriteSlave.bid(7 downto 0),
          c0_ddr4_s_axi_bresp        => ddrWriteSlave.bresp(1 downto 0),
          c0_ddr4_s_axi_bvalid       => ddrWriteSlave.bvalid,
-         c0_ddr4_s_axi_arid         => ddrReadMaster.arid(3 downto 0),
+         c0_ddr4_s_axi_arid         => ddrReadMaster.arid(7 downto 0),
          c0_ddr4_s_axi_araddr       => ddrReadMaster.araddr(33 downto 0),
          c0_ddr4_s_axi_arlen        => ddrReadMaster.arlen(7 downto 0),
          c0_ddr4_s_axi_arsize       => ddrReadMaster.arsize(2 downto 0),
@@ -225,7 +224,7 @@ begin
          c0_ddr4_s_axi_rlast        => ddrReadSlave.rlast,
          c0_ddr4_s_axi_rvalid       => ddrReadSlave.rvalid,
          c0_ddr4_s_axi_rresp        => ddrReadSlave.rresp(1 downto 0),
-         c0_ddr4_s_axi_rid          => ddrReadSlave.rid(3 downto 0),
+         c0_ddr4_s_axi_rid          => ddrReadSlave.rid(7 downto 0),
          c0_ddr4_s_axi_rdata        => ddrReadSlave.rdata(511 downto 0),
          sys_rst                    => extRst);
 

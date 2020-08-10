@@ -16,7 +16,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
@@ -29,7 +28,7 @@ package MigPkg is
    constant MEM_AXI_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 34,               -- 16GB per MIG interface (64GB total)
       DATA_BYTES_C => 64,               -- 512-bit data interface
-      ID_BITS_C    => 4,                -- Up to 16 IDS
+      ID_BITS_C    => 8,                -- Up to 256 IDS
       LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface
 
    -- DDR Port Types

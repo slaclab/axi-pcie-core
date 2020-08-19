@@ -228,7 +228,7 @@ begin
          c0_ddr4_s_axi_rdata        => ddrReadSlave.rdata(511 downto 0),
          sys_rst                    => extRst);
 
-   coreRst <= coreReset and not(ddrCalDone);
+   coreRst <= coreReset or not(ddrCalDone);
 
    U_Rst : entity surf.RstPipeline
       generic map (

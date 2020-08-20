@@ -138,6 +138,31 @@ module Ddr4ModelWrapper #(
    wire  [MC_DQS_BITS-1:0] ddr4_dimm_dqs_c;
    wire  db_dly_dir;
 
+   //===========================================================================
+   //                         Disable Warning Messages (custom)
+   //===========================================================================
+    initial begin
+    #1ps;         //(any time here should work, as long as it is before the writes)
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[0].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[1].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[2].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[3].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[4].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[5].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[6].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[7].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[8].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[9].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[10].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[11].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[12].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[13].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[14].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[15].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[16].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    rcd_enabled.genblk1.u_ddr4_dimm.rank_instances[0].even_ranks.u_ddr4_rank.Micron_model.instance_of_sdram_devices[17].micron_mem_model.u_ddr4_model.set_memory_warnings(0,0);
+    end  
+
 //  tran bidiDQ[MC_DQ_WIDTH-1:0]    (ddr4_dq[MC_DQ_WIDTH-1:0],       ddr4_dimm_dq[MC_DQ_WIDTH-1:0]);         // Left side - Right side (MC - Mem)
 //  tran bidiDQS_t[MC_DQS_BITS-1:0]   (ddr4_dqs_t[MC_DQS_BITS-1:0],       ddr4_dimm_dqs_t[MC_DQS_BITS-1:0]); // Left side - Right side (MC - Mem)
 //  tran bidiDQS_c[MC_DQS_BITS-1:0]   (ddr4_dqs_c[MC_DQS_BITS-1:0],       ddr4_dimm_dqs_c[MC_DQS_BITS-1:0]); // Left side - Right side (MC - Mem)

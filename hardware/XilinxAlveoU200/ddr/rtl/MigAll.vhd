@@ -75,7 +75,7 @@ begin
    -- MIG[1] IP Core
    -----------------
    GEN_MIG1 : if (NUM_DIMM_G >= 2) generate
-      U_Mig1 : entity axi_pcie_core.Mig1
+      U_Mig1 : entity axi_pcie_core.Mig3
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -123,7 +123,7 @@ begin
    -- MIG[3] IP Core
    -----------------
    GEN_MIG3 : if (NUM_DIMM_G >= 4) generate
-      U_Mig3 : entity axi_pcie_core.Mig3
+      U_Mig3 : entity axi_pcie_core.Mig1  -- MIG1 on same SRL1 as PCIe core
          generic map (
             TPD_G => TPD_G)
          port map (

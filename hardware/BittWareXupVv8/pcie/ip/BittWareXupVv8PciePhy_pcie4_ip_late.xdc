@@ -50,10 +50,10 @@
 ##
 ## Project    : UltraScale+ FPGA PCI Express v4.0 Integrated Block
 ## File       : BittWareXupVv8PciePhy_pcie4_ip_late.xdc
-## Version    : 1.3 
+## Version    : 1.3
 ##-----------------------------------------------------------------------------
 #
-# This constraints file contains ASYNC clock grouping and processed late after OOC and IP Level XDC files. 
+# This constraints file contains ASYNC clock grouping and processed late after OOC and IP Level XDC files.
 #
 #
 ###############################################################################
@@ -75,9 +75,9 @@ set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins gt_top_i
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_ports sys_clk]] -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/O]]
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/O]] -group [get_clocks -of_objects [get_ports sys_clk]]
 #
-#create_waiver -type METHODOLOGY -id {TIMING-1} -desc "SAFELYcanIGNORE" 
-#create_waiver -type METHODOLOGY -id {TIMING-3} -desc "SAFELYcanIGNORE" 
-#create_waiver -type METHODOLOGY -id {TIMING-9} -desc "SAFELYcanIGNORE" 
+#create_waiver -type METHODOLOGY -id {TIMING-1} -desc "SAFELYcanIGNORE"
+#create_waiver -type METHODOLOGY -id {TIMING-3} -desc "SAFELYcanIGNORE"
+#create_waiver -type METHODOLOGY -id {TIMING-9} -desc "SAFELYcanIGNORE"
 #
 create_waiver -internal -quiet -user pcie4_uscale_plus -tags 1015842 -type METHODOLOGY -id TIMING-3 -description "added waiver as TXOUTCLK period is intentionally overriding as DRP ports used to change the configuration/speed dynamically in runtime"  -scope \
   -objects [get_pins -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[3].GT*E4_CHANNEL_PRIM_INST/TXOUTCLK}]

@@ -50,7 +50,7 @@
 ##
 ## Project    : Ultrascale FPGA Gen3 Integrated Block for PCI Express
 ## File       : XilinxKcu1500PciePhy_pcie3_ip-PCIE_X0Y0.xdc
-## Version    : 4.2 
+## Version    : 4.2
 ##-----------------------------------------------------------------------------
 #
 ###############################################################################
@@ -118,8 +118,8 @@ set_property LOC RAMB36_X16Y10 [get_cells {pcie3_uscale_top_inst/pcie3_uscale_wr
 ###############################################################################
 
 # TXOUTCLKSEL switches during reset. Set the tool to analyze timing with TXOUTCLKSEL set to 'b101.
-set_case_analysis 1 [get_nets gt_top_i/PHY_TXOUTCLKSEL[2]] 
-set_case_analysis 0 [get_nets gt_top_i/PHY_TXOUTCLKSEL[1]]  
+set_case_analysis 1 [get_nets gt_top_i/PHY_TXOUTCLKSEL[2]]
+set_case_analysis 0 [get_nets gt_top_i/PHY_TXOUTCLKSEL[1]]
 set_case_analysis 1 [get_nets gt_top_i/PHY_TXOUTCLKSEL[0]]
 
 
@@ -147,7 +147,7 @@ set_case_analysis 0 [get_pins gt_top_i/phy_clk_i/bufg_gt_coreclk/DIV[0]]
 set_case_analysis 0 [get_pins gt_top_i/phy_clk_i/bufg_gt_coreclk/DIV[1]]
 set_case_analysis 0 [get_pins gt_top_i/phy_clk_i/bufg_gt_coreclk/DIV[2]]
 #
- 
+
 #
 
 #------------------------------------------------------------------------------
@@ -160,12 +160,12 @@ set_false_path -from [get_pins {gt_top_i/phy_rst_i/idle_reg/C}] -to [get_pins {p
 set_false_path -from [get_pins {gt_top_i/gt_wizard.gtwizard_top_i/XilinxKcu1500PciePhy_pcie3_ip_gt_i/inst/gen_gtwizard_gthe3_top.XilinxKcu1500PciePhy_pcie3_ip_gt_gtwizard_gthe3_inst/gen_gtwizard_gthe3.gen_channel_container[*].gen_enabled_channel.gthe3_channel_wrapper_inst/channel_inst/gthe3_channel_gen.gen_gthe3_channel_inst[*].GTHE3_CHANNEL_PRIM_INST/RXUSRCLK2}] -to [get_pins {gt_top_i/phy_rst_i/sync_phystatus/sync_vec[*].sync_cell_i/sync_reg[0]/D}]
 set_false_path -from [get_pins {gt_top_i/gt_wizard.gtwizard_top_i/XilinxKcu1500PciePhy_pcie3_ip_gt_i/inst/gen_gtwizard_gthe3_top.XilinxKcu1500PciePhy_pcie3_ip_gt_gtwizard_gthe3_inst/gen_gtwizard_gthe3.gen_channel_container[*].gen_enabled_channel.gthe3_channel_wrapper_inst/channel_inst/gthe3_channel_gen.gen_gthe3_channel_inst[*].GTHE3_CHANNEL_PRIM_INST/RXUSRCLK2}] -to [get_pins {gt_top_i/phy_rst_i/sync_rxresetdone/sync_vec[*].sync_cell_i/sync_reg[0]/D}]
 set_false_path -from [get_pins {gt_top_i/gt_wizard.gtwizard_top_i/XilinxKcu1500PciePhy_pcie3_ip_gt_i/inst/gen_gtwizard_gthe3_top.XilinxKcu1500PciePhy_pcie3_ip_gt_gtwizard_gthe3_inst/gen_gtwizard_gthe3.gen_channel_container[*].gen_enabled_channel.gthe3_channel_wrapper_inst/channel_inst/gthe3_channel_gen.gen_gthe3_channel_inst[*].GTHE3_CHANNEL_PRIM_INST/TXUSRCLK2}] -to [get_pins {gt_top_i/phy_rst_i/sync_txresetdone/sync_vec[*].sync_cell_i/sync_reg[0]/D}]
- 
+
 # Async reset registers
 set_false_path -to [get_pins user_lnk_up_reg/CLR]
 set_false_path -to [get_pins user_reset_reg/PRE]
 #
- 
+
 #------------------------------------------------------------------------------
 # Asynchronous Pins
 #------------------------------------------------------------------------------
@@ -179,9 +179,9 @@ set_false_path -through [get_pins -hierarchical -filter {NAME=~*/PCIESYNCTXSYNCD
 set_false_path -through [get_pins -hierarchical -filter {NAME=~*/GTPOWERGOOD}]
 set_false_path -through [get_pins -hierarchical -filter {NAME=~*/CPLLLOCK}]
 set_false_path -through [get_pins -hierarchical -filter {NAME=~*/QPLL1LOCK}]
- 
- 
- 
+
+
+
 
 ## Set the clock root on the PCIe clocks to limit skew to the PCIe Hardblock pins.
 #set_property USER_CLOCK_ROOT X4Y0 [get_nets -of_objects [get_pins gt_top_i/phy_clk_i/bufg_gt_pclk/O]]

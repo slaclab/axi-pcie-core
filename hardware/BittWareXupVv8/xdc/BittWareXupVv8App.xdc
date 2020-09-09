@@ -1,10 +1,10 @@
 ##############################################################################
 ## This file is part of 'axi-pcie-core'.
-## It is subject to the license terms in the LICENSE.txt file found in the 
-## top-level directory of this distribution and at: 
-##    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
-## No part of 'axi-pcie-core', including this file, 
-## may be copied, modified, propagated, or distributed except according to 
+## It is subject to the license terms in the LICENSE.txt file found in the
+## top-level directory of this distribution and at:
+##    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+## No part of 'axi-pcie-core', including this file,
+## may be copied, modified, propagated, or distributed except according to
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
@@ -15,7 +15,7 @@
 # Active Low Global Reset
 set_property -dict { PACKAGE_PIN AL19 IOSTANDARD LVCMOS18 } [get_ports { sysRstL }]
 
-# Ext Ref Clock 
+# Ext Ref Clock
 set_property -dict { PACKAGE_PIN AY21 IOSTANDARD LVCMOS18 } [get_ports { extRefClk }]
 
 # Ext PPS
@@ -50,7 +50,7 @@ set_property -dict { PACKAGE_PIN AF35 IOSTANDARD LVDS } [get_ports { gtyClkOutN[
 set_property -dict { PACKAGE_PIN AM19 IOSTANDARD LVCMOS18 PULLUP true } [get_ports { fpgaI2cMasterL }]
 
 ##############
-# UART I/F's # 
+# UART I/F's #
 ##############
 
 # AVR UART Rx Data
@@ -101,7 +101,7 @@ set_property -dict { PACKAGE_PIN AM21 IOSTANDARD LVCMOS18 } [get_ports { irqTofp
 set_property -dict { PACKAGE_PIN AM20 IOSTANDARD LVCMOS18 } [get_ports { irqToAvr }]
 
 ################
-# Oculink GPIO # 
+# Oculink GPIO #
 ################
 
 set_property -dict { PACKAGE_PIN BC18 IOSTANDARD LVCMOS18 } [get_ports { ocuLinkVio[0][0] }]; # Oculink 1 GPIO 0
@@ -132,39 +132,39 @@ set_property -dict { PACKAGE_PIN AP21 IOSTANDARD LVCMOS18 } [get_ports { ledL[2]
 set_property -dict { PACKAGE_PIN AP20 IOSTANDARD LVCMOS18 } [get_ports { ledL[3] }]
 
 #############################
-# GTY QSFP Reference Clocks # 
+# GTY QSFP Reference Clocks #
 #############################
 
 # GTY Bank 120 Refclk 0 / SI5346A CLK 3
-set_property PACKAGE_PIN AL36 [get_ports qsfpRefClkP[0]] 
+set_property PACKAGE_PIN AL36 [get_ports qsfpRefClkP[0]]
 set_property PACKAGE_PIN AL37 [get_ports qsfpRefClkN[0]]
 
 # GTY Bank 121 Refclk 0 / SI5346A CLK 2
-set_property PACKAGE_PIN AJ36 [get_ports qsfpRefClkP[1]] 
+set_property PACKAGE_PIN AJ36 [get_ports qsfpRefClkP[1]]
 set_property PACKAGE_PIN AJ37 [get_ports qsfpRefClkN[1]]
 
 # GTY Bank 122 Refclk 0 / SI5346B CLK 3
-set_property PACKAGE_PIN AG36 [get_ports qsfpRefClkP[2]] 
+set_property PACKAGE_PIN AG36 [get_ports qsfpRefClkP[2]]
 set_property PACKAGE_PIN AG37 [get_ports qsfpRefClkN[2]]
 
 # GTY Bank 123 Refclk 0 / SI5346B CLK 2
-set_property PACKAGE_PIN AE36 [get_ports qsfpRefClkP[3]] 
+set_property PACKAGE_PIN AE36 [get_ports qsfpRefClkP[3]]
 set_property PACKAGE_PIN AE37 [get_ports qsfpRefClkN[3]]
 
 # GTY Bank 128 Refclk 0 / SI5346A CLK 1
-set_property PACKAGE_PIN AC36 [get_ports qsfpRefClkP[4]] 
+set_property PACKAGE_PIN AC36 [get_ports qsfpRefClkP[4]]
 set_property PACKAGE_PIN AC37 [get_ports qsfpRefClkN[4]]
 
 # GTY Bank 129 Refclk 0 / SI5346A CLK 0
-set_property PACKAGE_PIN AA36 [get_ports qsfpRefClkP[5]] 
+set_property PACKAGE_PIN AA36 [get_ports qsfpRefClkP[5]]
 set_property PACKAGE_PIN AA37 [get_ports qsfpRefClkN[5]]
 
 # GTY Bank 131 Refclk 0 / SI5346B CLK 1
-set_property PACKAGE_PIN U36 [get_ports qsfpRefClkP[6]] 
+set_property PACKAGE_PIN U36 [get_ports qsfpRefClkP[6]]
 set_property PACKAGE_PIN U37 [get_ports qsfpRefClkN[6]]
 
 # GTY Bank 133 Refclk 0 / SI5346B CLK 0
-set_property PACKAGE_PIN R36 [get_ports qsfpRefClkP[7]] 
+set_property PACKAGE_PIN R36 [get_ports qsfpRefClkP[7]]
 set_property PACKAGE_PIN R37 [get_ports qsfpRefClkN[7]]
 
 ##################
@@ -190,94 +190,94 @@ set_property package_pin AW41 [get_ports qsfpTxN[3]]; # QSFP1_TX_N_3 QSFP Port 0
 set_property package_pin AW40 [get_ports qsfpTxP[3]]; # QSFP1_TX_P_3 QSFP Port 0 Output Pin 3
 
 # GTY Bank 121 QSFPDD-1 7:4
-set_property package_pin AU46 [get_ports qsfpRxN[4]];  # QSFP1_RX_N_4 QSFP Port 0 Input Pin 4
-set_property package_pin AU45 [get_ports qsfpRxP[4]];  # QSFP1_RX_P_4 QSFP Port 0 Input Pin 4
-set_property package_pin AT44 [get_ports qsfpRxN[5]];  # QSFP1_RX_N_5 QSFP Port 0 Input Pin 5
-set_property package_pin AT43 [get_ports qsfpRxP[5]];  # QSFP1_RX_P_5 QSFP Port 0 Input Pin 5
-set_property package_pin AR46 [get_ports qsfpRxN[6]];  # QSFP1_RX_N_6 QSFP Port 0 Input Pin 6
-set_property package_pin AR45 [get_ports qsfpRxP[6]];  # QSFP1_RX_P_6 QSFP Port 0 Input Pin 6
-set_property package_pin AP44 [get_ports qsfpRxN[7]];  # QSFP1_RX_N_7 QSFP Port 0 Input Pin 7
-set_property package_pin AP43 [get_ports qsfpRxP[7]];  # QSFP1_RX_P_7 QSFP Port 0 Input Pin 7
-set_property package_pin AU41 [get_ports qsfpTxN[12]]; # QSFP1_TX_N_4 QSFP Port 0 Output Pin 4
-set_property package_pin AU40 [get_ports qsfpTxP[12]]; # QSFP1_TX_P_4 QSFP Port 0 Output Pin 4
-set_property package_pin AT39 [get_ports qsfpTxN[13]]; # QSFP1_TX_N_5 QSFP Port 0 Output Pin 5
-set_property package_pin AT38 [get_ports qsfpTxP[13]]; # QSFP1_TX_P_5 QSFP Port 0 Output Pin 5
-set_property package_pin AR41 [get_ports qsfpTxN[14]]; # QSFP1_TX_N_6 QSFP Port 0 Output Pin 6
-set_property package_pin AR40 [get_ports qsfpTxP[14]]; # QSFP1_TX_P_6 QSFP Port 0 Output Pin 6
-set_property package_pin AP39 [get_ports qsfpTxN[15]]; # QSFP1_TX_N_7 QSFP Port 0 Output Pin 7
-set_property package_pin AP38 [get_ports qsfpTxP[15]]; # QSFP1_TX_P_7 QSFP Port 0 Output Pin 7
+set_property package_pin AU46 [get_ports qsfpRxN[4]]; # QSFP1_RX_N_4 QSFP Port 0 Input Pin 4
+set_property package_pin AU45 [get_ports qsfpRxP[4]]; # QSFP1_RX_P_4 QSFP Port 0 Input Pin 4
+set_property package_pin AT44 [get_ports qsfpRxN[5]]; # QSFP1_RX_N_5 QSFP Port 0 Input Pin 5
+set_property package_pin AT43 [get_ports qsfpRxP[5]]; # QSFP1_RX_P_5 QSFP Port 0 Input Pin 5
+set_property package_pin AR46 [get_ports qsfpRxN[6]]; # QSFP1_RX_N_6 QSFP Port 0 Input Pin 6
+set_property package_pin AR45 [get_ports qsfpRxP[6]]; # QSFP1_RX_P_6 QSFP Port 0 Input Pin 6
+set_property package_pin AP44 [get_ports qsfpRxN[7]]; # QSFP1_RX_N_7 QSFP Port 0 Input Pin 7
+set_property package_pin AP43 [get_ports qsfpRxP[7]]; # QSFP1_RX_P_7 QSFP Port 0 Input Pin 7
+set_property package_pin AU41 [get_ports qsfpTxN[4]]; # QSFP1_TX_N_4 QSFP Port 0 Output Pin 4
+set_property package_pin AU40 [get_ports qsfpTxP[4]]; # QSFP1_TX_P_4 QSFP Port 0 Output Pin 4
+set_property package_pin AT39 [get_ports qsfpTxN[5]]; # QSFP1_TX_N_5 QSFP Port 0 Output Pin 5
+set_property package_pin AT38 [get_ports qsfpTxP[5]]; # QSFP1_TX_P_5 QSFP Port 0 Output Pin 5
+set_property package_pin AR41 [get_ports qsfpTxN[6]]; # QSFP1_TX_N_6 QSFP Port 0 Output Pin 6
+set_property package_pin AR40 [get_ports qsfpTxP[6]]; # QSFP1_TX_P_6 QSFP Port 0 Output Pin 6
+set_property package_pin AP39 [get_ports qsfpTxN[7]]; # QSFP1_TX_N_7 QSFP Port 0 Output Pin 7
+set_property package_pin AP38 [get_ports qsfpTxP[7]]; # QSFP1_TX_P_7 QSFP Port 0 Output Pin 7
 
 # GTY Bank 122 QSFPDD-2 3:0
-set_property package_pin AN46 [get_ports qsfpRxN[16]]; # QSFP2_RX_N_0 QSFP Port 1 Input Pin 0
-set_property package_pin AN45 [get_ports qsfpRxP[16]]; # QSFP2_RX_P_0 QSFP Port 1 Input Pin 0
-set_property package_pin AM44 [get_ports qsfpRxN[17]]; # QSFP2_RX_N_1 QSFP Port 1 Input Pin 1
-set_property package_pin AM43 [get_ports qsfpRxP[17]]; # QSFP2_RX_P_1 QSFP Port 1 Input Pin 1
-set_property package_pin AL46 [get_ports qsfpRxN[18]]; # QSFP2_RX_N_2 QSFP Port 1 Input Pin 2
-set_property package_pin AL45 [get_ports qsfpRxP[18]]; # QSFP2_RX_P_2 QSFP Port 1 Input Pin 2
-set_property package_pin AK44 [get_ports qsfpRxN[19]]; # QSFP2_RX_N_3 QSFP Port 1 Input Pin 3
-set_property package_pin AK43 [get_ports qsfpRxP[19]]; # QSFP2_RX_P_3 QSFP Port 1 Input Pin 3
-set_property package_pin AN41 [get_ports qsfpTxN[16]]; # QSFP2_TX_N_0 QSFP Port 1 Output Pin 0
-set_property package_pin AN40 [get_ports qsfpTxP[16]]; # QSFP2_TX_P_0 QSFP Port 1 Output Pin 0
-set_property package_pin AM39 [get_ports qsfpTxN[17]]; # QSFP2_TX_N_1 QSFP Port 1 Output Pin 1
-set_property package_pin AM38 [get_ports qsfpTxP[17]]; # QSFP2_TX_P_1 QSFP Port 1 Output Pin 1
-set_property package_pin AL41 [get_ports qsfpTxN[18]]; # QSFP2_TX_N_2 QSFP Port 1 Output Pin 2
-set_property package_pin AL40 [get_ports qsfpTxP[18]]; # QSFP2_TX_P_2 QSFP Port 1 Output Pin 2
-set_property package_pin AK39 [get_ports qsfpTxN[19]]; # QSFP2_TX_N_3 QSFP Port 1 Output Pin 3
-set_property package_pin AK38 [get_ports qsfpTxP[19]]; # QSFP2_TX_P_3 QSFP Port 1 Output Pin 3
+set_property package_pin AN46 [get_ports qsfpRxN[8]];  # QSFP2_RX_N_0 QSFP Port 1 Input Pin 0
+set_property package_pin AN45 [get_ports qsfpRxP[8]];  # QSFP2_RX_P_0 QSFP Port 1 Input Pin 0
+set_property package_pin AM44 [get_ports qsfpRxN[9]];  # QSFP2_RX_N_1 QSFP Port 1 Input Pin 1
+set_property package_pin AM43 [get_ports qsfpRxP[9]];  # QSFP2_RX_P_1 QSFP Port 1 Input Pin 1
+set_property package_pin AL46 [get_ports qsfpRxN[10]]; # QSFP2_RX_N_2 QSFP Port 1 Input Pin 2
+set_property package_pin AL45 [get_ports qsfpRxP[10]]; # QSFP2_RX_P_2 QSFP Port 1 Input Pin 2
+set_property package_pin AK44 [get_ports qsfpRxN[11]]; # QSFP2_RX_N_3 QSFP Port 1 Input Pin 3
+set_property package_pin AK43 [get_ports qsfpRxP[11]]; # QSFP2_RX_P_3 QSFP Port 1 Input Pin 3
+set_property package_pin AN41 [get_ports qsfpTxN[8]];  # QSFP2_TX_N_0 QSFP Port 1 Output Pin 0
+set_property package_pin AN40 [get_ports qsfpTxP[8]];  # QSFP2_TX_P_0 QSFP Port 1 Output Pin 0
+set_property package_pin AM39 [get_ports qsfpTxN[9]];  # QSFP2_TX_N_1 QSFP Port 1 Output Pin 1
+set_property package_pin AM38 [get_ports qsfpTxP[9]];  # QSFP2_TX_P_1 QSFP Port 1 Output Pin 1
+set_property package_pin AL41 [get_ports qsfpTxN[10]]; # QSFP2_TX_N_2 QSFP Port 1 Output Pin 2
+set_property package_pin AL40 [get_ports qsfpTxP[10]]; # QSFP2_TX_P_2 QSFP Port 1 Output Pin 2
+set_property package_pin AK39 [get_ports qsfpTxN[11]]; # QSFP2_TX_N_3 QSFP Port 1 Output Pin 3
+set_property package_pin AK38 [get_ports qsfpTxP[11]]; # QSFP2_TX_P_3 QSFP Port 1 Output Pin 3
 
 # GTY Bank 123 QSFPDD-2 7:4
-set_property package_pin AJ46 [get_ports qsfpRxN[20]]; # QSFP2_RX_N_4 QSFP Port 1 Input Pin 4
-set_property package_pin AJ45 [get_ports qsfpRxP[20]]; # QSFP2_RX_P_4 QSFP Port 1 Input Pin 4
-set_property package_pin AH44 [get_ports qsfpRxN[21]]; # QSFP2_RX_N_5 QSFP Port 1 Input Pin 5
-set_property package_pin AH43 [get_ports qsfpRxP[21]]; # QSFP2_RX_P_5 QSFP Port 1 Input Pin 5
-set_property package_pin AG46 [get_ports qsfpRxN[22]]; # QSFP2_RX_N_6 QSFP Port 1 Input Pin 6
-set_property package_pin AG45 [get_ports qsfpRxP[22]]; # QSFP2_RX_P_6 QSFP Port 1 Input Pin 6
-set_property package_pin AF44 [get_ports qsfpRxN[23]]; # QSFP2_RX_N_7 QSFP Port 1 Input Pin 7
-set_property package_pin AF43 [get_ports qsfpRxP[23]]; # QSFP2_RX_P_7 QSFP Port 1 Input Pin 7
-set_property package_pin AJ41 [get_ports qsfpTxN[28]]; # QSFP2_TX_N_4 QSFP Port 1 Output Pin 4
-set_property package_pin AJ40 [get_ports qsfpTxP[28]]; # QSFP2_TX_P_4 QSFP Port 1 Output Pin 4
-set_property package_pin AH39 [get_ports qsfpTxN[29]]; # QSFP2_TX_N_5 QSFP Port 1 Output Pin 5
-set_property package_pin AH38 [get_ports qsfpTxP[29]]; # QSFP2_TX_P_5 QSFP Port 1 Output Pin 5
-set_property package_pin AG41 [get_ports qsfpTxN[30]]; # QSFP2_TX_N_6 QSFP Port 1 Output Pin 6
-set_property package_pin AG40 [get_ports qsfpTxP[30]]; # QSFP2_TX_P_6 QSFP Port 1 Output Pin 6
-set_property package_pin AF39 [get_ports qsfpTxN[31]]; # QSFP2_TX_N_7 QSFP Port 1 Output Pin 7
-set_property package_pin AF38 [get_ports qsfpTxP[31]]; # QSFP2_TX_P_7 QSFP Port 1 Output Pin 7
+set_property package_pin AJ46 [get_ports qsfpRxN[12]]; # QSFP2_RX_N_4 QSFP Port 1 Input Pin 4
+set_property package_pin AJ45 [get_ports qsfpRxP[12]]; # QSFP2_RX_P_4 QSFP Port 1 Input Pin 4
+set_property package_pin AH44 [get_ports qsfpRxN[13]]; # QSFP2_RX_N_5 QSFP Port 1 Input Pin 5
+set_property package_pin AH43 [get_ports qsfpRxP[13]]; # QSFP2_RX_P_5 QSFP Port 1 Input Pin 5
+set_property package_pin AG46 [get_ports qsfpRxN[14]]; # QSFP2_RX_N_6 QSFP Port 1 Input Pin 6
+set_property package_pin AG45 [get_ports qsfpRxP[14]]; # QSFP2_RX_P_6 QSFP Port 1 Input Pin 6
+set_property package_pin AF44 [get_ports qsfpRxN[15]]; # QSFP2_RX_N_7 QSFP Port 1 Input Pin 7
+set_property package_pin AF43 [get_ports qsfpRxP[15]]; # QSFP2_RX_P_7 QSFP Port 1 Input Pin 7
+set_property package_pin AJ41 [get_ports qsfpTxN[12]]; # QSFP2_TX_N_4 QSFP Port 1 Output Pin 4
+set_property package_pin AJ40 [get_ports qsfpTxP[12]]; # QSFP2_TX_P_4 QSFP Port 1 Output Pin 4
+set_property package_pin AH39 [get_ports qsfpTxN[13]]; # QSFP2_TX_N_5 QSFP Port 1 Output Pin 5
+set_property package_pin AH38 [get_ports qsfpTxP[13]]; # QSFP2_TX_P_5 QSFP Port 1 Output Pin 5
+set_property package_pin AG41 [get_ports qsfpTxN[14]]; # QSFP2_TX_N_6 QSFP Port 1 Output Pin 6
+set_property package_pin AG40 [get_ports qsfpTxP[14]]; # QSFP2_TX_P_6 QSFP Port 1 Output Pin 6
+set_property package_pin AF39 [get_ports qsfpTxN[15]]; # QSFP2_TX_N_7 QSFP Port 1 Output Pin 7
+set_property package_pin AF38 [get_ports qsfpTxP[15]]; # QSFP2_TX_P_7 QSFP Port 1 Output Pin 7
 
 # GTY Bank 128 QSFPDD-3 3:0
-set_property package_pin AE46 [get_ports qsfpRxN[24]]; # QSFP3_RX_N_0 QSFP Port 2 Input Pin 0
-set_property package_pin AE45 [get_ports qsfpRxP[24]]; # QSFP3_RX_P_0 QSFP Port 2 Input Pin 0
-set_property package_pin AD44 [get_ports qsfpRxN[25]]; # QSFP3_RX_N_1 QSFP Port 2 Input Pin 1
-set_property package_pin AD43 [get_ports qsfpRxP[25]]; # QSFP3_RX_P_1 QSFP Port 2 Input Pin 1
-set_property package_pin AC46 [get_ports qsfpRxN[26]]; # QSFP3_RX_N_2 QSFP Port 2 Input Pin 2
-set_property package_pin AC45 [get_ports qsfpRxP[26]]; # QSFP3_RX_P_2 QSFP Port 2 Input Pin 2
-set_property package_pin AB44 [get_ports qsfpRxN[27]]; # QSFP3_RX_N_3 QSFP Port 2 Input Pin 3
-set_property package_pin AB43 [get_ports qsfpRxP[27]]; # QSFP3_RX_P_3 QSFP Port 2 Input Pin 3
-set_property package_pin AE41 [get_ports qsfpTxN[24]]; # QSFP3_TX_N_0 QSFP Port 2 Output Pin 0
-set_property package_pin AE40 [get_ports qsfpTxP[24]]; # QSFP3_TX_P_0 QSFP Port 2 Output Pin 0
-set_property package_pin AD39 [get_ports qsfpTxN[25]]; # QSFP3_TX_N_1 QSFP Port 2 Output Pin 1
-set_property package_pin AD38 [get_ports qsfpTxP[25]]; # QSFP3_TX_P_1 QSFP Port 2 Output Pin 1
-set_property package_pin AC41 [get_ports qsfpTxN[26]]; # QSFP3_TX_N_2 QSFP Port 2 Output Pin 2
-set_property package_pin AC40 [get_ports qsfpTxP[26]]; # QSFP3_TX_P_2 QSFP Port 2 Output Pin 2
-set_property package_pin AB39 [get_ports qsfpTxN[27]]; # QSFP3_TX_N_3 QSFP Port 2 Output Pin 3
-set_property package_pin AB38 [get_ports qsfpTxP[27]]; # QSFP3_TX_P_3 QSFP Port 2 Output Pin 3
+set_property package_pin AE46 [get_ports qsfpRxN[16]]; # QSFP3_RX_N_0 QSFP Port 2 Input Pin 0
+set_property package_pin AE45 [get_ports qsfpRxP[16]]; # QSFP3_RX_P_0 QSFP Port 2 Input Pin 0
+set_property package_pin AD44 [get_ports qsfpRxN[17]]; # QSFP3_RX_N_1 QSFP Port 2 Input Pin 1
+set_property package_pin AD43 [get_ports qsfpRxP[17]]; # QSFP3_RX_P_1 QSFP Port 2 Input Pin 1
+set_property package_pin AC46 [get_ports qsfpRxN[18]]; # QSFP3_RX_N_2 QSFP Port 2 Input Pin 2
+set_property package_pin AC45 [get_ports qsfpRxP[18]]; # QSFP3_RX_P_2 QSFP Port 2 Input Pin 2
+set_property package_pin AB44 [get_ports qsfpRxN[19]]; # QSFP3_RX_N_3 QSFP Port 2 Input Pin 3
+set_property package_pin AB43 [get_ports qsfpRxP[19]]; # QSFP3_RX_P_3 QSFP Port 2 Input Pin 3
+set_property package_pin AE41 [get_ports qsfpTxN[16]]; # QSFP3_TX_N_0 QSFP Port 2 Output Pin 0
+set_property package_pin AE40 [get_ports qsfpTxP[16]]; # QSFP3_TX_P_0 QSFP Port 2 Output Pin 0
+set_property package_pin AD39 [get_ports qsfpTxN[17]]; # QSFP3_TX_N_1 QSFP Port 2 Output Pin 1
+set_property package_pin AD38 [get_ports qsfpTxP[17]]; # QSFP3_TX_P_1 QSFP Port 2 Output Pin 1
+set_property package_pin AC41 [get_ports qsfpTxN[18]]; # QSFP3_TX_N_2 QSFP Port 2 Output Pin 2
+set_property package_pin AC40 [get_ports qsfpTxP[18]]; # QSFP3_TX_P_2 QSFP Port 2 Output Pin 2
+set_property package_pin AB39 [get_ports qsfpTxN[19]]; # QSFP3_TX_N_3 QSFP Port 2 Output Pin 3
+set_property package_pin AB38 [get_ports qsfpTxP[19]]; # QSFP3_TX_P_3 QSFP Port 2 Output Pin 3
 
 # GTY Bank 129 QSFPDD-3 7:4
-set_property package_pin AA46 [get_ports qsfpRxN[28]]; # QSFP3_RX_N_4 QSFP Port 2 Input Pin 4
-set_property package_pin AA45 [get_ports qsfpRxP[28]]; # QSFP3_RX_P_4 QSFP Port 2 Input Pin 4
-set_property package_pin Y44  [get_ports qsfpRxN[29]]; # QSFP3_RX_N_5 QSFP Port 2 Input Pin 5
-set_property package_pin Y43  [get_ports qsfpRxP[29]]; # QSFP3_RX_P_5 QSFP Port 2 Input Pin 5
-set_property package_pin W46  [get_ports qsfpRxN[30]]; # QSFP3_RX_N_6 QSFP Port 2 Input Pin 6
-set_property package_pin W45  [get_ports qsfpRxP[30]]; # QSFP3_RX_P_6 QSFP Port 2 Input Pin 6
-set_property package_pin V44  [get_ports qsfpRxN[31]]; # QSFP3_RX_N_7 QSFP Port 2 Input Pin 7
-set_property package_pin V43  [get_ports qsfpRxP[31]]; # QSFP3_RX_P_7 QSFP Port 2 Input Pin 7
-set_property package_pin AA41 [get_ports qsfpTxN[28]]; # QSFP3_TX_N_4 QSFP Port 2 Output Pin 4
-set_property package_pin AA40 [get_ports qsfpTxP[28]]; # QSFP3_TX_P_4 QSFP Port 2 Output Pin 4
-set_property package_pin Y39  [get_ports qsfpTxN[29]]; # QSFP3_TX_N_5 QSFP Port 2 Output Pin 5
-set_property package_pin Y38  [get_ports qsfpTxP[29]]; # QSFP3_TX_P_5 QSFP Port 2 Output Pin 5
-set_property package_pin W41  [get_ports qsfpTxN[30]]; # QSFP3_TX_N_6 QSFP Port 2 Output Pin 6
-set_property package_pin W40  [get_ports qsfpTxP[30]]; # QSFP3_TX_P_6 QSFP Port 2 Output Pin 6
-set_property package_pin V39  [get_ports qsfpTxN[31]]; # QSFP3_TX_N_7 QSFP Port 2 Output Pin 7
-set_property package_pin V38  [get_ports qsfpTxP[31]]; # QSFP3_TX_P_7 QSFP Port 2 Output Pin 7
+set_property package_pin AA46 [get_ports qsfpRxN[20]]; # QSFP3_RX_N_4 QSFP Port 2 Input Pin 4
+set_property package_pin AA45 [get_ports qsfpRxP[20]]; # QSFP3_RX_P_4 QSFP Port 2 Input Pin 4
+set_property package_pin Y44  [get_ports qsfpRxN[21]]; # QSFP3_RX_N_5 QSFP Port 2 Input Pin 5
+set_property package_pin Y43  [get_ports qsfpRxP[21]]; # QSFP3_RX_P_5 QSFP Port 2 Input Pin 5
+set_property package_pin W46  [get_ports qsfpRxN[22]]; # QSFP3_RX_N_6 QSFP Port 2 Input Pin 6
+set_property package_pin W45  [get_ports qsfpRxP[22]]; # QSFP3_RX_P_6 QSFP Port 2 Input Pin 6
+set_property package_pin V44  [get_ports qsfpRxN[23]]; # QSFP3_RX_N_7 QSFP Port 2 Input Pin 7
+set_property package_pin V43  [get_ports qsfpRxP[23]]; # QSFP3_RX_P_7 QSFP Port 2 Input Pin 7
+set_property package_pin AA41 [get_ports qsfpTxN[20]]; # QSFP3_TX_N_4 QSFP Port 2 Output Pin 4
+set_property package_pin AA40 [get_ports qsfpTxP[20]]; # QSFP3_TX_P_4 QSFP Port 2 Output Pin 4
+set_property package_pin Y39  [get_ports qsfpTxN[21]]; # QSFP3_TX_N_5 QSFP Port 2 Output Pin 5
+set_property package_pin Y38  [get_ports qsfpTxP[21]]; # QSFP3_TX_P_5 QSFP Port 2 Output Pin 5
+set_property package_pin W41  [get_ports qsfpTxN[22]]; # QSFP3_TX_N_6 QSFP Port 2 Output Pin 6
+set_property package_pin W40  [get_ports qsfpTxP[22]]; # QSFP3_TX_P_6 QSFP Port 2 Output Pin 6
+set_property package_pin V39  [get_ports qsfpTxN[23]]; # QSFP3_TX_N_7 QSFP Port 2 Output Pin 7
+set_property package_pin V38  [get_ports qsfpTxP[23]]; # QSFP3_TX_P_7 QSFP Port 2 Output Pin 7
 
 # GTY Bank 131 QSFPDD-4 3:0
 set_property package_pin N46 [get_ports qsfpRxN[24]]; # QSFP4_RX_N_0 QSFP Port 3 Input Pin 0
@@ -320,11 +320,11 @@ set_property package_pin A42 [get_ports qsfpTxP[31]]; # QSFP4_TX_P_7 QSFP Port 3
 ################################
 
 # GTY Bank 231 OCU 1 OSC 0
-set_property PACKAGE_PIN M11 [get_ports ocuLinkRefClkP[0]] 
+set_property PACKAGE_PIN M11 [get_ports ocuLinkRefClkP[0]]
 set_property PACKAGE_PIN M10 [get_ports ocuLinkRefClkN[0]]
 
 # GTY Bank 232 OCU 2 CLK 0
-set_property PACKAGE_PIN H11 [get_ports ocuLinkRefClkP[1]] 
+set_property PACKAGE_PIN H11 [get_ports ocuLinkRefClkP[1]]
 set_property PACKAGE_PIN H10 [get_ports ocuLinkRefClkN[1]]
 
 ####################

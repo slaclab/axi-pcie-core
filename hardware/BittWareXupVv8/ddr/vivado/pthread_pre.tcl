@@ -8,7 +8,10 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-set_property USER_SLR_ASSIGNMENT SLR1 [get_cells {U_Mig/GEN_VEC[0].U_Mig}]
-set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_Mig/GEN_VEC[1].U_Mig}]
-set_property USER_SLR_ASSIGNMENT SLR2 [get_cells {U_Mig/GEN_VEC[2].U_Mig}]
-set_property USER_SLR_ASSIGNMENT SLR3 [get_cells {U_Mig/GEN_VEC[3].U_Mig}]
+# Setup project messaging
+source -quiet ${RUCKUS_DIR}/vivado_messages.tcl
+
+# Bug fix for using MIG cores in Vivado 2017.3 (or later)
+# https://forums.xilinx.com/t5/Synthesis/Vivado-2016-4-Linux-crash-during-Phase-7-Resynthesis/td-p/794884
+# https://forums.xilinx.com/t5/Welcome-Join/Abnormal-program-termination-11-in-place-design-vivado-2016-1/td-p/802908
+set_param general.maxThreads 1

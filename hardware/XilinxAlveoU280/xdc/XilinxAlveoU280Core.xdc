@@ -22,7 +22,7 @@ set_property -dict { PACKAGE_PIN F30 IOSTANDARD DIFF_SSTL12 } [get_ports { userC
 # https://www.xilinx.com/support/answers/72926.html
 #########################################################################################
 
-set_property -dict { PACKAGE_PIN D32 IOSTANDARD LVCMOS18 } [get_ports { pinD32 }]
+set_property -dict { PACKAGE_PIN D32 IOSTANDARD LVCMOS12 } [get_ports { pinD32 }]
 
 ##########################################
 # QSFP[0] ports located in the core area #

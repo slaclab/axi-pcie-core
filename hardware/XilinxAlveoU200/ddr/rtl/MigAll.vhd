@@ -27,22 +27,22 @@ use axi_pcie_core.MigPkg.all;
 entity MigAll is
    generic (
       TPD_G      : time                  := 1 ns;
-      NUM_LANE_G : positive range 1 to 4 := 4);
+      NUM_DIMM_G : positive range 1 to 4 := 4);
    port (
       extRst          : in    sl := '0';
       -- AXI MEM Interface
-      axiClk          : out   slv(NUM_LANE_G-1 downto 0);
-      axiRst          : out   slv(NUM_LANE_G-1 downto 0);
-      axiReady        : out   slv(NUM_LANE_G-1 downto 0);
-      axiWriteMasters : in    AxiWriteMasterArray(NUM_LANE_G-1 downto 0);
-      axiWriteSlaves  : out   AxiWriteSlaveArray(NUM_LANE_G-1 downto 0);
-      axiReadMasters  : in    AxiReadMasterArray(NUM_LANE_G-1 downto 0);
-      axiReadSlaves   : out   AxiReadSlaveArray(NUM_LANE_G-1 downto 0);
+      axiClk          : out   slv(NUM_DIMM_G-1 downto 0);
+      axiRst          : out   slv(NUM_DIMM_G-1 downto 0);
+      axiReady        : out   slv(NUM_DIMM_G-1 downto 0);
+      axiWriteMasters : in    AxiWriteMasterArray(NUM_DIMM_G-1 downto 0);
+      axiWriteSlaves  : out   AxiWriteSlaveArray(NUM_DIMM_G-1 downto 0);
+      axiReadMasters  : in    AxiReadMasterArray(NUM_DIMM_G-1 downto 0);
+      axiReadSlaves   : out   AxiReadSlaveArray(NUM_DIMM_G-1 downto 0);
       -- DDR Ports
-      ddrClkP         : in    slv(NUM_LANE_G-1 downto 0);
-      ddrClkN         : in    slv(NUM_LANE_G-1 downto 0);
-      ddrOut          : out   DdrOutArray(NUM_LANE_G-1 downto 0);
-      ddrInOut        : inout DdrInOutArray(NUM_LANE_G-1 downto 0));
+      ddrClkP         : in    slv(NUM_DIMM_G-1 downto 0);
+      ddrClkN         : in    slv(NUM_DIMM_G-1 downto 0);
+      ddrOut          : out   DdrOutArray(NUM_DIMM_G-1 downto 0);
+      ddrInOut        : inout DdrInOutArray(NUM_DIMM_G-1 downto 0));
 end MigAll;
 
 architecture mapping of MigAll is
@@ -74,8 +74,8 @@ begin
    -----------------
    -- MIG[1] IP Core
    -----------------
-   GEN_MIG1 : if (NUM_LANE_G >= 2) generate
-      U_Mig1 : entity axi_pcie_core.Mig1
+   GEN_MIG1 : if (NUM_DIMM_G >= 2) generate
+      U_Mig1 : entity axi_pcie_core.Mig3
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -98,7 +98,7 @@ begin
    -----------------
    -- MIG[2] IP Core
    -----------------
-   GEN_MIG2 : if (NUM_LANE_G >= 3) generate
+   GEN_MIG2 : if (NUM_DIMM_G >= 3) generate
       U_Mig2 : entity axi_pcie_core.Mig2
          generic map (
             TPD_G => TPD_G)
@@ -122,8 +122,8 @@ begin
    -----------------
    -- MIG[3] IP Core
    -----------------
-   GEN_MIG3 : if (NUM_LANE_G >= 4) generate
-      U_Mig3 : entity axi_pcie_core.Mig3
+   GEN_MIG3 : if (NUM_DIMM_G >= 4) generate
+      U_Mig3 : entity axi_pcie_core.Mig1  -- MIG1 on same SRL1 as PCIe core
          generic map (
             TPD_G => TPD_G)
          port map (

@@ -74,6 +74,7 @@ entity XilinxAlveoU280Core is
       -- System Ports
       userClkP        : in  sl;
       userClkN        : in  sl;
+      pinD32          : out sl;  -- https://www.xilinx.com/support/answers/72926.html
       -- QSFP[1:0] Ports
       qsfpRstL        : out slv(1 downto 0);
       qsfpLpMode      : out slv(1 downto 0);
@@ -156,6 +157,8 @@ begin
    qsfpRstL    <= (others => systemResetL);
    qsfpLpMode  <= "00";
    qsfpModSelL <= "11";
+
+   pinD32 <= '0';  -- https://www.xilinx.com/support/answers/72926.html
 
    ---------------
    -- AXI PCIe PHY

@@ -50,12 +50,12 @@
 ##
 ## Project    : UltraScale+ FPGA PCI Express CCIX v4.0 Integrated Block
 ## File       : ip_pcie4_uscale_plus_x1y0.xdc
-## Version    : 1.0 
+## Version    : 1.0
 ##-----------------------------------------------------------------------------
 #
 # pcie_blk_locn_int - X6
 ###############################################################################
-# Vivado - PCIe GUI / User Configuration 
+# Vivado - PCIe GUI / User Configuration
 ###############################################################################
 #
 # Link Speed   - Gen3 - 8.0 Gb/s
@@ -109,7 +109,7 @@ set_property LOC PCIE4CE4_X1Y0 [get_cells pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
 # TXOUTCLK Constraint
 ###############################################################################
 #
-# Constraining GT TXOUTCLK to 500 MHz 
+# Constraining GT TXOUTCLK to 500 MHz
 create_clock -period 2.0 [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.* }]]
 #
 create_clock -period 1000 [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]

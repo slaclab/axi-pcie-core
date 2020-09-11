@@ -65,7 +65,7 @@
 //*****************************************************************************
 
 
-`define DDR4_8G_X16 
+`define DDR4_8G_X4 
 `define DDR4_833_Timing
 // Added define SILENT to avoid timeset setting display messages in transcript
 `define SILENT

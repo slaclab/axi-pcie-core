@@ -8,7 +8,7 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-set_property USER_SLR_ASSIGNMENT SLR1 [get_cells {U_Mig/GEN_VEC[0].U_Mig}]
-set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_Mig/GEN_VEC[1].U_Mig}]
-set_property USER_SLR_ASSIGNMENT SLR2 [get_cells {U_Mig/GEN_VEC[2].U_Mig}]
-set_property USER_SLR_ASSIGNMENT SLR3 [get_cells {U_Mig/GEN_VEC[3].U_Mig}]
+set_property USER_SLR_ASSIGNMENT SLR1 [get_cells -hier -filter {NAME =~ *GEN_VEC[0].U_Mig}]
+set_property USER_SLR_ASSIGNMENT SLR0 [get_cells -hier -filter {NAME =~ *GEN_VEC[1].U_Mig}]
+set_property USER_SLR_ASSIGNMENT SLR2 [get_cells -hier -filter {NAME =~ *GEN_VEC[2].U_Mig}]
+set_property USER_SLR_ASSIGNMENT SLR3 [get_cells -hier -filter {NAME =~ *GEN_VEC[3].U_Mig}]

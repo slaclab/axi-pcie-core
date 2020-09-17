@@ -10,6 +10,14 @@
 
 set_property USER_SLR_ASSIGNMENT SLR1 [get_cells {U_Core}]
 
+###################
+# FPGA I2C Master #
+###################
+
+# 0 = FPGA has control of I2C chains shared with the BMC.
+# 1 = BMC  has control of I2C chains shared with the FPGA (default)
+set_property -dict { PACKAGE_PIN AM19 IOSTANDARD LVCMOS18 } [get_ports { fpgaI2cMasterL }]
+
 ######################
 # Board Clocks/Reset #
 ######################

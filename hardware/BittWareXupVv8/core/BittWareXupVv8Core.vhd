@@ -70,6 +70,8 @@ entity BittWareXupVv8Core is
       -------------------
       --  Top Level Ports
       -------------------
+      -- FPGA I2C Master
+      fpgaI2cMasterL  : out sl;
       -- System Ports
       userClkP        : in  sl;
       userClkN        : in  sl;
@@ -140,6 +142,10 @@ begin
 
    systemReset  <= sysReset or cardReset;
    systemResetL <= not(systemReset);
+
+   -- 0 = FPGA has control of I2C chains shared with the BMC.
+   -- 1 = BMC  has control of I2C chains shared with the FPGA (default)
+   fpgaI2cMasterL <= '1';
 
    U_IBUFDS : IBUFDS
       port map(

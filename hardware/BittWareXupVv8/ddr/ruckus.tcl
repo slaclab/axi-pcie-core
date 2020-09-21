@@ -5,7 +5,14 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 loadSource -lib axi_pcie_core           -dir "$::DIR_PATH/rtl"
 loadSource -lib axi_pcie_core -sim_only -dir "$::DIR_PATH/tb"
 
-loadIpCore      -dir "$::DIR_PATH/ip"
+# Determine the DDR speed type
+if { [info exists ::env(DDR_SPEED)] != 1 } {
+   set DDR_SPEED "2400-MTPS"
+} else {
+   set DDR_SPEED "$::env(DDR_SPEED)-MTPS"
+}
+
+loadIpCore      -dir "$::DIR_PATH/ip/${DDR_SPEED}"
 loadConstraints -dir "$::DIR_PATH/ip"
 loadConstraints -dir "$::DIR_PATH/xdc"
 

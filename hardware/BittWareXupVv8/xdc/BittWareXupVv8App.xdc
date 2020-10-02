@@ -8,6 +8,16 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
+create_pblock SLR0_GRP
+create_pblock SLR1_GRP
+create_pblock SLR2_GRP
+create_pblock SLR3_GRP
+
+resize_pblock [get_pblocks SLR0_GRP] -add {CLOCKREGION_X0Y0:CLOCKREGION_X7Y3}
+resize_pblock [get_pblocks SLR1_GRP] -add {CLOCKREGION_X0Y4:CLOCKREGION_X7Y7}
+resize_pblock [get_pblocks SLR2_GRP] -add {CLOCKREGION_X0Y8:CLOCKREGION_X7Y11}
+resize_pblock [get_pblocks SLR3_GRP] -add {CLOCKREGION_X0Y12:CLOCKREGION_X7Y15}
+
 ######################
 # Board Clocks/Reset #
 ######################
@@ -40,14 +50,6 @@ set_property -dict { PACKAGE_PIN AK35 IOSTANDARD LVDS } [get_ports { gtyClkOutN[
 # GTY Bank 122 Clk 1 / SI5346B Input 1
 set_property -dict { PACKAGE_PIN AF34 IOSTANDARD LVDS } [get_ports { gtyClkOutP[1] }]
 set_property -dict { PACKAGE_PIN AF35 IOSTANDARD LVDS } [get_ports { gtyClkOutN[1] }]
-
-###################
-# FPGA I2C Master #
-###################
-
-# 0 = FPGA has control of I2C chains shared with the BMC.
-# 1 = BMC  has control of I2C chains shared with the FPGA.
-set_property -dict { PACKAGE_PIN AM19 IOSTANDARD LVCMOS18 PULLUP true } [get_ports { fpgaI2cMasterL }]
 
 ##############
 # UART I/F's #
@@ -372,39 +374,15 @@ set_property package_pin F7 [get_ports ocuLinkTxP[7]]; # OCU2_TXP_3
 ##########
 
 create_clock -period 100.0 -name extRefClk   [get_ports {extRefClk}]
-
-create_clock -period 3.104 -name qsfpRefClk0 [get_ports {qsfpRefClkP[0]}]
-create_clock -period 3.104 -name qsfpRefClk1 [get_ports {qsfpRefClkP[1]}]
-create_clock -period 3.104 -name qsfpRefClk2 [get_ports {qsfpRefClkP[2]}]
-create_clock -period 3.104 -name qsfpRefClk3 [get_ports {qsfpRefClkP[3]}]
-create_clock -period 3.104 -name qsfpRefClk4 [get_ports {qsfpRefClkP[4]}]
-create_clock -period 3.104 -name qsfpRefClk5 [get_ports {qsfpRefClkP[5]}]
-create_clock -period 3.104 -name qsfpRefClk6 [get_ports {qsfpRefClkP[6]}]
-create_clock -period 3.104 -name qsfpRefClk7 [get_ports {qsfpRefClkP[7]}]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets extRefClk_IBUF_inst/O]
 
 create_clock -period 10.00 -name ocuLinkRefClk0 [get_ports {ocuLinkRefClkP[0]}]
 create_clock -period 10.00 -name ocuLinkRefClk1 [get_ports {ocuLinkRefClkP[1]}]
 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {extRefClk}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk0}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk1}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk2}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk3}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk4}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk5}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk6}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk7}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {ocuLinkRefClk0}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks -include_generated_clocks {ocuLinkRefClk1}]
 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {extRefClk}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk0}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk1}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk2}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk3}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk4}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk5}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk6}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfpRefClk7}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {ocuLinkRefClk0}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {ocuLinkRefClk1}]

@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
--- File       : BittWareXupVv8Core.vhd
+-- File       : XilinxVcu128Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for BittWare XUP-VV8 (PCIe GEN3 x 16 lanes)
--- https://www.bittware.com/fpga/xup-vv8/
+-- Description: AXI PCIe Core for Xilinx VCU128 board (PCIe GEN3 x 16 lanes)
+-- https://www.xilinx.com/products/boards-and-kits/vcu128.html
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -31,7 +31,7 @@ use axi_pcie_core.AxiPciePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity BittWareXupVv8Core is
+entity XilinxVcu128Core is
    generic (
       TPD_G                : time                        := 1 ns;
       ROGUE_SIM_EN_G       : boolean                     := false;
@@ -70,22 +70,25 @@ entity BittWareXupVv8Core is
       -------------------
       --  Top Level Ports
       -------------------
-      -- FPGA I2C Master
-      fpgaI2cMasterL  : out sl;
       -- System Ports
       userClkP        : in  sl;
       userClkN        : in  sl;
+      -- QSFP[3:0] Ports
+      qsfpRstL        : out slv(3 downto 0);
+      qsfpLpMode      : out slv(3 downto 0);
+      qsfpModSelL     : out slv(3 downto 0);
+      qsfpModPrsL     : in  slv(3 downto 0);
       -- PCIe Ports
       pciRstL         : in  sl;
-      pciRefClkP      : in  sl;
-      pciRefClkN      : in  sl;
+      pciRefClkP      : in  slv(1 downto 0);
+      pciRefClkN      : in  slv(1 downto 0);
       pciRxP          : in  slv(15 downto 0);
       pciRxN          : in  slv(15 downto 0);
       pciTxP          : out slv(15 downto 0);
       pciTxN          : out slv(15 downto 0));
-end BittWareXupVv8Core;
+end XilinxVcu128Core;
 
-architecture mapping of BittWareXupVv8Core is
+architecture mapping of XilinxVcu128Core is
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -143,22 +146,22 @@ begin
    systemReset  <= sysReset or cardReset;
    systemResetL <= not(systemReset);
 
-   -- 0 = FPGA has control of I2C chains shared with the BMC.
-   -- 1 = BMC  has control of I2C chains shared with the FPGA (default)
-   fpgaI2cMasterL <= '1';
-
    U_IBUFDS : IBUFDS
       port map(
          I  => userClkP,
          IB => userClkN,
          O  => userClk100);
 
+   qsfpRstL    <= (others => systemResetL);
+   qsfpLpMode  <= "0000";
+   qsfpModSelL <= "1111";
+
    ---------------
    -- AXI PCIe PHY
    ---------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
-      U_AxiPciePhy : entity axi_pcie_core.BittWareXupVv8PciePhyWrapper
+      U_AxiPciePhy : entity axi_pcie_core.XilinxVcu128PciePhyWrapper
          generic map (
             TPD_G => TPD_G)
          port map (

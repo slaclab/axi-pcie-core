@@ -40,13 +40,13 @@ entity TerminateQsfp is
       ---------------------
       --  Application Ports
       ---------------------
-      -- QSFP[31:0] Ports
-      qsfpRefClkP     : in  slv(7 downto 0);
-      qsfpRefClkN     : in  slv(7 downto 0);
-      qsfpRxP         : in  slv(31 downto 0);
-      qsfpRxN         : in  slv(31 downto 0);
-      qsfpTxP         : out slv(31 downto 0);
-      qsfpTxN         : out slv(31 downto 0));
+      -- QSFP[15:0] Ports
+      qsfpRefClkP     : in  slv(3 downto 0);
+      qsfpRefClkN     : in  slv(3 downto 0);
+      qsfpRxP         : in  slv(15 downto 0);
+      qsfpRxN         : in  slv(15 downto 0);
+      qsfpTxP         : out slv(15 downto 0);
+      qsfpTxN         : out slv(15 downto 0));
 end TerminateQsfp;
 
 architecture mapping of TerminateQsfp is
@@ -62,16 +62,16 @@ architecture mapping of TerminateQsfp is
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
 
-   signal refClk     : slv(7 downto 0);
-   signal refClkBufg : slv(7 downto 0);
-   signal refClkFreq : Slv32Array(7 downto 0);
+   signal refClk     : slv(3 downto 0);
+   signal refClkBufg : slv(3 downto 0);
+   signal refClkFreq : Slv32Array(3 downto 0);
 
 begin
 
    U_QSFP : entity surf.Gtye4ChannelDummy
       generic map (
          TPD_G   => TPD_G,
-         WIDTH_G => 32)
+         WIDTH_G => 16)
       port map (
          refClk => axilClk,
          gtRxP  => qsfpRxP,
@@ -79,7 +79,7 @@ begin
          gtTxP  => qsfpTxP,
          gtTxN  => qsfpTxN);
 
-   GEN_VEC : for i in 7 downto 0 generate
+   GEN_VEC : for i in 3 downto 0 generate
 
       U_IBUFDS : IBUFDS_GTE4
          generic map (
@@ -134,10 +134,7 @@ begin
       axiSlaveRegisterR(axilEp, x"04", 0, refClkFreq(1));
       axiSlaveRegisterR(axilEp, x"08", 0, refClkFreq(2));
       axiSlaveRegisterR(axilEp, x"0C", 0, refClkFreq(3));
-      axiSlaveRegisterR(axilEp, x"10", 0, refClkFreq(4));
-      axiSlaveRegisterR(axilEp, x"14", 0, refClkFreq(5));
-      axiSlaveRegisterR(axilEp, x"18", 0, refClkFreq(6));
-      axiSlaveRegisterR(axilEp, x"1C", 0, refClkFreq(7));
+
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);

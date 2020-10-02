@@ -132,8 +132,8 @@ begin
       -- Map the read registers
       axiSlaveRegisterR(axilEp, x"00", 0, refClkFreq(0));
       axiSlaveRegisterR(axilEp, x"04", 0, refClkFreq(1));
-      axiSlaveRegisterR(axilEp, x"08", 0, refClkFreq(3));
-      axiSlaveRegisterR(axilEp, x"0C", 0, refClkFreq(2));
+      axiSlaveRegisterR(axilEp, x"08", 0, refClkFreq(2));
+      axiSlaveRegisterR(axilEp, x"0C", 0, refClkFreq(3));
       axiSlaveRegisterR(axilEp, x"10", 0, refClkFreq(4));
       axiSlaveRegisterR(axilEp, x"14", 0, refClkFreq(5));
       axiSlaveRegisterR(axilEp, x"18", 0, refClkFreq(6));

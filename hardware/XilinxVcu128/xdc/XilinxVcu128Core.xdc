@@ -37,7 +37,7 @@ set_property -dict { PACKAGE_PIN BN4 IOSTANDARD LVCMOS18 } [get_ports { qsfpLpMo
 set_property -dict { PACKAGE_PIN BK23 IOSTANDARD LVCMOS18 } [get_ports { qsfpModSelL[3] }];
 set_property -dict { PACKAGE_PIN BK24 IOSTANDARD LVCMOS18 } [get_ports { qsfpRstL[3] }];
 set_property -dict { PACKAGE_PIN BL22 IOSTANDARD LVCMOS18 } [get_ports { qsfpModPrsL[3] }];
-set_property -dict { PACKAGE_PIN BH21 IOSTANDARD LVCMOS18 } [get_ports { qsfpLpMode[3] }];
+set_property -dict { PACKAGE_PIN BF23 IOSTANDARD LVCMOS18 } [get_ports { qsfpLpMode[3] }];
 
 ####################
 # PCIe Constraints #

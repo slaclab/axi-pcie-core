@@ -73,7 +73,7 @@ entity XilinxVcu128Core is
       -- System Ports
       userClkP        : in  sl;
       userClkN        : in  sl;
-      -- QSFP[1:0] Ports
+      -- QSFP[3:0] Ports
       qsfpRstL        : out slv(3 downto 0);
       qsfpLpMode      : out slv(3 downto 0);
       qsfpModSelL     : out slv(3 downto 0);

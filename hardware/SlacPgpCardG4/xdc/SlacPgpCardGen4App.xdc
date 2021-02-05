@@ -139,8 +139,8 @@ set_property PACKAGE_PIN P1 [get_ports { qsfp1RxN[3] }]
 # Clocks #
 ##########
 
-create_clock -period 2.691 -name sfpRefClkP0 [get_ports {sfpRefClkP[0]}]
-create_clock -period 4.201 -name sfpRefClkP1 [get_ports {sfpRefClkP[1]}]
+create_clock -period 4.201 -name sfpRefClkP0 [get_ports {sfpRefClkP[0]}]
+create_clock -period 2.691 -name sfpRefClkP1 [get_ports {sfpRefClkP[1]}]
 create_clock -period 6.400 -name qsfpRefClkP [get_ports {qsfpRefClkP}]
 
 set_clock_groups -asynchronous \

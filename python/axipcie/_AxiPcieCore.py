@@ -27,7 +27,7 @@ class AxiPcieCore(pr.Device):
         super().__init__(description=description, **kwargs)
 
         self.numDmaLanes = numDmaLanes
-        self.startArm    = True
+        self.startArmed  = True
 
         # PCI PHY status
         self.add(xil.AxiPciePhy(
@@ -79,6 +79,6 @@ class AxiPcieCore(pr.Device):
     def _start(self):
         super()._start()
         DMA_SIZE_G = self.AxiVersion.DMA_SIZE_G.get()
-        if ( self.numDmaLanes is not DMA_SIZE_G ) and (self.startArm):
-            self.startArm = False
-            click.secho(f'WARNING: {self.path}.numDmaLanes = {self.numDmaLanes} != {self.path}.AxiVersion.DMA_SIZE_G = {DMA_SIZE_G}', bg='yellow')
+        if ( self.numDmaLanes is not DMA_SIZE_G ) and (self.startArmed):
+            self.startArmed = False
+            click.secho(f'WARNING: {self.path}.numDmaLanes = {self.numDmaLanes} != {self.path}.AxiVersion.DMA_SIZE_G = {DMA_SIZE_G}', bg='cyan')

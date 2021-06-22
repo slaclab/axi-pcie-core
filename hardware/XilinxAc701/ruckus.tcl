@@ -13,7 +13,7 @@ if { $::env(PRJ_PART) != "XC7A200TFBG676-2" } {
 if { [VersionCheck 2018.2] < 0 } {exit -1}
 
 # Set the board part
-set_property board_part xilinx.com:ac701:part0:1.3 [current_project]
+set_property board_part xilinx.com:ac701:part0:1.4 [current_project]
 
 #######################################################################################
 # 7-Series PCIe IP core appear to not support 40-bit address (even with 64-bit enabled)

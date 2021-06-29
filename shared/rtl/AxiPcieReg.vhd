@@ -48,8 +48,8 @@ entity AxiPcieReg is
       regReadSlave        : out AxiReadSlaveType;
       regWriteMaster      : in  AxiWriteMasterType;
       regWriteSlave       : out AxiWriteSlaveType;
-      pipIbMaster         : out AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-      pipIbSlave          : in  AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+      pipIbMaster         : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave          : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- DMA AXI-Lite Interfaces (axiClk domain)
       dmaCtrlReadMasters  : out AxiLiteReadMasterArray(2 downto 0);
       dmaCtrlReadSlaves   : in  AxiLiteReadSlaveArray(2 downto 0);
@@ -60,6 +60,11 @@ entity AxiPcieReg is
       phyReadSlave        : in  AxiLiteReadSlaveType;
       phyWriteMaster      : out AxiLiteWriteMasterType;
       phyWriteSlave       : in  AxiLiteWriteSlaveType;
+      -- I2C AXI-Lite Interfaces (axiClk domain)
+      i2cReadMaster       : out AxiLiteReadMasterType;
+      i2cReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
+      i2cWriteMaster      : out AxiLiteWriteMasterType;
+      i2cWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk              : in  sl;
       appRst              : in  sl;
@@ -80,17 +85,15 @@ entity AxiPcieReg is
       bpiWeL              : out sl;
       bpiTri              : out sl;
       bpiDin              : out slv(15 downto 0);
-      bpiDout             : in  slv(15 downto 0)   := x"FFFF";
+      bpiDout             : in  slv(15 downto 0)      := x"FFFF";
       -- SPI Boot Memory Ports
       spiCsL              : out slv(1 downto 0);
       spiSck              : out slv(1 downto 0);
       spiMosi             : out slv(1 downto 0);
-      spiMiso             : in  slv(1 downto 0)    := "11");
+      spiMiso             : in  slv(1 downto 0)       := "11");
 end AxiPcieReg;
 
 architecture mapping of AxiPcieReg is
-
-   constant NUM_AXI_MASTERS_C : natural := 12;
 
    constant DMA_INDEX_C     : natural := 0;
    constant PHY_INDEX_C     : natural := 1;
@@ -100,11 +103,14 @@ architecture mapping of AxiPcieReg is
    constant SPI1_INDEX_C    : natural := 5;
    constant AXIS_MON_IB_C   : natural := 6;
    constant AXIS_MON_OB_C   : natural := 7;
+   constant I2C_INDEX_C     : natural := 8;
    -- constant APP0_INDEX_C    : natural := XXX; -- Now used for PIP interface
-   constant APP1_INDEX_C    : natural := 8;
-   constant APP2_INDEX_C    : natural := 9;
-   constant APP3_INDEX_C    : natural := 10;
-   constant APP4_INDEX_C    : natural := 11;
+   constant APP1_INDEX_C    : natural := 9;
+   constant APP2_INDEX_C    : natural := 10;
+   constant APP3_INDEX_C    : natural := 11;
+   constant APP4_INDEX_C    : natural := 12;
+
+   constant NUM_AXI_MASTERS_C : natural := 13;
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       DMA_INDEX_C     => (
@@ -133,9 +139,13 @@ architecture mapping of AxiPcieReg is
          connectivity => x"FFFF"),
       AXIS_MON_IB_C   => (
          baseAddr     => x"0006_0000",
-         addrBits     => 16,
+         addrBits     => 15,
          connectivity => x"FFFF"),
       AXIS_MON_OB_C   => (
+         baseAddr     => x"0006_8000",
+         addrBits     => 15,
+         connectivity => x"FFFF"),
+      I2C_INDEX_C     => (
          baseAddr     => x"0007_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
@@ -531,6 +541,27 @@ begin
    axilWriteSlaves(PHY_INDEX_C) <= phyWriteSlave;
    phyReadMaster                <= axilReadMasters(PHY_INDEX_C);
    axilReadSlaves(PHY_INDEX_C)  <= phyReadSlave;
+
+   --------------------------
+   -- Map the AXI-Lite to I2C
+   --------------------------
+   U_AxiLiteMasterProxy : entity surf.AxiLiteMasterProxy
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- Clocks and Resets
+         axiClk          => axiClk,
+         axiRst          => axiRst,
+         -- AXI-Lite Register Interface
+         sAxiReadMaster  => axilReadMasters(I2C_INDEX_C),
+         sAxiReadSlave   => axilReadSlaves(I2C_INDEX_C),
+         sAxiWriteMaster => axilWriteMasters(I2C_INDEX_C),
+         sAxiWriteSlave  => axilWriteSlaves(I2C_INDEX_C),
+         -- AXI-Lite Register Interface
+         mAxiReadMaster  => i2cReadMaster,
+         mAxiReadSlave   => i2cReadSlave,
+         mAxiWriteMaster => i2cWriteMaster,
+         mAxiWriteSlave  => i2cWriteSlave);
 
    --------------------------------------
    -- Combine APP AXI-Lite buses together

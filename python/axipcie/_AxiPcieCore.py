@@ -87,7 +87,7 @@ class AxiPcieCore(pr.Device):
         ))
 
         # Check for the SLAC GEN4 PGP Card
-        if boardType is 'SlacPgpCardG4':
+        if boardType == 'SlacPgpCardG4':
 
             for i in range(2):
                 self.add(xceiver.Qsfp(

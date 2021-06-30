@@ -25,6 +25,7 @@ use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiPkg.all;
+use surf.I2cPkg.all;
 
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
@@ -48,47 +49,81 @@ entity SlacPgpCardG4Core is
       --  Top Level Interfaces
       ------------------------
       -- DMA Interfaces  (dmaClk domain)
-      dmaClk          : out sl;
-      dmaRst          : out sl;
-      dmaBuffGrpPause : out slv(7 downto 0);
-      dmaObMasters    : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves     : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaClk          : out   sl;
+      dmaRst          : out   sl;
+      dmaBuffGrpPause : out   slv(7 downto 0);
+      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- PIP Interface [0x00080000:0009FFFF] (dmaClk domain)
-      pipIbMaster     : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipIbSlave      : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
-      pipObMaster     : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipObSlave      : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipIbMaster     : out   AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave      : in    AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipObMaster     : in    AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipObSlave      : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk          : in  sl                    := '0';
-      appRst          : in  sl                    := '1';
-      appReadMaster   : out AxiLiteReadMasterType;
-      appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      appWriteMaster  : out AxiLiteWriteMasterType;
-      appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      appClk          : in    sl                    := '0';
+      appRst          : in    sl                    := '1';
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
       -- System Ports
-      emcClk          : in  sl;
+      emcClk          : in    sl;
+      pwrScl          : inout sl;
+      pwrSda          : inout sl;
+      sfpScl          : inout sl;
+      sfpSda          : inout sl;
+      qsfpScl         : inout slv(1 downto 0);
+      qsfpSda         : inout slv(1 downto 0);
+      qsfpRstL        : out   slv(1 downto 0);
+      qsfpLpMode      : out   slv(1 downto 0);
+      qsfpModSelL     : out   slv(1 downto 0);
+      qsfpModPrsL     : in    slv(1 downto 0);
       -- Boot Memory Ports
-      flashCsL        : out sl;
-      flashMosi       : out sl;
-      flashMiso       : in  sl;
-      flashHoldL      : out sl;
-      flashWp         : out sl;
+      flashCsL        : out   sl;
+      flashMosi       : out   sl;
+      flashMiso       : in    sl;
+      flashHoldL      : out   sl;
+      flashWp         : out   sl;
       -- PCIe Ports
-      pciRstL         : in  sl;
-      pciRefClkP      : in  sl;
-      pciRefClkN      : in  sl;
-      pciRxP          : in  slv(7 downto 0);
-      pciRxN          : in  slv(7 downto 0);
-      pciTxP          : out slv(7 downto 0);
-      pciTxN          : out slv(7 downto 0));
+      pciRstL         : in    sl;
+      pciRefClkP      : in    sl;
+      pciRefClkN      : in    sl;
+      pciRxP          : in    slv(7 downto 0);
+      pciRxN          : in    slv(7 downto 0);
+      pciTxP          : out   slv(7 downto 0);
+      pciTxN          : out   slv(7 downto 0));
 end SlacPgpCardG4Core;
 
 architecture mapping of SlacPgpCardG4Core is
+
+   constant XBAR_I2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(3 downto 0) := genAxiLiteConfig(4, x"0007_0000", 16, 12);
+
+   constant SFF8472_I2C_CONFIG_C : I2cAxiLiteDevArray(1 downto 0) := (
+      0              => MakeI2cAxiLiteDevType(
+         i2cAddress  => "1010000",      -- 2 wire address 1010000X (A0h)
+         dataSize    => 8,              -- in units of bits
+         addrSize    => 8,              -- in units of bits
+         endianness  => '0',            -- Little endian
+         repeatStart => '1'),           -- No repeat start
+      1              => MakeI2cAxiLiteDevType(
+         i2cAddress  => "1010001",      -- 2 wire address 1010001X (A2h)
+         dataSize    => 8,              -- in units of bits
+         addrSize    => 8,              -- in units of bits
+         endianness  => '0',            -- Little endian
+         repeatStart => '1'));          -- Repeat Start
+
+   constant PWR_I2C_C : I2cAxiLiteDevArray(0 downto 0) := (
+      0              => MakeI2cAxiLiteDevType(
+         i2cAddress  => "1001000",      -- 0x90 = SA56004ATK
+         dataSize    => 8,              -- in units of bits
+         addrSize    => 8,              -- in units of bits
+         endianness  => '0',            -- Little endian
+         repeatStart => '0'));          -- No repeat start
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -114,6 +149,16 @@ architecture mapping of SlacPgpCardG4Core is
    signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
    signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+
+   signal i2cReadMaster  : AxiLiteReadMasterType;
+   signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+   signal i2cWriteMaster : AxiLiteWriteMasterType;
+   signal i2cWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+
+   signal i2cReadMasters  : AxiLiteReadMasterArray(3 downto 0);
+   signal i2cReadSlaves   : AxiLiteReadSlaveArray(3 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_OK_C);
+   signal i2cWriteMasters : AxiLiteWriteMasterArray(3 downto 0);
+   signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(3 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_OK_C);
 
    signal sysClock    : sl;
    signal sysReset    : sl;
@@ -146,6 +191,11 @@ begin
          rstOut => dmaRst);
 
    systemReset <= sysReset or cardReset;
+
+   qsfpRstL(0) <= not(systemReset);
+   qsfpRstL(1) <= not(systemReset);
+   qsfpLpMode  <= "00";
+   qsfpModSelL <= "00";
 
    ---------------
    -- AXI PCIe PHY
@@ -187,6 +237,84 @@ begin
 
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
+
+      U_XBAR : entity surf.AxiLiteCrossbar
+         generic map (
+            TPD_G              => TPD_G,
+            NUM_SLAVE_SLOTS_G  => 1,
+            NUM_MASTER_SLOTS_G => 4,
+            MASTERS_CONFIG_G   => XBAR_I2C_CONFIG_C)
+         port map (
+            axiClk              => sysClock,
+            axiClkRst           => sysReset,
+            sAxiWriteMasters(0) => i2cWriteMaster,
+            sAxiWriteSlaves(0)  => i2cWriteSlave,
+            sAxiReadMasters(0)  => i2cReadMaster,
+            sAxiReadSlaves(0)   => i2cReadSlave,
+            mAxiWriteMasters    => i2cWriteMasters,
+            mAxiWriteSlaves     => i2cWriteSlaves,
+            mAxiReadMasters     => i2cReadMasters,
+            mAxiReadSlaves      => i2cReadSlaves);
+
+      U_PwrI2C : entity surf.AxiI2cRegMaster
+         generic map (
+            TPD_G          => TPD_G,
+            DEVICE_MAP_G   => PWR_I2C_C,
+            I2C_SCL_FREQ_G => 400.0E+3,  -- units of Hz
+            AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
+         port map (
+            -- I2C Ports
+            scl            => pwrScl,
+            sda            => pwrSda,
+            -- AXI-Lite Register Interface
+            axiReadMaster  => i2cReadMasters(3),
+            axiReadSlave   => i2cReadSlaves(3),
+            axiWriteMaster => i2cWriteMasters(3),
+            axiWriteSlave  => i2cWriteSlaves(3),
+            -- Clocks and Resets
+            axiClk         => sysClock,
+            axiRst         => sysReset);
+
+      U_SFP_I2C : entity surf.AxiI2cRegMaster
+         generic map (
+            TPD_G          => TPD_G,
+            I2C_SCL_FREQ_G => 400.0E+3,  -- units of Hz
+            DEVICE_MAP_G   => SFF8472_I2C_CONFIG_C,
+            AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
+         port map (
+            -- I2C Ports
+            scl            => sfpScl,
+            sda            => sfpSda,
+            -- AXI-Lite Register Interface
+            axiReadMaster  => i2cReadMasters(2),
+            axiReadSlave   => i2cReadSlaves(2),
+            axiWriteMaster => i2cWriteMasters(2),
+            axiWriteSlave  => i2cWriteSlaves(2),
+            -- Clocks and Resets
+            axiClk         => sysClock,
+            axiRst         => sysReset);
+
+      GEN_QSFP :
+      for i in 1 downto 0 generate
+         U_I2C : entity surf.AxiI2cRegMaster
+            generic map (
+               TPD_G          => TPD_G,
+               I2C_SCL_FREQ_G => 400.0E+3,  -- units of Hz
+               DEVICE_MAP_G   => SFF8472_I2C_CONFIG_C,
+               AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
+            port map (
+               -- I2C Ports
+               scl            => qsfpScl(i),
+               sda            => qsfpSda(i),
+               -- AXI-Lite Register Interface
+               axiReadMaster  => i2cReadMasters(i),
+               axiReadSlave   => i2cReadSlaves(i),
+               axiWriteMaster => i2cWriteMasters(i),
+               axiWriteSlave  => i2cWriteSlaves(i),
+               -- Clocks and Resets
+               axiClk         => sysClock,
+               axiRst         => sysReset);
+      end generate GEN_QSFP;
 
    end generate;
 
@@ -242,6 +370,11 @@ begin
          phyReadSlave        => phyReadSlave,
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
+         -- I2C AXI-Lite Interfaces (axiClk domain)
+         i2cReadMaster       => i2cReadMaster,
+         i2cReadSlave        => i2cReadSlave,
+         i2cWriteMaster      => i2cWriteMaster,
+         i2cWriteSlave       => i2cWriteSlave,
          -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,

@@ -11,7 +11,10 @@
 import pyrogue              as pr
 import surf.axi             as axi
 import surf.devices.micron  as micron
+import surf.devices.nxp     as nxp
 import surf.xilinx          as xil
+
+import surf.devices.transceivers as xceiver
 
 import axipcie
 import click
@@ -23,6 +26,7 @@ class AxiPcieCore(pr.Device):
                  useBpi      = False,
                  useSpi      = False,
                  numDmaLanes = 1,
+                 boardType   = None,
                  **kwargs):
         super().__init__(description=description, **kwargs)
 
@@ -71,10 +75,42 @@ class AxiPcieCore(pr.Device):
         # DMA AXI Stream Outbound Monitor
         self.add(axi.AxiStreamMonAxiL(
             name        = 'DmaObAxisMon',
-            offset      = 0x70000,
+            offset      = 0x68000,
             numberLanes = self.numDmaLanes,
             expand      = False,
         ))
+
+        # I2C access is slow.  So using a AXI-Lite proxy to prevent holding up CPU during a BAR0 memory map transaction
+        self.add(axi.AxiLiteMasterProxy(
+            name   = 'AxilBridge',
+            offset = 0x70000,
+        ))
+
+        # Check for the SLAC GEN4 PGP Card
+        if boardType == 'SlacPgpCardG4':
+
+            for i in range(2):
+                self.add(xceiver.Qsfp(
+                    name    = f'Qsfp[{i}]',
+                    offset  = i*0x1000+0x70000,
+                    memBase = self.AxilBridge.proxy,
+                    enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                ))
+
+            self.add(xceiver.Sfp(
+                name        = 'Sfp',
+                offset      = 0x72000,
+                memBase     = self.AxilBridge.proxy,
+                enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+            ))
+
+            self.add(nxp.Sa56004x(
+                name        = 'BoardTemp',
+                description = 'This device monitors the board temperature and FPGA junction temperature',
+                offset      = 0x73000,
+                memBase     = self.AxilBridge.proxy,
+                enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+            ))
 
     def _start(self):
         super()._start()

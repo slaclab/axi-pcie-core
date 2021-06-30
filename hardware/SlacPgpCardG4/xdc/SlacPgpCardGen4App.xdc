@@ -12,12 +12,6 @@
 # System #
 ##########
 
-set_property -dict { PACKAGE_PIN AJ8  IOSTANDARD LVCMOS33 } [get_ports { qsfpScl[0] }]
-set_property -dict { PACKAGE_PIN AN8  IOSTANDARD LVCMOS33 } [get_ports { qsfpSda[0] }]
-
-set_property -dict { PACKAGE_PIN AP8  IOSTANDARD LVCMOS33 } [get_ports { qsfpScl[1] }]
-set_property -dict { PACKAGE_PIN AK10 IOSTANDARD LVCMOS33 } [get_ports { qsfpSda[1] }]
-
 set_property -dict { PACKAGE_PIN AL9  IOSTANDARD LVCMOS33 } [get_ports { ledRedL[0]   }]
 set_property -dict { PACKAGE_PIN AN9  IOSTANDARD LVCMOS33 } [get_ports { ledBlueL[0]  }]
 set_property -dict { PACKAGE_PIN AP9  IOSTANDARD LVCMOS33 } [get_ports { ledGreenL[0] }]
@@ -42,22 +36,9 @@ set_property -dict { PACKAGE_PIN AJ10 IOSTANDARD LVCMOS33 } [get_ports { ledRedL
 set_property -dict { PACKAGE_PIN AF10 IOSTANDARD LVCMOS33 } [get_ports { ledBlueL[5]  }]
 set_property -dict { PACKAGE_PIN AG10 IOSTANDARD LVCMOS33 } [get_ports { ledGreenL[5] }]
 
-set_property -dict { PACKAGE_PIN AP11 IOSTANDARD LVCMOS33 } [get_ports { pwrScl }]
-set_property -dict { PACKAGE_PIN AP10 IOSTANDARD LVCMOS33 } [get_ports { pwrSda }]
-
 #######
 # SFP #
 #######
-
-set_property -dict { PACKAGE_PIN AK8  IOSTANDARD LVCMOS33 } [get_ports { sfpScl }]
-set_property -dict { PACKAGE_PIN AL8  IOSTANDARD LVCMOS33 } [get_ports { sfpSda }]
-
-set_property -dict { PACKAGE_PIN AG11 IOSTANDARD LVCMOS33 } [get_ports { sfpRs[1]   }]; # SFP_0
-set_property -dict { PACKAGE_PIN AH11 IOSTANDARD LVCMOS33 } [get_ports { sfpRxLos   }]; # SFP_1
-set_property -dict { PACKAGE_PIN AJ11 IOSTANDARD LVCMOS33 } [get_ports { sfpRs[0]   }]; # SFP_2
-set_property -dict { PACKAGE_PIN AG12 IOSTANDARD LVCMOS33 } [get_ports { sfpAbs     }]; # SFP_3
-set_property -dict { PACKAGE_PIN AH12 IOSTANDARD LVCMOS33 } [get_ports { sfpTxDis   }]; # SFP_4
-set_property -dict { PACKAGE_PIN AD11 IOSTANDARD LVCMOS33 } [get_ports { sfpTxFault }]; # SFP_5
 
 set_property PACKAGE_PIN K6 [get_ports { sfpRefClkP[0] }] ;# 238 MHz
 set_property PACKAGE_PIN K5 [get_ports { sfpRefClkN[0] }] ;# 238 MHz

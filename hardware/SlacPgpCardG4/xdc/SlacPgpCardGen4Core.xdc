@@ -8,6 +8,41 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
+####################
+# I2C: Constraints #
+####################
+
+set_property -dict { PACKAGE_PIN AP11 IOSTANDARD LVCMOS33 } [get_ports { pwrScl }]
+set_property -dict { PACKAGE_PIN AP10 IOSTANDARD LVCMOS33 } [get_ports { pwrSda }]
+
+set_property -dict { PACKAGE_PIN AJ8  IOSTANDARD LVCMOS33 } [get_ports { qsfpScl[0] }]
+set_property -dict { PACKAGE_PIN AN8  IOSTANDARD LVCMOS33 } [get_ports { qsfpSda[0] }]
+
+set_property -dict { PACKAGE_PIN AP8  IOSTANDARD LVCMOS33 } [get_ports { qsfpScl[1] }]
+set_property -dict { PACKAGE_PIN AK10 IOSTANDARD LVCMOS33 } [get_ports { qsfpSda[1] }]
+
+set_property -dict { PACKAGE_PIN AK8  IOSTANDARD LVCMOS33 } [get_ports { sfpScl }]
+set_property -dict { PACKAGE_PIN AL8  IOSTANDARD LVCMOS33 } [get_ports { sfpSda }]
+
+set_property -dict { PACKAGE_PIN AG11 IOSTANDARD LVCMOS33 } [get_ports { sfpRs[1]   }]; # SFP_0
+set_property -dict { PACKAGE_PIN AH11 IOSTANDARD LVCMOS33 } [get_ports { sfpRxLos   }]; # SFP_1
+set_property -dict { PACKAGE_PIN AJ11 IOSTANDARD LVCMOS33 } [get_ports { sfpRs[0]   }]; # SFP_2
+set_property -dict { PACKAGE_PIN AG12 IOSTANDARD LVCMOS33 } [get_ports { sfpAbs     }]; # SFP_3
+set_property -dict { PACKAGE_PIN AH12 IOSTANDARD LVCMOS33 } [get_ports { sfpTxDis   }]; # SFP_4
+set_property -dict { PACKAGE_PIN AD11 IOSTANDARD LVCMOS33 } [get_ports { sfpTxFault }]; # SFP_5
+
+set_property -dict { PACKAGE_PIN AE11 IOSTANDARD LVCMOS33 } [get_ports { qsfpRstL[0]    }]; # QSFP0_0
+set_property -dict { PACKAGE_PIN AE12 IOSTANDARD LVCMOS33 } [get_ports { qsfpModSelL[0] }]; # QSFP0_1
+set_property -dict { PACKAGE_PIN AF12 IOSTANDARD LVCMOS33 } [get_ports { qsfpIntL[0]    }]; # QSFP0_2
+set_property -dict { PACKAGE_PIN AH13 IOSTANDARD LVCMOS33 } [get_ports { qsfpModPrsL[0] }]; # QSFP0_3
+set_property -dict { PACKAGE_PIN AJ13 IOSTANDARD LVCMOS33 } [get_ports { qsfpLpMode[0]  }]; # QSFP0_4
+
+set_property -dict { PACKAGE_PIN AE13 IOSTANDARD LVCMOS33 } [get_ports { qsfpRstL[1]    }]; # QSFP1_0
+set_property -dict { PACKAGE_PIN AF13 IOSTANDARD LVCMOS33 } [get_ports { qsfpModSelL[1] }]; # QSFP1_1
+set_property -dict { PACKAGE_PIN AK13 IOSTANDARD LVCMOS33 } [get_ports { qsfpIntL[1]    }]; # QSFP1_2
+set_property -dict { PACKAGE_PIN AL13 IOSTANDARD LVCMOS33 } [get_ports { qsfpModPrsL[1] }]; # QSFP1_3
+set_property -dict { PACKAGE_PIN AK12 IOSTANDARD LVCMOS33 } [get_ports { qsfpLpMode[1]  }]; # QSFP1_4
+
 ######################
 # FLASH: Constraints #
 ######################

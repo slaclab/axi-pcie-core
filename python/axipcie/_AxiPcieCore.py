@@ -112,6 +112,18 @@ class AxiPcieCore(pr.Device):
                 enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
             ))
 
+        elif boardType == 'Kcu1500':
+
+            qsfpOffset = [0x74_000,0x71_000]
+
+            for i in range(2):
+                self.add(xceiver.Qsfp(
+                    name    = f'Qsfp[{i}]',
+                    offset  = qsfpOffset[i],
+                    memBase = self.AxilBridge.proxy,
+                    enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                ))
+
     def _start(self):
         super()._start()
         DMA_SIZE_G = self.AxiVersion.DMA_SIZE_G.get()

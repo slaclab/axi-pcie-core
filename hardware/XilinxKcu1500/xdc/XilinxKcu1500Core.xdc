@@ -72,6 +72,10 @@ set_property -dict { PACKAGE_PIN AR26 IOSTANDARD LVCMOS18 } [get_ports {pciRstL}
 set_property -dict { PACKAGE_PIN AV24  IOSTANDARD LVDS_25 } [get_ports { userClkP }]; # 156.25 MHz
 set_property -dict { PACKAGE_PIN AW24  IOSTANDARD LVDS_25 } [get_ports { userClkN }]; # 156.25 MHz
 
+set_property -dict { PACKAGE_PIN AL24  IOSTANDARD LVCMOS18 } [get_ports { i2cRstL }];
+set_property -dict { PACKAGE_PIN AN24  IOSTANDARD LVCMOS18 } [get_ports { i2cScl }];
+set_property -dict { PACKAGE_PIN AP24  IOSTANDARD LVCMOS18 } [get_ports { i2cSda }];
+
 ##########################################
 # QSFP[0] ports located in the core area #
 ##########################################

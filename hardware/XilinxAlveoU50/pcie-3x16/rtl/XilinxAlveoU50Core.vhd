@@ -299,7 +299,7 @@ begin
          DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DESC_SYNTH_MODE_G    => "xpm",
-         DESC_MEMORY_TYPE_G   => "uram")
+         DESC_MEMORY_TYPE_G   => "ultra")
       port map (
          axiClk           => sysClock,
          axiRst           => sysReset,

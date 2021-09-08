@@ -190,6 +190,7 @@ architecture mapping of XilinxKcu1500Core is
 
    signal eos      : sl;
    signal userCclk : sl;
+   signal userClk  : sl;
 
 begin
 
@@ -209,6 +210,11 @@ begin
       port map(
          I  => userClkP,
          IB => userClkN,
+         O  => userClk);
+
+   U_BUFG : BUFG
+      port map(
+         I  => userClk,
          O  => userClk156);
 
    i2cRstL      <= not(systemReset);

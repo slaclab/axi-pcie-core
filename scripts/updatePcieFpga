@@ -40,7 +40,8 @@ def promptForImageNumber(imgLst):
     for i,l in enumerate(imgLst.items()):
         print('{} : {}'.format(i,l[0]))
     print('{} : {}'.format(len(imgLst),"Exit"))
-    idx = int(input('Enter image to program into the PCIe card\'s PROM: '))
+    selection = input('Enter image to program into the PCIe card\'s PROM: ')
+    idx = int(selection) if selection else len(imgLst)
     if idx < 0 or idx >= len(imgLst):
         return None
     return list(imgLst.items())[idx]

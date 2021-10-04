@@ -348,6 +348,7 @@ begin
          XIL_DEVICE_G         => "ULTRASCALE",
          BOOT_PROM_G          => "SPIx8",
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
+         PCIE_HW_TYPE_G       => HW_TYPE_SLAC_PGP_GEN4_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (

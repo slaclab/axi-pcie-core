@@ -34,6 +34,7 @@ class AxiPcieCore(pr.Device):
         self.numDmaLanes = numDmaLanes
         self.startArmed  = True
         self.sim         = sim
+        self.boardType   = boardType
 
         # AxiVersion Module
         self.add(axipcie.PcieAxiVersion(
@@ -116,7 +117,10 @@ class AxiPcieCore(pr.Device):
                     enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                 ))
 
-            elif (boardType == 'Kcu1500'):
+            elif (boardType == 'Kcu1500') or (boardType == 'XilinxKcu1500'):
+
+                # Support legacy 'Kcu1500' but override in self.boardType
+                self.boardType = 'XilinxKcu1500'
 
                 qsfpOffset = [0x74_000,0x71_000]
 
@@ -130,8 +134,11 @@ class AxiPcieCore(pr.Device):
 
     def _start(self):
         super()._start()
-        if not (self.sim):
+        if not (self.sim) and (self.startArmed):
             DMA_SIZE_G = self.AxiVersion.DMA_SIZE_G.get()
-            if ( self.numDmaLanes is not DMA_SIZE_G ) and (self.startArmed):
-                self.startArmed = False
+            if ( self.numDmaLanes is not DMA_SIZE_G ):
                 click.secho(f'WARNING: {self.path}.numDmaLanes = {self.numDmaLanes} != {self.path}.AxiVersion.DMA_SIZE_G = {DMA_SIZE_G}', bg='cyan')
+            PCIE_HW_TYPE_G = self.AxiVersion.PCIE_HW_TYPE_G.getDisp()
+            if (self.boardType != PCIE_HW_TYPE_G) and (self.boardType is not None):
+                click.secho(f'WARNING: {self.path}.boardType = {self.boardType} != {self.path}.AxiVersion.PCIE_HW_TYPE_G = {PCIE_HW_TYPE_G}', bg='cyan')
+        self.startArmed = False

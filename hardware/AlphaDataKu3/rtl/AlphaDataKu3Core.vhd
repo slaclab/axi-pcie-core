@@ -200,6 +200,7 @@ begin
          XIL_DEVICE_G         => "ULTRASCALE",
          BOOT_PROM_G          => "NOT_SUPPORTED",
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
+         PCIE_HW_TYPE_G       => HW_TYPE_ALPHADATA_KU3_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (

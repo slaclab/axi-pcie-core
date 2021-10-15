@@ -25,6 +25,7 @@ use surf.AxiLitePkg.all;
 
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
+use axi_pcie_core.AxiPcieSharedPkg.all;
 use surf.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is

@@ -25,6 +25,7 @@ use surf.AxiLitePkg.all;
 
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
+use axi_pcie_core.AxiPcieSharedPkg.all;
 use surf.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
@@ -37,6 +38,7 @@ entity AxiPcieReg is
       XIL_DEVICE_G         : string                      := "7SERIES";
       BOOT_PROM_G          : string                      := "BPI";
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
+      PCIE_HW_TYPE_G       : slv(31 downto 0)            := HW_TYPE_UNDEFINED_C;
       EN_DEVICE_DNA_G      : boolean                     := true;
       EN_ICAP_G            : boolean                     := true;
       DMA_SIZE_G           : positive range 1 to 16      := 1);
@@ -283,8 +285,11 @@ begin
       -- Application Clock Frequency
       userValues(8) <= appClkFreq;
 
+      -- PCIe Hardware Type
+      userValues(9) <= PCIE_HW_TYPE_G;
+
       -- Set unused to zero
-      for i in 63 downto 9 loop
+      for i in 63 downto 10 loop
          userValues(i) <= x"00000000";
       end loop;
 

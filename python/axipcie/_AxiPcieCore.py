@@ -27,42 +27,20 @@ class AxiPcieCore(pr.Device):
                  useSpi      = False,
                  numDmaLanes = 1,
                  boardType   = None,
+                 sim         = False,
                  **kwargs):
         super().__init__(description=description, **kwargs)
 
         self.numDmaLanes = numDmaLanes
         self.startArmed  = True
-
-        # PCI PHY status
-        self.add(xil.AxiPciePhy(
-            offset       = 0x10000,
-            expand       = False,
-        ))
+        self.sim         = sim
+        self.boardType   = boardType
 
         # AxiVersion Module
         self.add(axipcie.PcieAxiVersion(
             offset       = 0x20000,
             expand       = False,
         ))
-
-        # Check if using BPI PROM
-        if (useBpi):
-            self.add(micron.AxiMicronP30(
-                offset       =  0x30000,
-                expand       =  False,
-                hidden       =  True,
-            ))
-
-        # Check if using SPI PROM
-        if (useSpi):
-            for i in range(2):
-                self.add(micron.AxiMicronN25Q(
-                    name         = f'AxiMicronN25Q[{i}]',
-                    offset       =  0x40000 + (i * 0x10000),
-                    expand       =  False,
-                    addrMode     =  True, # True = 32-bit Address Mode
-                    hidden       =  True,
-                ))
 
         # DMA AXI Stream Inbound Monitor
         self.add(axi.AxiStreamMonAxiL(
@@ -80,53 +58,87 @@ class AxiPcieCore(pr.Device):
             expand      = False,
         ))
 
-        # I2C access is slow.  So using a AXI-Lite proxy to prevent holding up CPU during a BAR0 memory map transaction
-        self.add(axi.AxiLiteMasterProxy(
-            name   = 'AxilBridge',
-            offset = 0x70000,
-        ))
+        if not (self.sim):
 
-        # Check for the SLAC GEN4 PGP Card
-        if boardType == 'SlacPgpCardG4':
-
-            for i in range(2):
-                self.add(xceiver.Qsfp(
-                    name    = f'Qsfp[{i}]',
-                    offset  = i*0x1000+0x70000,
-                    memBase = self.AxilBridge.proxy,
-                    enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                ))
-
-            self.add(xceiver.Sfp(
-                name        = 'Sfp',
-                offset      = 0x72000,
-                memBase     = self.AxilBridge.proxy,
-                enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+            # PCI PHY status
+            self.add(xil.AxiPciePhy(
+                offset       = 0x10000,
+                expand       = False,
             ))
 
-            self.add(nxp.Sa56004x(
-                name        = 'BoardTemp',
-                description = 'This device monitors the board temperature and FPGA junction temperature',
-                offset      = 0x73000,
-                memBase     = self.AxilBridge.proxy,
-                enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+            # Check if using BPI PROM
+            if (useBpi):
+                self.add(micron.AxiMicronP30(
+                    offset       =  0x30000,
+                    expand       =  False,
+                    hidden       =  True,
+                ))
+
+            # Check if using SPI PROM
+            if (useSpi):
+                for i in range(2):
+                    self.add(micron.AxiMicronN25Q(
+                        name         = f'AxiMicronN25Q[{i}]',
+                        offset       =  0x40000 + (i * 0x10000),
+                        expand       =  False,
+                        addrMode     =  True, # True = 32-bit Address Mode
+                        hidden       =  True,
+                    ))
+
+            # I2C access is slow.  So using a AXI-Lite proxy to prevent holding up CPU during a BAR0 memory map transaction
+            self.add(axi.AxiLiteMasterProxy(
+                name   = 'AxilBridge',
+                offset = 0x70000,
             ))
 
-        elif boardType == 'Kcu1500':
+            # Check for the SLAC GEN4 PGP Card
+            if (boardType == 'SlacPgpCardG4'):
 
-            qsfpOffset = [0x74_000,0x71_000]
+                for i in range(2):
+                    self.add(xceiver.Qsfp(
+                        name    = f'Qsfp[{i}]',
+                        offset  = i*0x1000+0x70000,
+                        memBase = self.AxilBridge.proxy,
+                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                    ))
 
-            for i in range(2):
-                self.add(xceiver.Qsfp(
-                    name    = f'Qsfp[{i}]',
-                    offset  = qsfpOffset[i],
-                    memBase = self.AxilBridge.proxy,
-                    enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                self.add(xceiver.Sfp(
+                    name        = 'Sfp',
+                    offset      = 0x72000,
+                    memBase     = self.AxilBridge.proxy,
+                    enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                 ))
+
+                self.add(nxp.Sa56004x(
+                    name        = 'BoardTemp',
+                    description = 'This device monitors the board temperature and FPGA junction temperature',
+                    offset      = 0x73000,
+                    memBase     = self.AxilBridge.proxy,
+                    enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                ))
+
+            elif (boardType == 'Kcu1500') or (boardType == 'XilinxKcu1500'):
+
+                # Support legacy 'Kcu1500' but override in self.boardType
+                self.boardType = 'XilinxKcu1500'
+
+                qsfpOffset = [0x74_000,0x71_000]
+
+                for i in range(2):
+                    self.add(xceiver.Qsfp(
+                        name    = f'Qsfp[{i}]',
+                        offset  = qsfpOffset[i],
+                        memBase = self.AxilBridge.proxy,
+                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                    ))
 
     def _start(self):
         super()._start()
-        DMA_SIZE_G = self.AxiVersion.DMA_SIZE_G.get()
-        if ( self.numDmaLanes is not DMA_SIZE_G ) and (self.startArmed):
-            self.startArmed = False
-            click.secho(f'WARNING: {self.path}.numDmaLanes = {self.numDmaLanes} != {self.path}.AxiVersion.DMA_SIZE_G = {DMA_SIZE_G}', bg='cyan')
+        if not (self.sim) and (self.startArmed):
+            DMA_SIZE_G = self.AxiVersion.DMA_SIZE_G.get()
+            if ( self.numDmaLanes is not DMA_SIZE_G ):
+                click.secho(f'WARNING: {self.path}.numDmaLanes = {self.numDmaLanes} != {self.path}.AxiVersion.DMA_SIZE_G = {DMA_SIZE_G}', bg='cyan')
+            PCIE_HW_TYPE_G = self.AxiVersion.PCIE_HW_TYPE_G.getDisp()
+            if (self.boardType != PCIE_HW_TYPE_G) and (self.boardType is not None):
+                click.secho(f'WARNING: {self.path}.boardType = {self.boardType} != {self.path}.AxiVersion.PCIE_HW_TYPE_G = {PCIE_HW_TYPE_G}', bg='cyan')
+        self.startArmed = False

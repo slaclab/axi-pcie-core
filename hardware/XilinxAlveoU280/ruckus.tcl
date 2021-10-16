@@ -16,7 +16,7 @@ if { $::env(PRJ_PART) != "XCU280-FSVH2892-2L-E" } {
 }
 
 # Set the board part
-set_property board_part xilinx.com:au280:part0:1.0 [current_project]
+set_property board_part xilinx.com:au280:part0:1.1 [current_project]
 
 # Check which type of PCIe build to generate
 if { [info exists ::env(BUILD_PCIE_GEN4)] != 1 || $::env(BUILD_PCIE_GEN4) == 0 } {

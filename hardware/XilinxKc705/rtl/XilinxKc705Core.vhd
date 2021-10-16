@@ -33,6 +33,7 @@ use surf.AxiStreamPkg.all;
 
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
+use axi_pcie_core.AxiPcieSharedPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -194,6 +195,7 @@ begin
          XIL_DEVICE_G         => "7SERIES",
          BOOT_PROM_G          => "SPIx4",
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
+         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_KC705_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_C,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (

@@ -36,6 +36,16 @@ import rogue.hardware.axi
 import axipcie as pcie
 from collections import OrderedDict as odict
 
+def promptForImageNumber(imgLst):
+    for i,l in enumerate(imgLst.items()):
+        print('{} : {}'.format(i,l[0]))
+    print('{} : {}'.format(len(imgLst),"Exit"))
+    selection = input('Enter image to program into the PCIe card\'s PROM: ')
+    idx = int(selection) if selection else len(imgLst)
+    if idx < 0 or idx >= len(imgLst):
+        return None
+    return list(imgLst.items())[idx]
+
 if __name__ == "__main__": 
 
     # Set the argument parser
@@ -133,8 +143,11 @@ if __name__ == "__main__":
     # Get a list of images, using .mcs first
     imgLst = odict()
 
+    curImageName = AxiVersion.ImageName.get()
+    prefLst = glob.glob('{}/{}*.mcs*'.format(args.path,curImageName))
+
     rawLst = glob.glob('{}/*.mcs*'.format(args.path))
-    for l in rawLst:
+    for l in prefLst + rawLst:
 
         # Determine suffix
         if '.mcs.gz' in l:
@@ -153,43 +166,44 @@ if __name__ == "__main__":
         # Store entry
         imgLst[l] = suff
 
-    # Sort list
-    imgLst = odict(sorted(imgLst.items(), key=lambda x: x[0]))
+    ent = promptForImageNumber(imgLst)
+    if ent is not None:
+        # Check if firmware matches curImageName
+        newImageName = os.path.basename(ent[0])
+        if not newImageName.startswith(curImageName):
+            resp = str(input('Selected image does not match current image {}.\nAre you sure? (y/n): '.format(curImageName)))
+            if resp != "y":
+                ent = promptForImageNumber(imgLst)
 
-    for i,l in enumerate(imgLst.items()):
-        print('{} : {}'.format(i,l[0]))
+    if ent is not None:
+        if (promType == 'SPIx8'):
+            pri = ent[0] + '_primary.' + ent[1]
+            sec = ent[0] + '_secondary.' + ent[1]
+        else:
+            pri = ent[0] + '.' + ent[1]
 
-    idx = int(input('Enter image to program into the PCIe card\'s PROM: '))
+        # Load the primary MCS file
+        PROM_PRI.LoadMcsFile(pri)  
 
-    ent = list(imgLst.items())[idx]
-    if (promType == 'SPIx8'):
-        pri = ent[0] + '_primary.' + ent[1]
-        sec = ent[0] + '_secondary.' + ent[1]
-    else:
-        pri = ent[0] + '.' + ent[1]
-        
-    # Load the primary MCS file
-    PROM_PRI.LoadMcsFile(pri)  
-
-    # Update the programing done flag
-    progDone = PROM_PRI._progDone
-
-    # Check for secondary PROM
-    if (promType == 'SPIx8'):
-        # Check if the primary MCS failed
-        if PROM_PRI._progDone: 
-            # Load the secondary MCS file
-            PROM_SEC.LoadMcsFile(sec)  
         # Update the programing done flag
-        progDone = PROM_PRI._progDone and PROM_SEC._progDone
+        progDone = PROM_PRI._progDone
 
-    # Check if programming was successful
-    if (progDone):
-        print('\nReloading FPGA firmware from PROM ....')
-        AxiVersion.FpgaReload()
-        print('\nPlease reboot the computer')
-    else:
-        print('Failed to program FPGA')
+        # Check for secondary PROM
+        if (promType == 'SPIx8'):
+            # Check if the primary MCS failed
+            if PROM_PRI._progDone: 
+                # Load the secondary MCS file
+                PROM_SEC.LoadMcsFile(sec)  
+            # Update the programing done flag
+            progDone = PROM_PRI._progDone and PROM_SEC._progDone
+
+        # Check if programming was successful
+        if (progDone):
+            print('\nReloading FPGA firmware from PROM ....')
+            AxiVersion.FpgaReload()
+            print('\nPlease reboot the computer')
+        else:
+            print('Failed to program FPGA')
         
     # Close out
     base.stop()

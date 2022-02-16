@@ -17,6 +17,10 @@ set_property USER_SLR_ASSIGNMENT SLR1 [get_cells {U_Core}]
 set_property -dict { PACKAGE_PIN AU19  IOSTANDARD DIFF_SSTL12 } [get_ports { userClkP }]; # 156.25 MHz
 set_property -dict { PACKAGE_PIN AV19  IOSTANDARD DIFF_SSTL12 } [get_ports { userClkN }]; # 156.25 MHz
 
+set_property -dict { PACKAGE_PIN BF19 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { i2cRstL }];
+set_property -dict { PACKAGE_PIN BF20 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { i2cScl  }];
+set_property -dict { PACKAGE_PIN BF17 IOSTANDARD LVCMOS12 DRIVE 8 } [get_ports { i2cSda  }];
+
 ##########################################
 # QSFP[0] ports located in the core area #
 ##########################################

@@ -129,6 +129,14 @@ architecture mapping of XilinxKcu1500Core is
          endianness  => '0',            -- Little endian
          repeatStart => '1'));          -- Repeat Start
 
+   constant SI570_I2C_CONFIG_C : I2cAxiLiteDevArray(0 downto 0) := (
+      0              => MakeI2cAxiLiteDevType(
+         i2cAddress  => "1011101",      -- 2 wire address 1010000X (A0h)
+         dataSize    => 8,              -- in units of bits
+         addrSize    => 8,              -- in units of bits
+         endianness  => '0',            -- Little endian
+         repeatStart => '1'));          -- No repeat start
+   
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
    signal dmaWriteMaster : AxiWriteMasterType;
@@ -330,6 +338,25 @@ begin
             axiReadSlave   => i2cReadSlaves(4),
             axiWriteMaster => i2cWriteMasters(4),
             axiWriteSlave  => i2cWriteSlaves(4),
+            -- Clocks and Resets
+            axiClk         => sysClock,
+            axiRst         => sysReset);
+
+      U_SI570 : entity surf.AxiI2cRegMasterCore
+         generic map (
+            TPD_G          => TPD_G,
+            I2C_SCL_FREQ_G => 400.0E+3,  -- units of Hz
+            DEVICE_MAP_G   => SI570_I2C_CONFIG_C,
+            AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
+         port map (
+            -- I2C Ports
+            i2ci           => i2ci,
+            i2co           => i2coVec(2),
+            -- AXI-Lite Register Interface
+            axiReadMaster  => i2cReadMasters(2),
+            axiReadSlave   => i2cReadSlaves(2),
+            axiWriteMaster => i2cWriteMasters(2),
+            axiWriteSlave  => i2cWriteSlaves(2),
             -- Clocks and Resets
             axiClk         => sysClock,
             axiRst         => sysReset);

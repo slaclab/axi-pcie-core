@@ -18,13 +18,15 @@ Example: https://github.com/slaclab/pgp-pcie-apps/tree/master/firmware/submodule
 > https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
 
 4) Setup for large filesystems on github
-``` $ git lfs install```
+```bash
+$ git lfs install
+```
 
 <!--- ######################################################## -->
 
 # How to load the driver
 
-```
+```bash
 # Confirm that you have the board the computer with VID=1a4a ("SLAC") and PID=2030 ("AXI Stream DAQ")
 $ lspci -nn | grep SLAC
 04:00.0 Signal processing controller [1180]: SLAC National Accelerator Lab TID-AIR AXI Stream DAQ PCIe card [1a4a:2030]
@@ -61,20 +63,33 @@ $ cat /proc/data_dev0
 Note: This update script will only work if the axi-pcie-core firmware already loaded in FPGA and won't work if the factory default is still loaded.  Use the JTAG interface and Vivado Hardware Manager to load the axi-pcie-core firmware for the first time.
 
 1) Setup the rogue environment
-```
+```bash
 $ source /path/to/my/anaconda3/etc/profile.d/conda.sh
 $ conda activate rogue_env
 ```
 
 2) Run the PCIe firmware update script:
-```
+```bash
 $ python axi-pcie-core/python/updatePcieFpga.py --path <PATH_TO_IMAGE_DIR>
 ```
 where <PATH_TO_IMAGE_DIR> is path to .MCS image directory
 
 3) Reboot the computer
+```bash
+$ sudo reboot
 ```
-sudo reboot
+
+
+<!--- ######################################################## -->
+
+# Vivado flow for Alveo boards removed
+
+https://github.com/Xilinx/XilinxBoardStore/issues/470
+
+Example of copying over a board files to Linux Vivado install:
+
+```bash
+$ cp -rf au55c <PATH_TO_VIVADO>/data/xhub/boards/XilinxBoardStore/boards/Xilinx/.
 ```
 
 <!--- ######################################################## -->

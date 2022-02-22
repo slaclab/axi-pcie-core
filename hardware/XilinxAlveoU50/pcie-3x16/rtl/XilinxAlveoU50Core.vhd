@@ -48,7 +48,7 @@ entity XilinxAlveoU50Core is
       ------------------------
       --  Top Level Interfaces
       ------------------------
-      userClk156      : out sl;
+      userClk100      : out sl;
       -- DMA Interfaces  (dmaClk domain)
       dmaClk          : out sl;
       dmaRst          : out sl;
@@ -147,7 +147,7 @@ begin
       port map(
          I  => userClkP,
          IB => userClkN,
-         O  => userClk156);
+         O  => userClk100);
 
    ---------------
    -- AXI PCIe PHY

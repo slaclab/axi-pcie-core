@@ -8,6 +8,9 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
+# HBM Catastrophic Over temperature Output signal to Satellite Controller: active HIGH indicator to Satellite controller to indicate the HBM has exceeds its maximum allowable temperature.
+set_property -dict { PACKAGE_PIN D32 IOSTANDARD LVCMOS12 PULLDOWN TRUE } [get_ports { hbmCatTrip }]
+
 ###########
 # QSFP[0] #
 ###########

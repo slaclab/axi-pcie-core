@@ -8,23 +8,16 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_Core}]
+# set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_Core}]
+
+set_operating_conditions -design_power_budget 63
 
 ##########
 # System #
 ##########
 
-set_property -dict { PACKAGE_PIN BB18 IOSTANDARD LVDS } [get_ports { userClkP }]; # 156.25 MHz  (TODO: Need to double check this pin mapping)
-set_property -dict { PACKAGE_PIN BC18 IOSTANDARD LVDS } [get_ports { userClkN }]; # 156.25 MHz  (TODO: Need to double check this pin mapping)
-
-#######################################
-# QSFP ports located in the core area #
-#######################################
-
-# set_property -dict { PACKAGE_PIN XXX IOSTANDARD LVCMOS12 } [get_ports { qsfpRstL[0] }];
-# set_property -dict { PACKAGE_PIN XXX IOSTANDARD LVCMOS12 } [get_ports { qsfpLpMode[0] }];
-# set_property -dict { PACKAGE_PIN XXX IOSTANDARD LVCMOS12 } [get_ports { qsfpModPrsL[0] }];
-# set_property -dict { PACKAGE_PIN XXX IOSTANDARD LVCMOS12 } [get_ports { qsfpModSelL[0] }];
+set_property -dict { PACKAGE_PIN G17 IOSTANDARD LVDS DQS_BIAS TRUE } [get_ports { userClkP }]; # 100 MHz
+set_property -dict { PACKAGE_PIN G16 IOSTANDARD LVDS DQS_BIAS TRUE } [get_ports { userClkN }]; # 100 MHz
 
 ####################
 # PCIe Constraints #
@@ -113,8 +106,8 @@ set_property PACKAGE_PIN Y5  [get_ports {pciTxP[0]}]
 set_property PACKAGE_PIN AF9 [get_ports {pciRefClkP[0]}]; # 100 MHz
 set_property PACKAGE_PIN AF8 [get_ports {pciRefClkN[0]}]; # 100 MHz
 
-set_property PACKAGE_PIN AB9 [get_ports {pciRefClkP[1]}]; # 100 MHz (TODO: Need to double check this pin mapping)
-set_property PACKAGE_PIN AB8 [get_ports {pciRefClkN[1]}]; # 100 MHz (TODO: Need to double check this pin mapping)
+set_property PACKAGE_PIN AB9 [get_ports {pciRefClkP[1]}]; # 100 MHz
+set_property PACKAGE_PIN AB8 [get_ports {pciRefClkN[1]}]; # 100 MHz
 
 set_property -dict { PACKAGE_PIN AW27 IOSTANDARD POD12 } [get_ports {pciRstL}]
 set_false_path -from [get_ports pciRstL]
@@ -126,7 +119,7 @@ set_property PULLUP true [get_ports pciRstL]
 
 create_clock -period 10.000 -name pciRefClk0 [get_ports {pciRefClkP[0]}]
 create_clock -period 10.000 -name pciRefClk1 [get_ports {pciRefClkP[1]}]
-create_clock -period  6.400 -name userClkP   [get_ports {userClkP}]
+create_clock -period 10.000 -name userClkP   [get_ports {userClkP}]
 create_clock -period 16.000 -name dnaClk     [get_pins  {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 create_clock -period 16.000 -name iprogClk   [get_pins  {U_Core/U_REG/U_Version/GEN_ICAP.Iprog_1/GEN_ULTRA_SCALE.IprogUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 
@@ -147,17 +140,13 @@ set_property HIGH_PRIORITY true [get_nets {U_Core/REAL_PCIE.U_AxiPciePhy/axiClk}
 # BITSTREAM: .bit file Configuration #
 ######################################
 
-# ------------------------------------------------------------------------
-# https://www.xilinx.com/Attachment/u200_bitstream_constraints.xdc
-# ------------------------------------------------------------------------
 set_property CONFIG_VOLTAGE 1.8                        [current_design]
-set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable    [current_design]
+set_property BITSTREAM.CONFIG.CONFIGFALLBACK Enable    [current_design] ;# Golden image is the fall back image if  new bitstream is corrupted.
 set_property BITSTREAM.GENERAL.COMPRESS TRUE           [current_design]
 set_property CONFIG_MODE SPIx4                         [current_design]
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4           [current_design]
-set_property BITSTREAM.CONFIG.CONFIGRATE 85.0          [current_design]
+set_property BITSTREAM.CONFIG.CONFIGRATE 63.8          [current_design]
 set_property BITSTREAM.CONFIG.EXTMASTERCCLK_EN disable [current_design]
 set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES        [current_design]
-set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup         [current_design]
+set_property BITSTREAM.CONFIG.UNUSEDPIN Pullup         [current_design] ;# Choices are pullnone, pulldown, and pullup.
 set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR Yes       [current_design]
-# ------------------------------------------------------------------------

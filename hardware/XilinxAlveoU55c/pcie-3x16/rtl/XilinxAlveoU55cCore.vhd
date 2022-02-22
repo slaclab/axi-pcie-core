@@ -1,9 +1,8 @@
 -------------------------------------------------------------------------------
--- File       : XilinxAlveoU280Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for Xilinx Alveo U280 board (PCIe GEN3 x 16 lanes)
--- https://www.xilinx.com/products/boards-and-kits/alveo/u280.html
+-- Description: AXI PCIe Core for Xilinx Alveo U55c board (PCIe GEN3 x 16 lanes)
+-- https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -19,7 +18,6 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
@@ -33,7 +31,7 @@ use axi_pcie_core.AxiPcieSharedPkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity XilinxAlveoU280Core is
+entity XilinxAlveoU55cCore is
    generic (
       TPD_G                : time                        := 1 ns;
       ROGUE_SIM_EN_G       : boolean                     := false;
@@ -48,7 +46,7 @@ entity XilinxAlveoU280Core is
       ------------------------
       --  Top Level Interfaces
       ------------------------
-      userClk156      : out sl;
+      userClk100      : out sl;
       -- DMA Interfaces  (dmaClk domain)
       dmaClk          : out sl;
       dmaRst          : out sl;
@@ -75,11 +73,6 @@ entity XilinxAlveoU280Core is
       -- System Ports
       userClkP        : in  sl;
       userClkN        : in  sl;
-      -- QSFP[1:0] Ports
-      qsfpRstL        : out slv(1 downto 0);
-      qsfpLpMode      : out slv(1 downto 0);
-      qsfpModSelL     : out slv(1 downto 0);
-      qsfpModPrsL     : in  slv(1 downto 0);
       -- PCIe Ports
       pciRstL         : in  sl;
       pciRefClkP      : in  slv(1 downto 0);
@@ -88,9 +81,9 @@ entity XilinxAlveoU280Core is
       pciRxN          : in  slv(15 downto 0);
       pciTxP          : out slv(15 downto 0);
       pciTxN          : out slv(15 downto 0));
-end XilinxAlveoU280Core;
+end XilinxAlveoU55cCore;
 
-architecture mapping of XilinxAlveoU280Core is
+architecture mapping of XilinxAlveoU55cCore is
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -152,18 +145,14 @@ begin
       port map(
          I  => userClkP,
          IB => userClkN,
-         O  => userClk156);
-
-   qsfpRstL    <= (others => systemResetL);
-   qsfpLpMode  <= "00";
-   qsfpModSelL <= "11";
+         O  => userClk100);
 
    ---------------
    -- AXI PCIe PHY
    ---------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
-      U_AxiPciePhy : entity axi_pcie_core.XilinxAlveoU280PciePhyWrapper
+      U_AxiPciePhy : entity axi_pcie_core.XilinxAlveoU55cPciePhyWrapper
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -231,7 +220,7 @@ begin
          XIL_DEVICE_G         => "ULTRASCALE",
          BOOT_PROM_G          => "SPIx4",
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
-         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_U280_C,
+         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_U55C_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (

@@ -136,7 +136,7 @@ architecture mapping of XilinxKcu1500Core is
          addrSize    => 8,              -- in units of bits
          endianness  => '0',            -- Little endian
          repeatStart => '1'));          -- No repeat start
-   
+
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
    signal dmaWriteMaster : AxiWriteMasterType;

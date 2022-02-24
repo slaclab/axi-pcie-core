@@ -11,12 +11,12 @@ loadRuckusTcl "$::DIR_PATH/../../shared"
 set_property target_language Verilog [current_project]
 
 # Check for valid FPGA part number
-if { $::env(PRJ_PART) != "xcu55c-fsvh2892-2L-e" } {
-   puts "\n\nERROR: PRJ_PART was not defined as xcu55c-fsvh2892-2L-e in the Makefile\n\n"; exit -1
+if { $::env(PRJ_PART) != "XCU55N-FSVH2892-2L-E" } {
+   puts "\n\nERROR: PRJ_PART was not defined as XCU55N-FSVH2892-2L-E in the Makefile\n\n"; exit -1
 }
 
-# Set the board part
-set_property board_part xilinx.com:au55c:part0:1.0 [current_project]
+# # Set the board part
+# set_property board_part xilinx.com:au55n:part0:1.0 [current_project]
 
 # Check which type of PCIe build to generate
 if { [info exists ::env(BUILD_PCIE_GEN4)] != 1 || $::env(BUILD_PCIE_GEN4) == 0 } {
@@ -28,8 +28,8 @@ if { [info exists ::env(BUILD_PCIE_GEN4)] != 1 || $::env(BUILD_PCIE_GEN4) == 0 }
 
 # Load local Source Code and Constraints
 loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/misc"
-loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU55cCore.xdc"
-loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU55cApp.xdc"
+loadConstraints               -path "$::DIR_PATH/xdc/XilinxVariumC1100Core.xdc"
+loadConstraints               -path "$::DIR_PATH/xdc/XilinxVariumC1100App.xdc"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/${pcieType}"

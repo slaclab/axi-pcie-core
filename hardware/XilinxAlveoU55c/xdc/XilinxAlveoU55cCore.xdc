@@ -19,6 +19,13 @@ set_operating_conditions -design_power_budget 63
 set_property -dict { PACKAGE_PIN BK10 IOSTANDARD LVDS } [get_ports { userClkP }]
 set_property -dict { PACKAGE_PIN BL10 IOSTANDARD LVDS } [get_ports { userClkN }]
 
+set_property -dict { PACKAGE_PIN BM14 IOSTANDARD LVCMOS18 } [get_ports { si5394Scl }]
+set_property -dict { PACKAGE_PIN BN14 IOSTANDARD LVCMOS18 } [get_ports { si5394Sda }]
+set_property -dict { PACKAGE_PIN BM9  IOSTANDARD LVCMOS18 } [get_ports { si5394IrqL }]
+set_property -dict { PACKAGE_PIN BN10 IOSTANDARD LVCMOS18 } [get_ports { si5394LolL }]
+set_property -dict { PACKAGE_PIN BM10 IOSTANDARD LVCMOS18 } [get_ports { si5394LosL }]
+set_property -dict { PACKAGE_PIN BM8  IOSTANDARD LVCMOS18 } [get_ports { si5394RstL }]
+
 ####################
 # PCIe Constraints #
 ####################

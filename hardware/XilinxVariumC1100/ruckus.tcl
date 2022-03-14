@@ -27,9 +27,12 @@ if { [info exists ::env(BUILD_PCIE_GEN4)] != 1 || $::env(BUILD_PCIE_GEN4) == 0 }
 }
 
 # Load local Source Code and Constraints
-loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/misc"
-loadConstraints               -path "$::DIR_PATH/xdc/XilinxVariumC1100Core.xdc"
-loadConstraints               -path "$::DIR_PATH/xdc/XilinxVariumC1100App.xdc"
+loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/../XilinxAlveoU55c/misc"
+loadConstraints               -path "$::DIR_PATH/../XilinxAlveoU55c/xdc/XilinxAlveoU55cCore.xdc"
+loadConstraints               -path "$::DIR_PATH/../XilinxAlveoU55c/xdc/XilinxAlveoU55cApp.xdc"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/${pcieType}"
+
+# Adding the common Si5345 configuration
+add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/Si5394-config/Si5394_GTY_REFCLK_156p25MHz.mem"

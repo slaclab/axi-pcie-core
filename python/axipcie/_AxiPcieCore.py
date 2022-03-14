@@ -12,6 +12,7 @@ import pyrogue              as pr
 import surf.axi             as axi
 import surf.devices.micron  as micron
 import surf.devices.nxp     as nxp
+import surf.devices.silabs  as silabs
 import surf.xilinx          as xil
 
 import surf.devices.transceivers as xceiver
@@ -131,6 +132,14 @@ class AxiPcieCore(pr.Device):
                         memBase = self.AxilBridge.proxy,
                         enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                     ))
+
+            elif (boardType == 'XilinxVariumC1100'):
+                # self.add(silabs.Si5345(
+                self.add(silabs.Si5394(
+                    offset  = 0x70000,
+                    memBase = self.AxilBridge.proxy,
+                    enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                ))
 
     def _start(self):
         super()._start()

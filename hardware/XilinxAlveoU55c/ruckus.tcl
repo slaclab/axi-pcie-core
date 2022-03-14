@@ -33,3 +33,6 @@ loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU55cApp.xdc"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/${pcieType}"
+
+# Adding the common Si5345 configuration
+add_files -norecurse "$::DIR_PATH/Si5394-config/Si5394_GTY_REFCLK_156p25MHz.mem"

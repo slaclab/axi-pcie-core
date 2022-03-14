@@ -34,6 +34,7 @@ use unisim.vcomponents.all;
 entity XilinxVariumC1100Core is
    generic (
       TPD_G                : time                        := 1 ns;
+      SI5394_INIT_FILE_G   : string                      := "Si5394_GTY_REFCLK_156p25MHz.mem";
       ROGUE_SIM_EN_G       : boolean                     := false;
       ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
       ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
@@ -46,41 +47,48 @@ entity XilinxVariumC1100Core is
       ------------------------
       --  Top Level Interfaces
       ------------------------
-      userClk100      : out sl;
+      userClk100      : out   sl;
       -- DMA Interfaces  (dmaClk domain)
-      dmaClk          : out sl;
-      dmaRst          : out sl;
-      dmaBuffGrpPause : out slv(7 downto 0);
-      dmaObMasters    : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves     : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaClk          : out   sl;
+      dmaRst          : out   sl;
+      dmaBuffGrpPause : out   slv(7 downto 0);
+      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- PIP Interface [0x00080000:0009FFFF] (dmaClk domain)
-      pipIbMaster     : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipIbSlave      : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
-      pipObMaster     : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipObSlave      : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipIbMaster     : out   AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave      : in    AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipObMaster     : in    AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipObSlave      : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk          : in  sl                    := '0';
-      appRst          : in  sl                    := '1';
-      appReadMaster   : out AxiLiteReadMasterType;
-      appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      appWriteMaster  : out AxiLiteWriteMasterType;
-      appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      appClk          : in    sl                    := '0';
+      appRst          : in    sl                    := '1';
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
       -- System Ports
-      userClkP        : in  sl;
-      userClkN        : in  sl;
+      userClkP        : in    sl;
+      userClkN        : in    sl;
+      -- SI5394 Ports
+      si5394Scl       : inout sl;
+      si5394Sda       : inout sl;
+      si5394IrqL      : in    sl;
+      si5394LolL      : in    sl;
+      si5394LosL      : in    sl;
+      si5394RstL      : out   sl;
       -- PCIe Ports
-      pciRstL         : in  sl;
-      pciRefClkP      : in  slv(1 downto 0);
-      pciRefClkN      : in  slv(1 downto 0);
-      pciRxP          : in  slv(15 downto 0);
-      pciRxN          : in  slv(15 downto 0);
-      pciTxP          : out slv(15 downto 0);
-      pciTxN          : out slv(15 downto 0));
+      pciRstL         : in    sl;
+      pciRefClkP      : in    slv(1 downto 0);
+      pciRefClkN      : in    slv(1 downto 0);
+      pciRxP          : in    slv(15 downto 0);
+      pciRxN          : in    slv(15 downto 0);
+      pciTxP          : out   slv(15 downto 0);
+      pciTxN          : out   slv(15 downto 0));
 end XilinxVariumC1100Core;
 
 architecture mapping of XilinxVariumC1100Core is
@@ -104,6 +112,11 @@ architecture mapping of XilinxVariumC1100Core is
    signal phyReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
    signal phyWriteMaster : AxiLiteWriteMasterType;
    signal phyWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+
+   signal i2cReadMaster  : AxiLiteReadMasterType;
+   signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
+   signal i2cWriteMaster : AxiLiteWriteMasterType;
+   signal i2cWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
 
    signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
@@ -188,6 +201,31 @@ begin
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
 
+      U_SI5394 : entity surf.Si5394I2c
+         generic map (
+            TPD_G              => TPD_G,
+            MEMORY_INIT_FILE_G => SI5394_INIT_FILE_G,
+            I2C_BASE_ADDR_G    => "00",
+            I2C_SCL_FREQ_G     => 100.0E+3,        -- units of Hz
+            AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C)  -- units of Hz
+         port map (
+            -- I2C Ports
+            scl             => si5394Scl,
+            sda             => si5394Sda,
+            -- Misc Interface
+            irqL            => si5394IrqL,
+            lolL            => si5394LolL,
+            losL            => si5394LosL,
+            rstL            => si5394RstL,
+            -- AXI-Lite Register Interface
+            axilReadMaster  => i2cReadMaster,
+            axilReadSlave   => i2cReadSlave,
+            axilWriteMaster => i2cWriteMaster,
+            axilWriteSlave  => i2cWriteSlave,
+            -- Clocks and Resets
+            axilClk         => sysClock,
+            axilRst         => sysReset);
+
    end generate;
 
    SIM_PCIE : if (ROGUE_SIM_EN_G) generate
@@ -243,6 +281,11 @@ begin
          phyReadSlave        => phyReadSlave,
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
+         -- I2C AXI-Lite Interfaces (axiClk domain)
+         i2cReadMaster       => i2cReadMaster,
+         i2cReadSlave        => i2cReadSlave,
+         i2cWriteMaster      => i2cWriteMaster,
+         i2cWriteSlave       => i2cWriteSlave,
          -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,

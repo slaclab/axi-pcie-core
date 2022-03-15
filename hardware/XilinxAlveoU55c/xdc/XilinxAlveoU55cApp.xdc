@@ -73,8 +73,9 @@ set_property PACKAGE_PIN V52 [get_ports { qsfp1RxN[3] }]
 create_clock -period 6.4 -name qsfp0RefClkP [get_ports {qsfp0RefClkP}] ;# 156.25 MHz (after reprogramming Si5394)
 create_clock -period 6.4 -name qsfp1RefClkP [get_ports {qsfp1RefClkP}] ;# 156.25 MHz (after reprogramming Si5394)
 
-set_clock_groups -asynchronous
+set_clock_groups -asynchronous \
    -group [get_clocks -include_generated_clocks {qsfp0RefClkP}] \
    -group [get_clocks -include_generated_clocks {qsfp1RefClkP}] \
    -group [get_clocks -include_generated_clocks {pciRefClk0}] \
+   -group [get_clocks -include_generated_clocks {pciRefClk1}] \
    -group [get_clocks -include_generated_clocks {userClkP}]

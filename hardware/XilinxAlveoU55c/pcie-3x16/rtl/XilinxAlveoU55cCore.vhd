@@ -206,7 +206,7 @@ begin
             TPD_G              => TPD_G,
             MEMORY_INIT_FILE_G => SI5394_INIT_FILE_G,
             I2C_BASE_ADDR_G    => "00",
-            I2C_SCL_FREQ_G     => 100.0E+3,        -- units of Hz
+            I2C_SCL_FREQ_G     => 400.0E+3,        -- units of Hz
             AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C)  -- units of Hz
          port map (
             -- I2C Ports

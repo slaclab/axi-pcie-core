@@ -3,6 +3,7 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
 # Load local Source Code and Constraints
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
+loadConstraints               -dir "$::DIR_PATH/xdc"
 
 # loadIpCore -path "$::DIR_PATH/ip/XilinxAlveoU55cPciePhyGen3x16.xci"
 

@@ -34,7 +34,7 @@ use unisim.vcomponents.all;
 entity XilinxVariumC1100Core is
    generic (
       TPD_G                : time                        := 1 ns;
-      SI5394_INIT_FILE_G   : string                      := "Si5394_GTY_REFCLK_156p25MHz.mem";
+      SI5394_INIT_FILE_G   : string                      := "none";
       ROGUE_SIM_EN_G       : boolean                     := false;
       ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
       ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
@@ -47,7 +47,8 @@ entity XilinxVariumC1100Core is
       ------------------------
       --  Top Level Interfaces
       ------------------------
-      userClk100      : out   sl;
+      userClk         : out   sl;
+      hbmRefClk       : out   sl;
       -- DMA Interfaces  (dmaClk domain)
       dmaClk          : out   sl;
       dmaRst          : out   sl;
@@ -74,6 +75,8 @@ entity XilinxVariumC1100Core is
       -- System Ports
       userClkP        : in    sl;
       userClkN        : in    sl;
+      hbmRefClkP      : in    sl;
+      hbmRefClkN      : in    sl;
       -- SI5394 Ports
       si5394Scl       : inout sl;
       si5394Sda       : inout sl;
@@ -154,11 +157,17 @@ begin
    systemReset  <= sysReset or cardReset;
    systemResetL <= not(systemReset);
 
-   U_IBUFDS : IBUFDS
+   U_userClk : IBUFDS
       port map(
          I  => userClkP,
          IB => userClkN,
-         O  => userClk100);
+         O  => userClk);
+
+   U_hbmRefClk : IBUFDS
+      port map(
+         I  => hbmRefClkP,
+         IB => hbmRefClkN,
+         O  => hbmRefClk);
 
    ---------------
    -- AXI PCIe PHY

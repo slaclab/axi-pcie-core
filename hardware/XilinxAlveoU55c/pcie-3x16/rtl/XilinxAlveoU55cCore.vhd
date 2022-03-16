@@ -34,7 +34,7 @@ use unisim.vcomponents.all;
 entity XilinxAlveoU55cCore is
    generic (
       TPD_G                : time                        := 1 ns;
-      SI5394_INIT_FILE_G   : string                      := "Si5394_GTY_REFCLK_156p25MHz.mem";
+      SI5394_INIT_FILE_G   : string                      := "none";
       ROGUE_SIM_EN_G       : boolean                     := false;
       ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
       ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
@@ -47,33 +47,36 @@ entity XilinxAlveoU55cCore is
       ------------------------
       --  Top Level Interfaces
       ------------------------
-      userClk100      : out sl;
+      userClk         : out   sl;
+      hbmRefClk       : out   sl;
       -- DMA Interfaces  (dmaClk domain)
-      dmaClk          : out sl;
-      dmaRst          : out sl;
-      dmaBuffGrpPause : out slv(7 downto 0);
-      dmaObMasters    : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves     : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaClk          : out   sl;
+      dmaRst          : out   sl;
+      dmaBuffGrpPause : out   slv(7 downto 0);
+      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- PIP Interface [0x00080000:0009FFFF] (dmaClk domain)
-      pipIbMaster     : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipIbSlave      : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
-      pipObMaster     : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipObSlave      : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipIbMaster     : out   AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave      : in    AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipObMaster     : in    AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipObSlave      : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk          : in  sl                    := '0';
-      appRst          : in  sl                    := '1';
-      appReadMaster   : out AxiLiteReadMasterType;
-      appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      appWriteMaster  : out AxiLiteWriteMasterType;
-      appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      appClk          : in    sl                    := '0';
+      appRst          : in    sl                    := '1';
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
       -- System Ports
       userClkP        : in    sl;
       userClkN        : in    sl;
+      hbmRefClkP      : in    sl;
+      hbmRefClkN      : in    sl;
       -- SI5394 Ports
       si5394Scl       : inout sl;
       si5394Sda       : inout sl;
@@ -82,13 +85,13 @@ entity XilinxAlveoU55cCore is
       si5394LosL      : in    sl;
       si5394RstL      : out   sl;
       -- PCIe Ports
-      pciRstL         : in  sl;
-      pciRefClkP      : in  slv(1 downto 0);
-      pciRefClkN      : in  slv(1 downto 0);
-      pciRxP          : in  slv(15 downto 0);
-      pciRxN          : in  slv(15 downto 0);
-      pciTxP          : out slv(15 downto 0);
-      pciTxN          : out slv(15 downto 0));
+      pciRstL         : in    sl;
+      pciRefClkP      : in    slv(1 downto 0);
+      pciRefClkN      : in    slv(1 downto 0);
+      pciRxP          : in    slv(15 downto 0);
+      pciRxN          : in    slv(15 downto 0);
+      pciTxP          : out   slv(15 downto 0);
+      pciTxN          : out   slv(15 downto 0));
 end XilinxAlveoU55cCore;
 
 architecture mapping of XilinxAlveoU55cCore is
@@ -154,11 +157,17 @@ begin
    systemReset  <= sysReset or cardReset;
    systemResetL <= not(systemReset);
 
-   U_IBUFDS : IBUFDS
+   U_userClk : IBUFDS
       port map(
          I  => userClkP,
          IB => userClkN,
-         O  => userClk100);
+         O  => userClk);
+
+   U_hbmRefClk : IBUFDS
+      port map(
+         I  => hbmRefClkP,
+         IB => hbmRefClkN,
+         O  => hbmRefClk);
 
    ---------------
    -- AXI PCIe PHY

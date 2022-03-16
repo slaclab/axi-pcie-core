@@ -15,8 +15,8 @@ set_property -dict { PACKAGE_PIN BE45 IOSTANDARD LVCMOS18 PULLDOWN TRUE } [get_p
 # QSFP[0] - QSFP28 MGTY Interface QUAD 130
 ##########################################
 
-set_property PACKAGE_PIN AD42 [get_ports { qsfp0RefClkP }] ;# MGTREFCLK0P_130: 156.25 MHz (after reprogramming Si5394)
-set_property PACKAGE_PIN AD43 [get_ports { qsfp0RefClkN }] ;# MGTREFCLK0N_130: 156.25 MHz (after reprogramming Si5394)
+set_property PACKAGE_PIN AD42 [get_ports { qsfp0RefClkP }]
+set_property PACKAGE_PIN AD43 [get_ports { qsfp0RefClkN }]
 
 set_property PACKAGE_PIN AD46 [get_ports { qsfp0TxP[0] }]
 set_property PACKAGE_PIN AD47 [get_ports { qsfp0TxN[0] }]
@@ -42,8 +42,8 @@ set_property PACKAGE_PIN AB52 [get_ports { qsfp0RxN[3] }]
 # QSFP[0] - QSFP28 MGTY Interface QUAD 131
 ##########################################
 
-set_property PACKAGE_PIN AB42 [get_ports { qsfp1RefClkP }] ;# MGTREFCLK0P_131: 156.25 MHz (after reprogramming Si5394)
-set_property PACKAGE_PIN AB43 [get_ports { qsfp1RefClkN }] ;# MGTREFCLK0N_131: 156.25 MHz (after reprogramming Si5394)
+set_property PACKAGE_PIN AB42 [get_ports { qsfp1RefClkP }]
+set_property PACKAGE_PIN AB43 [get_ports { qsfp1RefClkN }]
 
 set_property PACKAGE_PIN AA44 [get_ports { qsfp1TxP[0] }]
 set_property PACKAGE_PIN AA45 [get_ports { qsfp1TxN[0] }]
@@ -70,8 +70,8 @@ set_property PACKAGE_PIN V52 [get_ports { qsfp1RxN[3] }]
 # Clocks #
 ##########
 
-create_clock -period 6.4 -name qsfp0RefClkP [get_ports {qsfp0RefClkP}] ;# 156.25 MHz (after reprogramming Si5394)
-create_clock -period 6.4 -name qsfp1RefClkP [get_ports {qsfp1RefClkP}] ;# 156.25 MHz (after reprogramming Si5394)
+create_clock -period 6.206 -name qsfp0RefClkP [get_ports {qsfp0RefClkP}] ;# 161.1328125 MHz
+create_clock -period 6.206 -name qsfp1RefClkP [get_ports {qsfp1RefClkP}] ;# 161.1328125 MHz
 
 set_clock_groups -asynchronous \
    -group [get_clocks -include_generated_clocks {qsfp0RefClkP}] \

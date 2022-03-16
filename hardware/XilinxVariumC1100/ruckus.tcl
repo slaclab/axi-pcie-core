@@ -27,9 +27,9 @@ if { [info exists ::env(BUILD_PCIE_GEN4)] != 1 || $::env(BUILD_PCIE_GEN4) == 0 }
 }
 
 # Load local Source Code and Constraints
-loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/misc"
-loadConstraints               -path "$::DIR_PATH/xdc/XilinxVariumC1100Core.xdc"
-loadConstraints               -path "$::DIR_PATH/xdc/XilinxVariumC1100App.xdc"
+loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/../XilinxAlveoU55c/misc"
+loadConstraints               -path "$::DIR_PATH/../XilinxAlveoU55c/xdc/XilinxAlveoU55cCore.xdc"
+loadConstraints               -path "$::DIR_PATH/../XilinxAlveoU55c/xdc/XilinxAlveoU55cApp.xdc"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/${pcieType}"

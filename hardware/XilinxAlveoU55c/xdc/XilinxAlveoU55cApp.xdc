@@ -11,12 +11,12 @@
 # HBM Catastrophic Over temperature Output signal to Satellite Controller: active HIGH indicator to Satellite controller to indicate the HBM has exceeds its maximum allowable temperature.
 set_property -dict { PACKAGE_PIN BE45 IOSTANDARD LVCMOS18 PULLDOWN TRUE } [get_ports { hbmCatTrip }]
 
-###########
-# QSFP[0] #
-###########
+##########################################
+# QSFP[0] - QSFP28 MGTY Interface QUAD 130
+##########################################
 
-set_property PACKAGE_PIN AD42 [get_ports { qsfp0RefClkP }] ;# 161.1328125 MHz
-set_property PACKAGE_PIN AD43 [get_ports { qsfp0RefClkN }] ;# 161.1328125 MHz
+set_property PACKAGE_PIN AD42 [get_ports { qsfp0RefClkP }]
+set_property PACKAGE_PIN AD43 [get_ports { qsfp0RefClkN }]
 
 set_property PACKAGE_PIN AD46 [get_ports { qsfp0TxP[0] }]
 set_property PACKAGE_PIN AD47 [get_ports { qsfp0TxN[0] }]
@@ -38,12 +38,12 @@ set_property PACKAGE_PIN AA49 [get_ports { qsfp0TxN[3] }]
 set_property PACKAGE_PIN AB51 [get_ports { qsfp0RxP[3] }]
 set_property PACKAGE_PIN AB52 [get_ports { qsfp0RxN[3] }]
 
-###########
-# QSFP[1] #
-###########
+##########################################
+# QSFP[0] - QSFP28 MGTY Interface QUAD 131
+##########################################
 
-set_property PACKAGE_PIN AB42 [get_ports { qsfp1RefClkP }] ;# 161.1328125 MHz
-set_property PACKAGE_PIN AB43 [get_ports { qsfp1RefClkN }] ;# 161.1328125 MHz
+set_property PACKAGE_PIN AB42 [get_ports { qsfp1RefClkP }]
+set_property PACKAGE_PIN AB43 [get_ports { qsfp1RefClkN }]
 
 set_property PACKAGE_PIN AA44 [get_ports { qsfp1TxP[0] }]
 set_property PACKAGE_PIN AA45 [get_ports { qsfp1TxN[0] }]
@@ -73,9 +73,9 @@ set_property PACKAGE_PIN V52 [get_ports { qsfp1RxN[3] }]
 create_clock -period 6.206 -name qsfp0RefClkP [get_ports {qsfp0RefClkP}] ;# 161.1328125 MHz
 create_clock -period 6.206 -name qsfp1RefClkP [get_ports {qsfp1RefClkP}] ;# 161.1328125 MHz
 
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfp0RefClkP}]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {userClkP}] -group [get_clocks -include_generated_clocks {qsfp1RefClkP}]
-
 set_clock_groups -asynchronous \
    -group [get_clocks -include_generated_clocks {qsfp0RefClkP}] \
-   -group [get_clocks -include_generated_clocks {qsfp1RefClkP}]
+   -group [get_clocks -include_generated_clocks {qsfp1RefClkP}] \
+   -group [get_clocks -include_generated_clocks {pciRefClk0}] \
+   -group [get_clocks -include_generated_clocks {pciRefClk1}] \
+   -group [get_clocks -include_generated_clocks {userClkP}]

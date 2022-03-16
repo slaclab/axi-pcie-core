@@ -7,10 +7,21 @@
 # copied, modified, propagated, or distributed except according to the terms
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
-from axipcie._AxiGpuAsyncCore import *
-from axipcie._AxiPcieCore     import *
-from axipcie._AxiPcieDma      import *
-from axipcie._AxiPcieRoot     import *
-from axipcie._AxiPipCore      import *
-from axipcie._PcieAxiVersion  import *
-from axipcie._TerminateQsfp   import *
+
+import pyrogue as pr
+
+class TerminateQsfp(pr.Device):
+    def __init__(self,numRefClk=4,**kwargs):
+        super().__init__(**kwargs)
+
+        self.addRemoteVariables(
+            name         = 'RefClkFreq',
+            offset       = 0x0,
+            bitSize      = 32,
+            mode         = 'RO',
+            number       = numRefClk,
+            stride       = 4,
+            disp         = '{:d}',
+            units        = 'Hz',
+            pollInterval = 1,
+        )

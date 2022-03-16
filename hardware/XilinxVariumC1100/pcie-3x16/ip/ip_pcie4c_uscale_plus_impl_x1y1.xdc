@@ -50,7 +50,7 @@
 ##
 ## Project    : UltraScale+ FPGA PCI Express CCIX v4.0 Integrated Block
 ## File       : ip_pcie4c_uscale_plus_impl_x1y1.xdc
-## Version    : 1.0 
+## Version    : 1.0
 ##-----------------------------------------------------------------------------
 #
 ###############################################################################

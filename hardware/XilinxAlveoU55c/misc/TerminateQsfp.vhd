@@ -71,7 +71,7 @@ architecture mapping of TerminateQsfp is
    signal rin : RegType;
 
    signal unusedGtClk : slv(1 downto 0);
-   signal refClk      : slv(1 downto 0);
+   signal refClk      : slv(3 downto 0);
    signal refClkBufg  : slv(3 downto 0);
    signal refClkFreq  : Slv32Array(3 downto 0);
 
@@ -105,30 +105,30 @@ begin
          gtTxN  => qsfp1TxN);
 
 
+  U_unusedGtClk0 : IBUFDS_GTE4
+     generic map (
+        REFCLK_EN_TX_PATH  => '0',
+        REFCLK_HROW_CK_SEL => "00",  -- 2'b00: ODIV2 = O
+        REFCLK_ICNTL_RX    => "00")
+     port map (
+        I     => qsfp0RefClkP,
+        IB    => qsfp0RefClkN,
+        CEB   => '0',
+        ODIV2 => refClk(0),
+        O     => unusedGtClk(0));
 
-   U_unusedGtClk0 : IBUFDS_GTE4
-      generic map (
-         REFCLK_EN_TX_PATH  => '0',
-         REFCLK_HROW_CK_SEL => "00",    -- 2'b00: ODIV2 = O
-         REFCLK_ICNTL_RX    => "00")
-      port map (
-         I     => qsfp0RefClkP,
-         IB    => qsfp0RefClkN,
-         CEB   => '0',
-         ODIV2 => refClk(0),
-         O     => unusedGtClk(0));
+  U_unusedGtClk1 : IBUFDS_GTE4
+     generic map (
+        REFCLK_EN_TX_PATH  => '0',
+        REFCLK_HROW_CK_SEL => "00",  -- 2'b00: ODIV2 = O
+        REFCLK_ICNTL_RX    => "00")
+     port map (
+        I     => qsfp1RefClkP,
+        IB    => qsfp1RefClkN,
+        CEB   => '0',
+        ODIV2 => refClk(1),
+        O     => unusedGtClk(1));
 
-   U_unusedGtClk1 : IBUFDS_GTE4
-      generic map (
-         REFCLK_EN_TX_PATH  => '0',
-         REFCLK_HROW_CK_SEL => "00",    -- 2'b00: ODIV2 = O
-         REFCLK_ICNTL_RX    => "00")
-      port map (
-         I     => qsfp1RefClkP,
-         IB    => qsfp1RefClkN,
-         CEB   => '0',
-         ODIV2 => refClk(1),
-         O     => unusedGtClk(1));
 
    GEN_FREQ_MON : for i in 1 downto 0 generate
 

@@ -7,6 +7,9 @@ loadIpCore                              -dir "$::DIR_PATH/ip"
 loadSource -lib axi_pcie_core -sim_only -dir "$::DIR_PATH/tb"
 loadConstraints                         -dir "$::DIR_PATH/xdc"
 
+# Add MigClkConvt dependent header for simulation
+loadSource -sim_only -lib axi_infrastructure_v1_1_0 -fileType {Verilog Header} -path "$::DIR_PATH/ip/axi_infrastructure_v1_1_0.vh"
+
 # Load the User port naming
 loadConstraints -path "$::DIR_PATH/xdc/XilinxAlveoU200Mig0_user_mapping.xdc"
 set_property USED_IN {synthesis implementation board}    [get_files {XilinxAlveoU200Mig0_user_mapping.xdc}]

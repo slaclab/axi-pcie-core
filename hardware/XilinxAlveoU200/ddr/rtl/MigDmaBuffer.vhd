@@ -73,7 +73,7 @@ architecture mapping of MigDmaBuffer is
 
    constant DMA_AXI_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 40,  -- Match 40-bit address for axi_pcie_core.AxiPcieCrossbar
-      DATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,  -- Matches the AXIS stream
+      DATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,  -- Matches the AXIS stream because you ***CANNOT*** resize an interleaved AXI stream
       ID_BITS_C    => MEM_AXI_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => MEM_AXI_CONFIG_C.LEN_BITS_C);
 

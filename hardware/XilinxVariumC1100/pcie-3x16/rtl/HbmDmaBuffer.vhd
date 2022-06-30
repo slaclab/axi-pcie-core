@@ -335,6 +335,79 @@ architecture mapping of HbmDmaBuffer is
          );
    end component;
 
+   component HbmAxiFifo
+      port (
+         aclk          : in  std_logic;
+         aresetn       : in  std_logic;
+         s_axi_awaddr  : in  std_logic_vector(32 downto 0);
+         s_axi_awlen   : in  std_logic_vector(3 downto 0);
+         s_axi_awsize  : in  std_logic_vector(2 downto 0);
+         s_axi_awburst : in  std_logic_vector(1 downto 0);
+         s_axi_awlock  : in  std_logic_vector(1 downto 0);
+         s_axi_awcache : in  std_logic_vector(3 downto 0);
+         s_axi_awprot  : in  std_logic_vector(2 downto 0);
+         s_axi_awqos   : in  std_logic_vector(3 downto 0);
+         s_axi_awvalid : in  std_logic;
+         s_axi_awready : out std_logic;
+         s_axi_wdata   : in  std_logic_vector(255 downto 0);
+         s_axi_wstrb   : in  std_logic_vector(31 downto 0);
+         s_axi_wlast   : in  std_logic;
+         s_axi_wvalid  : in  std_logic;
+         s_axi_wready  : out std_logic;
+         s_axi_bresp   : out std_logic_vector(1 downto 0);
+         s_axi_bvalid  : out std_logic;
+         s_axi_bready  : in  std_logic;
+         s_axi_araddr  : in  std_logic_vector(32 downto 0);
+         s_axi_arlen   : in  std_logic_vector(3 downto 0);
+         s_axi_arsize  : in  std_logic_vector(2 downto 0);
+         s_axi_arburst : in  std_logic_vector(1 downto 0);
+         s_axi_arlock  : in  std_logic_vector(1 downto 0);
+         s_axi_arcache : in  std_logic_vector(3 downto 0);
+         s_axi_arprot  : in  std_logic_vector(2 downto 0);
+         s_axi_arqos   : in  std_logic_vector(3 downto 0);
+         s_axi_arvalid : in  std_logic;
+         s_axi_arready : out std_logic;
+         s_axi_rdata   : out std_logic_vector(255 downto 0);
+         s_axi_rresp   : out std_logic_vector(1 downto 0);
+         s_axi_rlast   : out std_logic;
+         s_axi_rvalid  : out std_logic;
+         s_axi_rready  : in  std_logic;
+         m_axi_awaddr  : out std_logic_vector(32 downto 0);
+         m_axi_awlen   : out std_logic_vector(3 downto 0);
+         m_axi_awsize  : out std_logic_vector(2 downto 0);
+         m_axi_awburst : out std_logic_vector(1 downto 0);
+         m_axi_awlock  : out std_logic_vector(1 downto 0);
+         m_axi_awcache : out std_logic_vector(3 downto 0);
+         m_axi_awprot  : out std_logic_vector(2 downto 0);
+         m_axi_awqos   : out std_logic_vector(3 downto 0);
+         m_axi_awvalid : out std_logic;
+         m_axi_awready : in  std_logic;
+         m_axi_wdata   : out std_logic_vector(255 downto 0);
+         m_axi_wstrb   : out std_logic_vector(31 downto 0);
+         m_axi_wlast   : out std_logic;
+         m_axi_wvalid  : out std_logic;
+         m_axi_wready  : in  std_logic;
+         m_axi_bresp   : in  std_logic_vector(1 downto 0);
+         m_axi_bvalid  : in  std_logic;
+         m_axi_bready  : out std_logic;
+         m_axi_araddr  : out std_logic_vector(32 downto 0);
+         m_axi_arlen   : out std_logic_vector(3 downto 0);
+         m_axi_arsize  : out std_logic_vector(2 downto 0);
+         m_axi_arburst : out std_logic_vector(1 downto 0);
+         m_axi_arlock  : out std_logic_vector(1 downto 0);
+         m_axi_arcache : out std_logic_vector(3 downto 0);
+         m_axi_arprot  : out std_logic_vector(2 downto 0);
+         m_axi_arqos   : out std_logic_vector(3 downto 0);
+         m_axi_arvalid : out std_logic;
+         m_axi_arready : in  std_logic;
+         m_axi_rdata   : in  std_logic_vector(255 downto 0);
+         m_axi_rresp   : in  std_logic_vector(1 downto 0);
+         m_axi_rlast   : in  std_logic;
+         m_axi_rvalid  : in  std_logic;
+         m_axi_rready  : out std_logic
+         );
+   end component;
+
    -- HBM MEM AXI Configuration
    constant MEM_AXI_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 33,               -- 8GB HBM
@@ -376,6 +449,11 @@ architecture mapping of HbmDmaBuffer is
    signal memWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_WRITE_SLAVE_INIT_C);
    signal memReadMasters  : AxiReadMasterArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
    signal memReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G-1 downto 0)   := (others => AXI_READ_SLAVE_INIT_C);
+
+   signal fifoWriteMasters : AxiWriteMasterArray(DMA_SIZE_G-1 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
+   signal fifoWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_WRITE_SLAVE_INIT_C);
+   signal fifoReadMasters  : AxiReadMasterArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
+   signal fifoReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G-1 downto 0)   := (others => AXI_READ_SLAVE_INIT_C);
 
    signal axiWriteMasters : AxiWriteMasterArray(7 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
    signal axiWriteSlaves  : AxiWriteSlaveArray(7 downto 0)  := (others => AXI_WRITE_SLAVE_INIT_C);
@@ -501,11 +579,86 @@ begin
             sAxiWriteMaster => memWriteMasters(i),
             sAxiWriteSlave  => memWriteSlaves(i),
             -- Master Port
-            mAxiReadMaster  => axiReadMasters(i),
-            mAxiReadSlave   => axiReadSlaves(i),
-            mAxiWriteMaster => axiWriteMasters(i),
-            mAxiWriteSlave  => axiWriteSlaves(i));
+            mAxiReadMaster  => fifoReadMasters(i),
+            mAxiReadSlave   => fifoReadSlaves(i),
+            mAxiWriteMaster => fifoWriteMasters(i),
+            mAxiWriteSlave  => fifoWriteSlaves(i));
 
+      -- Store/Forward AXI3 FIFO
+      U_StoreAndForwardFifo : HbmAxiFifo
+         port map (
+            aclk          => axisClk,
+            aresetn       => axisReset(i),
+            -- Slave Interface
+            s_axi_awaddr  => fifoWriteMasters(i).awaddr(32 downto 0),
+            s_axi_awlen   => fifoWriteMasters(i).awlen(3 downto 0),
+            s_axi_awsize  => fifoWriteMasters(i).awsize,
+            s_axi_awburst => fifoWriteMasters(i).awburst,
+            s_axi_awlock  => fifoWriteMasters(i).awlock,
+            s_axi_awcache => fifoWriteMasters(i).awcache,
+            s_axi_awprot  => fifoWriteMasters(i).awprot,
+            s_axi_awqos   => fifoWriteMasters(i).awqos,
+            s_axi_awvalid => fifoWriteMasters(i).awvalid,
+            s_axi_awready => fifoWriteSlaves(i).awready,
+            s_axi_wdata   => fifoWriteMasters(i).wdata(255 downto 0),
+            s_axi_wstrb   => fifoWriteMasters(i).wstrb(31 downto 0),
+            s_axi_wlast   => fifoWriteMasters(i).wlast,
+            s_axi_wvalid  => fifoWriteMasters(i).wvalid,
+            s_axi_wready  => fifoWriteSlaves(i).wready,
+            s_axi_bresp   => fifoWriteSlaves(i).bresp,
+            s_axi_bvalid  => fifoWriteSlaves(i).bvalid,
+            s_axi_bready  => fifoWriteMasters(i).bready,
+            s_axi_araddr  => fifoReadMasters(i).araddr(32 downto 0),
+            s_axi_arlen   => fifoReadMasters(i).arlen(3 downto 0),
+            s_axi_arsize  => fifoReadMasters(i).arsize,
+            s_axi_arburst => fifoReadMasters(i).arburst,
+            s_axi_arlock  => fifoReadMasters(i).arlock,
+            s_axi_arcache => fifoReadMasters(i).arcache,
+            s_axi_arprot  => fifoReadMasters(i).arprot,
+            s_axi_arqos   => fifoReadMasters(i).arqos,
+            s_axi_arvalid => fifoReadMasters(i).arvalid,
+            s_axi_arready => fifoReadSlaves(i).arready,
+            s_axi_rdata   => fifoReadSlaves(i).rdata(255 downto 0),
+            s_axi_rresp   => fifoReadSlaves(i).rresp,
+            s_axi_rlast   => fifoReadSlaves(i).rlast,
+            s_axi_rvalid  => fifoReadSlaves(i).rvalid,
+            s_axi_rready  => fifoReadMasters(i).rready,
+            -- Master Interface
+            m_axi_awaddr  => axiWriteMasters(i).awaddr(32 downto 0),
+            m_axi_awlen   => axiWriteMasters(i).awlen(3 downto 0),
+            m_axi_awsize  => axiWriteMasters(i).awsize,
+            m_axi_awburst => axiWriteMasters(i).awburst,
+            m_axi_awlock  => axiWriteMasters(i).awlock,
+            m_axi_awcache => axiWriteMasters(i).awcache,
+            m_axi_awprot  => axiWriteMasters(i).awprot,
+            m_axi_awqos   => axiWriteMasters(i).awqos,
+            m_axi_awvalid => axiWriteMasters(i).awvalid,
+            m_axi_awready => axiWriteSlaves(i).awready,
+            m_axi_wdata   => axiWriteMasters(i).wdata(255 downto 0),
+            m_axi_wstrb   => axiWriteMasters(i).wstrb(31 downto 0),
+            m_axi_wlast   => axiWriteMasters(i).wlast,
+            m_axi_wvalid  => axiWriteMasters(i).wvalid,
+            m_axi_wready  => axiWriteSlaves(i).wready,
+            m_axi_bresp   => axiWriteSlaves(i).bresp,
+            m_axi_bvalid  => axiWriteSlaves(i).bvalid,
+            m_axi_bready  => axiWriteMasters(i).bready,
+            m_axi_araddr  => axiReadMasters(i).araddr(32 downto 0),
+            m_axi_arlen   => axiReadMasters(i).arlen(3 downto 0),
+            m_axi_arsize  => axiReadMasters(i).arsize,
+            m_axi_arburst => axiReadMasters(i).arburst,
+            m_axi_arlock  => axiReadMasters(i).arlock,
+            m_axi_arcache => axiReadMasters(i).arcache,
+            m_axi_arprot  => axiReadMasters(i).arprot,
+            m_axi_arqos   => axiReadMasters(i).arqos,
+            m_axi_arvalid => axiReadMasters(i).arvalid,
+            m_axi_arready => axiReadSlaves(i).arready,
+            m_axi_rdata   => axiReadSlaves(i).rdata(255 downto 0),
+            m_axi_rresp   => axiReadSlaves(i).rresp,
+            m_axi_rlast   => axiReadSlaves(i).rlast,
+            m_axi_rvalid  => axiReadSlaves(i).rvalid,
+            m_axi_rready  => axiReadMasters(i).rready);
+
+      -- Calculate the WDATA parity bits
       GEN_VEC : for j in MEM_AXI_CONFIG_C.DATA_BYTES_C-1 downto 0 generate
          wdataParity(i)(j) <= oddParity(axiWriteMasters(i).wdata(8*j+7 downto 8*j));
       end generate;

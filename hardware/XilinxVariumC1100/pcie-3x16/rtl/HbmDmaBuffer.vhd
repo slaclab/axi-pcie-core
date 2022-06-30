@@ -588,7 +588,7 @@ begin
       U_StoreAndForwardFifo : HbmAxiFifo
          port map (
             aclk          => axisClk,
-            aresetn       => axisReset(i),
+            aresetn       => axisRstL(i),
             -- Slave Interface
             s_axi_awaddr  => fifoWriteMasters(i).awaddr(32 downto 0),
             s_axi_awlen   => fifoWriteMasters(i).awlen(3 downto 0),

@@ -554,7 +554,7 @@ begin
             AXI_BASE_ADDR_G    => AXI_BASE_ADDR_C(i),
             AXI_CONFIG_G       => DMA_AXI_CONFIG_C,
             BURST_BYTES_G      => 512,
-            RD_PEND_THRESH_G   => 256)
+            RD_PEND_THRESH_G   => 2048)
          port map (
             -- AXI4 Interface (axiClk domain)
             axiClk          => axisClk,

@@ -82,7 +82,7 @@ architecture mapping of AxiPcieDma is
       TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
       TDEST_BITS_C  => 8,
       TID_BITS_C    => 3,
-      TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
+      TKEEP_MODE_C  => TKEEP_COUNT_C,   -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
@@ -148,7 +148,7 @@ begin
       U_V2Gen : entity surf.AxiStreamDmaV2
          generic map (
             TPD_G              => TPD_G,
-            DESC_AWIDTH_G      => 12,   -- 4096 entries
+            DESC_AWIDTH_G      => 12,    -- 4096 entries
             DESC_ARB_G         => DESC_ARB_G,
             DESC_SYNTH_MODE_G  => DESC_SYNTH_MODE_G,
             DESC_MEMORY_TYPE_G => DESC_MEMORY_TYPE_G,
@@ -340,8 +340,60 @@ begin
    end generate;
 
    SIM_PCIE : if (ROGUE_SIM_EN_G) generate
+      signal fastClk       : sl;
+      signal fastRst       : sl;
+      signal fastObMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      signal fastObSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      signal fastIbMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      signal fastIbSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+
+   begin
+
+      U_ClkRst_1 : entity surf.ClkRst
+         generic map (
+            CLK_PERIOD_G => 1 ns)
+         port map (
+            clkP => fastClk,            -- [out]
+            rst  => fastRst);           -- [out]
 
       GEN_VEC : for i in DMA_SIZE_G-1 downto 0 generate
+
+         U_AxiStreamFifoV2_1 : entity surf.AxiStreamFifoV2
+            generic map (
+               TPD_G               => TPD_G,
+               SLAVE_READY_EN_G    => true,
+               GEN_SYNC_FIFO_G     => false,
+               SLAVE_AXI_CONFIG_G  => DMA_AXIS_CONFIG_G,
+               MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_G)
+            port map (
+               sAxisClk    => axiClk,            -- [in]
+               sAxisRst    => axiRst,            -- [in]
+               sAxisMaster => dmaIbMasters(i),   -- [in]
+               sAxisSlave  => dmaIbSlaves(i),    -- [out]
+               mAxisClk    => fastClk,           -- [in]
+               mAxisRst    => fastRst,           -- [in]
+               mAxisMaster => fastIbMasters(i),  -- [out]
+               mAxisSlave  => fastIbSlaves(i));  -- [in]
+
+         U_AxiStreamFifoV2_2 : entity surf.AxiStreamFifoV2
+            generic map (
+               TPD_G               => TPD_G,
+               SLAVE_READY_EN_G    => true,
+               GEN_SYNC_FIFO_G     => false,
+               SLAVE_AXI_CONFIG_G  => DMA_AXIS_CONFIG_G,
+               MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_G)
+            port map (
+               sAxisClk    => fastClk,           -- [in]
+               sAxisRst    => fastRst,           -- [in]
+               sAxisMaster => fastObMasters(i),  -- [in]
+               sAxisSlave  => fastObSlaves(i),   -- [out]
+               mAxisClk    => axiClk,            -- [in]
+               mAxisRst    => axiRst,            -- [in]
+               mAxisMaster => dmaObMasters(i),   -- [out]
+               mAxisSlave  => dmaObSlaves(i));   -- [in]
+
+
+
          -------------------------------------------------------
          -- DMA.LANE.TDEST Mapping:
          -------------------------------------------------------
@@ -365,12 +417,12 @@ begin
                CHAN_COUNT_G  => ROGUE_SIM_CH_COUNT_G,
                AXIS_CONFIG_G => DMA_AXIS_CONFIG_G)
             port map (
-               axisClk     => axiClk,
-               axisRst     => axiRst,
-               sAxisMaster => dmaIbMasters(i),
-               sAxisSlave  => dmaIbSlaves(i),
-               mAxisMaster => dmaObMasters(i),
-               mAxisSlave  => dmaObSlaves(i));
+               axisClk     => fastClk,
+               axisRst     => fastRst,
+               sAxisMaster => fastIbMasters(i),
+               sAxisSlave  => fastIbSlaves(i),
+               mAxisMaster => fastObMasters(i),
+               mAxisSlave  => fastObSlaves(i));
       end generate GEN_VEC;
 
    end generate;

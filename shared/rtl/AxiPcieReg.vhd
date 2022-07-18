@@ -41,7 +41,8 @@ entity AxiPcieReg is
       PCIE_HW_TYPE_G       : slv(31 downto 0)            := HW_TYPE_UNDEFINED_C;
       EN_DEVICE_DNA_G      : boolean                     := true;
       EN_ICAP_G            : boolean                     := true;
-      DMA_SIZE_G           : positive range 1 to 16      := 1);
+      DMA_SIZE_G           : positive range 1 to 16      := 1;
+      APP_CLK_IS_AXI_CLK_G : boolean := false);
    port (
       -- AXI4 Interfaces (axiClk domain)
       axiClk              : in  sl;
@@ -596,7 +597,7 @@ begin
    U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
          TPD_G           => TPD_G,
-         COMMON_CLK_G    => false,
+         COMMON_CLK_G    => APP_CLK_IS_AXI_CLK_G,
          NUM_ADDR_BITS_G => 24)
       port map (
          -- Slave Interface

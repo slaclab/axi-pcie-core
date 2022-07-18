@@ -44,7 +44,8 @@ entity SlacPgpCardG4Core is
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
       DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
-      DMA_SIZE_G           : positive range 1 to 8       := 1);
+      DMA_SIZE_G           : positive range 1 to 8       := 1;
+      APP_CLK_IS_DMA_CLK_g : boolean := false);
    port (
       ------------------------
       --  Top Level Interfaces

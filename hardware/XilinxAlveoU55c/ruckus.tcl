@@ -19,11 +19,10 @@ if { $::env(PRJ_PART) != "xcu55c-fsvh2892-2L-e" } {
 set_property board_part xilinx.com:au55c:part0:1.0 [current_project]
 
 # Check which type of PCIe build to generate
-if { [info exists ::env(BUILD_PCIE_GEN4)] != 1 || $::env(BUILD_PCIE_GEN4) == 0 } {
-   set pcieType "pcie-3x16"
+if { [info exists ::env(BUILD_PCIE_GEN4)] != 1 || $::env(BUILD_PCIE_GEN4) == 1 } {
+   set pcieType "pcie-4x8"
 } else {
-   set pcieType "pcie-gen4x8x2"
-   puts "\n\nERROR: PCIe GEN4 is not supported in the Xilinx AXI PCIe bridge IP core yet\n\n"; exit -1
+   set pcieType "pcie-3x16"
 }
 
 # Load local Source Code and Constraints

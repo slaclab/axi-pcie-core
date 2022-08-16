@@ -98,6 +98,9 @@ end XilinxAlveoU200Core;
 
 architecture mapping of XilinxAlveoU200Core is
 
+   constant I2C_SCL_FREQ_C  : real := 100.0E+3;  -- units of Hz
+   constant I2C_MIN_PULSE_C : real := 100.0E-9;  -- units of seconds
+
    constant XBAR_I2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(3 downto 0) := genAxiLiteConfig(4, x"0007_0000", 16, 12);
 
    constant SFF8472_I2C_CONFIG_C : I2cAxiLiteDevArray(1 downto 0) := (
@@ -106,13 +109,21 @@ architecture mapping of XilinxAlveoU200Core is
          dataSize    => 8,              -- in units of bits
          addrSize    => 8,              -- in units of bits
          endianness  => '0',            -- Little endian
-         repeatStart => '1'),           -- No repeat start
+         repeatStart => '1'),           -- Repeat start
       1              => MakeI2cAxiLiteDevType(
          i2cAddress  => "1010001",      -- 2 wire address 1010001X (A2h)
          dataSize    => 8,              -- in units of bits
          addrSize    => 8,              -- in units of bits
          endianness  => '0',            -- Little endian
-         repeatStart => '1'));          -- Repeat Start
+         repeatStart => '1'));          -- Repeat start
+
+   constant SI570_I2C_CONFIG_C : I2cAxiLiteDevArray(0 downto 0) := (
+      0              => MakeI2cAxiLiteDevType(
+         i2cAddress  => "1011101",      -- 2 wire address 1011101X (BAh)
+         dataSize    => 8,              -- in units of bits
+         addrSize    => 8,              -- in units of bits
+         endianness  => '0',            -- Little endian
+         repeatStart => '0'));          -- No repeat start
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -248,10 +259,9 @@ begin
          generic map (
             TPD_G              => TPD_G,
             -- I2C MUX Generics
-            -- MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_PCA9546A_C, -- broken
-            MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_PCA9544A_C,
+            MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_PCA9546A_C,
             I2C_MUX_ADDR_G     => b"1110_100",
-            I2C_SCL_FREQ_G     => 400.0E+3,  -- units of Hz
+            I2C_SCL_FREQ_G     => I2C_SCL_FREQ_C,
             AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C,
             -- AXI-Lite Crossbar Generics
             NUM_MASTER_SLOTS_G => 4,
@@ -275,13 +285,14 @@ begin
             i2co              => i2coVec(4));
 
       GEN_VEC :
-      for i in 3 downto 0 generate
+      for i in 1 downto 0 generate
          U_QSFP : entity surf.AxiI2cRegMasterCore
             generic map (
-               TPD_G          => TPD_G,
-               I2C_SCL_FREQ_G => 400.0E+3,  -- units of Hz
-               DEVICE_MAP_G   => SFF8472_I2C_CONFIG_C,
-               AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
+               TPD_G           => TPD_G,
+               I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+               I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
+               DEVICE_MAP_G    => SFF8472_I2C_CONFIG_C,
+               AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
             port map (
                -- I2C Ports
                i2ci           => i2ci,
@@ -295,6 +306,26 @@ begin
                axiClk         => sysClock,
                axiRst         => sysReset);
       end generate GEN_VEC;
+
+      U_SI570 : entity surf.AxiI2cRegMasterCore
+         generic map (
+            TPD_G           => TPD_G,
+            I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+            I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
+            DEVICE_MAP_G    => SI570_I2C_CONFIG_C,
+            AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
+         port map (
+            -- I2C Ports
+            i2ci           => i2ci,
+            i2co           => i2coVec(2),
+            -- AXI-Lite Register Interface
+            axiReadMaster  => i2cReadMasters(2),
+            axiReadSlave   => i2cReadSlaves(2),
+            axiWriteMaster => i2cWriteMasters(2),
+            axiWriteSlave  => i2cWriteSlaves(2),
+            -- Clocks and Resets
+            axiClk         => sysClock,
+            axiRst         => sysReset);
 
       process(i2cReadMasters, i2cWriteMasters, i2coVec)
          variable tmp : i2c_out_type;

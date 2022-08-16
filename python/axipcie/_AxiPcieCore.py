@@ -135,7 +135,7 @@ class AxiPcieCore(pr.Device):
 
             elif (boardType == 'U200') or (boardType == 'U250'):
 
-                for i in range(4):
+                for i in range(2):
                     self.add(xceiver.Qsfp(
                         name    = f'Qsfp[{i}]',
                         offset  = i*0x1000+0x70000,

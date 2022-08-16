@@ -17,13 +17,6 @@ set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_Core}]
 set_property -dict { PACKAGE_PIN G30 IOSTANDARD DIFF_SSTL12 } [get_ports { userClkP }]; # 156.25 MHz
 set_property -dict { PACKAGE_PIN F30 IOSTANDARD DIFF_SSTL12 } [get_ports { userClkN }]; # 156.25 MHz
 
-#########################################################################################
-# Alveo Data Center Accelerator Card - U280 - Custom Flow - Pin D32 must be driven to '0'
-# https://www.xilinx.com/support/answers/72926.html
-#########################################################################################
-
-set_property -dict { PACKAGE_PIN D32 IOSTANDARD LVCMOS12 } [get_ports { pinD32 }]
-
 ##########################################
 # QSFP[0] ports located in the core area #
 ##########################################

@@ -207,7 +207,6 @@ begin
          IB => userClkN,
          O  => userClk156);
 
-   i2cRstL       <= systemResetL;
    qsfpFs        <= (others => "11");  -- 161.1328125 MHzFS[1:0] = 1X -> CLK1A/1B: 161.1328125 MHz 1.8V LVDS
    qsfpRefClkRst <= "00";               -- SI5335A-B06201-GM/Reset pin
    qsfpRstL      <= (others => systemResetL);
@@ -262,6 +261,7 @@ begin
             MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_PCA9546A_C,
             I2C_MUX_ADDR_G     => b"1110_100",
             I2C_SCL_FREQ_G     => I2C_SCL_FREQ_C,
+            I2C_MIN_PULSE_G    => I2C_MIN_PULSE_C,
             AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C,
             -- AXI-Lite Crossbar Generics
             NUM_MASTER_SLOTS_G => 4,
@@ -281,6 +281,7 @@ begin
             mAxilReadMasters  => i2cReadMasters,
             mAxilReadSlaves   => i2cReadSlaves,
             -- I2C MUX Ports
+            i2cRstL           => i2cRstL,
             i2ci              => i2ci,
             i2co              => i2coVec(4));
 

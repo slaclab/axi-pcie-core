@@ -140,6 +140,12 @@ class AxiPcieCore(pr.Device):
                         enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                     ))
 
+                self.add(silabs.Si570(
+                    name = 'Si570',
+                    offset = 0x70000 + 0x3000,
+                    memBase = self.AxilBridge.proxy,
+                    enabled = False))
+
             elif (boardType == 'XilinxAlveoU55c') or (boardType == 'XilinxVariumC1100'):
                 self.add(silabs.Si5394(
                     offset  = 0x70000,

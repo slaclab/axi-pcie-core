@@ -145,7 +145,8 @@ class AxiPcieCore(pr.Device):
 
                 self.add(silabs.Si570(
                     name = 'Si570',
-                    offset = 0x70000 + 0x3000,
+                    factory_freq = 156.25,
+                    offset = 0x70000 + 0x2000,
                     memBase = self.AxilBridge.proxy,
                     enabled = False))
 

@@ -91,3 +91,9 @@ set_clock_groups -asynchronous \
    -group [get_clocks -include_generated_clocks {qsfp0RefClkP1}] \
    -group [get_clocks -include_generated_clocks {qsfp1RefClkP0}] \
    -group [get_clocks -include_generated_clocks {qsfp1RefClkP1}]
+
+
+set_property -dict {PACKAGE_PIN AY38 IOSTANDARD DIFF_POD12_DCI } [get_ports ddrClkN[0] ]; # Bank 42 VCCO - VCC1V2 Net "SYSCLK0_300_N" - IO_L13N_T2L_N1_GC_QBC_42
+set_property -dict {PACKAGE_PIN AY37 IOSTANDARD DIFF_POD12_DCI } [get_ports ddrClkP[0]]; # Bank 42 VCCO - VCC1V2 Net "SYSCLK0_300_P" - IO_L13P_T2L_N0_GC_QBC_42
+
+create_clock -period 3.332 -name ddrClk0 [get_ports ddrClkP[0]]

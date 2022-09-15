@@ -6,7 +6,6 @@ loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
 loadConstraints               -dir "$::DIR_PATH/xdc"
 
 # loadIpCore -path "$::DIR_PATH/ip/XilinxVariumC1100PciePhyGen3x16.xci"
-
 loadSource -lib axi_pcie_core -path "$::DIR_PATH/ip/XilinxVariumC1100PciePhyGen3x16.dcp"
 
 loadConstraints -path "$::DIR_PATH/ip/XilinxVariumC1100PciePhyGen3x16_pcie4c_ip_gt.xdc"

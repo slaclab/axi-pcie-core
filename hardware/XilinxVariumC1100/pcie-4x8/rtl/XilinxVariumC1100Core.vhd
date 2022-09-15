@@ -1,9 +1,8 @@
 -------------------------------------------------------------------------------
--- File       : XilinxAlveoU200Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for Xilinx Alveo U200 board (PCIe GEN3 x 16 lanes)
--- https://www.xilinx.com/products/boards-and-kits/alveo/u200.html
+-- Description: AXI PCIe Core for Xilinx Alveo U55c board (PCIe GEN3 x 16 lanes)
+-- https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -24,8 +23,6 @@ use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiPkg.all;
-use surf.I2cPkg.all;
-use surf.I2cMuxPkg.all;
 
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
@@ -34,9 +31,10 @@ use axi_pcie_core.AxiPcieSharedPkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity XilinxAlveoU200Core is
+entity XilinxVariumC1100Core is
    generic (
       TPD_G                : time                        := 1 ns;
+      SI5394_INIT_FILE_G   : string                      := "none";
       ROGUE_SIM_EN_G       : boolean                     := false;
       ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
       ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
@@ -49,7 +47,8 @@ entity XilinxAlveoU200Core is
       ------------------------
       --  Top Level Interfaces
       ------------------------
-      userClk156      : out   sl;
+      userClk         : out   sl;
+      hbmRefClk       : out   sl;
       -- DMA Interfaces  (dmaClk domain)
       dmaClk          : out   sl;
       dmaRst          : out   sl;
@@ -76,54 +75,26 @@ entity XilinxAlveoU200Core is
       -- System Ports
       userClkP        : in    sl;
       userClkN        : in    sl;
-      i2cRstL         : out   sl;
-      i2cScl          : inout sl;
-      i2cSda          : inout sl;
-      -- QSFP[1:0] Ports
-      qsfpFs          : out   Slv2Array(1 downto 0);
-      qsfpRefClkRst   : out   slv(1 downto 0);
-      qsfpRstL        : out   slv(1 downto 0);
-      qsfpLpMode      : out   slv(1 downto 0);
-      qsfpModSelL     : out   slv(1 downto 0);
-      qsfpModPrsL     : in    slv(1 downto 0);
+      hbmRefClkP      : in    sl;
+      hbmRefClkN      : in    sl;
+      -- SI5394 Ports
+      si5394Scl       : inout sl;
+      si5394Sda       : inout sl;
+      si5394IrqL      : in    sl;
+      si5394LolL      : in    sl;
+      si5394LosL      : in    sl;
+      si5394RstL      : out   sl;
       -- PCIe Ports
       pciRstL         : in    sl;
-      pciRefClkP      : in    sl;
-      pciRefClkN      : in    sl;
-      pciRxP          : in    slv(15 downto 0);
-      pciRxN          : in    slv(15 downto 0);
-      pciTxP          : out   slv(15 downto 0);
-      pciTxN          : out   slv(15 downto 0));
-end XilinxAlveoU200Core;
+      pciRefClkP      : in    slv(0 downto 0);
+      pciRefClkN      : in    slv(0 downto 0);
+      pciRxP          : in    slv(7 downto 0);
+      pciRxN          : in    slv(7 downto 0);
+      pciTxP          : out   slv(7 downto 0);
+      pciTxN          : out   slv(7 downto 0));
+end XilinxVariumC1100Core;
 
-architecture mapping of XilinxAlveoU200Core is
-
-   constant I2C_SCL_FREQ_C  : real := 100.0E+3;  -- units of Hz
-   constant I2C_MIN_PULSE_C : real := 100.0E-9;  -- units of seconds
-
-   constant XBAR_I2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(3 downto 0) := genAxiLiteConfig(4, x"0007_0000", 16, 12);
-
-   constant SFF8472_I2C_CONFIG_C : I2cAxiLiteDevArray(1 downto 0) := (
-      0              => MakeI2cAxiLiteDevType(
-         i2cAddress  => "1010000",      -- 2 wire address 1010000X (A0h)
-         dataSize    => 8,              -- in units of bits
-         addrSize    => 8,              -- in units of bits
-         endianness  => '0',            -- Little endian
-         repeatStart => '1'),           -- Repeat start
-      1              => MakeI2cAxiLiteDevType(
-         i2cAddress  => "1010001",      -- 2 wire address 1010001X (A2h)
-         dataSize    => 8,              -- in units of bits
-         addrSize    => 8,              -- in units of bits
-         endianness  => '0',            -- Little endian
-         repeatStart => '1'));          -- Repeat start
-
-   constant SI570_I2C_CONFIG_C : I2cAxiLiteDevArray(0 downto 0) := (
-      0              => MakeI2cAxiLiteDevType(
-         i2cAddress  => "1011101",      -- 2 wire address 1011101X (BAh)
-         dataSize    => 8,              -- in units of bits
-         addrSize    => 8,              -- in units of bits
-         endianness  => '0',            -- Little endian
-         repeatStart => '0'));          -- No repeat start
+architecture mapping of XilinxVariumC1100Core is
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -145,30 +116,15 @@ architecture mapping of XilinxAlveoU200Core is
    signal phyWriteMaster : AxiLiteWriteMasterType;
    signal phyWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
 
-   signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-   signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
-   signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-   signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
-
    signal i2cReadMaster  : AxiLiteReadMasterType;
    signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
    signal i2cWriteMaster : AxiLiteWriteMasterType;
    signal i2cWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
 
-   signal i2cReadMasters  : AxiLiteReadMasterArray(3 downto 0);
-   signal i2cReadSlaves   : AxiLiteReadSlaveArray(3 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
-   signal i2cWriteMasters : AxiLiteWriteMasterArray(3 downto 0);
-   signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(3 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
-
-   signal i2ci : i2c_in_type;
-   signal i2coVec : i2c_out_array(4 downto 0) := (
-      others    => (
-         scl    => '1',
-         scloen => '1',
-         sda    => '1',
-         sdaoen => '1',
-         enable => '0'));
-   signal i2co : i2c_out_type;
+   signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+   signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+   signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+   signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
 
    signal sysClock     : sl;
    signal sysReset     : sl;
@@ -201,24 +157,24 @@ begin
    systemReset  <= sysReset or cardReset;
    systemResetL <= not(systemReset);
 
-   U_IBUFDS : IBUFDS
+   U_userClk : IBUFDS
       port map(
          I  => userClkP,
          IB => userClkN,
-         O  => userClk156);
+         O  => userClk);
 
-   qsfpFs        <= (others => "11");  -- 161.1328125 MHzFS[1:0] = 1X -> CLK1A/1B: 161.1328125 MHz 1.8V LVDS
-   qsfpRefClkRst <= "00";               -- SI5335A-B06201-GM/Reset pin
-   qsfpRstL      <= (others => systemResetL);
-   qsfpLpMode    <= "00";
-   qsfpModSelL   <= "00";
+   U_hbmRefClk : IBUFDS
+      port map(
+         I  => hbmRefClkP,
+         IB => hbmRefClkN,
+         O  => hbmRefClk);
 
    ---------------
    -- AXI PCIe PHY
    ---------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
-      U_AxiPciePhy : entity axi_pcie_core.XilinxAlveoU200PciePhyWrapper
+      U_AxiPciePhy : entity axi_pcie_core.XilinxVariumC1100PciePhyWrapper
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -254,108 +210,30 @@ begin
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
 
-      U_XbarI2cMux : entity surf.AxiLiteCrossbarI2cMux
+      U_SI5394 : entity surf.Si5394I2c
          generic map (
             TPD_G              => TPD_G,
-            -- I2C MUX Generics
-            MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_PCA9546A_C,
-            I2C_MUX_ADDR_G     => b"1110_100",
-            I2C_SCL_FREQ_G     => I2C_SCL_FREQ_C,
-            I2C_MIN_PULSE_G    => I2C_MIN_PULSE_C,
-            AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C,
-            -- AXI-Lite Crossbar Generics
-            NUM_MASTER_SLOTS_G => 4,
-            MASTERS_CONFIG_G   => XBAR_I2C_CONFIG_C)
-         port map (
-            -- Clocks and Resets
-            axilClk           => sysClock,
-            axilRst           => sysReset,
-            -- Slave AXI-Lite Interface
-            sAxilWriteMaster  => i2cWriteMaster,
-            sAxilWriteSlave   => i2cWriteSlave,
-            sAxilReadMaster   => i2cReadMaster,
-            sAxilReadSlave    => i2cReadSlave,
-            -- Master AXI-Lite Interfaces
-            mAxilWriteMasters => i2cWriteMasters,
-            mAxilWriteSlaves  => i2cWriteSlaves,
-            mAxilReadMasters  => i2cReadMasters,
-            mAxilReadSlaves   => i2cReadSlaves,
-            -- I2C MUX Ports
-            i2cRstL           => i2cRstL,
-            i2ci              => i2ci,
-            i2co              => i2coVec(4));
-
-      GEN_VEC :
-      for i in 1 downto 0 generate
-         U_QSFP : entity surf.AxiI2cRegMasterCore
-            generic map (
-               TPD_G           => TPD_G,
-               I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
-               I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
-               DEVICE_MAP_G    => SFF8472_I2C_CONFIG_C,
-               AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
-            port map (
-               -- I2C Ports
-               i2ci           => i2ci,
-               i2co           => i2coVec(i),
-               -- AXI-Lite Register Interface
-               axiReadMaster  => i2cReadMasters(i),
-               axiReadSlave   => i2cReadSlaves(i),
-               axiWriteMaster => i2cWriteMasters(i),
-               axiWriteSlave  => i2cWriteSlaves(i),
-               -- Clocks and Resets
-               axiClk         => sysClock,
-               axiRst         => sysReset);
-      end generate GEN_VEC;
-
-      U_SI570 : entity surf.AxiI2cRegMasterCore
-         generic map (
-            TPD_G           => TPD_G,
-            I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
-            I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
-            DEVICE_MAP_G    => SI570_I2C_CONFIG_C,
-            AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
+            MEMORY_INIT_FILE_G => SI5394_INIT_FILE_G,
+            I2C_BASE_ADDR_G    => "00",
+            I2C_SCL_FREQ_G     => 400.0E+3,        -- units of Hz
+            AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C)  -- units of Hz
          port map (
             -- I2C Ports
-            i2ci           => i2ci,
-            i2co           => i2coVec(2),
+            scl             => si5394Scl,
+            sda             => si5394Sda,
+            -- Misc Interface
+            irqL            => si5394IrqL,
+            lolL            => si5394LolL,
+            losL            => si5394LosL,
+            rstL            => si5394RstL,
             -- AXI-Lite Register Interface
-            axiReadMaster  => i2cReadMasters(2),
-            axiReadSlave   => i2cReadSlaves(2),
-            axiWriteMaster => i2cWriteMasters(2),
-            axiWriteSlave  => i2cWriteSlaves(2),
+            axilReadMaster  => i2cReadMaster,
+            axilReadSlave   => i2cReadSlave,
+            axilWriteMaster => i2cWriteMaster,
+            axilWriteSlave  => i2cWriteSlave,
             -- Clocks and Resets
-            axiClk         => sysClock,
-            axiRst         => sysReset);
-
-      process(i2cReadMasters, i2cWriteMasters, i2coVec)
-         variable tmp : i2c_out_type;
-      begin
-         -- Init
-         tmp := i2coVec(4);
-         -- Check for TXN after XBAR/I2C_MUX
-         for i in 0 to 3 loop
-            if (i2cWriteMasters(i).awvalid = '1') or (i2cReadMasters(i).arvalid = '1') then
-               tmp := i2coVec(i);
-            end if;
-         end loop;
-         -- Return result
-         i2co <= tmp;
-      end process;
-
-      IOBUF_SCL : IOBUF
-         port map (
-            O  => i2ci.scl,
-            IO => i2cScl,
-            I  => i2co.scl,
-            T  => i2co.scloen);
-
-      IOBUF_SDA : IOBUF
-         port map (
-            O  => i2ci.sda,
-            IO => i2cSda,
-            I  => i2co.sda,
-            T  => i2co.sdaoen);
+            axilClk         => sysClock,
+            axilRst         => sysReset);
 
    end generate;
 
@@ -389,7 +267,7 @@ begin
          XIL_DEVICE_G         => "ULTRASCALE",
          BOOT_PROM_G          => "SPIx4",
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
-         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_U200_C,
+         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_C1100_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
@@ -412,7 +290,7 @@ begin
          phyReadSlave        => phyReadSlave,
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
-         -- I2C AXI-Lite Interfaces
+         -- I2C AXI-Lite Interfaces (axiClk domain)
          i2cReadMaster       => i2cReadMaster,
          i2cReadSlave        => i2cReadSlave,
          i2cWriteMaster      => i2cWriteMaster,

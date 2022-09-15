@@ -133,6 +133,16 @@ class AxiPcieCore(pr.Device):
                         enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                     ))
 
+            elif (boardType == 'U200') or (boardType == 'U250'):
+
+                for i in range(2):
+                    self.add(xceiver.Qsfp(
+                        name    = f'Qsfp[{i}]',
+                        offset  = i*0x1000+0x70000,
+                        memBase = self.AxilBridge.proxy,
+                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                    ))
+
             elif (boardType == 'XilinxAlveoU55c') or (boardType == 'XilinxVariumC1100'):
                 self.add(silabs.Si5394(
                     offset  = 0x70000,

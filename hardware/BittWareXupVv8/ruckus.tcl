@@ -11,8 +11,8 @@ loadRuckusTcl "$::DIR_PATH/../../shared"
 set_property target_language Verilog [current_project]
 
 # Check for valid FPGA part number
-if { $::env(PRJ_PART) != "xcvu13p-figd2104-2-e" } {
-   puts "\n\nERROR: PRJ_PART was not defined as xcvu13p-figd2104-2-e in the Makefile\n\n"; exit -1
+if { $::env(PRJ_PART) != "xcvu13p-figd2104-2-e" && $::env(PRJ_PART) != "xcvu9p-fsgd2104-2-e"} {
+   puts "\n\nERROR: PRJ_PART was not defined as xcvu13p-figd2104-2-e or xcvu9p-fsgd2104-2-e in the Makefile\n\n"; exit -1
 }
 
 # Load local Source Code and Constraints

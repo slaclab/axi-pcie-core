@@ -54,7 +54,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y16 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[28].*gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y16 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[28].*gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -74,7 +74,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y17 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[28].*gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y17 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[28].*gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -94,7 +94,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y18 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[28].*gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y18 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[28].*gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -114,7 +114,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y19 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[28].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y19 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[28].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -134,7 +134,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y20 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[29].*gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y20 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[29].*gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -154,7 +154,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y21 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[29].*gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y21 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[29].*gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -174,7 +174,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y22 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[29].*gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y22 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[29].*gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -194,7 +194,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y23 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[29].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y23 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[29].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -214,7 +214,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y24 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[30].*gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y24 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[30].*gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -234,7 +234,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y25 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[30].*gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y25 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[30].*gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -254,7 +254,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y26 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[30].*gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y26 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[30].*gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -274,7 +274,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y27 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[30].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y27 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[30].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -294,7 +294,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y28 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y28 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[0].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -314,7 +314,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y29 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y29 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[1].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -334,7 +334,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y30 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y30 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[2].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)
@@ -354,7 +354,7 @@ set_false_path -from [get_cells -hierarchical -filter {NAME =~ *gen_cpll_cal_ins
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Channel primitive location constraint
-set_property LOC GTYE4_CHANNEL_X1Y31 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
+#set_property LOC GTYE4_CHANNEL_X1Y31 [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST}]
 
 # Channel primitive serial data pin location constraints
 # (Provided as comments for your reference. The channel primitive location constraint is sufficient.)

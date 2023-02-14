@@ -120,7 +120,7 @@
 ###############################################################################
 # Add PCIe LOC Constraints Here
 #
-set_property LOC PCIE40E4_X0Y1 [get_cells pcie_4_0_pipe_inst/pcie_4_0_e4_inst]
+#set_property LOC PCIE40E4_X0Y1 [get_cells pcie_4_0_pipe_inst/pcie_4_0_e4_inst]
 #
 # Constraining GT TXOUTCLK to 500 MHz
 #create_clock -period 2.0 [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.* }]]

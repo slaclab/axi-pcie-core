@@ -201,13 +201,15 @@ architecture mapping of AxiPcieReg is
    signal mAxilWriteMaster : AxiLiteWriteMasterType;
    signal mAxilWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal userValues   : Slv32Array(0 to 63) := (others => x"00000000");
-   signal bpiAddress   : slv(30 downto 0);
-   signal spiBusyIn    : slv(1 downto 0);
-   signal spiBusyOut   : slv(1 downto 0);
-   signal cardRst      : sl;
-   signal appReset     : sl;
-   signal appResetSync : sl;
+   signal userValues : Slv32Array(0 to 63) := (others => x"00000000");
+   signal bpiAddress : slv(30 downto 0);
+   signal spiBusyIn  : slv(1 downto 0);
+   signal spiBusyOut : slv(1 downto 0);
+
+   signal cardResetApp : sl;
+   signal appRstTmp    : sl;
+   signal appRstInt    : sl;
+   signal appRstAxi    : sl;
    signal appClkFreq   : slv(31 downto 0);
 
 begin
@@ -215,7 +217,7 @@ begin
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
    ---------------------------------------------------------------------------------------------
-   process(appClkFreq, appResetSync)
+   process(appClkFreq, appRstAxi)
       variable i : natural;
    begin
       -- Number of DMA lanes (defined by user)
@@ -274,7 +276,7 @@ begin
 
       -- Application Reset
       userValues(6)(1) <= ite(DMA_AXIS_CONFIG_G.TSTRB_EN_C, '1', '0');
-      userValues(6)(0) <= appResetSync;
+      userValues(6)(0) <= appRstAxi;
 
       -- PCIE PHY AXI Configuration
       userValues(7)(31 downto 24) <= toSlv(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C, 8);
@@ -591,6 +593,33 @@ begin
          mAxiReadSlaves(0)   => mAxilReadSlave);
 
    ----------------------------------
+   -- Synchronize cardRestIn to appClk 
+   ----------------------------------
+   U_AppResetSync1 : entity surf.RstSync
+      port map (
+         clk      => appClk,
+         asyncRst => cardResetIn,
+         syncRst  => cardResetApp);
+
+   -- Tie cardReset to appRst
+   appRstTmp <= cardResetApp or appRst;
+
+   -- Resynchronize the or'd reset
+   U_AppResetSync2 : entity surf.RstSync
+      port map (
+         clk      => appClk,
+         asyncRst => appRstTmp,
+         syncRst  => appRstInt);
+
+   -- Synchronize appRstInt back to AXI clock for readout
+   U_AppResetSync3 : entity surf.Synchronizer
+      port map (
+         clk     => axiClk,
+         dataIn  => appRstInt,
+         dataOut => appRstAxi);
+
+
+   ----------------------------------
    -- Map the AXI-Lite to Application
    ----------------------------------
    U_AxiLiteAsync : entity surf.AxiLiteAsync
@@ -608,19 +637,12 @@ begin
          sAxiWriteSlave  => mAxilWriteSlave,
          -- Master Interface
          mAxiClk         => appClk,
-         mAxiClkRst      => appReset,
+         mAxiClkRst      => appRstInt,
          mAxiReadMaster  => appReadMaster,
          mAxiReadSlave   => appReadSlave,
          mAxiWriteMaster => appWriteMaster,
          mAxiWriteSlave  => appWriteSlave);
 
-   appReset <= cardResetIn or appRst;
-
-   U_AppResetSync : entity surf.Synchronizer
-      port map (
-         clk     => axiClk,
-         dataIn  => appReset,
-         dataOut => appResetSync);
 
    U_appClkFreq : entity surf.SyncClockFreq
       generic map (

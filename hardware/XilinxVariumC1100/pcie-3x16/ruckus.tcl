@@ -5,11 +5,6 @@ source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
 loadConstraints               -dir "$::DIR_PATH/xdc"
 
-loadSource -lib axi_pcie_core -path "$::DIR_PATH/ip/HbmAxiFifo.dcp"
-# loadIpCore -path "$::DIR_PATH/ip/HbmAxiFifo.xci"
-
-loadIpCore -path "$::DIR_PATH/ip/HbmDmaBufferIpCore.xci"
-
 # loadIpCore -path "$::DIR_PATH/ip/XilinxVariumC1100PciePhyGen3x16.xci"
 loadSource -lib axi_pcie_core -path "$::DIR_PATH/ip/XilinxVariumC1100PciePhyGen3x16.dcp"
 

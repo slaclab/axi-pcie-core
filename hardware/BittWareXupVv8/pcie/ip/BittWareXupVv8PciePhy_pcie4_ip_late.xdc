@@ -68,6 +68,7 @@ set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins gt_top_i
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_ports sys_clk]] -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]]
 #
 # intclk vs pclk
+create_generated_clock -name pciePClk [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/O]
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]] -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/O]]
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/O]] -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]]
 #

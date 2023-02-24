@@ -22,7 +22,7 @@ loadConstraints -path "$::DIR_PATH/xdc/BittWareXupVv8App.xdc"
 
 if { $::env(PRJ_PART) == "xcvu13p-figd2104-2-e" } {
   loadConstraints -path "$::DIR_PATH/xdc/BittWareXupVv8Vu13p.xdc"
-} elseif { $::env(PRJ_PART) != "xcvu9p-fsgd2104-2-e" } {
+} elseif { $::env(PRJ_PART) == "xcvu9p-fsgd2104-2-e" } {
   loadConstraints -path "$::DIR_PATH/xdc/BittWareXupVv8Vu9p.xdc"    
 }
 

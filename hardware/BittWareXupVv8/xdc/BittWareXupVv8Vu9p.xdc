@@ -14,5 +14,5 @@ create_pblock SLR2_GRP
 
 resize_pblock [get_pblocks SLR0_GRP] -add {CLOCKREGION_X0Y0:CLOCKREGION_X5Y4}
 resize_pblock [get_pblocks SLR1_GRP] -add {CLOCKREGION_X0Y5:CLOCKREGION_X5Y9}
-resize_pblock [get_pblocks SLR2_GRP] -add {CLOCKREGION_X0Y10:CLOCKREGION_X7Y14}
+resize_pblock [get_pblocks SLR2_GRP] -add {CLOCKREGION_X0Y10:CLOCKREGION_X5Y14}
 

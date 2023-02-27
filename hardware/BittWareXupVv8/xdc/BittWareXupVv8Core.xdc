@@ -125,7 +125,7 @@ set_clock_groups -asynchronous \
 set_clock_groups -asynchronous \
     -group [get_clocks dnaClk] \
     -group [get_clocks iprogClk] \
-    -group [get_clocks -include_generated_clocks dmaClk]
+    -group [get_clocks dmaClk]
 
 
 

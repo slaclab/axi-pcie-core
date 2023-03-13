@@ -39,8 +39,8 @@ entity AxiPcieDma is
       DMA_BURST_BYTES_G    : positive range 256 to 4096   := 256;
       DMA_SIZE_G           : positive range 1 to 8        := 1;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType          := ssiAxiStreamConfig(16);
-      INT_PIPE_STAGES_G    : natural range 0 to 1         := 1;
-      PIPE_STAGES_G        : natural range 0 to 1         := 1;
+      INT_PIPE_STAGES_G    : natural range 0 to 16        := 1;
+      PIPE_STAGES_G        : natural range 0 to 16        := 1;
       DESC_SYNTH_MODE_G    : string                       := "inferred";
       DESC_MEMORY_TYPE_G   : string                       := "block";
       DESC_ARB_G           : boolean                      := false);  -- false = Round robin to help with timing
@@ -82,7 +82,7 @@ architecture mapping of AxiPcieDma is
       TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
       TDEST_BITS_C  => 8,
       TID_BITS_C    => 3,
-      TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
+      TKEEP_MODE_C  => TKEEP_COUNT_C,   -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
@@ -148,7 +148,7 @@ begin
       U_V2Gen : entity surf.AxiStreamDmaV2
          generic map (
             TPD_G              => TPD_G,
-            DESC_AWIDTH_G      => 12,   -- 4096 entries
+            DESC_AWIDTH_G      => 12,    -- 4096 entries
             DESC_ARB_G         => DESC_ARB_G,
             DESC_SYNTH_MODE_G  => DESC_SYNTH_MODE_G,
             DESC_MEMORY_TYPE_G => DESC_MEMORY_TYPE_G,

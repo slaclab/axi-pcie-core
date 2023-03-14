@@ -80,7 +80,8 @@ if __name__ == "__main__":
         "--type", 
         type     = str,
         default  = None,
-        required = False,
+        required = True,
+        choices = ['BPI', 'SPIx4', 'SPIx8'],
         help     = "prom type",
     )  
 

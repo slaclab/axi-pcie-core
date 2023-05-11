@@ -70,8 +70,8 @@ set_property PACKAGE_PIN V52 [get_ports { qsfp1RxN[3] }]
 # Clocks #
 ##########
 
-create_clock -period 6.206 -name qsfp0RefClkP [get_ports {qsfp0RefClkP}] ;# 161.1328125 MHz
-create_clock -period 6.206 -name qsfp1RefClkP [get_ports {qsfp1RefClkP}] ;# 161.1328125 MHz
+create_clock -period 6.4 -name qsfp0RefClkP [get_ports {qsfp0RefClkP}] ;# SI5394_INIT_FILE_G="Si5394A_GT_REFCLK_156MHz.mem"
+create_clock -period 6.4 -name qsfp1RefClkP [get_ports {qsfp1RefClkP}] ;# SI5394_INIT_FILE_G="Si5394A_GT_REFCLK_156MHz.mem"
 
 set_clock_groups -asynchronous \
    -group [get_clocks -include_generated_clocks {qsfp0RefClkP}] \

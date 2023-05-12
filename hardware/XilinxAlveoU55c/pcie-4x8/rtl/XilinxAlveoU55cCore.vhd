@@ -34,7 +34,7 @@ use unisim.vcomponents.all;
 entity XilinxAlveoU55cCore is
    generic (
       TPD_G                : time                        := 1 ns;
-      SI5394_INIT_FILE_G   : string                      := "none";
+      SI5394_INIT_FILE_G   : string                      := "Si5394A_GT_REFCLK_156MHz.mem";
       ROGUE_SIM_EN_G       : boolean                     := false;
       ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
       ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
@@ -215,7 +215,7 @@ begin
             TPD_G              => TPD_G,
             MEMORY_INIT_FILE_G => SI5394_INIT_FILE_G,
             I2C_BASE_ADDR_G    => "00",
-            I2C_SCL_FREQ_G     => 400.0E+3,        -- units of Hz
+            I2C_SCL_FREQ_G     => 100.0E+3,        -- units of Hz
             AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C)  -- units of Hz
          port map (
             -- I2C Ports

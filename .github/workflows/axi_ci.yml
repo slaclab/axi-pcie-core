@@ -11,7 +11,6 @@
 # ----------------------------------------------------------------------------
 # The following environment variables are required for this process:
 # secrets.GH_TOKEN
-# secrets.CONDA_UPLOAD_TOKEN_DEV
 # secrets.CONDA_UPLOAD_TOKEN_TAG
 
 name: AXI-PCIE Core Integration
@@ -79,8 +78,8 @@ jobs:
 
   conda_build:
     name: Anaconda Build
-    needs: [test]
-    if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/pre-release'
+    needs: [test_and_document]
+    if: startsWith(github.ref, 'refs/tags/')
     strategy:
       matrix:
         os:
@@ -107,6 +106,9 @@ jobs:
           export PATH="${HOME}/miniconda/bin:$PATH"
           source ${HOME}/miniconda/etc/profile.d/conda.sh
           conda config --set always_yes yes
+          conda config --set channel_priority strict
+          conda install -n base conda-libmamba-solver
+          conda config --set solver libmamba
           conda install conda-build anaconda-client conda-verify
           conda update -q conda conda-build
           conda update --all
@@ -114,16 +116,10 @@ jobs:
       - name: Get Image Information
         id: get_image_info
         env:
-          CONDA_UPLOAD_TOKEN_DEV: ${{ secrets.CONDA_UPLOAD_TOKEN_DEV }}
           CONDA_UPLOAD_TOKEN_TAG: ${{ secrets.CONDA_UPLOAD_TOKEN_TAG }}
           OS_NAME: ${{ matrix.os }}
         run: |
-          if [ ${GITHUB_REF} == "refs/heads/pre-release" ]
-          then
-              echo ::set-output name=token::$CONDA_UPLOAD_TOKEN_DEV
-          else
-              echo ::set-output name=token::$CONDA_UPLOAD_TOKEN_TAG
-          fi
+          echo ::set-output name=token::$CONDA_UPLOAD_TOKEN_TAG
           echo ::set-output name=os::linux-64
 
       - name: Build And Upload
@@ -131,5 +127,4 @@ jobs:
           export PATH="${HOME}/miniconda/bin:$PATH"
           source ${HOME}/miniconda/etc/profile.d/conda.sh
           conda build --debug conda-recipe --output-folder bld-dir -c tidair-tag -c tidair-packages -c conda-forge
-          anaconda -t ${{ steps.get_image_info.outputs.token }} upload bld-dir/${{ steps.get_image_info.outputs.os }}/*.tar.bz2
-
+          anaconda -t ${{ steps.get_image_info.outputs.token }} upload --force bld-dir/noarch/*.tar.bz2

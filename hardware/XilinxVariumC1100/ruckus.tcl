@@ -38,3 +38,7 @@ loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmAxiFifo.dcp"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/${pcieType}"
+
+# Adding the Si5345 configurations
+add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/pll-config/Si5394A_GT_REFCLK_156MHz.mem"
+add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/pll-config/Si5394A_GT_REFCLK_161MHz.mem"

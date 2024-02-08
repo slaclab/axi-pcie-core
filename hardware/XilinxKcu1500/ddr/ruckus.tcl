@@ -8,8 +8,10 @@ loadConstraints                         -dir "$::DIR_PATH/xdc"
 
 if { $::env(VIVADO_VERSION) <= 2018.3 } {
    loadIpCore -dir "$::DIR_PATH/ip/2018.3"
-} else {
+} elseif  { $::env(VIVADO_VERSION) <= 2022.1 } {
    loadIpCore -dir "$::DIR_PATH/ip/2019.1"
+} else {
+   loadIpCore -dir "$::DIR_PATH/ip/2022.2"
 }
 
 # Add MigClkConvt

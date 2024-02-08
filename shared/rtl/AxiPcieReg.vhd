@@ -593,7 +593,7 @@ begin
          mAxiReadSlaves(0)   => mAxilReadSlave);
 
    ----------------------------------
-   -- Synchronize cardRestIn to appClk 
+   -- Synchronize cardRestIn to appClk
    ----------------------------------
    U_AppResetSync1 : entity surf.RstSync
       port map (

@@ -8,15 +8,15 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-create_pblock SLR0_GRP
-create_pblock SLR1_GRP
-create_pblock SLR2_GRP
-create_pblock SLR3_GRP
+# create_pblock SLR0_GRP
+# create_pblock SLR1_GRP
+# create_pblock SLR2_GRP
+# create_pblock SLR3_GRP
 
-resize_pblock [get_pblocks SLR0_GRP] -add {CLOCKREGION_X0Y0:CLOCKREGION_X7Y3}
-resize_pblock [get_pblocks SLR1_GRP] -add {CLOCKREGION_X0Y4:CLOCKREGION_X7Y7}
-resize_pblock [get_pblocks SLR2_GRP] -add {CLOCKREGION_X0Y8:CLOCKREGION_X7Y11}
-resize_pblock [get_pblocks SLR3_GRP] -add {CLOCKREGION_X0Y12:CLOCKREGION_X7Y15}
+# resize_pblock [get_pblocks SLR0_GRP] -add {CLOCKREGION_X0Y0:CLOCKREGION_X7Y3}
+# resize_pblock [get_pblocks SLR1_GRP] -add {CLOCKREGION_X0Y4:CLOCKREGION_X7Y7}
+# resize_pblock [get_pblocks SLR2_GRP] -add {CLOCKREGION_X0Y8:CLOCKREGION_X7Y11}
+# resize_pblock [get_pblocks SLR3_GRP] -add {CLOCKREGION_X0Y12:CLOCKREGION_X7Y15}
 
 ######################
 # Board Clocks/Reset #
@@ -42,14 +42,6 @@ set_property -dict { PACKAGE_PIN AU22 IOSTANDARD LVDS } [get_ports { fabClkOutN[
 # Fabric Out Clk 1 / SI5346B Input 2
 set_property -dict { PACKAGE_PIN AT20 IOSTANDARD LVDS } [get_ports { fabClkOutP[1] }]
 set_property -dict { PACKAGE_PIN AT19 IOSTANDARD LVDS } [get_ports { fabClkOutN[1] }]
-
-# GTY Bank 120 Clk 1 / SI5346A Input 1
-set_property -dict { PACKAGE_PIN AK34 IOSTANDARD LVDS } [get_ports { gtyClkOutP[0] }]
-set_property -dict { PACKAGE_PIN AK35 IOSTANDARD LVDS } [get_ports { gtyClkOutN[0] }]
-
-# GTY Bank 122 Clk 1 / SI5346B Input 1
-set_property -dict { PACKAGE_PIN AF34 IOSTANDARD LVDS } [get_ports { gtyClkOutP[1] }]
-set_property -dict { PACKAGE_PIN AF35 IOSTANDARD LVDS } [get_ports { gtyClkOutN[1] }]
 
 ##############
 # UART I/F's #
@@ -137,37 +129,85 @@ set_property -dict { PACKAGE_PIN AP20 IOSTANDARD LVCMOS18 } [get_ports { ledL[3]
 # GTY QSFP Reference Clocks #
 #############################
 
-# GTY Bank 120 Refclk 0 / SI5346A CLK 3
+#########################################################
+# GTY Bank 120 Refclk 0 / QSFP-1L / SI5346A CLKOUT0
 set_property PACKAGE_PIN AL36 [get_ports qsfpRefClkP[0]]
 set_property PACKAGE_PIN AL37 [get_ports qsfpRefClkN[0]]
 
-# GTY Bank 121 Refclk 0 / SI5346A CLK 2
+# GTY Bank 120 Refclk 1 / QSFP-1L / SI5346A CLKIN1
+set_property PACKAGE_PIN AK34 [get_ports qsfpRecClkP[0]]
+set_property PACKAGE_PIN AK35 [get_ports qsfpRecClkN[0]]
+#########################################################
+
+#########################################################
+# GTY Bank 121 Refclk 0 / QSFP-1H / SI5346A CLKOUT1
 set_property PACKAGE_PIN AJ36 [get_ports qsfpRefClkP[1]]
 set_property PACKAGE_PIN AJ37 [get_ports qsfpRefClkN[1]]
 
-# GTY Bank 122 Refclk 0 / SI5346B CLK 3
+# GTY Bank 121 Refclk 1 / QSFP-1H / Not Connected
+set_property PACKAGE_PIN AH34 [get_ports qsfpRecClkP[1]]
+set_property PACKAGE_PIN AH35 [get_ports qsfpRecClkN[1]]
+#########################################################
+
+#########################################################
+# GTY Bank 122 Refclk 0 / QSFP-2L / SI5346B CLKOUT0
 set_property PACKAGE_PIN AG36 [get_ports qsfpRefClkP[2]]
 set_property PACKAGE_PIN AG37 [get_ports qsfpRefClkN[2]]
 
-# GTY Bank 123 Refclk 0 / SI5346B CLK 2
+# GTY Bank 122 Refclk 1 / QSFP-2L / SI5346B CLKIN1
+set_property PACKAGE_PIN AF34 [get_ports qsfpRecClkP[2]]
+set_property PACKAGE_PIN AF35 [get_ports qsfpRecClkN[2]]
+#########################################################
+
+#########################################################
+# GTY Bank 123 Refclk 0 / QSFP-2H / SI5346B CLKOUT1
 set_property PACKAGE_PIN AE36 [get_ports qsfpRefClkP[3]]
 set_property PACKAGE_PIN AE37 [get_ports qsfpRefClkN[3]]
 
-# GTY Bank 128 Refclk 0 / SI5346A CLK 1
+# GTY Bank 123 Refclk 1 / QSFP-2H / Not Connected
+set_property PACKAGE_PIN AD34 [get_ports qsfpRecClkP[3]]
+set_property PACKAGE_PIN AD35 [get_ports qsfpRecClkN[3]]
+#########################################################
+
+#########################################################
+# GTY Bank 124 Refclk 0 / QSFP-3L / SI5346A CLKOUT2
 set_property PACKAGE_PIN AC36 [get_ports qsfpRefClkP[4]]
 set_property PACKAGE_PIN AC37 [get_ports qsfpRefClkN[4]]
 
-# GTY Bank 129 Refclk 0 / SI5346A CLK 0
+# GTY Bank 124 Refclk 1 / QSFP-3L / Not Connected
+set_property PACKAGE_PIN AB34 [get_ports qsfpRecClkP[4]]
+set_property PACKAGE_PIN AB35 [get_ports qsfpRecClkN[4]]
+#########################################################
+
+#########################################################
+# GTY Bank 125 Refclk 0 / QSFP-3H / SI5346A CLKOUT3
 set_property PACKAGE_PIN AA36 [get_ports qsfpRefClkP[5]]
 set_property PACKAGE_PIN AA37 [get_ports qsfpRefClkN[5]]
 
-# GTY Bank 131 Refclk 0 / SI5346B CLK 1
+# GTY Bank 125 Refclk 1 / QSFP-3H / Not Connected
+set_property PACKAGE_PIN Y34  [get_ports qsfpRecClkP[5]]
+set_property PACKAGE_PIN Y35  [get_ports qsfpRecClkN[5]]
+#########################################################
+
+#########################################################
+# GTY Bank 127 Refclk 0 / QSFP-4L / SI5346B CLKOUT2
 set_property PACKAGE_PIN U36 [get_ports qsfpRefClkP[6]]
 set_property PACKAGE_PIN U37 [get_ports qsfpRefClkN[6]]
 
-# GTY Bank 133 Refclk 0 / SI5346B CLK 0
+# GTY Bank 127 Refclk 1 / QSFP-4L / Not Connected
+set_property PACKAGE_PIN T34 [get_ports qsfpRecClkP[6]]
+set_property PACKAGE_PIN T35 [get_ports qsfpRecClkN[6]]
+#########################################################
+
+#########################################################
+# GTY Bank 131 Refclk 0 / QSFP-4H / SI5346B CLKOUT3
 set_property PACKAGE_PIN R36 [get_ports qsfpRefClkP[7]]
 set_property PACKAGE_PIN R37 [get_ports qsfpRefClkN[7]]
+
+# GTY Bank 131 Refclk 1 / QSFP-4H / Not Connected
+set_property PACKAGE_PIN N36 [get_ports qsfpRecClkP[7]]
+set_property PACKAGE_PIN N37 [get_ports qsfpRecClkN[7]]
+#########################################################
 
 ##################
 # GTY QSFP[31:0] #

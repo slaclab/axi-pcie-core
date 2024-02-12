@@ -120,15 +120,15 @@
 ###############################################################################
 # Add PCIe LOC Constraints Here
 #
-set_property LOC PCIE40E4_X0Y1 [get_cells pcie_4_0_pipe_inst/pcie_4_0_e4_inst]
+#set_property LOC PCIE40E4_X0Y1 [get_cells pcie_4_0_pipe_inst/pcie_4_0_e4_inst]
 #
 # Constraining GT TXOUTCLK to 500 MHz
 #create_clock -period 2.0 [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.* }]]
-create_clock -period 2.0 [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[3].GT*E4_CHANNEL_PRIM_INST}]]
+create_clock -period 2.0 -name pcieCoreClk [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[3].GT*E4_CHANNEL_PRIM_INST}]]
 #create_generated_clock -source [get_ports sys_clk_gt] -multiply_by 5 -divide_by 1 [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[31].*gen_gtye4_channel_inst[3].GT*E4_CHANNEL_PRIM_INST}]]
 #
 # This is a slow running clock 1MHz drives small logic before perst only for delaying reference clock probation.
-create_clock -period 1000 [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]
+create_clock -period 1000 -name pcieIntClk [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]
 #
 #
 #

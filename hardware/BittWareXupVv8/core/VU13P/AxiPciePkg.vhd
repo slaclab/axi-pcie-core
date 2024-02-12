@@ -22,7 +22,12 @@ use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiPkg.all;
 
+library axi_pcie_core;
+use axi_pcie_core.AxiPcieSharedPkg.all;
+
 package AxiPciePkg is
+
+   constant HW_TYPE_BITTWARE_XUP_VV8_TYPE_C : slv(31 downto 0) := HW_TYPE_BITTWARE_XUP_VV8_VU13P_C;
 
    -- System Clock Frequency
    constant DMA_CLK_FREQ_C : real := 250.0E+6;  -- units of Hz

@@ -212,7 +212,7 @@ class PcieAxiVersion(axi.AxiVersion):
             enum        = {
                 0x00_00_00_00: 'Undefined',
                 0x00_00_00_01: 'AlphaDataKu3',
-                0x00_00_00_02: 'BittWareXupVv8',
+                0x00_00_00_02: 'BittWareXupVv8Vu13p',
                 0x00_00_00_03: 'SlacPgpCardG3',
                 0x00_00_00_04: 'SlacPgpCardG4',
                 0x00_00_00_05: 'XilinxAc701',
@@ -227,5 +227,8 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x00_00_00_0E: 'XilinxVcu128',
                 0x00_00_00_0F: 'XilinxAlveoU55C',
                 0x00_00_00_10: 'XilinxVariumC1100',
+                0x00_00_00_11: 'AbacoPc821Ku085',
+                0x00_00_00_12: 'AbacoPc821Ku115',
+                0x00_00_00_13: 'BittWareXupVv8Vu9p',
             },
         ))

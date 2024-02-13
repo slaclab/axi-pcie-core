@@ -1,9 +1,5 @@
 -------------------------------------------------------------------------------
--- File       : BittWareXupVv8Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
--------------------------------------------------------------------------------
--- Description: AXI PCIe Core for BittWare XUP-VV8 (PCIe GEN3 x 16 lanes)
--- https://www.bittware.com/fpga/xup-vv8/
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -31,7 +27,7 @@ use axi_pcie_core.AxiPciePkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity BittWareXupVv8Core is
+entity AbacoPc821Core is
    generic (
       TPD_G                : time                        := 1 ns;
       ROGUE_SIM_EN_G       : boolean                     := false;
@@ -46,46 +42,40 @@ entity BittWareXupVv8Core is
       ------------------------
       --  Top Level Interfaces
       ------------------------
-      userClk100      : out sl;
       -- DMA Interfaces  (dmaClk domain)
-      dmaClk          : out sl;
-      dmaRst          : out sl;
-      dmaBuffGrpPause : out slv(7 downto 0);
-      dmaObMasters    : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves     : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      -- PIP Interface [0x00080000:0009FFFF] (dmaClk domain)
-      pipIbMaster     : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipIbSlave      : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
-      pipObMaster     : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipObSlave      : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      dmaClk          : out   sl;
+      dmaRst          : out   sl;
+      dmaBuffGrpPause : out   slv(7 downto 0);
+      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk          : in  sl                    := '0';
-      appRst          : in  sl                    := '1';
-      appReadMaster   : out AxiLiteReadMasterType;
-      appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      appWriteMaster  : out AxiLiteWriteMasterType;
-      appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      appClk          : in    sl;
+      appRst          : in    sl;
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType;
       -------------------
       --  Top Level Ports
       -------------------
-      -- FPGA I2C Master
-      fpgaI2cMasterL  : out sl;
-      -- System Ports
-      userClkP        : in  sl;
-      userClkN        : in  sl;
+      -- Boot Memory Ports
+      flashAddr       : out   slv(25 downto 0);
+      flashData       : inout slv(15 downto 4);
+      flashOeL        : out   sl;
+      flashWeL        : out   sl;
       -- PCIe Ports
-      pciRstL         : in  sl;
-      pciRefClkP      : in  sl;
-      pciRefClkN      : in  sl;
-      pciRxP          : in  slv(15 downto 0);
-      pciRxN          : in  slv(15 downto 0);
-      pciTxP          : out slv(15 downto 0);
-      pciTxN          : out slv(15 downto 0));
-end BittWareXupVv8Core;
+      pciRstL         : in    sl;
+      pciRefClkP      : in    sl;
+      pciRefClkN      : in    sl;
+      pciRxP          : in    slv(7 downto 0);
+      pciRxN          : in    slv(7 downto 0);
+      pciTxP          : out   slv(7 downto 0);
+      pciTxN          : out   slv(7 downto 0));
+end AbacoPc821Core;
 
-architecture mapping of BittWareXupVv8Core is
+architecture mapping of AbacoPc821Core is
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -107,26 +97,19 @@ architecture mapping of BittWareXupVv8Core is
    signal phyWriteMaster : AxiLiteWriteMasterType;
    signal phyWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
 
-   signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-   signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
-   signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
-   signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+   signal sysClock    : sl;
+   signal sysReset    : sl;
+   signal systemReset : sl;
+   signal cardReset   : sl;
+   signal dmaIrq      : sl;
 
-   signal sysClock     : sl;
-   signal sysReset     : sl;
-   signal systemReset  : sl;
-   signal systemResetL : sl;
-   signal cardReset    : sl;
-   signal userClock    : sl;
-   signal dmaIrq       : sl;
-
-   signal bootCsL  : slv(1 downto 0);
-   signal bootSck  : slv(1 downto 0);
-   signal bootMosi : slv(1 downto 0);
-   signal bootMiso : slv(1 downto 0);
-   signal di       : slv(3 downto 0);
-   signal do       : slv(3 downto 0);
-   signal sck      : sl;
+   signal bpiClk  : sl;
+   signal bpiCeL  : sl;
+   signal bpiDin  : slv(15 downto 0);
+   signal bpiDout : slv(15 downto 0);
+   signal bpiTri  : sl;
+   signal bpiDts  : slv(3 downto 0);
+   signal bpiAddr : slv(28 downto 0);
 
 begin
 
@@ -140,25 +123,13 @@ begin
          rstIn  => systemReset,
          rstOut => dmaRst);
 
-   systemReset  <= sysReset or cardReset;
-   systemResetL <= not(systemReset);
-
-   -- 0 = FPGA has control of I2C chains shared with the BMC.
-   -- 1 = BMC  has control of I2C chains shared with the FPGA (default)
-   fpgaI2cMasterL <= '1';
-
-   U_IBUFDS : IBUFDS
-      port map(
-         I  => userClkP,
-         IB => userClkN,
-         O  => userClk100);
+   systemReset <= sysReset or cardReset;
 
    ---------------
    -- AXI PCIe PHY
    ---------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
-
-      U_AxiPciePhy : entity axi_pcie_core.BittWareXupVv8PciePhyWrapper
+      U_AxiPciePhy : entity axi_pcie_core.AbacoPc821PciePhyWrapper
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -187,18 +158,8 @@ begin
             pciRxN         => pciRxN,
             pciTxP         => pciTxP,
             pciTxN         => pciTxN);
-
-      intPipObMaster <= pipObMaster;
-      pipObSlave     <= intPipObSlave;
-
-      pipIbMaster   <= intPipIbMaster;
-      intPipIbSlave <= pipIbSlave;
-
    end generate;
-
    SIM_PCIE : if (ROGUE_SIM_EN_G) generate
-
-      -- Generate local 250 MHz clock
       U_sysClock : entity surf.ClkRst
          generic map (
             CLK_PERIOD_G      => 4 ns,  -- 250 MHz
@@ -207,11 +168,6 @@ begin
          port map (
             clkP => sysClock,
             rst  => sysReset);
-
-      -- Loopback PIP interface
-      pipIbMaster <= pipObMaster;
-      pipObSlave  <= pipIbSlave;
-
    end generate;
 
    ---------------
@@ -224,9 +180,9 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          BUILD_INFO_G         => BUILD_INFO_G,
          XIL_DEVICE_G         => "ULTRASCALE",
-         BOOT_PROM_G          => "SPIx4",
+         BOOT_PROM_G          => "BPI",  -- s29gl01gs-bpi-x16
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
-         PCIE_HW_TYPE_G       => HW_TYPE_BITTWARE_XUP_VV8_TYPE_C,
+         PCIE_HW_TYPE_G       => HW_TYPE_ABACO_PC821_TYPE_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
@@ -237,8 +193,6 @@ begin
          regReadSlave        => regReadSlave,
          regWriteMaster      => regWriteMaster,
          regWriteSlave       => regWriteSlave,
-         pipIbMaster         => intPipIbMaster,
-         pipIbSlave          => intPipIbSlave,
          -- DMA AXI-Lite Interfaces
          dmaCtrlReadMasters  => dmaCtrlReadMasters,
          dmaCtrlReadSlaves   => dmaCtrlReadSlaves,
@@ -259,11 +213,30 @@ begin
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset,
-         -- SPI Boot Memory Ports
-         spiCsL              => bootCsL,
-         spiSck              => bootSck,
-         spiMosi             => bootMosi,
-         spiMiso             => bootMiso);
+         -- Boot Memory Ports
+         bpiAddr             => bpiAddr,
+         bpiAdv              => open,
+         bpiClk              => bpiClk,
+         bpiRstL             => open,
+         bpiCeL              => bpiCeL,
+         bpiOeL              => flashOeL,
+         bpiWeL              => flashWeL,
+         bpiDin              => bpiDin,
+         bpiDout             => bpiDout,
+         bpiTri              => bpiTri);
+
+   flashAddr <= bpiAddr(25 downto 0);
+   bpiDts    <= (others => bpiTri);
+
+   GEN_IOBUF :
+   for i in 15 downto 4 generate
+      IOBUF_inst : IOBUF
+         port map (
+            O  => bpiDout(i),           -- Buffer output
+            IO => flashData(i),  -- Buffer inout port (connect directly to top-level port)
+            I  => bpiDin(i),            -- Buffer input
+            T  => bpiTri);  -- 3-state enable input, high=input, low=output
+   end generate GEN_IOBUF;
 
    U_STARTUPE3 : STARTUPE3
       generic map (
@@ -272,25 +245,21 @@ begin
       port map (
          CFGCLK    => open,  -- 1-bit output: Configuration main clock output
          CFGMCLK   => open,  -- 1-bit output: Configuration internal oscillator clock output
-         DI        => di,  -- 4-bit output: Allow receiving on the D[3:0] input pins
+         DI        => bpiDin(3 downto 0),
          EOS       => open,  -- 1-bit output: Active high output signal indicating the End Of Startup.
          PREQ      => open,  -- 1-bit output: PROGRAM request to fabric output
-         DO        => do,  -- 4-bit input: Allows control of the D[3:0] pin outputs
-         DTS       => "1110",  -- 4-bit input: Allows tristate of the D[3:0] pins
-         FCSBO     => bootCsL(0),  -- 1-bit input: Contols the FCS_B pin for flash access
+         DO        => bpiDout(3 downto 0),
+         DTS       => bpiDts,
+         FCSBO     => bpiCeL,
          FCSBTS    => '0',              -- 1-bit input: Tristate the FCS_B pin
          GSR       => '0',  -- 1-bit input: Global Set/Reset input (GSR cannot be used for the port name)
-         GTS       => '0',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
+         GTS       => '1',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
          KEYCLEARB => '0',  -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
          PACK      => '0',  -- 1-bit input: PROGRAM acknowledge input
-         USRCCLKO  => sck,              -- 1-bit input: User CCLK input
-         USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
-         USRDONEO  => '1',  -- 1-bit input: User DONE pin output control
-         USRDONETS => '0');  -- 1-bit input: User DONE 3-state enable output
-
-   do          <= "111" & bootMosi(0);
-   bootMiso(0) <= di(1);
-   sck         <= uOr(bootSck);
+         USRCCLKO  => bpiClk,           -- 1-bit input: User CCLK input
+         USRCCLKTS => '1',  -- 1-bit input: User CCLK 3-state enable input
+         USRDONEO  => '0',  -- 1-bit input: User DONE pin output control
+         USRDONETS => '1');  -- 1-bit input: User DONE 3-state enable output
 
    ---------------
    -- AXI PCIe DMA
@@ -303,9 +272,7 @@ begin
          ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
          DMA_SIZE_G           => DMA_SIZE_G,
          DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
-         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
-         DESC_SYNTH_MODE_G    => "xpm",
-         DESC_MEMORY_TYPE_G   => "ultra")
+         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G)
       port map (
          axiClk           => sysClock,
          axiRst           => sysReset,
@@ -314,8 +281,6 @@ begin
          axiReadSlave     => dmaReadSlave,
          axiWriteMaster   => dmaWriteMaster,
          axiWriteSlave    => dmaWriteSlave,
-         pipObMaster      => intPipObMaster,
-         pipObSlave       => intPipObSlave,
          -- AXI4-Lite Interfaces
          axilReadMasters  => dmaCtrlReadMasters,
          axilReadSlaves   => dmaCtrlReadSlaves,

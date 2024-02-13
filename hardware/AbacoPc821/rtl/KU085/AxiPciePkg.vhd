@@ -22,7 +22,12 @@ use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiPkg.all;
 
+library axi_pcie_core;
+use axi_pcie_core.AxiPcieSharedPkg.all;
+
 package AxiPciePkg is
+
+   constant HW_TYPE_ABACO_PC821_TYPE_C : slv(31 downto 0) := HW_TYPE_ABACO_PC821_KU085_C;
 
    -- System Clock Frequency
    constant DMA_CLK_FREQ_C : real := 250.0E+6;  -- units of Hz
@@ -30,7 +35,7 @@ package AxiPciePkg is
    -- PCIE PHY AXI Configuration
    constant AXI_PCIE_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 40,               -- 40-bit address interface
-      DATA_BYTES_C => 64,               -- 512-bit data interface
+      DATA_BYTES_C => 32,               -- 256-bit data interface
       ID_BITS_C    => 4,                -- Up to 16 DMA IDS
       LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface
 

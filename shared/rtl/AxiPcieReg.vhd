@@ -78,9 +78,7 @@ entity AxiPcieReg is
       cardResetIn         : in  sl;
       cardResetOut        : out sl;
       -- BPI Boot Memory Ports
-      bpiAddr             : out slv(28 downto 0);
-      bpiAdv              : out sl;
-      bpiClk              : out sl;
+      bpiAddr             : out slv(25 downto 0);
       bpiRstL             : out sl;
       bpiCeL              : out sl;
       bpiOeL              : out sl;
@@ -202,7 +200,6 @@ architecture mapping of AxiPcieReg is
    signal mAxilWriteSlave  : AxiLiteWriteSlaveType;
 
    signal userValues : Slv32Array(0 to 63) := (others => x"00000000");
-   signal bpiAddress : slv(30 downto 0);
    signal spiBusyIn  : slv(1 downto 0);
    signal spiBusyOut : slv(1 downto 0);
 
@@ -422,22 +419,20 @@ begin
    -----------------------------
    GEN_BPI : if (BOOT_PROM_G = "BPI") and (not ROGUE_SIM_EN_G) generate
 
-      U_BootProm : entity surf.AxiMicronP30Reg
+      U_BootProm : entity surf.AxiMicronMt28ewReg
          generic map (
             TPD_G          => TPD_G,
             AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
          port map (
             -- FLASH Interface
-            flashAddr      => bpiAddress,
-            flashAdv       => bpiAdv,
-            flashClk       => bpiClk,
+            flashAddr      => bpiAddr,
             flashRstL      => bpiRstL,
             flashCeL       => bpiCeL,
             flashOeL       => bpiOeL,
             flashWeL       => bpiWeL,
+            flashTri       => bpiTri,
             flashDin       => bpiDin,
             flashDout      => bpiDout,
-            flashTri       => bpiTri,
             -- AXI-Lite Register Interface
             axiReadMaster  => axilReadMasters(BPI_INDEX_C),
             axiReadSlave   => axilReadSlaves(BPI_INDEX_C),
@@ -446,8 +441,6 @@ begin
             -- Clocks and Resets
             axiClk         => axiClk,
             axiRst         => axiRst);
-
-      bpiAddr <= bpiAddress(28 downto 0);
 
       GEN_VEC : for i in 1 downto 0 generate
          spiCsL  <= (others => '1');
@@ -460,8 +453,6 @@ begin
    GEN_SPI : if (BOOT_PROM_G = "SPIx4" or BOOT_PROM_G = "SPIx8") and (not ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
-      bpiAdv  <= '1';
-      bpiClk  <= '1';
       bpiRstL <= '1';
       bpiCeL  <= '1';
       bpiOeL  <= '1';
@@ -504,8 +495,6 @@ begin
    GEN_NO_PROM : if (BOOT_PROM_G /= "BPI" and BOOT_PROM_G /= "SPIx4" and BOOT_PROM_G /= "SPIx8") or (ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
-      bpiAdv  <= '1';
-      bpiClk  <= '1';
       bpiRstL <= '1';
       bpiCeL  <= '1';
       bpiOeL  <= '1';

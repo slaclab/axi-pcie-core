@@ -67,9 +67,9 @@ class AxiPcieCore(pr.Device):
                 expand       = False,
             ))
 
-            # Check if using BPI PROM
+            # Check if using BPI PROM (Micron MT28 or Cypress S29GL)
             if (useBpi):
-                self.add(micron.AxiMicronP30(
+                self.add(micron.AxiMicronMt28ew(
                     offset       =  0x30000,
                     expand       =  False,
                     hidden       =  True,

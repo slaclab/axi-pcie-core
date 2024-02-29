@@ -26,7 +26,7 @@ use axi_pcie_core.MigPkg.all;
 entity MigAll is
    generic (
       TPD_G      : time                  := 1 ns;
-      NUM_DIMM_G : positive range 1 to 4 := 4);
+      NUM_DIMM_G : natural range 0 to 4 := 4);
    port (
       extRst          : in    sl := '0';
       -- AXI MEM Interface

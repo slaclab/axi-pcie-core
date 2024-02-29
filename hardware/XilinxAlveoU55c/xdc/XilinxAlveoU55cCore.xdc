@@ -22,12 +22,21 @@ set_property -dict { PACKAGE_PIN BL10 IOSTANDARD LVDS } [get_ports { userClkN }]
 set_property -dict { PACKAGE_PIN BK43 IOSTANDARD LVDS } [get_ports { hbmRefClkP }]
 set_property -dict { PACKAGE_PIN BK44 IOSTANDARD LVDS } [get_ports { hbmRefClkN }]
 
-set_property -dict { PACKAGE_PIN BM14 IOSTANDARD LVCMOS18 } [get_ports { si5394Scl }]
-set_property -dict { PACKAGE_PIN BN14 IOSTANDARD LVCMOS18 } [get_ports { si5394Sda }]
-set_property -dict { PACKAGE_PIN BM9  IOSTANDARD LVCMOS18 } [get_ports { si5394IrqL }]
-set_property -dict { PACKAGE_PIN BN10 IOSTANDARD LVCMOS18 } [get_ports { si5394LolL }]
-set_property -dict { PACKAGE_PIN BM10 IOSTANDARD LVCMOS18 } [get_ports { si5394LosL }]
-set_property -dict { PACKAGE_PIN BM8  IOSTANDARD LVCMOS18 } [get_ports { si5394RstL }]
+####################################################################################
+# I2C_SI5394_SCLK    Master I2C clock connection from FPGA to Si5394B
+# I2C_SI5394_SDA     Master I2C data connection from FPGA to Si5394B
+# SI_INTRB           Active low interrupt output from Si5394B to FPGA input
+# SI_PLL_LOCK        Active low PLL Loss of Lock output from Si5394B to FPGA input
+# SI_IN_LOS          Active low PLL Loss of Signal output from Si5394B to FPGA input
+# SI_RSTBB           Active low reset output from FPGA to Si5394B input
+####################################################################################
+
+set_property -dict { PACKAGE_PIN BM14 IOSTANDARD LVCMOS18 } [get_ports { si5394Scl }] ;# Bank  68 VCCO - VCC1V8   - IO_L5P_T0U_N8_AD14P_68
+set_property -dict { PACKAGE_PIN BN14 IOSTANDARD LVCMOS18 } [get_ports { si5394Sda }] ;# Bank  68 VCCO - VCC1V8   - IO_L4N_T0U_N7_DBC_AD7N_68
+set_property -dict { PACKAGE_PIN BM9  IOSTANDARD LVCMOS18 } [get_ports { si5394IrqL }] ;# Bank  68 VCCO - VCC1V8   - IO_L9P_T1L_N4_AD12P_68
+set_property -dict { PACKAGE_PIN BN10 IOSTANDARD LVCMOS18 } [get_ports { si5394LolL }] ;# Bank  68 VCCO - VCC1V8   - IO_L8N_T1L_N3_AD5N_68
+set_property -dict { PACKAGE_PIN BM10 IOSTANDARD LVCMOS18 } [get_ports { si5394LosL }] ;# Bank  68 VCCO - VCC1V8   - IO_L8P_T1L_N2_AD5P_68
+set_property -dict { PACKAGE_PIN BM8  IOSTANDARD LVCMOS18 } [get_ports { si5394RstL }] ;# Bank  68 VCCO - VCC1V8   - IO_L10N_T1U_N7_QBC_AD4N_68
 
 ####################
 # PCIe Constraints #

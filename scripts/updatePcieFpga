@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     # Case on PROM type
     if (promType == 'BPI'):
-        PROM_PRI = base.AxiPcieCore.AxiMicronP30
+        PROM_PRI = base.AxiPcieCore.AxiMicronMt28ew
     elif (promType == 'SPIx8') or (promType == 'SPIx4'):
         PROM_PRI = base.AxiPcieCore.AxiMicronN25Q[0]
         if (promType == 'SPIx8'):

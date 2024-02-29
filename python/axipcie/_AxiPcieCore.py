@@ -67,9 +67,9 @@ class AxiPcieCore(pr.Device):
                 expand       = False,
             ))
 
-            # Check if using BPI PROM
+            # Check if using BPI PROM (Micron MT28 or Cypress S29GL)
             if (useBpi):
-                self.add(micron.AxiMicronP30(
+                self.add(micron.AxiMicronMt28ew(
                     offset       =  0x30000,
                     expand       =  False,
                     hidden       =  True,
@@ -118,10 +118,7 @@ class AxiPcieCore(pr.Device):
                     enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                 ))
 
-            elif (boardType == 'Kcu1500') or (boardType == 'XilinxKcu1500'):
-
-                # Support legacy 'Kcu1500' but override in self.boardType
-                self.boardType = 'XilinxKcu1500'
+            elif (boardType == 'XilinxKcu1500'):
 
                 qsfpOffset = [0x74_000,0x71_000]
 
@@ -129,6 +126,16 @@ class AxiPcieCore(pr.Device):
                     self.add(xceiver.Qsfp(
                         name    = f'Qsfp[{i}]',
                         offset  = qsfpOffset[i],
+                        memBase = self.AxilBridge.proxy,
+                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                    ))
+
+            elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250'):
+
+                for i in range(2):
+                    self.add(xceiver.Qsfp(
+                        name    = f'Qsfp[{i}]',
+                        offset  = i*0x1000+0x70000,
                         memBase = self.AxilBridge.proxy,
                         enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                     ))

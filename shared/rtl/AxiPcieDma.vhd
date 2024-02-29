@@ -39,8 +39,8 @@ entity AxiPcieDma is
       DMA_BURST_BYTES_G    : positive range 256 to 4096   := 256;
       DMA_SIZE_G           : positive range 1 to 8        := 1;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType          := ssiAxiStreamConfig(16);
-      INT_PIPE_STAGES_G    : natural range 0 to 1         := 1;
-      PIPE_STAGES_G        : natural range 0 to 1         := 1;
+      INT_PIPE_STAGES_G    : natural range 0 to 16        := 1;
+      PIPE_STAGES_G        : natural range 0 to 16        := 1;
       DESC_SYNTH_MODE_G    : string                       := "inferred";
       DESC_MEMORY_TYPE_G   : string                       := "block";
       DESC_ARB_G           : boolean                      := false);  -- false = Round robin to help with timing

@@ -26,9 +26,11 @@ use axi_pcie_core.MigPkg.all;
 
 entity MigDmaBuffer is
    generic (
-      TPD_G             : time                  := 1 ns;
-      DMA_SIZE_G        : positive range 1 to 8 := 8;
+      TPD_G             : time                     := 1 ns;
+      DMA_SIZE_G        : positive range 1 to 8    := 8;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType;
+      BURST_BYTES_G     : positive range 1 to 4096 := 1024;
+      RD_PEND_THRESH_G  : positive                 := 1;  -- In units of bytes
       AXIL_BASE_ADDR_G  : slv(31 downto 0));
    port (
       -- AXI-Lite Interface (axilClk domain)
@@ -177,7 +179,9 @@ begin
             AXIS_CONFIG_G      => DMA_AXIS_CONFIG_G,
             -- AXI4 Configurations
             AXI_BASE_ADDR_G    => AXI_BASE_ADDR_C(i),
-            AXI_CONFIG_G       => DMA_AXI_CONFIG_C)
+            AXI_CONFIG_G       => DMA_AXI_CONFIG_C,
+            BURST_BYTES_G      => BURST_BYTES_G,
+            RD_PEND_THRESH_G   => RD_PEND_THRESH_G)
          port map (
             -- AXI4 Interface (axiClk domain)
             axiClk          => axisClk,

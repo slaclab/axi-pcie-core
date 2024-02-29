@@ -79,9 +79,7 @@ entity AxiPcieReg is
       cardResetIn         : in  sl;
       cardResetOut        : out sl;
       -- BPI Boot Memory Ports
-      bpiAddr             : out slv(28 downto 0);
-      bpiAdv              : out sl;
-      bpiClk              : out sl;
+      bpiAddr             : out slv(25 downto 0);
       bpiRstL             : out sl;
       bpiCeL              : out sl;
       bpiOeL              : out sl;
@@ -202,13 +200,14 @@ architecture mapping of AxiPcieReg is
    signal mAxilWriteMaster : AxiLiteWriteMasterType;
    signal mAxilWriteSlave  : AxiLiteWriteSlaveType;
 
-   signal userValues   : Slv32Array(0 to 63) := (others => x"00000000");
-   signal bpiAddress   : slv(30 downto 0);
-   signal spiBusyIn    : slv(1 downto 0);
-   signal spiBusyOut   : slv(1 downto 0);
-   signal cardRst      : sl;
-   signal appReset     : sl;
-   signal appResetSync : sl;
+   signal userValues : Slv32Array(0 to 63) := (others => x"00000000");
+   signal spiBusyIn  : slv(1 downto 0);
+   signal spiBusyOut : slv(1 downto 0);
+
+   signal cardResetApp : sl;
+   signal appRstTmp    : sl;
+   signal appRstInt    : sl;
+   signal appRstAxi    : sl;
    signal appClkFreq   : slv(31 downto 0);
 
 begin
@@ -216,7 +215,7 @@ begin
    ---------------------------------------------------------------------------------------------
    -- Driver Polls the userValues to determine the firmware's configurations and interrupt state
    ---------------------------------------------------------------------------------------------
-   process(appClkFreq, appResetSync)
+   process(appClkFreq, appRstAxi)
       variable i : natural;
    begin
       -- Number of DMA lanes (defined by user)
@@ -275,7 +274,7 @@ begin
 
       -- Application Reset
       userValues(6)(1) <= ite(DMA_AXIS_CONFIG_G.TSTRB_EN_C, '1', '0');
-      userValues(6)(0) <= appResetSync;
+      userValues(6)(0) <= appRstAxi;
 
       -- PCIE PHY AXI Configuration
       userValues(7)(31 downto 24) <= toSlv(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C, 8);
@@ -421,22 +420,20 @@ begin
    -----------------------------
    GEN_BPI : if (BOOT_PROM_G = "BPI") and (not ROGUE_SIM_EN_G) generate
 
-      U_BootProm : entity surf.AxiMicronP30Reg
+      U_BootProm : entity surf.AxiMicronMt28ewReg
          generic map (
             TPD_G          => TPD_G,
             AXI_CLK_FREQ_G => DMA_CLK_FREQ_C)
          port map (
             -- FLASH Interface
-            flashAddr      => bpiAddress,
-            flashAdv       => bpiAdv,
-            flashClk       => bpiClk,
+            flashAddr      => bpiAddr,
             flashRstL      => bpiRstL,
             flashCeL       => bpiCeL,
             flashOeL       => bpiOeL,
             flashWeL       => bpiWeL,
+            flashTri       => bpiTri,
             flashDin       => bpiDin,
             flashDout      => bpiDout,
-            flashTri       => bpiTri,
             -- AXI-Lite Register Interface
             axiReadMaster  => axilReadMasters(BPI_INDEX_C),
             axiReadSlave   => axilReadSlaves(BPI_INDEX_C),
@@ -445,8 +442,6 @@ begin
             -- Clocks and Resets
             axiClk         => axiClk,
             axiRst         => axiRst);
-
-      bpiAddr <= bpiAddress(28 downto 0);
 
       GEN_VEC : for i in 1 downto 0 generate
          spiCsL  <= (others => '1');
@@ -459,8 +454,6 @@ begin
    GEN_SPI : if (BOOT_PROM_G = "SPIx4" or BOOT_PROM_G = "SPIx8") and (not ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
-      bpiAdv  <= '1';
-      bpiClk  <= '1';
       bpiRstL <= '1';
       bpiCeL  <= '1';
       bpiOeL  <= '1';
@@ -503,8 +496,6 @@ begin
    GEN_NO_PROM : if (BOOT_PROM_G /= "BPI" and BOOT_PROM_G /= "SPIx4" and BOOT_PROM_G /= "SPIx8") or (ROGUE_SIM_EN_G) generate
 
       bpiAddr <= (others => '1');
-      bpiAdv  <= '1';
-      bpiClk  <= '1';
       bpiRstL <= '1';
       bpiCeL  <= '1';
       bpiOeL  <= '1';
@@ -592,6 +583,33 @@ begin
          mAxiReadSlaves(0)   => mAxilReadSlave);
 
    ----------------------------------
+   -- Synchronize cardRestIn to appClk
+   ----------------------------------
+   U_AppResetSync1 : entity surf.RstSync
+      port map (
+         clk      => appClk,
+         asyncRst => cardResetIn,
+         syncRst  => cardResetApp);
+
+   -- Tie cardReset to appRst
+   appRstTmp <= cardResetApp or appRst;
+
+   -- Resynchronize the or'd reset
+   U_AppResetSync2 : entity surf.RstSync
+      port map (
+         clk      => appClk,
+         asyncRst => appRstTmp,
+         syncRst  => appRstInt);
+
+   -- Synchronize appRstInt back to AXI clock for readout
+   U_AppResetSync3 : entity surf.Synchronizer
+      port map (
+         clk     => axiClk,
+         dataIn  => appRstInt,
+         dataOut => appRstAxi);
+
+
+   ----------------------------------
    -- Map the AXI-Lite to Application
    ----------------------------------
    U_AxiLiteAsync : entity surf.AxiLiteAsync
@@ -609,19 +627,12 @@ begin
          sAxiWriteSlave  => mAxilWriteSlave,
          -- Master Interface
          mAxiClk         => appClk,
-         mAxiClkRst      => appReset,
+         mAxiClkRst      => appRstInt,
          mAxiReadMaster  => appReadMaster,
          mAxiReadSlave   => appReadSlave,
          mAxiWriteMaster => appWriteMaster,
          mAxiWriteSlave  => appWriteSlave);
 
-   appReset <= cardResetIn or appRst;
-
-   U_AppResetSync : entity surf.Synchronizer
-      port map (
-         clk     => axiClk,
-         dataIn  => appReset,
-         dataOut => appResetSync);
 
    U_appClkFreq : entity surf.SyncClockFreq
       generic map (

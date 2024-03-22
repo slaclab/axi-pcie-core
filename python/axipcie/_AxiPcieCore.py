@@ -19,6 +19,7 @@ import surf.devices.transceivers as xceiver
 
 import axipcie
 import click
+import time
 
 class AxiPcieCore(pr.Device):
     """This class maps to axi-pcie-core/shared/rtl/AxiPcieReg.vhd"""
@@ -157,3 +158,11 @@ class AxiPcieCore(pr.Device):
             if (self.boardType != PCIE_HW_TYPE_G) and (self.boardType is not None):
                 click.secho(f'WARNING: {self.path}.boardType = {self.boardType} != {self.path}.AxiVersion.PCIE_HW_TYPE_G = {PCIE_HW_TYPE_G}', bg='cyan')
         self.startArmed = False
+
+    def CardReset(self):
+        # Send a local PCIe reset
+        self.AxiVersion.UserRst()
+
+        # Wait for the AXI-Lite to recover from reset
+        while (self.AxiVersion.AppReset.get() != 0):
+            time.sleep(0.001)

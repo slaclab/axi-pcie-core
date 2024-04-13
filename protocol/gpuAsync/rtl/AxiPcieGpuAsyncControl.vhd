@@ -387,7 +387,7 @@ begin
       --------------------------------------------------------------------------------------------
       -- Outputs
       awCache         <= r.awCache;
-      arCache         <= r.awCache;
+      arCache         <= r.arCache;
       writeSlave      <= r.writeSlave;
       readSlave       <= r.readSlave;
       dmaWrDescAck    <= r.dmaWrDescAck;

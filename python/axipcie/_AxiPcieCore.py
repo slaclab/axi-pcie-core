@@ -19,6 +19,7 @@ import surf.devices.transceivers as xceiver
 
 import axipcie
 import click
+import time
 
 class AxiPcieCore(pr.Device):
     """This class maps to axi-pcie-core/shared/rtl/AxiPcieReg.vhd"""
@@ -149,11 +150,33 @@ class AxiPcieCore(pr.Device):
 
     def _start(self):
         super()._start()
+
+        # Check if not a simulation and armed for start
         if not (self.sim) and (self.startArmed):
+
+            # Get the number of DMA lanes built in the firmware
             DMA_SIZE_G = self.AxiVersion.DMA_SIZE_G.get()
+
+            # Check if the number of software DMA lanes does not match the hardware
             if ( self.numDmaLanes is not DMA_SIZE_G ):
                 click.secho(f'WARNING: {self.path}.numDmaLanes = {self.numDmaLanes} != {self.path}.AxiVersion.DMA_SIZE_G = {DMA_SIZE_G}', bg='cyan')
+
+            # Get the hardware type built in the firmware
             PCIE_HW_TYPE_G = self.AxiVersion.PCIE_HW_TYPE_G.getDisp()
+
+            # Check if the software board type does not match the hardware
             if (self.boardType != PCIE_HW_TYPE_G) and (self.boardType is not None):
-                click.secho(f'WARNING: {self.path}.boardType = {self.boardType} != {self.path}.AxiVersion.PCIE_HW_TYPE_G = {PCIE_HW_TYPE_G}', bg='cyan')
+                errMsg = f'ERROR: {self.path}.boardType = {self.boardType} != {self.path}.AxiVersion.PCIE_HW_TYPE_G = {PCIE_HW_TYPE_G}'
+                click.secho(errMsg, bg='red')
+                raise ValueError(errMsg)
+
+        # Set the flag
         self.startArmed = False
+
+    def CardReset(self):
+        # Send a local PCIe reset
+        self.AxiVersion.UserRst()
+
+        # Wait for the AXI-Lite to recover from reset
+        while (self.AxiVersion.AppReset.get() != 0):
+            time.sleep(0.001)

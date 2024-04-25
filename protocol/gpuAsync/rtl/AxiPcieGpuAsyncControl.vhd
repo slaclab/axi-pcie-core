@@ -74,7 +74,9 @@ architecture mapping of AxiPcieGpuAsyncControl is
       rxFrameCnt       : slv(31 downto 0);
       txFrameCnt       : slv(31 downto 0);
       axiWriteErrorCnt : slv(31 downto 0);
+      axiWriteErrorVal : slv(2 downto 0);
       axiReadErrorCnt  : slv(31 downto 0);
+      axiReadErrorVal  : slv(2 downto 0);
       cntRst           : sl;
       awcache          : slv(3 downto 0);
       arcache          : slv(3 downto 0);
@@ -84,10 +86,12 @@ architecture mapping of AxiPcieGpuAsyncControl is
       readCount        : slv(3 downto 0);
       nextWriteIdx     : slv(3 downto 0);
       nextReadIdx      : slv(3 downto 0);
-      remoteWriteAddr  : Slv32Array(MAX_BUFFERS_G-1 downto 0);
+      remoteWriteAddrL : Slv32Array(MAX_BUFFERS_G-1 downto 0);
+      remoteWriteAddrH : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteWriteSize  : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteWriteEn    : slv(MAX_BUFFERS_G-1 downto 0);
-      remoteReadAddr   : Slv32Array(MAX_BUFFERS_G-1 downto 0);
+      remoteReadAddrL  : Slv32Array(MAX_BUFFERS_G-1 downto 0);
+      remoteReadAddrH  : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteReadSize   : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteReadEn     : slv(MAX_BUFFERS_G-1 downto 0);
       totLatency       : Slv32Array(MAX_BUFFERS_G-1 downto 0);
@@ -112,7 +116,9 @@ architecture mapping of AxiPcieGpuAsyncControl is
       rxFrameCnt       => (others => '0'),
       txFrameCnt       => (others => '0'),
       axiWriteErrorCnt => (others => '0'),
+      axiWriteErrorVal => (others => '0'),
       axiReadErrorCnt  => (others => '0'),
+      axiReadErrorVal  => (others => '0'),
       cntRst           => '0',
       awcache          => (others => '0'),
       arcache          => (others => '0'),
@@ -122,10 +128,12 @@ architecture mapping of AxiPcieGpuAsyncControl is
       readCount        => (others => '0'),
       nextWriteIdx     => (others => '0'),
       nextReadIdx      => (others => '0'),
-      remoteWriteAddr  => (others => (others => '0')),
+      remoteWriteAddrL => (others => (others => '0')),
+      remoteWriteAddrH => (others => (others => '0')),
       remoteWriteSize  => (others => (others => '0')),
       remoteWriteEn    => (others => '0'),
-      remoteReadAddr   => (others => (others => '0')),
+      remoteReadAddrL  => (others => (others => '0')),
+      remoteReadAddrH  => (others => (others => '0')),
       remoteReadSize   => (others => (others => '0')),
       remoteReadEn     => (others => '0'),
       totLatency       => (others => (others => '0')),
@@ -199,7 +207,9 @@ begin
          v.rxFrameCnt       := (others => '0');
          v.txFrameCnt       := (others => '0');
          v.axiWriteErrorCnt := (others => '0');
+         v.axiWriteErrorVal := (others => '0');
          v.axiReadErrorCnt  := (others => '0');
+         v.axiReadErrorVal  := (others => '0');
       end if;
 
       -- Latency Counters
@@ -239,14 +249,20 @@ begin
       axiSlaveRegisterR(axilEp, x"01C", 0, r.axiReadErrorCnt);
 
       axiSlaveRegister (axilEp, x"020", 0, v.cntRst);
+      axiSlaveRegisterR(axilEp, x"024", 0, r.axiWriteErrorVal);
+      axiSlaveRegisterR(axilEp, x"028", 0, r.axiReadErrorVal);
+
+
 
       for i in 0 to MAX_BUFFERS_G-1 loop
-         axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddr(i));  -- 0x1x0 (x = 0,1,2,3....)
-         axiSlaveRegister (axilEp, toSlv(256+i*16+8, 12), 0, v.remoteWriteSize(i));  -- 0x1x8 (x = 0,1,2,3....)
+         axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)
+         axiSlaveRegister (axilEp, toSlv(256+i*16+4, 12), 0, v.remoteWriteAddrH(i));  -- 0x1x4 (x = 0,1,2,3....)
+         axiSlaveRegister (axilEp, toSlv(256+i*16+8, 12), 0, v.remoteWriteSize(i));   -- 0x1x8 (x = 0,1,2,3....)
       end loop;
 
       for i in 0 to MAX_BUFFERS_G-1 loop
-         axiSlaveRegister (axilEp, toSlv(512+i*16+0, 12), 0, v.remoteReadAddr(i));  -- 0x2x0 (x = 0,1,2,3....)
+         axiSlaveRegister (axilEp, toSlv(512+i*16+0, 12), 0, v.remoteReadAddrL(i));  -- 0x2x0 (x = 0,1,2,3....)
+         axiSlaveRegister (axilEp, toSlv(512+i*16+0, 12), 0, v.remoteReadAddrH(i));  -- 0x2x4 (x = 0,1,2,3....)
       end loop;
 
       for i in 0 to MAX_BUFFERS_G-1 loop
@@ -282,8 +298,10 @@ begin
 
                v.dmaWrDescAck.buffId(3 downto 0) := r.nextWriteIdx;
 
-               v.dmaWrDescAck.metaAddr(31 downto 0) := r.remoteWriteAddr(conv_integer(r.nextWriteIdx));
-               v.dmaWrDescAck.address(31 downto 0)  := r.remoteWriteAddr(conv_integer(r.nextWriteIdx)) + DMA_AXI_CONFIG_G.DATA_BYTES_C;
+               v.dmaWrDescAck.metaAddr(31 downto  0) := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx));
+               v.dmaWrDescAck.metaAddr(63 downto 32) := r.remoteWriteAddrH(conv_integer(r.nextWriteIdx));
+               v.dmaWrDescAck.address(31 downto  0)  := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx)) + DMA_AXI_CONFIG_G.DATA_BYTES_C;
+               v.dmaWrDescAck.address(63 downto 32)  := r.remoteWriteAddrH(conv_integer(r.nextWriteIdx));
 
                if r.remoteWriteEn(conv_integer(r.nextWriteIdx)) = '1' or r.writeEnable = '0' then
                   v.dmaWrDescAck.valid := '1';
@@ -324,6 +342,7 @@ begin
 
                if dmaWrDescRet.result /= "000" then
                   v.axiWriteErrorCnt := r.axiWriteErrorCnt + 1;
+                  v.axiWriteErrorVal := dmaWrDescRet.result;
                end if;
 
                v.rxFrameCnt := r.rxFrameCnt + 1;
@@ -360,7 +379,8 @@ begin
                v.dmaRdDescReq.id        := (others => '0');
                v.dmaRdDescReq.dest      := (others => '0');
 
-               v.dmaRdDescReq.address(31 downto 0) := r.remoteReadAddr(conv_integer(r.nextReadIdx));
+               v.dmaRdDescReq.address(31 downto  0) := r.remoteReadAddrL(conv_integer(r.nextReadIdx));
+               v.dmaRdDescReq.address(63 downto 32) := r.remoteReadAddrH(conv_integer(r.nextReadIdx));
 
                v.txState := MOVE_S;
             end if;
@@ -375,6 +395,7 @@ begin
 
                if dmaRdDescRet.result /= "000" then
                   v.axiReadErrorCnt := r.axiReadErrorCnt + 1;
+                  v.axiReadErrorVal := dmaRdDescRet.result;
                end if;
 
                v.txFrameCnt := r.txFrameCnt + 1;

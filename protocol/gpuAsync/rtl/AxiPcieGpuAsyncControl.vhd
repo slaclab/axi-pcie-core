@@ -262,7 +262,7 @@ begin
 
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(512+i*16+0, 12), 0, v.remoteReadAddrL(i));  -- 0x2x0 (x = 0,1,2,3....)
-         axiSlaveRegister (axilEp, toSlv(512+i*16+0, 12), 0, v.remoteReadAddrH(i));  -- 0x2x4 (x = 0,1,2,3....)
+         axiSlaveRegister (axilEp, toSlv(512+i*16+4, 12), 0, v.remoteReadAddrH(i));  -- 0x2x4 (x = 0,1,2,3....)
       end loop;
 
       for i in 0 to MAX_BUFFERS_G-1 loop

@@ -76,7 +76,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 8,
             bitOffset    = 16,
             disp         = '{}',
-            mode         = 'RW',
+            mode         = 'RO',
             pollInterval = 1,
         ))
 

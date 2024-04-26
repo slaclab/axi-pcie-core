@@ -52,7 +52,7 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'BufferCount',
+            name         = 'WriteCount',
             offset       = 0x008,
             bitSize      = 8,
             bitOffset    = 0,
@@ -62,10 +62,29 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'BufferEnable',
+            name         = 'WriteEnable',
             offset       = 0x008,
             bitSize      = 1,
             bitOffset    = 8,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'ReadCount',
+            offset       = 0x008,
+            bitSize      = 8,
+            bitOffset    = 16,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'ReadEnable',
+            offset       = 0x008,
+            bitSize      = 1,
+            bitOffset    = 24,
             mode         = 'RO',
             pollInterval = 1,
         ))
@@ -114,12 +133,37 @@ class AxiGpuAsyncCore(pr.Device):
             function     = pr.BaseCommand.touchOne
         ))
 
+        self.add(pr.RemoteVariable(
+            name         = 'WriteAxiErrorVal',
+            offset       = 0x024,
+            bitSize      = 3,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'ReadAxiErrorVal',
+            offset       = 0x028,
+            bitSize      = 3,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
 
         for i in range(maxBuffers):
 
             self.add(pr.RemoteVariable(
-                name         = f'RemoteWriteAddress[{i}]',
+                name         = f'RemoteWriteAddressL[{i}]',
                 offset       = 0x100 + i*16,
+                bitSize      = 32,
+                mode         = 'RO',
+                pollInterval = 1,
+            ))
+
+            self.add(pr.RemoteVariable(
+                name         = f'RemoteWriteAddressH[{i}]',
+                offset       = 0x104 + i*16,
                 bitSize      = 32,
                 mode         = 'RO',
                 pollInterval = 1,
@@ -134,8 +178,16 @@ class AxiGpuAsyncCore(pr.Device):
             ))
 
             self.add(pr.RemoteVariable(
-                name         = f'RemoteReadAddress[{i}]',
+                name         = f'RemoteReadAddressL[{i}]',
                 offset       = 0x200 + i*16,
+                bitSize      = 32,
+                mode         = 'RO',
+                pollInterval = 1,
+            ))
+
+            self.add(pr.RemoteVariable(
+                name         = f'RemoteReadAddressH[{i}]',
+                offset       = 0x204 + i*16,
                 bitSize      = 32,
                 mode         = 'RO',
                 pollInterval = 1,

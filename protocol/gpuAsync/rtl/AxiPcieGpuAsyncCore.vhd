@@ -34,8 +34,6 @@ entity AxiPcieGpuAsyncCore is
    generic (
       TPD_G             : time := 1 ns;
       NUM_CHAN_G        : positive range 1 to 4 := 1;
-      NUM_MASTERS_G : integer := 2;
-      MODE_G : string := "DYNAMIC";  -- Or "ROUTED" Or "DYNAMIC"
       DMA_AXIS_CONFIG_G : AxiStreamConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -53,8 +51,8 @@ entity AxiPcieGpuAsyncCore is
       mAxisMaster     : out AxiStreamMasterType;
       mAxisSlave      : in  AxiStreamSlaveType;
       -- AXI Stream Interface bypass (axisClk domain)
-      mAxisMaster1     : out AxiStreamMasterType;
-      mAxisSlave1      : in  AxiStreamSlaveType;
+      bypassMaster     : out AxiStreamMasterType;
+      bypassSlave      : in  AxiStreamSlaveType;
       -- AXI4 Interfaces (axiClk domain)
       axiClk          : in  sl;
       axiRst          : in  sl;
@@ -102,8 +100,8 @@ architecture mapping of AxiPcieGpuAsyncCore is
 begin
 
    -- direct connection to Pcie core from Demux
-   mAxisMaster1 <= mAxisDemuxMasters(1);
-   mAxisDemuxSlaves(1) <= mAxisSlave1;
+   bypassMaster <= mAxisDemuxMasters(1);
+   mAxisDemuxSlaves(1) <= bypassSlave;
    ------------------------------
    -- AXI-Lite Control/Monitoring
    ------------------------------
@@ -138,8 +136,8 @@ begin
    AxiStreamDeMux_inst : entity surf.AxiStreamDeMux
    generic map (
       TPD_G => TPD_G,
-      NUM_MASTERS_G => NUM_MASTERS_G,
-      MODE_G => MODE_G)
+      NUM_MASTERS_G => 2,
+      MODE_G => "DYNAMIC")
    port map (
       axisClk => axisClk,
       axisRst => axisRst,

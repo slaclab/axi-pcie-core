@@ -54,10 +54,10 @@ entity AxiPcieGpuAsyncControl is
       dynamicRouteMasks : out slv(7 downto 0);
       dynamicRouteDests : out slv(7 downto 0);
       -- DMA Write Engine
-      dmaWrDescReq    : in  AxiWriteDmaDescReqType;
-      dmaWrDescAck    : out AxiWriteDmaDescAckType;
-      dmaWrDescRet    : in  AxiWriteDmaDescRetType;
-      dmaWrDescRetAck : out sl;
+      dmaWrDescReq      : in  AxiWriteDmaDescReqType;
+      dmaWrDescAck      : out AxiWriteDmaDescAckType;
+      dmaWrDescRet      : in  AxiWriteDmaDescRetType;
+      dmaWrDescRetAck   : out sl;
 
       -- DMA Read Engine
       dmaRdDescReq    : out AxiReadDmaDescReqType;
@@ -265,7 +265,7 @@ begin
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)
          axiSlaveRegister (axilEp, toSlv(256+i*16+4, 12), 0, v.remoteWriteAddrH(i));  -- 0x1x4 (x = 0,1,2,3....)
-         axiSlaveRegister (axilEp, toSlv(256+i*16+8, 12), 0, v.remoteWriteSize(i));   -- 0x1x8 (x = 0,1,2,3....)
+         axiSlaveRegister (axilEp, toSlv(256+i*16+8, 12), 0, v.remoteWriteSize(i));  -- 0x1x8 (x = 0,1,2,3....)
       end loop;
 
       for i in 0 to MAX_BUFFERS_G-1 loop
@@ -306,9 +306,9 @@ begin
 
                v.dmaWrDescAck.buffId(3 downto 0) := r.nextWriteIdx;
 
-               v.dmaWrDescAck.metaAddr(31 downto  0) := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx));
+               v.dmaWrDescAck.metaAddr(31 downto 0)  := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx));
                v.dmaWrDescAck.metaAddr(63 downto 32) := r.remoteWriteAddrH(conv_integer(r.nextWriteIdx));
-               v.dmaWrDescAck.address(31 downto  0)  := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx)) + DMA_AXI_CONFIG_G.DATA_BYTES_C;
+               v.dmaWrDescAck.address(31 downto 0)   := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx)) + DMA_AXI_CONFIG_G.DATA_BYTES_C;
                v.dmaWrDescAck.address(63 downto 32)  := r.remoteWriteAddrH(conv_integer(r.nextWriteIdx));
 
                if r.remoteWriteEn(conv_integer(r.nextWriteIdx)) = '1' or r.writeEnable = '0' then
@@ -387,7 +387,7 @@ begin
                v.dmaRdDescReq.id        := (others => '0');
                v.dmaRdDescReq.dest      := (others => '0');
 
-               v.dmaRdDescReq.address(31 downto  0) := r.remoteReadAddrL(conv_integer(r.nextReadIdx));
+               v.dmaRdDescReq.address(31 downto 0)  := r.remoteReadAddrL(conv_integer(r.nextReadIdx));
                v.dmaRdDescReq.address(63 downto 32) := r.remoteReadAddrH(conv_integer(r.nextReadIdx));
 
                v.txState := MOVE_S;
@@ -415,14 +415,14 @@ begin
 
       --------------------------------------------------------------------------------------------
       -- Outputs
-      awCache         <= r.awCache;
-      arCache         <= r.arCache;
-      writeSlave      <= r.writeSlave;
-      readSlave       <= r.readSlave;
-      dmaWrDescAck    <= r.dmaWrDescAck;
-      dmaWrDescRetAck <= r.dmaWrDescRetAck;
-      dmaRdDescReq    <= r.dmaRdDescReq;
-      dmaRdDescRetAck <= r.dmaRdDescRetAck;
+      awCache           <= r.awCache;
+      arCache           <= r.arCache;
+      writeSlave        <= r.writeSlave;
+      readSlave         <= r.readSlave;
+      dmaWrDescAck      <= r.dmaWrDescAck;
+      dmaWrDescRetAck   <= r.dmaWrDescRetAck;
+      dmaRdDescReq      <= r.dmaRdDescReq;
+      dmaRdDescRetAck   <= r.dmaRdDescRetAck;
       dynamicRouteMasks <= r.dynamicRouteMasks;
       dynamicRouteDests <= r.dynamicRouteDests;
 

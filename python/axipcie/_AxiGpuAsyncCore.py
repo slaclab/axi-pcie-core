@@ -160,23 +160,22 @@ class AxiGpuAsyncCore(pr.Device):
             pollInterval = 1,
         ))
 
-        self.add(pr.RemoteVariable(
-            name         = 'DynamicRouteMasks',
-            offset       = 0x02C,
-            bitSize      = 8,
-            bitOffset    = 0,
-            disp         = '{}',
-            mode         = 'RW', # Exposed to userspace as read/write
-        ))
+        for i in range(2):
+            self.add(pr.RemoteVariable(
+                name         = f'DynamicRouteMasks[{i}]',
+                offset       = 0x02C,
+                bitSize      = 8,
+                bitOffset    = 16*i+0,
+                mode         = 'RW', # Exposed to userspace as read/write
+            ))
 
-        self.add(pr.RemoteVariable(
-            name         = 'DynamicRouteDests',
-            offset       = 0x02C,
-            bitSize      = 8,
-            bitOffset    = 8,
-            disp         = '{}',
-            mode         = 'RW', # Exposed to userspace as read/write
-        ))
+            self.add(pr.RemoteVariable(
+                name         = f'DynamicRouteDests[{i}]',
+                offset       = 0x02C,
+                bitSize      = 8,
+                bitOffset    = 16*i+8,
+                mode         = 'RW', # Exposed to userspace as read/write
+            ))
 
         for i in range(maxBuffers):
 

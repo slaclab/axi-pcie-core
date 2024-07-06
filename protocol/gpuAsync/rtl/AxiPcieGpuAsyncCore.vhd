@@ -84,10 +84,10 @@ architecture mapping of AxiPcieGpuAsyncCore is
    signal dmaRdDescRet    : AxiReadDmaDescRetType;
    signal dmaRdDescRetAck : sl;
 
-   signal dynamicRouteMasks : slv(7 downto 0);
-   signal dynamicRouteDests : slv(7 downto 0);
+   signal dynamicRouteMasks : Slv8Array(1 downto 0);
+   signal dynamicRouteDests : Slv8Array(1 downto 0);
    signal mAxisDemuxMasters : AxiStreamMasterArray(1 downto 0);
-   signal mAxisDemuxSlaves  : AxiStreamMasterArray(1 downto 0);
+   signal mAxisDemuxSlaves  : AxiStreamSlaveArray(1 downto 0);
 
    signal awCache : slv(3 downto 0);
    signal arCache : slv(3 downto 0);
@@ -102,6 +102,7 @@ begin
    -- direct connection to Pcie core from Demux
    bypassMaster        <= mAxisDemuxMasters(1);
    mAxisDemuxSlaves(1) <= bypassSlave;
+
    ------------------------------
    -- AXI-Lite Control/Monitoring
    ------------------------------

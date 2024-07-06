@@ -51,8 +51,8 @@ entity AxiPcieGpuAsyncControl is
       arCache : out slv(3 downto 0);
 
       --AxiePcieGpu Demux
-      dynamicRouteMasks : out slv(7 downto 0);
-      dynamicRouteDests : out slv(7 downto 0);
+      dynamicRouteMasks : out Slv8Array(1 downto 0);
+      dynamicRouteDests : out Slv8Array(1 downto 0);
       -- DMA Write Engine
       dmaWrDescReq      : in  AxiWriteDmaDescReqType;
       dmaWrDescAck      : out AxiWriteDmaDescAckType;
@@ -111,8 +111,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
       dmaWrDescRetAck   : sl;
       dmaRdDescReq      : AxiReadDmaDescReqType;
       dmaRdDescRetAck   : sl;
-      dynamicRouteMasks : slv(7 downto 0);
-      dynamicRouteDests : slv(7 downto 0);
+      dynamicRouteMasks : Slv8Array(1 downto 0);
+      dynamicRouteDests : Slv8Array(1 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -155,9 +155,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
       dmaWrDescRetAck   => '0',
       dmaRdDescReq      => AXI_READ_DMA_DESC_REQ_INIT_C,
       dmaRdDescRetAck   => '0',
-      dynamicRouteMasks => (others => '0'),
-      dynamicRouteDests => (others => '0')
-      );
+      dynamicRouteMasks => (0 => x"00", 1 => x"FF"),
+      dynamicRouteDests => (0 => x"00", 1 => x"FF"));
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -259,8 +258,10 @@ begin
       axiSlaveRegisterR(axilEp, x"024", 0, r.axiWriteErrorVal);
       axiSlaveRegisterR(axilEp, x"028", 0, r.axiReadErrorVal);
 
-      axiSlaveRegister (axilEp, x"02C", 0, v.dynamicRouteMasks);
-      axiSlaveRegister (axilEp, x"02C", 8, v.dynamicRouteDests);
+      axiSlaveRegister (axilEp, x"02C", 0, v.dynamicRouteMasks(0));
+      axiSlaveRegister (axilEp, x"02C", 8, v.dynamicRouteDests(0));
+      axiSlaveRegister (axilEp, x"02C", 16, v.dynamicRouteMasks(1));
+      axiSlaveRegister (axilEp, x"02C", 24, v.dynamicRouteDests(1));
 
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)

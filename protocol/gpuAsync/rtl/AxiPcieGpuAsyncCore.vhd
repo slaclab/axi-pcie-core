@@ -33,7 +33,7 @@ use axi_pcie_core.AxiPciePkg.all;
 entity AxiPcieGpuAsyncCore is
    generic (
       TPD_G             : time                  := 1 ns;
-      NUM_CHAN_G        : positive range 1 to 4 := 1;
+      MAX_BUFFERS_G     : integer range 1 to 16 := 4;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -108,6 +108,7 @@ begin
    U_AxiPcieGpuAsyncControl : entity axi_pcie_core.AxiPcieGpuAsyncControl
       generic map (
          TPD_G            => TPD_G,
+         MAX_BUFFERS_G    => MAX_BUFFERS_G,
          DMA_AXI_CONFIG_G => AXI_PCIE_CONFIG_C)
       port map (
          axilClk           => axilClk,

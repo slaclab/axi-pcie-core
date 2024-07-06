@@ -19,6 +19,7 @@ if { [VersionCheck 2018.3] < 0 } {exit -1}
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip"
 loadRuckusTcl "$::DIR_PATH/../protocol/pip"
+loadRuckusTcl "$::DIR_PATH/../protocol/gpuAsync"
 
 # loadIpCore -dir "$::DIR_PATH/ip/AxiPcie16BCrossbarIpCore"
 # loadIpCore -dir "$::DIR_PATH/ip/AxiPcie32BCrossbarIpCore"

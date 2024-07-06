@@ -17,12 +17,21 @@ class AxiGpuAsyncCore(pr.Device):
                  **kwargs):
         super().__init__(description=description, **kwargs)
 
+        #-----------------------------------------------------------------------------
+        # There are lots of RemoteVariables in this device that are "read only"
+        # But if you look at the firmware, you will noticed that they are "read/write"
+        # The reason why they are "read only in this code is because it is the
+        # Linux kernel driver that is intended to write and update this remote variables
+        # and NOT the userspace
+        #-----------------------------------------------------------------------------
+        kernelVarMode = 'RO'
+
         self.add(pr.RemoteVariable(
             name         = 'AxiReadCache',
             offset       = 0x004,
             bitSize      = 4,
             bitOffset    = 0,
-            mode         = 'RO',
+            mode         = kernelVarMode,
         ))
 
         self.add(pr.RemoteVariable(
@@ -30,7 +39,7 @@ class AxiGpuAsyncCore(pr.Device):
             offset       = 0x004,
             bitSize      = 4,
             bitOffset    = 8,
-            mode         = 'RO',
+            mode         = kernelVarMode,
         ))
 
         self.add(pr.RemoteVariable(
@@ -57,7 +66,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 8,
             bitOffset    = 0,
             disp         = '{}',
-            mode         = 'RO',
+            mode         = kernelVarMode,
             pollInterval = 1,
         ))
 
@@ -66,7 +75,7 @@ class AxiGpuAsyncCore(pr.Device):
             offset       = 0x008,
             bitSize      = 1,
             bitOffset    = 8,
-            mode         = 'RO',
+            mode         = kernelVarMode,
             pollInterval = 1,
         ))
 
@@ -76,7 +85,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 8,
             bitOffset    = 16,
             disp         = '{}',
-            mode         = 'RO',
+            mode         = kernelVarMode,
             pollInterval = 1,
         ))
 
@@ -85,7 +94,7 @@ class AxiGpuAsyncCore(pr.Device):
             offset       = 0x008,
             bitSize      = 1,
             bitOffset    = 24,
-            mode         = 'RO',
+            mode         = kernelVarMode,
             pollInterval = 1,
         ))
 
@@ -151,13 +160,30 @@ class AxiGpuAsyncCore(pr.Device):
             pollInterval = 1,
         ))
 
+        for i in range(2):
+            self.add(pr.RemoteVariable(
+                name         = f'DynamicRouteMasks[{i}]',
+                offset       = 0x02C,
+                bitSize      = 8,
+                bitOffset    = 16*i+0,
+                mode         = 'RW', # Exposed to userspace as read/write
+            ))
+
+            self.add(pr.RemoteVariable(
+                name         = f'DynamicRouteDests[{i}]',
+                offset       = 0x02C,
+                bitSize      = 8,
+                bitOffset    = 16*i+8,
+                mode         = 'RW', # Exposed to userspace as read/write
+            ))
+
         for i in range(maxBuffers):
 
             self.add(pr.RemoteVariable(
                 name         = f'RemoteWriteAddressL[{i}]',
                 offset       = 0x100 + i*16,
                 bitSize      = 32,
-                mode         = 'RO',
+                mode         = kernelVarMode,
                 pollInterval = 1,
             ))
 
@@ -165,7 +191,7 @@ class AxiGpuAsyncCore(pr.Device):
                 name         = f'RemoteWriteAddressH[{i}]',
                 offset       = 0x104 + i*16,
                 bitSize      = 32,
-                mode         = 'RO',
+                mode         = kernelVarMode,
                 pollInterval = 1,
             ))
 
@@ -173,7 +199,7 @@ class AxiGpuAsyncCore(pr.Device):
                 name         = f'RemoteWriteSize[{i}]',
                 offset       = 0x108 + i*16,
                 bitSize      = 32,
-                mode         = 'RO',
+                mode         = kernelVarMode,
                 pollInterval = 1,
             ))
 
@@ -181,7 +207,7 @@ class AxiGpuAsyncCore(pr.Device):
                 name         = f'RemoteReadAddressL[{i}]',
                 offset       = 0x200 + i*16,
                 bitSize      = 32,
-                mode         = 'RO',
+                mode         = kernelVarMode,
                 pollInterval = 1,
             ))
 
@@ -189,7 +215,7 @@ class AxiGpuAsyncCore(pr.Device):
                 name         = f'RemoteReadAddressH[{i}]',
                 offset       = 0x204 + i*16,
                 bitSize      = 32,
-                mode         = 'RO',
+                mode         = kernelVarMode,
                 pollInterval = 1,
             ))
 
@@ -197,7 +223,7 @@ class AxiGpuAsyncCore(pr.Device):
                 name         = f'RemoteReadSize[{i}]',
                 offset       = 0x400 + i*4,
                 bitSize      = 32,
-                mode         = 'RO',
+                mode         = kernelVarMode,
                 pollInterval = 1,
             ))
 

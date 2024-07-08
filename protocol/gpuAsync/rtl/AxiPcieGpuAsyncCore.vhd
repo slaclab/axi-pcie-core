@@ -86,8 +86,8 @@ architecture mapping of AxiPcieGpuAsyncCore is
 
    signal dynamicRouteMasks : slv(7 downto 0);
    signal dynamicRouteDests : slv(7 downto 0);
-   signal mAxisDemuxMasters  : AxiStreamMasterArray(NUM_MASTERS_G-1 downto 0);
-   signal mAxisDemuxSlaves  : AxiStreamMasterArray(NUM_MASTERS_G-1 downto 0);
+   signal mAxisDemuxMasters  : AxiStreamMasterArray(1 downto 0);
+   signal mAxisDemuxSlaves  : AxiStreamMasterArray(1 downto 0);
 
    signal awCache         : slv(3 downto 0);
    signal arCache         : slv(3 downto 0);

@@ -1,8 +1,8 @@
 # Load RUCKUS environment and library
 source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
 
-# Check for version 2020.1 of Vivado (or later)
-if { [VersionCheck 2020.1] < 0 } {exit -1}
+# Check for version 2023.1 of Vivado (or later)
+if { [VersionCheck 2023.1] < 0 } {exit -1}
 
 # Load shared source code
 loadRuckusTcl "$::DIR_PATH/../../shared"

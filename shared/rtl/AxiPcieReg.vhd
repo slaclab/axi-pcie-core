@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
@@ -15,7 +14,6 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-
 
 library surf;
 use surf.StdRtlPkg.all;

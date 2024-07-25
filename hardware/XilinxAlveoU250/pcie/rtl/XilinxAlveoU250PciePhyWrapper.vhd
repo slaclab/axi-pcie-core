@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : XilinxAlveoU250PciePhyWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXI PCIe Core
@@ -17,7 +16,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
-
 
 library surf;
 use surf.StdRtlPkg.all;
@@ -80,7 +78,7 @@ architecture mapping of XilinxAlveoU250PciePhyWrapper is
          usr_irq_req     : in  std_logic_vector(0 downto 0);
          usr_irq_ack     : out std_logic_vector(0 downto 0);
          m_axib_awid     : out std_logic_vector(3 downto 0);
-         m_axib_awaddr   : out std_logic_vector(39 downto 0);
+         m_axib_awaddr   : out std_logic_vector(63 downto 0);
          m_axib_awlen    : out std_logic_vector(7 downto 0);
          m_axib_awsize   : out std_logic_vector(2 downto 0);
          m_axib_awburst  : out std_logic_vector(1 downto 0);
@@ -99,7 +97,7 @@ architecture mapping of XilinxAlveoU250PciePhyWrapper is
          m_axib_bvalid   : in  std_logic;
          m_axib_bready   : out std_logic;
          m_axib_arid     : out std_logic_vector(3 downto 0);
-         m_axib_araddr   : out std_logic_vector(39 downto 0);
+         m_axib_araddr   : out std_logic_vector(63 downto 0);
          m_axib_arlen    : out std_logic_vector(7 downto 0);
          m_axib_arsize   : out std_logic_vector(2 downto 0);
          m_axib_arburst  : out std_logic_vector(1 downto 0);
@@ -135,7 +133,7 @@ architecture mapping of XilinxAlveoU250PciePhyWrapper is
          s_axil_rready   : in  std_logic;
          interrupt_out   : out std_logic;
          s_axib_awid     : in  std_logic_vector(3 downto 0);
-         s_axib_awaddr   : in  std_logic_vector(39 downto 0);
+         s_axib_awaddr   : in  std_logic_vector(63 downto 0);
          s_axib_awregion : in  std_logic_vector(3 downto 0);
          s_axib_awlen    : in  std_logic_vector(7 downto 0);
          s_axib_awsize   : in  std_logic_vector(2 downto 0);
@@ -147,7 +145,7 @@ architecture mapping of XilinxAlveoU250PciePhyWrapper is
          s_axib_wvalid   : in  std_logic;
          s_axib_bready   : in  std_logic;
          s_axib_arid     : in  std_logic_vector(3 downto 0);
-         s_axib_araddr   : in  std_logic_vector(39 downto 0);
+         s_axib_araddr   : in  std_logic_vector(63 downto 0);
          s_axib_arregion : in  std_logic_vector(3 downto 0);
          s_axib_arlen    : in  std_logic_vector(7 downto 0);
          s_axib_arsize   : in  std_logic_vector(2 downto 0);

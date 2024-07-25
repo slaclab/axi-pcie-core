@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : XilinxKcu1500PcieExtendedCore.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board: Extended PCIe Ports  (PCIe GEN3 x 8 lanes)
@@ -18,7 +17,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
-
 
 library surf;
 use surf.StdRtlPkg.all;

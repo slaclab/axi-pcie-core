@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
@@ -16,7 +15,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiPkg.all;
@@ -26,7 +24,6 @@ use surf.AxiLitePkg.all;
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
 use axi_pcie_core.AxiPcieSharedPkg.all;
-use surf.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
    generic (

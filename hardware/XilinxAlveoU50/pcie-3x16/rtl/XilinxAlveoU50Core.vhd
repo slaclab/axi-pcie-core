@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : XilinxAlveoU50Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for Xilinx Alveo U50 board (PCIe GEN3 x 16 lanes)
@@ -18,7 +17,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
-
 
 library surf;
 use surf.StdRtlPkg.all;

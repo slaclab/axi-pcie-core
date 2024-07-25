@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : AxiPcieGpuAsyncCore.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Support for GpuDirectAsync like data transport to/from a GPU

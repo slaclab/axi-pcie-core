@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : XilinxKcu1500Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for Xilinx KCU1500 board (PCIe GEN3 x 8 lanes)

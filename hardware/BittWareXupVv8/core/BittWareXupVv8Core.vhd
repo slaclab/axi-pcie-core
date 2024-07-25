@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : BittWareXupVv8Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for BittWare XUP-VV8 (PCIe GEN3 x 16 lanes)

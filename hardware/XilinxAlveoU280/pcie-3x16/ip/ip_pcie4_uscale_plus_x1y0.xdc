@@ -58,6 +58,11 @@
 # Vivado - PCIe GUI / User Configuration
 ###############################################################################
 #
+# Family       - virtexuplusHBM
+# Part         - xcu280
+# Package      - fsvh2892
+# Speed grade  - -2L
+# PCIe Block   - X1Y0
 # Link Speed   - Gen3 - 8.0 Gb/s
 # Link Width   - X16
 # AXIST Width  - 512-bit
@@ -65,13 +70,12 @@
 # Core Clock   - 500 MHz
 # Pipe Clock   - 125 MHz (Gen1) : 250 MHz (Gen2/Gen3/Gen4)
 #
-# Family       - virtexuplusHBM
-# Part         - xcu280
-# Package      - fsvh2892
-# Speed grade  - -2L
-# PCIe Block   - X1Y0
 # Xilinx Reference Board is AU280
 #
+# master_gt           - GTYE4_CHANNEL_X1Y15
+# master_gt_quad_inx  - 3
+# master_gt_container - 27
+# gt_type             - gtye4
 #
 #
 ###############################################################################
@@ -110,8 +114,10 @@ set_property LOC PCIE4CE4_X1Y0 [get_cells pcie_4_0_pipe_inst/pcie_4_c_e4_inst]
 ###############################################################################
 #
 # Constraining GT TXOUTCLK to 500 MHz
-create_clock -period 2.0 [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.* }]]
+#create_clock -period 2.0 [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.* }]]
+create_clock -period 2.0 [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[27].*gen_gtye4_channel_inst[3].GT*E4_CHANNEL_PRIM_INST}]]
 #
+# This is a slow running clock 1MHz drives small logic before perst only for delaying reference clock probation.
 create_clock -period 1000 [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]
 #
 #
@@ -203,12 +209,12 @@ set_false_path -to [get_pins user_reset_reg/PRE]
 # CLOCK_ROOT LOCKing to Reduce CLOCK SKEW
 # Add/Edit  Clock Routing Option to improve clock path skew
 ###############################################################################
-set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins bufg_gt_sysclk/O]]
-set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_intclk/O]]
-set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_coreclk/O]]
-set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_userclk/O]]
-set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_pclk/O]]
-set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_mcapclk/O]]
+#set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins bufg_gt_sysclk/O]]
+#set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_intclk/O]]
+#set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_coreclk/O]]
+#set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_userclk/O]]
+#set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_pclk/O]]
+#set_property USER_CLOCK_ROOT X7Y1 [get_nets -of_objects [get_pins -hierarchical -filter NAME=~*/phy_clk_i/bufg_gt_mcapclk/O]]
 #
 #set_property CLOCK_DELAY_GROUP group_i0 [get_nets {gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/*TXOUTCLK*}]
 #set_property CLOCK_DELAY_GROUP group_i0 [get_nets {gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/*USERCLK*}]
@@ -244,5 +250,5 @@ set_property CLOCK_DELAY_GROUP group_i0 [get_nets -of_objects [get_pins -hierarc
 
 #create_waiver -type METHODOLOGY -id {TIMING-9} -internal -scoped -tags 1024539   -user "pcie4_uscaleplus" -desc "The CDC logic is used for clock domain crossing so it can be ignored"
 
-#create_waiver -type CDC -id {CDC-11} -tags "1019576" -desc "properly_synced" -from [get_pins {pcie4_uscale_plus_0_i/inst/gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/pcie4_uscale_plus_0_gt_i/inst/gen_gtwizard_gtye4_top.pcie4_uscale_plus_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_cpll_cal_gtye4.gen_cpll_cal_inst[0].gen_inst_cpll_cal.gtwizard_ultrascale_v1_7_5_gtye4_cpll_cal_inst/gtwizard_ultrascale_v1_7_6_5_gtye4_cpll_cal_tx_i/U_TXOUTCLK_FREQ_COUNTER/state_reg[0]/C}] -to [get_pins {pcie4_uscale_plus_0_i/inst/gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/pcie4_uscale_plus_0_gt_i/inst/gen_gtwizard_gtye4_top.pcie4_uscale_plus_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_cpll_cal_gtye4.gen_cpll_cal_inst[0].gen_inst_cpll_cal.gtwizard_ultrascale_v1_7_5_gtye4_cpll_cal_inst/gtwizard_ultrascale_v1_7_6_5_gtye4_cpll_cal_tx_i/U_TXOUTCLK_FREQ_COUNTER/reset_synchronizer_testclk_rst_inst/rst_in_meta_reg/PRE}]
+#create_waiver -type CDC -id {CDC-11} -tags "1019576" -desc "properly_synced" -from [get_pins {pcie4_uscale_plus_0_i/inst/gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/pcie4_uscale_plus_0_gt_i/inst/gen_gtwizard_gtye4_top.pcie4_uscale_plus_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_cpll_cal_gtye4.gen_cpll_cal_inst[0].gen_inst_cpll_cal.gtwizard_ultrascale_v1_7_5_gtye4_cpll_cal_inst/gtwizard_ultrascale_v1_7_8_5_gtye4_cpll_cal_tx_i/U_TXOUTCLK_FREQ_COUNTER/state_reg[0]/C}] -to [get_pins {pcie4_uscale_plus_0_i/inst/gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/pcie4_uscale_plus_0_gt_i/inst/gen_gtwizard_gtye4_top.pcie4_uscale_plus_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_cpll_cal_gtye4.gen_cpll_cal_inst[0].gen_inst_cpll_cal.gtwizard_ultrascale_v1_7_5_gtye4_cpll_cal_inst/gtwizard_ultrascale_v1_7_8_5_gtye4_cpll_cal_tx_i/U_TXOUTCLK_FREQ_COUNTER/reset_synchronizer_testclk_rst_inst/rst_in_meta_reg/PRE}]
 

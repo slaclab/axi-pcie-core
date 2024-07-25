@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : Mig1.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Wrapper for the MIG core

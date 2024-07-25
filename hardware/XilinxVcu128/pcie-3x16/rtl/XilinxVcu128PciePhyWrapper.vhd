@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : XilinxVcu128PciePhyWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Wrapper for AXI PCIe Core

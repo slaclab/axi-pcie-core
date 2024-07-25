@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : XilinxVcu128Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for Xilinx VCU128 board (PCIe GEN3 x 16 lanes)

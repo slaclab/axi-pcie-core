@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : MigPkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Package file for MIG Core
@@ -15,7 +14,6 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-
 
 library surf;
 use surf.StdRtlPkg.all;

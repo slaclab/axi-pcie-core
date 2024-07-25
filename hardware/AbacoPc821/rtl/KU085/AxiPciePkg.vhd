@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : AxiPciePkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Package file for AXI PCIe Core

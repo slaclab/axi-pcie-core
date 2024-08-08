@@ -166,7 +166,17 @@ architecture mapping of AxiPcieGpuAsyncControl is
    signal writeMaster : AxiLiteWriteMasterType;
    signal writeSlave  : AxiLiteWriteSlaveType;
 
+   signal state_rx : sl;
+   signal state_tx : sl;
+
 begin
+   
+
+   state_rx <= '0' when r.rxState = IDLE_S else
+                '1' when r.rxState = MOVE_S; 
+
+   state_tx <= '0' when r.txState = IDLE_S else
+                '1' when r.txState = MOVE_S; 
 
    U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
@@ -262,6 +272,8 @@ begin
       axiSlaveRegister (axilEp, x"02C", 8, v.dynamicRouteDests(0));
       axiSlaveRegister (axilEp, x"02C", 16, v.dynamicRouteMasks(1));
       axiSlaveRegister (axilEp, x"02C", 24, v.dynamicRouteDests(1));
+      axiSlaveRegister (axilEp, x"02C", 25, state_rx);
+      axiSlaveRegister (axilEp, x"02C", 26, state_tx);
 
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)

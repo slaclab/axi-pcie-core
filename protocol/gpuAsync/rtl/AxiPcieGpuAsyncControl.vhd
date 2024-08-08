@@ -74,6 +74,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
    type RegType is record
       rxState           : StateType;
       txState           : StateType;
+      state_rx           : sl;
+      state_tx           : sl;
       rxFrameCnt        : slv(31 downto 0);
       txFrameCnt        : slv(31 downto 0);
       axiWriteErrorCnt  : slv(31 downto 0);
@@ -118,6 +120,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
    constant REG_INIT_C : RegType := (
       rxState           => IDLE_S,
       txState           => IDLE_S,
+      state_rx          => '0',
+      state_tx          => '0',
       rxFrameCnt        => (others => '0'),
       txFrameCnt        => (others => '0'),
       axiWriteErrorCnt  => (others => '0'),
@@ -170,13 +174,6 @@ architecture mapping of AxiPcieGpuAsyncControl is
    signal state_tx : sl;
 
 begin
-   
-
-   state_rx <= '0' when r.rxState = IDLE_S else
-                '1' when r.rxState = MOVE_S; 
-
-   state_tx <= '0' when r.txState = IDLE_S else
-                '1' when r.txState = MOVE_S; 
 
    U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
@@ -217,7 +214,16 @@ begin
       v.dmaRdDescReq.valid := '0';
       v.dmaWrDescRetAck    := '0';
       v.dmaRdDescRetAck    := '0';
-
+      if (r.rxState = IDLE_S) then
+         v.state_rx := '0';
+      else 
+         v.state_rx := '1';       
+      end if;
+      if (r.txState = IDLE_S) then
+         v.state_tx := '0';
+      else  
+         v.state_tx := '1';       
+      end if;
       -- Reset counters
       if (r.cntRst = '1') then
          v.rxFrameCnt       := (others => '0');
@@ -272,8 +278,8 @@ begin
       axiSlaveRegister (axilEp, x"02C", 8, v.dynamicRouteDests(0));
       axiSlaveRegister (axilEp, x"02C", 16, v.dynamicRouteMasks(1));
       axiSlaveRegister (axilEp, x"02C", 24, v.dynamicRouteDests(1));
-      axiSlaveRegister (axilEp, x"02C", 25, state_rx);
-      axiSlaveRegister (axilEp, x"02C", 26, state_tx);
+      axiSlaveRegisterR (axilEp, x"030", 0, r.state_rx);
+      axiSlaveRegisterR (axilEp, x"030", 1, r.state_tx);
 
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)

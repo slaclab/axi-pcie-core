@@ -179,9 +179,9 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'StateRx',
-            offset       = 0x02C,
+            offset       = 0x030,
             bitSize      = 1,
-            bitOffset    = 25,
+            bitOffset    = 0,
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
@@ -189,9 +189,9 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'StateTx',
-            offset       = 0x02C,
+            offset       = 0x030,
             bitSize      = 1,
-            bitOffset    = 26,
+            bitOffset    = 1,
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,

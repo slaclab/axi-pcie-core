@@ -196,9 +196,8 @@ class AxiGpuAsyncCore(pr.Device):
             mode         = 'RO',
             pollInterval = 1,
         ))
-        
-        for i in range(maxBuffers):
 
+        for i in range(maxBuffers):
             self.add(pr.RemoteVariable(
                 name         = f'RemoteWriteAddressL[{i}]',
                 offset       = 0x100 + i*16,

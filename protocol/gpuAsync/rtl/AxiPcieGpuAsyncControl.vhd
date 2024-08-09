@@ -69,13 +69,13 @@ end AxiPcieGpuAsyncControl;
 
 architecture mapping of AxiPcieGpuAsyncControl is
 
-   type StateType is (IDLE_S, MOVE_S);
+   type StateType is (IDLE_S, MOVE_S, WAIT_S);
 
    type RegType is record
       rxState           : StateType;
       txState           : StateType;
-      state_rx           : sl;
-      state_tx           : sl;
+      state_rx           : slv(1 downto 0);
+      state_tx           : slv(1 downto 0);
       rxFrameCnt        : slv(31 downto 0);
       txFrameCnt        : slv(31 downto 0);
       axiWriteErrorCnt  : slv(31 downto 0);
@@ -120,8 +120,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
    constant REG_INIT_C : RegType := (
       rxState           => IDLE_S,
       txState           => IDLE_S,
-      state_rx          => '0',
-      state_tx          => '0',
+      state_rx          => (others => '0'),
+      state_tx          => (others => '0'),
       rxFrameCnt        => (others => '0'),
       txFrameCnt        => (others => '0'),
       axiWriteErrorCnt  => (others => '0'),
@@ -170,9 +170,6 @@ architecture mapping of AxiPcieGpuAsyncControl is
    signal writeMaster : AxiLiteWriteMasterType;
    signal writeSlave  : AxiLiteWriteSlaveType;
 
-   signal state_rx : sl;
-   signal state_tx : sl;
-
 begin
 
    U_AxiLiteAsync : entity surf.AxiLiteAsync
@@ -214,16 +211,15 @@ begin
       v.dmaRdDescReq.valid := '0';
       v.dmaWrDescRetAck    := '0';
       v.dmaRdDescRetAck    := '0';
-      if (r.rxState = IDLE_S) then
-         v.state_rx := '0';
-      else 
-         v.state_rx := '1';       
-      end if;
-      if (r.txState = IDLE_S) then
-         v.state_tx := '0';
-      else  
-         v.state_tx := '1';       
-      end if;
+      case v.rxState is
+         when IDLE_S    => v.state_rx := x"0";
+         when MOVE_S  => v.state_rx := x"1";
+       end case;
+       case v.txState is
+         when IDLE_S    => v.state_tx := x"0";
+         when MOVE_S  => v.state_tx := x"0";
+       end case;
+
       -- Reset counters
       if (r.cntRst = '1') then
          v.rxFrameCnt       := (others => '0');
@@ -279,7 +275,7 @@ begin
       axiSlaveRegister (axilEp, x"02C", 16, v.dynamicRouteMasks(1));
       axiSlaveRegister (axilEp, x"02C", 24, v.dynamicRouteDests(1));
       axiSlaveRegisterR (axilEp, x"030", 0, r.state_rx);
-      axiSlaveRegisterR (axilEp, x"030", 1, r.state_tx);
+      axiSlaveRegisterR (axilEp, x"030", 2, r.state_tx);
 
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)
@@ -373,6 +369,8 @@ begin
                end if;
 
                v.rxFrameCnt := r.rxFrameCnt + 1;
+            end if;
+            if v.rxFrameCnt = v.txFrameCnt then
                v.rxState    := IDLE_S;
             end if;
       end case;
@@ -408,7 +406,7 @@ begin
 
                v.dmaRdDescReq.address(31 downto 0)  := r.remoteReadAddrL(conv_integer(r.nextReadIdx));
                v.dmaRdDescReq.address(63 downto 32) := r.remoteReadAddrH(conv_integer(r.nextReadIdx));
-
+                  
                v.txState := MOVE_S;
             end if;
 
@@ -426,7 +424,6 @@ begin
                end if;
 
                v.txFrameCnt := r.txFrameCnt + 1;
-
                v.txState := IDLE_S;
             end if;
 

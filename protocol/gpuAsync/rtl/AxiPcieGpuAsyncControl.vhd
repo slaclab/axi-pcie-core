@@ -69,7 +69,7 @@ end AxiPcieGpuAsyncControl;
 
 architecture mapping of AxiPcieGpuAsyncControl is
 
-   type StateType is (IDLE_S, MOVE_S, WAIT_S);
+   type StateType is (IDLE_S, MOVE_S);
 
    type RegType is record
       rxState           : StateType;
@@ -212,12 +212,12 @@ begin
       v.dmaWrDescRetAck    := '0';
       v.dmaRdDescRetAck    := '0';
       case v.rxState is
-         when IDLE_S    => v.state_rx := x"0";
-         when MOVE_S  => v.state_rx := x"1";
+         when IDLE_S    => v.state_rx := "00";
+         when MOVE_S  => v.state_rx := "01";
        end case;
        case v.txState is
-         when IDLE_S    => v.state_tx := x"0";
-         when MOVE_S  => v.state_tx := x"0";
+         when IDLE_S    => v.state_tx := "00";
+         when MOVE_S  => v.state_tx := "01";
        end case;
 
       -- Reset counters

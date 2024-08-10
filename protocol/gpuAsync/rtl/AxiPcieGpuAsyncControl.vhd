@@ -369,8 +369,7 @@ begin
                end if;
 
                v.rxFrameCnt := r.rxFrameCnt + 1;
-            end if;
-            if v.rxFrameCnt = v.txFrameCnt then
+
                v.rxState    := IDLE_S;
             end if;
       end case;

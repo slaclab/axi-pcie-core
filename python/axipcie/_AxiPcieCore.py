@@ -89,7 +89,7 @@ class AxiPcieCore(pr.Device):
                     ))
 
             # I2C access is slow.  So using a AXI-Lite proxy to prevent holding up CPU during a BAR0 memory map transaction
-            if (extended):
+            if not (extended):
             	self.add(axi.AxiLiteMasterProxy(
                     name   = 'AxilBridge',
                     offset = 0x70000,

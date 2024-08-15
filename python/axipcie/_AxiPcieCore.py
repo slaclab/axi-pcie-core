@@ -29,6 +29,7 @@ class AxiPcieCore(pr.Device):
                  useSpi      = False,
                  numDmaLanes = 1,
                  boardType   = None,
+                 extended    = False,
                  sim         = False,
                  **kwargs):
         super().__init__(description=description, **kwargs)
@@ -88,10 +89,11 @@ class AxiPcieCore(pr.Device):
                     ))
 
             # I2C access is slow.  So using a AXI-Lite proxy to prevent holding up CPU during a BAR0 memory map transaction
-            self.add(axi.AxiLiteMasterProxy(
-                name   = 'AxilBridge',
-                offset = 0x70000,
-            ))
+            if (extended):
+            	self.add(axi.AxiLiteMasterProxy(
+                    name   = 'AxilBridge',
+                    offset = 0x70000,
+            	))
 
             # Check for the SLAC GEN4 PGP Card
             if (boardType == 'SlacPgpCardG4'):

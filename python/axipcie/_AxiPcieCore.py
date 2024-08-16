@@ -93,7 +93,7 @@ class AxiPcieCore(pr.Device):
                 self.add(axi.AxiLiteMasterProxy(
                     name   = 'AxilBridge',
                     offset = 0x70000,
-            	))
+                ))
 
             # Check for the SLAC GEN4 PGP Card
             if (boardType == 'SlacPgpCardG4'):

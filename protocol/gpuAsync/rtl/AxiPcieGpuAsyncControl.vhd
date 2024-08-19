@@ -74,6 +74,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
    type RegType is record
       rxState           : StateType;
       txState           : StateType;
+      state_rx           : slv(1 downto 0);
+      state_tx           : slv(1 downto 0);
       rxFrameCnt        : slv(31 downto 0);
       txFrameCnt        : slv(31 downto 0);
       axiWriteErrorCnt  : slv(31 downto 0);
@@ -103,8 +105,6 @@ architecture mapping of AxiPcieGpuAsyncControl is
       gpuLatencyEn      : slv(MAX_BUFFERS_G-1 downto 0);
       wrLatency         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       wrLatencyEn       : slv(MAX_BUFFERS_G-1 downto 0);
-      rdLatency         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      rdLatencyEn       : slv(MAX_BUFFERS_G-1 downto 0);
       readSlave         : AxiLiteReadSlaveType;
       writeSlave        : AxiLiteWriteSlaveType;
       dmaWrDescAck      : AxiWriteDmaDescAckType;
@@ -118,6 +118,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
    constant REG_INIT_C : RegType := (
       rxState           => IDLE_S,
       txState           => IDLE_S,
+      state_rx          => (others => '0'),
+      state_tx          => (others => '0'),
       rxFrameCnt        => (others => '0'),
       txFrameCnt        => (others => '0'),
       axiWriteErrorCnt  => (others => '0'),
@@ -147,8 +149,6 @@ architecture mapping of AxiPcieGpuAsyncControl is
       gpuLatencyEn      => (others => '0'),
       wrLatency         => (others => (others => '0')),
       wrLatencyEn       => (others => '0'),
-      rdLatency         => (others => (others => '0')),
-      rdLatencyEn       => (others => '0'),
       readSlave         => AXI_LITE_READ_SLAVE_INIT_C,
       writeSlave        => AXI_LITE_WRITE_SLAVE_INIT_C,
       dmaWrDescAck      => AXI_WRITE_DMA_DESC_ACK_INIT_C,
@@ -207,6 +207,14 @@ begin
       v.dmaRdDescReq.valid := '0';
       v.dmaWrDescRetAck    := '0';
       v.dmaRdDescRetAck    := '0';
+      case v.rxState is
+         when IDLE_S    => v.state_rx := "00";
+         when MOVE_S  => v.state_rx := "01";
+       end case;
+       case v.txState is
+         when IDLE_S    => v.state_tx := "00";
+         when MOVE_S  => v.state_tx := "01";
+       end case;
 
       -- Reset counters
       if (r.cntRst = '1') then
@@ -228,9 +236,6 @@ begin
          end if;
          if r.wrLatencyEn(i) = '1' then
             v.wrLatency(i) := r.wrLatency(i) + 1;
-         end if;
-         if r.rdLatencyEn(i) = '1' then
-            v.rdLatency(i) := r.rdLatency(i) + 1;
          end if;
       end loop;
 
@@ -262,6 +267,8 @@ begin
       axiSlaveRegister (axilEp, x"02C", 8, v.dynamicRouteDests(0));
       axiSlaveRegister (axilEp, x"02C", 16, v.dynamicRouteMasks(1));
       axiSlaveRegister (axilEp, x"02C", 24, v.dynamicRouteDests(1));
+      axiSlaveRegisterR (axilEp, x"030", 0, r.state_rx);
+      axiSlaveRegisterR (axilEp, x"030", 2, r.state_tx);
 
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)
@@ -287,7 +294,6 @@ begin
          axiSlaveRegisterR(axilEp, toSlv(1280+i*16+0, 12), 0, r.totLatency(i));  -- 0x5x0 (x = 0,4,8,C....)
          axiSlaveRegisterR(axilEp, toSlv(1280+i*16+4, 12), 0, r.gpuLatency(i));  -- 0x5x4 (x = 0,4,8,C....)
          axiSlaveRegisterR(axilEp, toSlv(1280+i*16+8, 12), 0, r.wrLatency(i));  -- 0x5x8 (x = 0,4,8,C....)
-         axiSlaveRegisterR(axilEp, toSlv(1280+i*16+12, 12), 0, r.rdLatency(i));  -- 0x5xc (x = 0,4,8,C....)
       end loop;
 
       -- Closeout the transaction
@@ -299,6 +305,9 @@ begin
 
          when IDLE_S =>
 
+         if r.writeEnable = '0' then
+            v.gpuLatencyEn(conv_integer(r.nextWriteIdx)) := '0';
+         end if;
             if dmaWrDescReq.valid = '1' then
                v.dmaWrDescAck.dropEn     := not r.writeEnable;
                v.dmaWrDescAck.maxSize    := r.remoteWriteSize(conv_integer(r.nextWriteIdx));
@@ -328,9 +337,6 @@ begin
                      v.wrLatencyEn(conv_integer(r.nextWriteIdx)) := '1';
                      v.wrLatency(conv_integer(r.nextWriteIdx))   := (others => '0');
 
-                     v.rdLatencyEn(conv_integer(r.nextWriteIdx)) := '0';
-                     v.rdLatency(conv_integer(r.nextWriteIdx))   := (others => '0');
-
                      if r.nextWriteIdx = r.writeCount then
                         v.nextWriteIdx := (others => '0');
                      else
@@ -355,6 +361,7 @@ begin
                end if;
 
                v.rxFrameCnt := r.rxFrameCnt + 1;
+
                v.rxState    := IDLE_S;
             end if;
       end case;
@@ -368,9 +375,6 @@ begin
 
             if r.readEnable = '1' and r.remoteReadEn(conv_integer(r.nextReadIdx)) = '1' then
                v.remoteReadEn(conv_integer(r.nextReadIdx)) := '0';
-
-               v.rdLatencyEn(conv_integer(r.nextReadIdx))  := '1';
-               v.gpuLatencyEn(conv_integer(r.nextReadIdx)) := '0';
 
                if r.nextReadIdx = r.readCount then
                   v.nextReadIdx := (others => '0');
@@ -390,7 +394,7 @@ begin
 
                v.dmaRdDescReq.address(31 downto 0)  := r.remoteReadAddrL(conv_integer(r.nextReadIdx));
                v.dmaRdDescReq.address(63 downto 32) := r.remoteReadAddrH(conv_integer(r.nextReadIdx));
-
+                  
                v.txState := MOVE_S;
             end if;
 
@@ -399,7 +403,6 @@ begin
             if dmaRdDescRet.valid = '1' then
                v.dmaRdDescRetAck := '1';
 
-               v.rdLatencyEn(conv_integer(dmaRdDescRet.buffId(3 downto 0)))  := '0';
                v.totLatencyEn(conv_integer(dmaRdDescRet.buffId(3 downto 0))) := '0';
 
                if dmaRdDescRet.result /= "000" then
@@ -408,7 +411,6 @@ begin
                end if;
 
                v.txFrameCnt := r.txFrameCnt + 1;
-
                v.txState := IDLE_S;
             end if;
 

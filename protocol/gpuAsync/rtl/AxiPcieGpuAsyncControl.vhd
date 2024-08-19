@@ -103,8 +103,6 @@ architecture mapping of AxiPcieGpuAsyncControl is
       gpuLatencyEn      : slv(MAX_BUFFERS_G-1 downto 0);
       wrLatency         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       wrLatencyEn       : slv(MAX_BUFFERS_G-1 downto 0);
-      rdLatency         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      rdLatencyEn       : slv(MAX_BUFFERS_G-1 downto 0);
       readSlave         : AxiLiteReadSlaveType;
       writeSlave        : AxiLiteWriteSlaveType;
       dmaWrDescAck      : AxiWriteDmaDescAckType;
@@ -147,8 +145,6 @@ architecture mapping of AxiPcieGpuAsyncControl is
       gpuLatencyEn      => (others => '0'),
       wrLatency         => (others => (others => '0')),
       wrLatencyEn       => (others => '0'),
-      rdLatency         => (others => (others => '0')),
-      rdLatencyEn       => (others => '0'),
       readSlave         => AXI_LITE_READ_SLAVE_INIT_C,
       writeSlave        => AXI_LITE_WRITE_SLAVE_INIT_C,
       dmaWrDescAck      => AXI_WRITE_DMA_DESC_ACK_INIT_C,
@@ -229,9 +225,6 @@ begin
          if r.wrLatencyEn(i) = '1' then
             v.wrLatency(i) := r.wrLatency(i) + 1;
          end if;
-         if r.rdLatencyEn(i) = '1' then
-            v.rdLatency(i) := r.rdLatency(i) + 1;
-         end if;
       end loop;
 
       --------------------------------------------------------------------------------------------
@@ -287,7 +280,6 @@ begin
          axiSlaveRegisterR(axilEp, toSlv(1280+i*16+0, 12), 0, r.totLatency(i));  -- 0x5x0 (x = 0,4,8,C....)
          axiSlaveRegisterR(axilEp, toSlv(1280+i*16+4, 12), 0, r.gpuLatency(i));  -- 0x5x4 (x = 0,4,8,C....)
          axiSlaveRegisterR(axilEp, toSlv(1280+i*16+8, 12), 0, r.wrLatency(i));  -- 0x5x8 (x = 0,4,8,C....)
-         axiSlaveRegisterR(axilEp, toSlv(1280+i*16+12, 12), 0, r.rdLatency(i));  -- 0x5xc (x = 0,4,8,C....)
       end loop;
 
       -- Closeout the transaction
@@ -299,6 +291,9 @@ begin
 
          when IDLE_S =>
 
+            if r.writeEnable = '0' then
+               v.gpuLatencyEn(conv_integer(r.nextWriteIdx)) := '0';
+            end if;
             if dmaWrDescReq.valid = '1' then
                v.dmaWrDescAck.dropEn     := not r.writeEnable;
                v.dmaWrDescAck.maxSize    := r.remoteWriteSize(conv_integer(r.nextWriteIdx));
@@ -327,9 +322,6 @@ begin
 
                      v.wrLatencyEn(conv_integer(r.nextWriteIdx)) := '1';
                      v.wrLatency(conv_integer(r.nextWriteIdx))   := (others => '0');
-
-                     v.rdLatencyEn(conv_integer(r.nextWriteIdx)) := '0';
-                     v.rdLatency(conv_integer(r.nextWriteIdx))   := (others => '0');
 
                      if r.nextWriteIdx = r.writeCount then
                         v.nextWriteIdx := (others => '0');
@@ -369,8 +361,6 @@ begin
             if r.readEnable = '1' and r.remoteReadEn(conv_integer(r.nextReadIdx)) = '1' then
                v.remoteReadEn(conv_integer(r.nextReadIdx)) := '0';
 
-               v.rdLatencyEn(conv_integer(r.nextReadIdx))  := '1';
-               v.gpuLatencyEn(conv_integer(r.nextReadIdx)) := '0';
 
                if r.nextReadIdx = r.readCount then
                   v.nextReadIdx := (others => '0');
@@ -399,7 +389,6 @@ begin
             if dmaRdDescRet.valid = '1' then
                v.dmaRdDescRetAck := '1';
 
-               v.rdLatencyEn(conv_integer(dmaRdDescRet.buffId(3 downto 0)))  := '0';
                v.totLatencyEn(conv_integer(dmaRdDescRet.buffId(3 downto 0))) := '0';
 
                if dmaRdDescRet.result /= "000" then

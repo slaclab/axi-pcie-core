@@ -254,14 +254,6 @@ class AxiGpuAsyncCore(pr.Device):
                 pollInterval = 1,
             ))
 
-            self.add(pr.RemoteVariable(
-                name         = f'RdLatency[{i}]',
-                offset       = 0x50C + i*16,
-                bitSize      = 32,
-                disp         = '{}',
-                mode         = 'RO',
-                pollInterval = 1,
-            ))
 
     def countReset(self):
         self.CountReset()

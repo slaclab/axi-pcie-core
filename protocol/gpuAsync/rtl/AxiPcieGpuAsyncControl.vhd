@@ -291,7 +291,7 @@ begin
 
          when IDLE_S =>
 
-            if r.writeEnable = '0' then
+            if r.remoteWriteEn(conv_integer(r.nextWriteIdx)) = '0' then
                v.gpuLatencyEn(conv_integer(r.nextWriteIdx)) := '0';
             end if;
             if dmaWrDescReq.valid = '1' then

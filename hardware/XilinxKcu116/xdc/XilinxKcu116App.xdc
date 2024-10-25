@@ -71,13 +71,13 @@ set_property -dict { PACKAGE_PIN R23 IOSTANDARD LVDS } [get_ports { sfpRecClkN }
 
 ##############################################################################
 
-set_property -dict { PACKAGE_PIN P25  IOSTANDARD LVCMOS18                    } [get_ports { phyMdio  }]
-set_property -dict { PACKAGE_PIN U25  IOSTANDARD LVCMOS18                    } [get_ports { phyMdc   }]
-set_property -dict { PACKAGE_PIN R25  IOSTANDARD LVCMOS18                    } [get_ports { phyIrqN  }]
-set_property -dict { PACKAGE_PIN N24  IOSTANDARD LVDS                        } [get_ports { sgmiiTxP }]
-set_property -dict { PACKAGE_PIN U26  IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { sgmiiRxP }]
-set_property -dict { PACKAGE_PIN T24  IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { phyClkP  }]
-set_property -dict { PACKAGE_PIN AA23 IOSTANDARD LVCMOS18                    } [get_ports { phyRstN  }]
+set_property -dict { PACKAGE_PIN U25  IOSTANDARD LVCMOS18                    } [get_ports { phyMdc   }]; # PHY1_MDC
+set_property -dict { PACKAGE_PIN P25  IOSTANDARD LVCMOS18                    } [get_ports { phyMdio  }]; # PHY1_MDIO
+set_property -dict { PACKAGE_PIN AA23 IOSTANDARD LVCMOS18                    } [get_ports { phyRstN  }]; # PHY1_RESET_B
+set_property -dict { PACKAGE_PIN R25  IOSTANDARD LVCMOS18                    } [get_ports { phyIrqN  }]; # PHY1_PDWN_B_I_INT_B_O
+set_property -dict { PACKAGE_PIN T24  IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { phyClkP  }]; # PHY1_SGMII_CLK_P
+set_property -dict { PACKAGE_PIN N24  IOSTANDARD LVDS                        } [get_ports { sgmiiTxP }]; # PHY1_SGMII_IN_P
+set_property -dict { PACKAGE_PIN U26  IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { sgmiiRxP }]; # PHY1_SGMII_OUT_P
 
 # # Placement - put SGMII ETH close in clock region of the 625MHz clock;
 # #             otherwise it is difficult to meet timing.

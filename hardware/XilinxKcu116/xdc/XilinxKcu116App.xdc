@@ -95,7 +95,7 @@ set_property PACKAGE_PIN D1 [get_ports fmcRxN[0]]
 set_property PACKAGE_PIN E5 [get_ports fmcTxP[1]]
 set_property PACKAGE_PIN E4 [get_ports fmcTxN[1]]
 set_property PACKAGE_PIN C4 [get_ports fmcRxP[1]]
-set_property PACKAGE_PIN D3 [get_ports fmcRxN[1]]
+set_property PACKAGE_PIN C3 [get_ports fmcRxN[1]]
 
 set_property PACKAGE_PIN D7 [get_ports fmcTxP[2]]
 set_property PACKAGE_PIN D6 [get_ports fmcTxN[2]]

@@ -323,7 +323,7 @@ begin
                      v.wrLatencyEn(conv_integer(r.nextWriteIdx)) := '1';
                      v.wrLatency(conv_integer(r.nextWriteIdx))   := (others => '0');
 
-                     if r.nextWriteIdx = r.writeCount then
+                     if r.nextWriteIdx >= r.writeCount then
                         v.nextWriteIdx := (others => '0');
                      else
                         v.nextWriteIdx := r.nextWriteIdx + 1;
@@ -331,6 +331,10 @@ begin
                   end if;
 
                end if;
+            end if;
+
+            if r.writeEnable = '0' then
+               v.nextWriteIdx := (others => '0');
             end if;
 
          when MOVE_S =>
@@ -362,7 +366,7 @@ begin
                v.remoteReadEn(conv_integer(r.nextReadIdx)) := '0';
 
 
-               if r.nextReadIdx = r.readCount then
+               if r.nextReadIdx >= r.readCount then
                   v.nextReadIdx := (others => '0');
                else
                   v.nextReadIdx := r.nextReadIdx + 1;
@@ -382,6 +386,10 @@ begin
                v.dmaRdDescReq.address(63 downto 32) := r.remoteReadAddrH(conv_integer(r.nextReadIdx));
 
                v.txState := MOVE_S;
+            end if;
+
+            if r.readEnable = '0' then
+               v.nextReadIdx := (others => '0');
             end if;
 
          when MOVE_S =>

@@ -46,12 +46,6 @@ class AxiPcieCore(pr.Device):
             expand       = False,
         ))
 
-        if useGpu:
-            self.add(axipcie.AxiGpuAsyncCore(
-                name     = 'AxiGpuAsyncCore',
-                offset    = 0x28000,
-                expand    = False,
-            ))
         # DMA AXI Stream Inbound Monitor
         self.add(axi.AxiStreamMonAxiL(
             name        = 'DmaIbAxisMon',
@@ -75,6 +69,14 @@ class AxiPcieCore(pr.Device):
                 offset       = 0x10000,
                 expand       = False,
             ))
+
+            # Check if using GpuAsyncCore
+            if useGpu:
+                self.add(axipcie.AxiGpuAsyncCore(
+                    name     = 'AxiGpuAsyncCore',
+                    offset    = 0x28000,
+                    expand    = False,
+                ))
 
             # Check if using BPI PROM (Micron MT28 or Cypress S29GL)
             if (useBpi):

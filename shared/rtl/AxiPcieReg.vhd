@@ -122,6 +122,10 @@ architecture mapping of AxiPcieReg is
          baseAddr     => x"0002_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
+      GPU_INDEX_C => (
+         baseAddr     => x"0002_8000", 
+         addrBits     => 12, 
+         connectivity => x"FFFF"), 
       BPI_INDEX_C     => (
          baseAddr     => x"0003_0000",
          addrBits     => 16,

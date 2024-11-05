@@ -95,19 +95,20 @@ architecture mapping of AxiPcieReg is
    constant DMA_INDEX_C     : natural := 0;
    constant PHY_INDEX_C     : natural := 1;
    constant VERSION_INDEX_C : natural := 2;
-   constant BPI_INDEX_C     : natural := 3;
-   constant SPI0_INDEX_C    : natural := 4;
-   constant SPI1_INDEX_C    : natural := 5;
-   constant AXIS_MON_IB_C   : natural := 6;
-   constant AXIS_MON_OB_C   : natural := 7;
-   constant I2C_INDEX_C     : natural := 8;
+   constant GPU_INDEX_C    : natural := 3;
+   constant BPI_INDEX_C     : natural := 4;
+   constant SPI0_INDEX_C    : natural := 5;
+   constant SPI1_INDEX_C    : natural := 6;
+   constant AXIS_MON_IB_C   : natural := 7;
+   constant AXIS_MON_OB_C   : natural := 8;
+   constant I2C_INDEX_C     : natural := 9;
    -- constant APP0_INDEX_C    : natural := XXX; -- Now used for PIP interface
-   constant APP1_INDEX_C    : natural := 9;
-   constant APP2_INDEX_C    : natural := 10;
-   constant APP3_INDEX_C    : natural := 11;
-   constant APP4_INDEX_C    : natural := 12;
+   constant APP1_INDEX_C    : natural := 10;
+   constant APP2_INDEX_C    : natural := 11;
+   constant APP3_INDEX_C    : natural := 12;
+   constant APP4_INDEX_C    : natural := 13;
 
-   constant NUM_AXI_MASTERS_C : natural := 13;
+   constant NUM_AXI_MASTERS_C : natural := 14;
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       DMA_INDEX_C     => (

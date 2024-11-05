@@ -26,6 +26,7 @@ class AxiPcieCore(pr.Device):
     def __init__(self,
                  description = 'Base components of the PCIe firmware core',
                  useBpi      = False,
+                 useGpu      = False,
                  useSpi      = False,
                  numDmaLanes = 1,
                  boardType   = None,
@@ -45,6 +46,12 @@ class AxiPcieCore(pr.Device):
             expand       = False,
         ))
 
+        if useGpu:
+            self.add(axipcie.AxiGpuAsyncCore(
+                name     = 'AxiGpuAsyncCore',
+                offset    = 0x28000,
+                expand    = False,
+            ))
         # DMA AXI Stream Inbound Monitor
         self.add(axi.AxiStreamMonAxiL(
             name        = 'DmaIbAxisMon',

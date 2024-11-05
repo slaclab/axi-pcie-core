@@ -64,6 +64,11 @@ entity AxiPcieReg is
       i2cReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
       i2cWriteMaster      : out AxiLiteWriteMasterType;
       i2cWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
+      -- GTH AXI-Lite Interfaces
+      gpuReadMaster      : out AxiLiteReadMasterType;
+      gpuReadSlave       : in  AxiLiteReadSlaveType;
+      gpuWriteMaster     : out AxiLiteWriteMasterType;
+      gpuWriteSlave      : in  AxiLiteWriteSlaveType;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk              : in  sl;
       appRst              : in  sl;
@@ -415,6 +420,14 @@ begin
          userReset      => cardResetOut,
          -- Optional: user values
          userValues     => userValues);
+
+   --------------------------------------
+   -- Map the AXI-Lite to AxiGpuAsyncCore
+   --------------------------------------
+  gpuWriteMaster               <= axilWriteMasters(GPU_INDEX_C);
+  axilWriteSlaves(GPU_INDEX_C) <= gpuWriteSlave;
+  gpuReadMaster                <= axilReadMasters(GPU_INDEX_C);
+  axilReadSlaves(GPU_INDEX_C)  <= gpuReadSlave;
 
    -----------------------------
    -- AXI-Lite Boot Flash Module

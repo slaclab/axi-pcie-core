@@ -69,6 +69,11 @@ entity XilinxAlveoU200Core is
       appReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
       appWriteMaster  : out   AxiLiteWriteMasterType;
       appWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      -- GPU AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
+      gpuReadMaster   : out   AxiLiteReadMasterType;
+      gpuReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      gpuWriteMaster  : out   AxiLiteWriteMasterType;
+      gpuWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
@@ -423,6 +428,11 @@ begin
          appReadSlave        => appReadSlave,
          appWriteMaster      => appWriteMaster,
          appWriteSlave       => appWriteSlave,
+         -- (Optional) GPU AXI-Lite Interfaces
+         gpuReadMaster       => gpuReadMaster,
+         gpuReadSlave        => gpuReadSlave,
+         gpuWriteMaster      => gpuWriteMaster,
+         gpuWriteSlave       => gpuWriteSlave,
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset,
@@ -435,25 +445,25 @@ begin
    U_STARTUPE3 : STARTUPE3
       generic map (
          PROG_USR      => "FALSE",  -- Activate program event security feature. Requires encrypted bitstreams.
-         SIM_CCLK_FREQ => 0.0)          -- Set the Configuration Clock Frequency(ns) for simulation
+         SIM_CCLK_FREQ => 0.0)  -- Set the Configuration Clock Frequency(ns) for simulation
       port map (
-         CFGCLK    => open,             -- 1-bit output: Configuration main clock output
+         CFGCLK    => open,  -- 1-bit output: Configuration main clock output
          CFGMCLK   => open,  -- 1-bit output: Configuration internal oscillator clock output
-         DI        => di,               -- 4-bit output: Allow receiving on the D[3:0] input pins
+         DI        => di,  -- 4-bit output: Allow receiving on the D[3:0] input pins
          EOS       => open,  -- 1-bit output: Active high output signal indicating the End Of Startup.
-         PREQ      => open,             -- 1-bit output: PROGRAM request to fabric output
-         DO        => do,               -- 4-bit input: Allows control of the D[3:0] pin outputs
-         DTS       => "1110",           -- 4-bit input: Allows tristate of the D[3:0] pins
-         FCSBO     => bootCsL(0),       -- 1-bit input: Contols the FCS_B pin for flash access
+         PREQ      => open,  -- 1-bit output: PROGRAM request to fabric output
+         DO        => do,  -- 4-bit input: Allows control of the D[3:0] pin outputs
+         DTS       => "1110",  -- 4-bit input: Allows tristate of the D[3:0] pins
+         FCSBO     => bootCsL(0),  -- 1-bit input: Contols the FCS_B pin for flash access
          FCSBTS    => '0',              -- 1-bit input: Tristate the FCS_B pin
          GSR       => '0',  -- 1-bit input: Global Set/Reset input (GSR cannot be used for the port name)
          GTS       => '0',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
          KEYCLEARB => '0',  -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
-         PACK      => '0',              -- 1-bit input: PROGRAM acknowledge input
+         PACK      => '0',  -- 1-bit input: PROGRAM acknowledge input
          USRCCLKO  => sck,              -- 1-bit input: User CCLK input
-         USRCCLKTS => '0',              -- 1-bit input: User CCLK 3-state enable input
-         USRDONEO  => '1',              -- 1-bit input: User DONE pin output control
-         USRDONETS => '0');             -- 1-bit input: User DONE 3-state enable output
+         USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
+         USRDONEO  => '1',  -- 1-bit input: User DONE pin output control
+         USRDONETS => '0');  -- 1-bit input: User DONE 3-state enable output
 
    do          <= "111" & bootMosi(0);
    bootMiso(0) <= di(1);

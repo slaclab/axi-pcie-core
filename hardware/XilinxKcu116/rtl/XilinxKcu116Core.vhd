@@ -55,12 +55,17 @@ entity XilinxKcu116Core is
       dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk          : in  sl;
-      appRst          : in  sl;
+      appClk          : in  sl                    := '0';
+      appRst          : in  sl                    := '1';
       appReadMaster   : out AxiLiteReadMasterType;
-      appReadSlave    : in  AxiLiteReadSlaveType;
+      appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
       appWriteMaster  : out AxiLiteWriteMasterType;
-      appWriteSlave   : in  AxiLiteWriteSlaveType;
+      appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      -- GPU AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
+      gpuReadMaster   : out AxiLiteReadMasterType;
+      gpuReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      gpuWriteMaster  : out AxiLiteWriteMasterType;
+      gpuWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
@@ -221,6 +226,11 @@ begin
          appReadSlave        => appReadSlave,
          appWriteMaster      => appWriteMaster,
          appWriteSlave       => appWriteSlave,
+         -- (Optional) GPU AXI-Lite Interfaces
+         gpuReadMaster       => gpuReadMaster,
+         gpuReadSlave        => gpuReadSlave,
+         gpuWriteMaster      => gpuWriteMaster,
+         gpuWriteSlave       => gpuWriteSlave,
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset,

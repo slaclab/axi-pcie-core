@@ -64,14 +64,14 @@ entity AxiPcieReg is
       i2cReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
       i2cWriteMaster      : out AxiLiteWriteMasterType;
       i2cWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
-      -- Application AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
+      -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk              : in  sl;
       appRst              : in  sl;
       appReadMaster       : out AxiLiteReadMasterType;
       appReadSlave        : in  AxiLiteReadSlaveType;
       appWriteMaster      : out AxiLiteWriteMasterType;
       appWriteSlave       : in  AxiLiteWriteSlaveType;
-      -- GPU AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
+      -- GPU AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
       gpuReadMaster       : out AxiLiteReadMasterType;
       gpuReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
       gpuWriteMaster      : out AxiLiteWriteMasterType;

@@ -64,18 +64,18 @@ entity AxiPcieReg is
       i2cReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
       i2cWriteMaster      : out AxiLiteWriteMasterType;
       i2cWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
-      -- GTH AXI-Lite Interfaces
-      gpuReadMaster       : out AxiLiteReadMasterType;
-      gpuReadSlave        : in  AxiLiteReadSlaveType;
-      gpuWriteMaster      : out AxiLiteWriteMasterType;
-      gpuWriteSlave       : in  AxiLiteWriteSlaveType;
-      -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
+      -- Application AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
       appClk              : in  sl;
       appRst              : in  sl;
       appReadMaster       : out AxiLiteReadMasterType;
       appReadSlave        : in  AxiLiteReadSlaveType;
       appWriteMaster      : out AxiLiteWriteMasterType;
       appWriteSlave       : in  AxiLiteWriteSlaveType;
+      -- GPU AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
+      gpuReadMaster       : out AxiLiteReadMasterType;
+      gpuReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
+      gpuWriteMaster      : out AxiLiteWriteMasterType;
+      gpuWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
       -- Application Force reset
       cardResetIn         : in  sl;
       cardResetOut        : out sl;
@@ -424,10 +424,26 @@ begin
    --------------------------------------
    -- Map the AXI-Lite to AxiGpuAsyncCore
    --------------------------------------
-   gpuWriteMaster               <= axilWriteMasters(GPU_INDEX_C);
-   axilWriteSlaves(GPU_INDEX_C) <= gpuWriteSlave;
-   gpuReadMaster                <= axilReadMasters(GPU_INDEX_C);
-   axilReadSlaves(GPU_INDEX_C)  <= gpuReadSlave;
+   U_GpuAsync : entity surf.AxiLiteAsync
+      generic map (
+         TPD_G           => TPD_G,
+         COMMON_CLK_G    => false,
+         NUM_ADDR_BITS_G => 12)
+      port map (
+         -- Slave Interface
+         sAxiClk         => axiClk,
+         sAxiClkRst      => axiRst,
+         sAxiReadMaster  => axilReadMasters(GPU_INDEX_C),
+         sAxiReadSlave   => axilReadSlaves(GPU_INDEX_C),
+         sAxiWriteMaster => axilWriteMasters(GPU_INDEX_C),
+         sAxiWriteSlave  => axilWriteSlaves(GPU_INDEX_C),
+         -- Master Interface
+         mAxiClk         => appClk,
+         mAxiClkRst      => appRstInt,
+         mAxiReadMaster  => gpuWriteMaster,
+         mAxiReadSlave   => gpuWriteSlave,
+         mAxiWriteMaster => gpuReadMaster,
+         mAxiWriteSlave  => gpuReadSlave);
 
    -----------------------------
    -- AXI-Lite Boot Flash Module

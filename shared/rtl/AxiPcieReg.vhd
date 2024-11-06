@@ -65,10 +65,10 @@ entity AxiPcieReg is
       i2cWriteMaster      : out AxiLiteWriteMasterType;
       i2cWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
       -- GTH AXI-Lite Interfaces
-      gpuReadMaster      : out AxiLiteReadMasterType;
-      gpuReadSlave       : in  AxiLiteReadSlaveType;
-      gpuWriteMaster     : out AxiLiteWriteMasterType;
-      gpuWriteSlave      : in  AxiLiteWriteSlaveType;
+      gpuReadMaster       : out AxiLiteReadMasterType;
+      gpuReadSlave        : in  AxiLiteReadSlaveType;
+      gpuWriteMaster      : out AxiLiteWriteMasterType;
+      gpuWriteSlave       : in  AxiLiteWriteSlaveType;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk              : in  sl;
       appRst              : in  sl;
@@ -100,7 +100,7 @@ architecture mapping of AxiPcieReg is
    constant DMA_INDEX_C     : natural := 0;
    constant PHY_INDEX_C     : natural := 1;
    constant VERSION_INDEX_C : natural := 2;
-   constant GPU_INDEX_C    : natural := 3;
+   constant GPU_INDEX_C     : natural := 3;
    constant BPI_INDEX_C     : natural := 4;
    constant SPI0_INDEX_C    : natural := 5;
    constant SPI1_INDEX_C    : natural := 6;
@@ -128,10 +128,10 @@ architecture mapping of AxiPcieReg is
          baseAddr     => x"0002_0000",
          addrBits     => 16,
          connectivity => x"FFFF"),
-      GPU_INDEX_C => (
-         baseAddr     => x"0002_8000", 
-         addrBits     => 12, 
-         connectivity => x"FFFF"), 
+      GPU_INDEX_C     => (
+         baseAddr     => x"0002_8000",
+         addrBits     => 12,
+         connectivity => x"FFFF"),
       BPI_INDEX_C     => (
          baseAddr     => x"0003_0000",
          addrBits     => 16,
@@ -424,10 +424,10 @@ begin
    --------------------------------------
    -- Map the AXI-Lite to AxiGpuAsyncCore
    --------------------------------------
-  gpuWriteMaster               <= axilWriteMasters(GPU_INDEX_C);
-  axilWriteSlaves(GPU_INDEX_C) <= gpuWriteSlave;
-  gpuReadMaster                <= axilReadMasters(GPU_INDEX_C);
-  axilReadSlaves(GPU_INDEX_C)  <= gpuReadSlave;
+   gpuWriteMaster               <= axilWriteMasters(GPU_INDEX_C);
+   axilWriteSlaves(GPU_INDEX_C) <= gpuWriteSlave;
+   gpuReadMaster                <= axilReadMasters(GPU_INDEX_C);
+   axilReadSlaves(GPU_INDEX_C)  <= gpuReadSlave;
 
    -----------------------------
    -- AXI-Lite Boot Flash Module

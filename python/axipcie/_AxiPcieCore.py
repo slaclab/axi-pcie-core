@@ -26,6 +26,7 @@ class AxiPcieCore(pr.Device):
     def __init__(self,
                  description = 'Base components of the PCIe firmware core',
                  useBpi      = False,
+                 useGpu      = False,
                  useSpi      = False,
                  numDmaLanes = 1,
                  boardType   = None,
@@ -68,6 +69,14 @@ class AxiPcieCore(pr.Device):
                 offset       = 0x10000,
                 expand       = False,
             ))
+
+            # Check if using GpuAsyncCore
+            if useGpu:
+                self.add(axipcie.AxiGpuAsyncCore(
+                    name     = 'AxiGpuAsyncCore',
+                    offset    = 0x28000,
+                    expand    = False,
+                ))
 
             # Check if using BPI PROM (Micron MT28 or Cypress S29GL)
             if (useBpi):

@@ -443,7 +443,7 @@ begin
          mAxiReadMaster  => gpuReadMaster,
          mAxiReadSlave   => gpuReadSlave,
          mAxiWriteMaster => gpuWriteMaster,
-         mAxiWriteSlave  => gpuReadSlave);
+         mAxiWriteSlave  => gpuWriteSlave);
 
    -----------------------------
    -- AXI-Lite Boot Flash Module

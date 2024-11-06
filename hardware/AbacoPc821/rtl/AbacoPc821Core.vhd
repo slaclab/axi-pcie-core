@@ -61,7 +61,7 @@ entity AbacoPc821Core is
       gpuReadMaster   : out   AxiLiteReadMasterType;
       gpuReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
       gpuWriteMaster  : out   AxiLiteWriteMasterType;
-      gpuWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      gpuWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------

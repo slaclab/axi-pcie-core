@@ -126,11 +126,11 @@ architecture mapping of AxiPcieReg is
          connectivity => x"FFFF"),
       VERSION_INDEX_C => (
          baseAddr     => x"0002_0000",
-         addrBits     => 16,
+         addrBits     => 15,
          connectivity => x"FFFF"),
       GPU_INDEX_C     => (
          baseAddr     => x"0002_8000",
-         addrBits     => 12,
+         addrBits     => 15,
          connectivity => x"FFFF"),
       BPI_INDEX_C     => (
          baseAddr     => x"0003_0000",
@@ -428,7 +428,7 @@ begin
       generic map (
          TPD_G           => TPD_G,
          COMMON_CLK_G    => false,
-         NUM_ADDR_BITS_G => 12)
+         NUM_ADDR_BITS_G => 15)
       port map (
          -- Slave Interface
          sAxiClk         => axiClk,

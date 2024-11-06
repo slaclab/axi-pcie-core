@@ -440,9 +440,9 @@ begin
          -- Master Interface
          mAxiClk         => appClk,
          mAxiClkRst      => appRstInt,
-         mAxiReadMaster  => gpuWriteMaster,
-         mAxiReadSlave   => gpuWriteSlave,
-         mAxiWriteMaster => gpuReadMaster,
+         mAxiReadMaster  => gpuReadMaster,
+         mAxiReadSlave   => gpuReadSlave,
+         mAxiWriteMaster => gpuWriteMaster,
          mAxiWriteSlave  => gpuReadSlave);
 
    -----------------------------

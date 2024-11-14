@@ -39,12 +39,15 @@ class AxiPcieCore(pr.Device):
         self.startArmed  = True
         self.sim         = sim
         self.boardType   = boardType
+        XIL_DEVICE_G     = None
 
         # AxiVersion Module
         self.add(axipcie.PcieAxiVersion(
             offset       = 0x20000,
             expand       = False,
         ))
+
+
 
         # DMA AXI Stream Inbound Monitor
         self.add(axi.AxiStreamMonAxiL(
@@ -105,7 +108,18 @@ class AxiPcieCore(pr.Device):
                 ))
 
             # Check for the SLAC GEN4 PGP Card
-            if (boardType == 'SlacPgpCardG4'):
+            if (boardType == 'AbacoPc821'):
+                XIL_DEVICE_G = 'ULTRASCALE'
+
+            elif (boardType == 'AlphaDataKu3'):
+                XIL_DEVICE_G = 'ULTRASCALE'
+
+            elif (boardType == 'BittWareXupVv8'):
+                XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+
+            elif (boardType == 'SlacPgpCardG4'):
+
+                XIL_DEVICE_G = 'ULTRASCALE'
 
                 for i in range(2):
                     self.add(xceiver.Qsfp(
@@ -132,6 +146,7 @@ class AxiPcieCore(pr.Device):
 
             elif (boardType == 'XilinxKcu1500'):
 
+                XIL_DEVICE_G = 'ULTRASCALE'
                 qsfpOffset = [0x74_000,0x71_000]
 
                 for i in range(2):
@@ -142,7 +157,9 @@ class AxiPcieCore(pr.Device):
                         enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                     ))
 
-            elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250'):
+            elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250') or (boardType == 'XilinxAlveoU280'):
+
+                XIL_DEVICE_G = 'ULTRASCALE_PLUS'
 
                 for i in range(2):
                     self.add(xceiver.Qsfp(
@@ -153,11 +170,30 @@ class AxiPcieCore(pr.Device):
                     ))
 
             elif (boardType == 'XilinxAlveoU55c') or (boardType == 'XilinxVariumC1100'):
+
+                XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+
                 self.add(silabs.Si5394(
                     offset  = 0x70000,
                     memBase = self.AxilBridge.proxy,
                     enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                 ))
+
+            elif (boardType == 'XilinxKcu105'):
+                XIL_DEVICE_G = 'ULTRASCALE'
+
+            elif (boardType == 'XilinxKcu116') or (boardType == 'XilinxVcu128'):
+                XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+
+        # SysMon Module
+        if XIL_DEVICE_G is not None:
+            self.add(xil.AxiSysMonUltraScale(
+                offset       = 0x24000,
+                simpleViewList = [ 'Temperature',   'VccInt',   'VccAux',   'VccBram',
+                                'MaxTemperature','MaxVccInt','MaxVccAux','MaxVccBram',
+                                'MinTemperature','MinVccInt','MinVccAux','MinVccBram'],
+                XIL_DEVICE_G = XIL_DEVICE_G,
+            ))
 
     def _start(self):
         super()._start()

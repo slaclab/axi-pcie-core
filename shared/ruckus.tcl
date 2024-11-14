@@ -25,11 +25,13 @@ loadRuckusTcl "$::DIR_PATH/../protocol/gpuAsync"
 # loadIpCore -dir "$::DIR_PATH/ip/AxiPcie32BCrossbarIpCore"
 # loadIpCore -dir "$::DIR_PATH/ip/AxiPcie64BCrossbarIpCore"
 # loadIpCore -dir "$::DIR_PATH/ip/AxiPcieResize"
+# loadIpCore -dir "$::DIR_PATH/ip/SystemManagementCore"
 
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcie16BCrossbarIpCore"
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcie32BCrossbarIpCore"
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcie64BCrossbarIpCore"
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcieResize"
+loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/SystemManagementCore"
 
 # Skip the utilization check during placement
 set_param place.skipUtilizationCheck 1

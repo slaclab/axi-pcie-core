@@ -100,20 +100,21 @@ architecture mapping of AxiPcieReg is
    constant DMA_INDEX_C     : natural := 0;
    constant PHY_INDEX_C     : natural := 1;
    constant VERSION_INDEX_C : natural := 2;
-   constant GPU_INDEX_C     : natural := 3;
-   constant BPI_INDEX_C     : natural := 4;
-   constant SPI0_INDEX_C    : natural := 5;
-   constant SPI1_INDEX_C    : natural := 6;
-   constant AXIS_MON_IB_C   : natural := 7;
-   constant AXIS_MON_OB_C   : natural := 8;
-   constant I2C_INDEX_C     : natural := 9;
+   constant SYSMON_INDEX_C  : natural := 3;
+   constant GPU_INDEX_C     : natural := 4;
+   constant BPI_INDEX_C     : natural := 5;
+   constant SPI0_INDEX_C    : natural := 6;
+   constant SPI1_INDEX_C    : natural := 7;
+   constant AXIS_MON_IB_C   : natural := 8;
+   constant AXIS_MON_OB_C   : natural := 9;
+   constant I2C_INDEX_C     : natural := 10;
    -- constant APP0_INDEX_C    : natural := XXX; -- Now used for PIP interface
-   constant APP1_INDEX_C    : natural := 10;
-   constant APP2_INDEX_C    : natural := 11;
-   constant APP3_INDEX_C    : natural := 12;
-   constant APP4_INDEX_C    : natural := 13;
+   constant APP1_INDEX_C    : natural := 11;
+   constant APP2_INDEX_C    : natural := 12;
+   constant APP3_INDEX_C    : natural := 13;
+   constant APP4_INDEX_C    : natural := 14;
 
-   constant NUM_AXI_MASTERS_C : natural := 14;
+   constant NUM_AXI_MASTERS_C : natural := 15;
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       DMA_INDEX_C     => (
@@ -126,7 +127,11 @@ architecture mapping of AxiPcieReg is
          connectivity => x"FFFF"),
       VERSION_INDEX_C => (
          baseAddr     => x"0002_0000",
-         addrBits     => 15,
+         addrBits     => 14,
+         connectivity => x"FFFF"),
+      SYSMON_INDEX_C  => (
+         baseAddr     => x"0002_4000",
+         addrBits     => 14,
          connectivity => x"FFFF"),
       GPU_INDEX_C     => (
          baseAddr     => x"0002_8000",
@@ -420,6 +425,21 @@ begin
          userReset      => cardResetOut,
          -- Optional: user values
          userValues     => userValues);
+
+   -------------------------
+   -- AXI-Lite Sysmon Module
+   -------------------------
+   U_Sysmon : entity axi_pcie_core.Sysmon
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         -- AXI-Lite Interface
+         axilClk         => axiClk,
+         axilRst         => axiRst,
+         axilReadMaster  => axilReadMasters(SYSMON_INDEX_C),
+         axilReadSlave   => axilReadSlaves(SYSMON_INDEX_C),
+         axilWriteMaster => axilWriteMasters(SYSMON_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(SYSMON_INDEX_C));
 
    --------------------------------------
    -- Map the AXI-Lite to AxiGpuAsyncCore

@@ -302,10 +302,6 @@ begin
 
       -- Set whether the DATAGPU mode is enabled
       userValues(10)(0) <= ite(DATAGPU_EN_G, '1', '0');
-      -- Set unused bits to zero
-      for i in 31 downto 1 loop
-         userValues(10)(i) <= '0';
-      end loop;
 
       -- Set unused to zero
       for i in 63 downto 11 loop

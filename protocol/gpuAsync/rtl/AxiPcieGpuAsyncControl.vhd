@@ -255,6 +255,7 @@ begin
       axiSlaveRegister (axilEp, x"02C", 8, v.dynamicRouteDests(0));
       axiSlaveRegister (axilEp, x"02C", 16, v.dynamicRouteMasks(1));
       axiSlaveRegister (axilEp, x"02C", 24, v.dynamicRouteDests(1));
+      axiSlaveRegisterR(axilEp, x"030", 0, toSlv(1,8)); -- version number, 1 if gpu enabled
 
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)

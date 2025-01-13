@@ -32,7 +32,6 @@ entity AxiPcieGpuAsyncControl is
    generic (
       TPD_G            : time                  := 1 ns;
       MAX_BUFFERS_G    : integer range 1 to 16 := 4;
-      VERSION          : bool := false;
       DMA_AXI_CONFIG_G : AxiConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -112,7 +111,6 @@ architecture mapping of AxiPcieGpuAsyncControl is
       dmaRdDescRetAck   : sl;
       dynamicRouteMasks : Slv8Array(1 downto 0);
       dynamicRouteDests : Slv8Array(1 downto 0);
-      version           : sl;
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -154,8 +152,7 @@ architecture mapping of AxiPcieGpuAsyncControl is
       dmaRdDescReq      => AXI_READ_DMA_DESC_REQ_INIT_C,
       dmaRdDescRetAck   => '0',
       dynamicRouteMasks => (0 => x"00", 1 => x"FF"),
-      dynamicRouteDests => (0 => x"00", 1 => x"FF"),
-      version           =>  '0');
+      dynamicRouteDests => (0 => x"00", 1 => x"FF"));
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -217,15 +214,6 @@ begin
          v.axiReadErrorVal  := (others => '0');
       end if;
 
-      -- version 
-      if VERSION = true then
-         -- firmware is gpu-enabled
-         v.version := '0';
-      else 
-         -- if '1' firmware is NOT gpu-enabled
-         v.version := '1';
-      end if;
-
       -- Latency Counters
       for i in 0 to MAX_BUFFERS_G-1 loop
          if r.totLatencyEn(i) = '1' then
@@ -267,7 +255,7 @@ begin
       axiSlaveRegister (axilEp, x"02C", 8, v.dynamicRouteDests(0));
       axiSlaveRegister (axilEp, x"02C", 16, v.dynamicRouteMasks(1));
       axiSlaveRegister (axilEp, x"02C", 24, v.dynamicRouteDests(1));
-      axiSlaveRegisterR(axilEp, x"030", 0, r.version);
+      axiSlaveRegisterR(axilEp, x"030", 0, toSlv(1,8)); -- version number, 1 if gpu enabled
 
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)

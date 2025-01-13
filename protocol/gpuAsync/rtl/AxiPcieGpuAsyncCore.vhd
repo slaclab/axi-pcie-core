@@ -33,7 +33,6 @@ entity AxiPcieGpuAsyncCore is
    generic (
       TPD_G             : time                  := 1 ns;
       MAX_BUFFERS_G     : integer range 1 to 16 := 4;
-      VERSION           : bool                  := true; 
       DMA_AXIS_CONFIG_G : AxiStreamConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -110,7 +109,6 @@ begin
       generic map (
          TPD_G            => TPD_G,
          MAX_BUFFERS_G    => MAX_BUFFERS_G,
-         VERSION          => VERSION,
          DMA_AXI_CONFIG_G => AXI_PCIE_CONFIG_C)
       port map (
          axilClk           => axilClk,

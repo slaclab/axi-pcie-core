@@ -38,6 +38,7 @@ entity AxiPcieReg is
       PCIE_HW_TYPE_G       : slv(31 downto 0)            := HW_TYPE_UNDEFINED_C;
       EN_DEVICE_DNA_G      : boolean                     := true;
       EN_ICAP_G            : boolean                     := true;
+      DATAGPU_EN_G         : boolean                     := false;
       DMA_SIZE_G           : positive range 1 to 16      := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)
@@ -299,8 +300,15 @@ begin
       -- PCIe Hardware Type
       userValues(9) <= PCIE_HW_TYPE_G;
 
+      -- Set whether the DATAGPU mode is enabled
+      userValues(10)(0) <= ite(DATAGPU_EN_G, '1', '0');
+      -- Set unused bits to zero
+      for i in 31 downto 1 loop
+         userValues(10)(i) <= '0';
+      end loop;
+
       -- Set unused to zero
-      for i in 63 downto 10 loop
+      for i in 63 downto 11 loop
          userValues(i) <= x"00000000";
       end loop;
 

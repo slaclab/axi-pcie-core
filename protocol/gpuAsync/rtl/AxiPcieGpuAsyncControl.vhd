@@ -244,7 +244,7 @@ begin
 
       axiSlaveRegisterR(axilEp, x"010", 0, r.rxFrameCnt);
       axiSlaveRegisterR(axilEp, x"014", 0, r.txFrameCnt);
-      axiSlaveRegisterR(axilEp, x"018", 0, r.axiWriteErrorCnt);
+      axiSlaveRegisterR(axilEp, x"018", 0, r.axiWriteErrorCnt); 
       axiSlaveRegisterR(axilEp, x"01C", 0, r.axiReadErrorCnt);
 
       axiSlaveRegister (axilEp, x"020", 0, v.cntRst);

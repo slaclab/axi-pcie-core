@@ -177,6 +177,13 @@ class AxiGpuAsyncCore(pr.Device):
                 mode         = 'RW', # Exposed to userspace as read/write
             ))
 
+        self.add(pr.RemoteVariable(
+            name         = f'VersionNumber',
+            offset       = 0x030,
+            bitSize      = 8,
+            mode         = 'RO', 
+        ))
+
         for i in range(maxBuffers):
 
             self.add(pr.RemoteVariable(

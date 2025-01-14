@@ -178,10 +178,10 @@ class AxiGpuAsyncCore(pr.Device):
             ))
 
         self.add(pr.RemoteVariable(
-            name         = f'VersionNumber',
+            name         = 'VersionNumber',
             offset       = 0x030,
             bitSize      = 8,
-            mode         = 'RO', 
+            mode         = 'RO',
         ))
 
         for i in range(maxBuffers):

@@ -234,7 +234,7 @@ class PcieAxiVersion(axi.AxiVersion):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'GataGpuEn',
+            name         = 'DataGpuEn',
             offset       = 0x400+(4*10),
             bitSize      = 1,
             bitOffset    = 0,

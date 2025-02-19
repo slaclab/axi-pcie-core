@@ -224,6 +224,14 @@ class AxiPcieCore(pr.Device):
         # Send a local PCIe reset
         self.AxiVersion.UserRst()
 
+        # Initialize watchdog counter
+        watchdog_counter = 0
+        watchdog_limit = 10  # 10 iterations of 0.1s = 1 second
+
         # Wait for the AXI-Lite to recover from reset
-        while (self.AxiVersion.AppReset.get() != 0):
-            time.sleep(0.001)
+        while (watchdog_counter < watchdog_limit):
+            if (not self.AxiVersion.AppReset.get()):
+                watchdog_counter += 1
+            else:
+                watchdog_counter = 0  # Reset watchdog if condition is broken
+            time.sleep(0.1)

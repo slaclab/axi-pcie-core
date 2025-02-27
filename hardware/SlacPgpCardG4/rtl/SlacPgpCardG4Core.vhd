@@ -42,6 +42,7 @@ entity SlacPgpCardG4Core is
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
       DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
+      DATAGPU_EN_G         : boolean                     := false;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (
       ------------------------
@@ -354,6 +355,7 @@ begin
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
          PCIE_HW_TYPE_G       => HW_TYPE_SLAC_PGP_GEN4_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
+         DATAGPU_EN_G         => DATAGPU_EN_G,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces

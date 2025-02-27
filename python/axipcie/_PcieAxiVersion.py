@@ -232,3 +232,12 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x00_00_00_13: 'BittWareXupVv8Vu9p',
             },
         ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'DataGpuEn',
+            offset       = 0x400+(4*10),
+            bitSize      = 1,
+            bitOffset    = 0,
+            mode         = 'RO',
+            base         = pr.Bool,
+        ))

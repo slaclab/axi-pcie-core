@@ -128,7 +128,7 @@ begin
       U_XBAR : entity axi_pcie_core.AxiPcieCrossbar
          generic map (
             TPD_G             => TPD_G,
-            AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
+            AXI_DMA_CONFIG_G  => XBAR_AXI_CONFIG_C,
             AXI_PCIE_CONFIG_G => AXI_PCIE_CONFIG_C,
             DMA_SIZE_G        => DMA_SIZE_G)
          port map (

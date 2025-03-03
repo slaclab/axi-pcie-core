@@ -80,13 +80,18 @@ architecture mapping of AxiPcieDma is
       TDATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,
       TDEST_BITS_C  => 8,
       TID_BITS_C    => 3,
-      TKEEP_MODE_C  => TKEEP_COUNT_C,   -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
+      TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
       TUSER_BITS_C  => 4,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
-   -- DMA AXI Configuration
+   constant XBAR_AXI_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => 64,  -- Allow 64-bit address in the AXI4 crossbar (required for dataGPU)
+      DATA_BYTES_C => INT_DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- Matches the AXIS stream
+      ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
+      LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
+
    constant DMA_AXI_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => AXI_PCIE_CONFIG_C.ADDR_WIDTH_C,
+      ADDR_WIDTH_C => 40,  -- AxiStreamDmaV2Desc.vhd only supports up to 40-bits
       DATA_BYTES_C => INT_DMA_AXIS_CONFIG_C.TDATA_BYTES_C,  -- Matches the AXIS stream
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
@@ -146,7 +151,7 @@ begin
       U_V2Gen : entity surf.AxiStreamDmaV2
          generic map (
             TPD_G              => TPD_G,
-            DESC_AWIDTH_G      => 12,    -- 4096 entries
+            DESC_AWIDTH_G      => 12,   -- 4096 entries
             DESC_ARB_G         => DESC_ARB_G,
             DESC_SYNTH_MODE_G  => DESC_SYNTH_MODE_G,
             DESC_MEMORY_TYPE_G => DESC_MEMORY_TYPE_G,

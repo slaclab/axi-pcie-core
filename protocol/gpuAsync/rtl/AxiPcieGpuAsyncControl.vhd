@@ -208,13 +208,13 @@ begin
 
       -- Reset counters
       if (r.cntRst = '1') then
-         v.rxFrameCnt            := (others => '0');
-         v.txFrameCnt            := (others => '0');
-         v.axiWriteErrorCnt      := (others => '0');
-         axiWriteTimeoutErrorCnt := (others => '0');
-         v.axiWriteErrorVal      := (others => '0');
-         v.axiReadErrorCnt       := (others => '0');
-         v.axiReadErrorVal       := (others => '0');
+         v.rxFrameCnt              := (others => '0');
+         v.txFrameCnt              := (others => '0');
+         v.axiWriteErrorCnt        := (others => '0');
+         v.axiWriteTimeoutErrorCnt := (others => '0');
+         v.axiWriteErrorVal        := (others => '0');
+         v.axiReadErrorCnt         := (others => '0');
+         v.axiReadErrorVal         := (others => '0');
       end if;
 
       -- Latency Counters

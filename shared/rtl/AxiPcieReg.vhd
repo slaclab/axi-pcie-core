@@ -39,6 +39,7 @@ entity AxiPcieReg is
       EN_DEVICE_DNA_G      : boolean                     := true;
       EN_ICAP_G            : boolean                     := true;
       DATAGPU_EN_G         : boolean                     := false;
+      GEN_SYSMON_G         : boolean                     := true;
       DMA_SIZE_G           : positive range 1 to 16      := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)

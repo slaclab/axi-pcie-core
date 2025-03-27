@@ -39,6 +39,7 @@ entity AxiPcieReg is
       EN_DEVICE_DNA_G      : boolean                     := true;
       EN_ICAP_G            : boolean                     := true;
       DATAGPU_EN_G         : boolean                     := false;
+      GEN_SYSMON_G         : boolean                     := true;
       DMA_SIZE_G           : positive range 1 to 16      := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)
@@ -433,18 +434,19 @@ begin
    -------------------------
    -- AXI-Lite Sysmon Module
    -------------------------
-   U_Sysmon : entity axi_pcie_core.Sysmon
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- AXI-Lite Interface
-         axilClk         => axiClk,
-         axilRst         => axiRst,
-         axilReadMaster  => axilReadMasters(SYSMON_INDEX_C),
-         axilReadSlave   => axilReadSlaves(SYSMON_INDEX_C),
-         axilWriteMaster => axilWriteMasters(SYSMON_INDEX_C),
-         axilWriteSlave  => axilWriteSlaves(SYSMON_INDEX_C));
-
+   GEN_SYSMON : if (GEN_SYSMON_G) generate
+      U_Sysmon : entity axi_pcie_core.Sysmon
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            -- AXI-Lite Interface
+            axilClk         => axiClk,
+            axilRst         => axiRst,
+            axilReadMaster  => axilReadMasters(SYSMON_INDEX_C),
+            axilReadSlave   => axilReadSlaves(SYSMON_INDEX_C),
+            axilWriteMaster => axilWriteMasters(SYSMON_INDEX_C),
+            axilWriteSlave  => axilWriteSlaves(SYSMON_INDEX_C));
+   end generate;
    --------------------------------------
    -- Map the AXI-Lite to AxiGpuAsyncCore
    --------------------------------------

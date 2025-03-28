@@ -145,7 +145,7 @@ class AxiGpuAsyncCore(pr.Device):
         self.add(pr.RemoteVariable(
             name         = 'WriteAxiErrorVal',
             offset       = 0x024,
-            bitSize      = 3,
+            bitSize      = 4,
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
@@ -154,7 +154,7 @@ class AxiGpuAsyncCore(pr.Device):
         self.add(pr.RemoteVariable(
             name         = 'ReadAxiErrorVal',
             offset       = 0x028,
-            bitSize      = 4,
+            bitSize      = 3,
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,

@@ -258,7 +258,7 @@ begin
       axiSlaveRegister (axilEp, x"02C", 8, v.dynamicRouteDests(0));
       axiSlaveRegister (axilEp, x"02C", 16, v.dynamicRouteMasks(1));
       axiSlaveRegister (axilEp, x"02C", 24, v.dynamicRouteDests(1));
-      axiSlaveRegisterR(axilEp, x"030", 0, toSlv(1, 8));  -- version number, 1 if gpu enabled
+      axiSlaveRegisterR(axilEp, x"030", 0, toSlv(2, 8));  -- version number, >= 1 if gpu enabled
       axiSlaveRegisterR(axilEp, x"034", 0, r.axiWriteTimeoutErrorCnt);
 
       for i in 0 to MAX_BUFFERS_G-1 loop

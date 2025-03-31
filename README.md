@@ -1,5 +1,7 @@
 # axi-pcie-core
 
+[DOE Code](https://www.osti.gov/doecode/biblio/75521)
+
 This GIT repository is intended to be a common firmware library submodule used by many other applications.
 
 Example: https://github.com/slaclab/pgp-pcie-apps/tree/master/firmware/submodules

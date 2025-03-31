@@ -207,6 +207,7 @@ begin
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DATAGPU_EN_G         => DATAGPU_EN_G,
+         GEN_SYSMON_G         => false,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces

@@ -121,6 +121,7 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x1: 'TKEEP_COMP_C',
                 0x2: 'TKEEP_FIXED_C',
                 0x3: 'TKEEP_COUNT_C',
+                0xF: 'UNDEFINED',
             },
         ))
 
@@ -135,6 +136,7 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x1: 'TUSER_FIRST_LAST_C',
                 0x2: 'TUSER_LAST_C',
                 0x3: 'TUSER_NONE_C',
+                0xF: 'UNDEFINED',
             },
         ))
 

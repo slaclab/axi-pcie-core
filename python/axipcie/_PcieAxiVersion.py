@@ -72,6 +72,7 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x0: 'BPI',
                 0x1: 'SPIx8',
                 0x2: 'SPIx4',
+                0xFFFF_FFFF: 'UNDEFINED',
             },
         ))
 

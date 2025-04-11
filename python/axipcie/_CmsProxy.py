@@ -42,7 +42,7 @@ class _Regs(pr.Device):
             groups    = groups,
             bitSize   = 32,
             bitOffset = 0,
-            value     = 0x1000,
+            value     = 0x1000, # "Assumes HOST_MSG_OFFSET_REG = 0x1000"
         ))
 
         self.add(pr.RemoteVariable(
@@ -94,14 +94,6 @@ class _Regs(pr.Device):
                 pageSel = (transaction.address() >>12)&0xFF # BIT19:BIT12
                 wordSel = (transaction.address() >>2)&0x3FF # BIT11:BIT2
 
-                # print(f'CONTROL_REG {self.CONTROL_REG.get(read=True):x}')
-                # print(f'HOST_MSG_OFFSET_REG {self.HOST_MSG_OFFSET_REG.get(read=True):x}')
-                # print(f'Address {transaction.address():x}')
-                # print(f'opcode {opcode:x}')
-                # print(f'cageSel {cageSel:x}')
-                # print(f'pageSel {pageSel:x}')
-                # print(f'wordSel {wordSel:x}')
-
                 CMS_OP_CARD_INFO_REQ = 0x04
                 CMS_OP_READ_MODULE_LOW_SPEED_IO = 0x0D
                 CMS_OP_BYTE_READ_MODULE_I2C = 0x0F
@@ -125,6 +117,14 @@ class _Regs(pr.Device):
                     transaction.error('Unknown operation')
                     continue
                 ###########################################################
+
+                # print(f'CONTROL_REG {self.CONTROL_REG.get(read=True):x}')
+                # print(f'HOST_MSG_OFFSET_REG {self.HOST_MSG_OFFSET_REG.get(read=True):x}')
+                # print(f'Address {transaction.address():x}')
+                # print(f'opcode {opcode:x}')
+                # print(f'cageSel {cageSel:x}')
+                # print(f'pageSel {pageSel:x}')
+                # print(f'wordSel {wordSel:x}')
 
                 ######################################################################################################
                 # 3. The host sets CONTROL_REG[5] to 1 to indicate a new request message is available to CMS firmware.

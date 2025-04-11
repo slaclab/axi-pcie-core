@@ -20,12 +20,18 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2023.1
+set scripts_vivado_version 2024.2
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
    puts ""
-   catch {common::send_gid_msg -ssname BD::TCL -id 2041 -severity "ERROR" "This script was generated using Vivado <$scripts_vivado_version> and is being run in <$current_vivado_version> of Vivado. Please run the script in Vivado <$scripts_vivado_version> then open the design in Vivado <$current_vivado_version>. Upgrade the design by running \"Tools => Report => Report IP Status...\", then run write_bd_tcl to create an updated script."}
+   if { [string compare $scripts_vivado_version $current_vivado_version] > 0 } {
+      catch {common::send_gid_msg -ssname BD::TCL -id 2042 -severity "ERROR" " This script was generated using Vivado <$scripts_vivado_version> and is being run in <$current_vivado_version> of Vivado. Sourcing the script failed since it was created with a future version of Vivado."}
+
+   } else {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2041 -severity "ERROR" "This script was generated using Vivado <$scripts_vivado_version> and is being run in <$current_vivado_version> of Vivado. Please run the script in Vivado <$scripts_vivado_version> then open the design in Vivado <$current_vivado_version>. Upgrade the design by running \"Tools => Report => Report IP Status...\", then run write_bd_tcl to create an updated script."}
+
+   }
 
    return 1
 }
@@ -196,7 +202,7 @@ proc create_root_design { parentCell } {
    CONFIG.AWUSER_WIDTH {0} \
    CONFIG.BUSER_WIDTH {0} \
    CONFIG.DATA_WIDTH {32} \
-   CONFIG.FREQ_HZ {250000000} \
+   CONFIG.FREQ_HZ {50000000} \
    CONFIG.HAS_BRESP {1} \
    CONFIG.HAS_BURST {0} \
    CONFIG.HAS_CACHE {0} \
@@ -229,7 +235,7 @@ proc create_root_design { parentCell } {
    CONFIG.PortWidth {4} \
    CONFIG.SENSITIVITY {EDGE_RISING} \
  ] $satellite_gpio_0
-  set aclk_ctrl_0 [ create_bd_port -dir I -type clk -freq_hz 250000000 aclk_ctrl_0 ]
+  set aclk_ctrl_0 [ create_bd_port -dir I -type clk -freq_hz 50000000 aclk_ctrl_0 ]
   set aresetn_ctrl_0 [ create_bd_port -dir I -type rst aresetn_ctrl_0 ]
   set interrupt_hbm_cattrip_0 [ create_bd_port -dir I -from 0 -to 0 -type intr interrupt_hbm_cattrip_0 ]
   set_property -dict [ list \
@@ -246,12 +252,18 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net s_axi_ctrl_0_1 [get_bd_intf_ports s_axi_ctrl_0] [get_bd_intf_pins cms_subsystem_0/s_axi_ctrl]
 
   # Create port connections
-  connect_bd_net -net aclk_ctrl_0_1 [get_bd_ports aclk_ctrl_0] [get_bd_pins cms_subsystem_0/aclk_ctrl]
-  connect_bd_net -net aresetn_ctrl_0_1 [get_bd_ports aresetn_ctrl_0] [get_bd_pins cms_subsystem_0/aresetn_ctrl]
-  connect_bd_net -net hbm_temp_1_0_1 [get_bd_ports hbm_temp_1_0] [get_bd_pins cms_subsystem_0/hbm_temp_1]
-  connect_bd_net -net hbm_temp_2_0_1 [get_bd_ports hbm_temp_2_0] [get_bd_pins cms_subsystem_0/hbm_temp_2]
-  connect_bd_net -net interrupt_hbm_cattrip_0_1 [get_bd_ports interrupt_hbm_cattrip_0] [get_bd_pins cms_subsystem_0/interrupt_hbm_cattrip]
-  connect_bd_net -net satellite_gpio_0_1 [get_bd_ports satellite_gpio_0] [get_bd_pins cms_subsystem_0/satellite_gpio]
+  connect_bd_net -net aclk_ctrl_0_1  [get_bd_ports aclk_ctrl_0] \
+  [get_bd_pins cms_subsystem_0/aclk_ctrl]
+  connect_bd_net -net aresetn_ctrl_0_1  [get_bd_ports aresetn_ctrl_0] \
+  [get_bd_pins cms_subsystem_0/aresetn_ctrl]
+  connect_bd_net -net hbm_temp_1_0_1  [get_bd_ports hbm_temp_1_0] \
+  [get_bd_pins cms_subsystem_0/hbm_temp_1]
+  connect_bd_net -net hbm_temp_2_0_1  [get_bd_ports hbm_temp_2_0] \
+  [get_bd_pins cms_subsystem_0/hbm_temp_2]
+  connect_bd_net -net interrupt_hbm_cattrip_0_1  [get_bd_ports interrupt_hbm_cattrip_0] \
+  [get_bd_pins cms_subsystem_0/interrupt_hbm_cattrip]
+  connect_bd_net -net satellite_gpio_0_1  [get_bd_ports satellite_gpio_0] \
+  [get_bd_pins cms_subsystem_0/satellite_gpio]
 
   # Create address segments
   assign_bd_address -offset 0x00000000 -range 0x00040000 -target_address_space [get_bd_addr_spaces s_axi_ctrl_0] [get_bd_addr_segs cms_subsystem_0/s_axi_ctrl/Mem] -force

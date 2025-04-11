@@ -16,6 +16,14 @@ set_operating_conditions -design_power_budget 63
 # System #
 ##########
 
+set_property -dict { PACKAGE_PIN BE46 IOSTANDARD LVCMOS18 } [get_ports { cmsGpio[0] }]
+set_property -dict { PACKAGE_PIN BH46 IOSTANDARD LVCMOS18 } [get_ports { cmsGpio[1] }]
+set_property -dict { PACKAGE_PIN BF45 IOSTANDARD LVCMOS18 } [get_ports { cmsGpio[2] }]
+set_property -dict { PACKAGE_PIN BF46 IOSTANDARD LVCMOS18 } [get_ports { cmsGpio[3] }]
+
+set_property -dict { PACKAGE_PIN BH12 IOSTANDARD LVCMOS18 } [get_ports { cmsUartTxd }]
+set_property -dict { PACKAGE_PIN BH14 IOSTANDARD LVCMOS18 } [get_ports { cmsUartRxd }]
+
 set_property -dict { PACKAGE_PIN BK10 IOSTANDARD LVDS } [get_ports { userClkP }]
 set_property -dict { PACKAGE_PIN BL10 IOSTANDARD LVDS } [get_ports { userClkN }]
 
@@ -142,8 +150,10 @@ create_clock -period 10.000 -name userClkP   [get_ports {userClkP}]
 create_clock -period 10.000 -name hbmRefClkP [get_ports {hbmRefClkP}]
 create_clock -period 16.000 -name dnaClk     [get_pins  {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 create_clock -period 16.000 -name iprogClk   [get_pins  {U_Core/U_REG/U_Version/GEN_ICAP.Iprog_1/GEN_ULTRA_SCALE.IprogUltraScale_Inst/BUFGCE_DIV_Inst/O}]
+create_clock -period 20.000 -name cmsClk     [get_pins  {U_Core/REAL_PCIE.U_CMS/U_Bufg/O}]
 
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClk0}] -group [get_clocks -include_generated_clocks {userClkP}]
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClk0}] -group [get_clocks -include_generated_clocks {cmsClk}]
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClk1}] -group [get_clocks -include_generated_clocks {userClkP}]
 
 set_false_path -to [get_pins -hier *sync_reg[0]/D]

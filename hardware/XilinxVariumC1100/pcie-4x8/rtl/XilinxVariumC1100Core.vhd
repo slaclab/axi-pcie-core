@@ -78,6 +78,12 @@ entity XilinxVariumC1100Core is
       -------------------
       --  Top Level Ports
       -------------------
+      -- Card Management Solution (CMS) Interface
+      cmsHbmCatTrip   : in    sl;
+      cmsHbmTemp      : in    Slv7Array(1 downto 0);
+      cmsUartRxd      : in    sl;
+      cmsUartTxd      : out   sl;
+      cmsGpio         : in    slv (3 downto 0);
       -- System Ports
       userClkP        : in    sl;
       userClkN        : in    sl;
@@ -101,6 +107,16 @@ entity XilinxVariumC1100Core is
 end XilinxVariumC1100Core;
 
 architecture mapping of XilinxVariumC1100Core is
+
+   constant XBAR_I2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(1 downto 0) := (
+      0               => (
+         baseAddr     => x"0000_0000",
+         addrBits     => 14,            -- Si5394I2c only uses 14b of address
+         connectivity => x"FFFF"),
+      1               => (
+         baseAddr     => x"8000_0000",
+         addrBits     => 18,
+         connectivity => x"FFFF"));
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -126,6 +142,12 @@ architecture mapping of XilinxVariumC1100Core is
    signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
    signal i2cWriteMaster : AxiLiteWriteMasterType;
    signal i2cWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
+
+   signal i2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
+   signal i2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal i2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
+   signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+
 
    signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
@@ -216,6 +238,24 @@ begin
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
 
+      U_XBAR : entity surf.AxiLiteCrossbar
+         generic map (
+            TPD_G              => TPD_G,
+            NUM_SLAVE_SLOTS_G  => 1,
+            NUM_MASTER_SLOTS_G => 2,
+            MASTERS_CONFIG_G   => XBAR_I2C_CONFIG_C)
+         port map (
+            axiClk              => sysClock,
+            axiClkRst           => sysReset,
+            sAxiWriteMasters(0) => i2cWriteMaster,
+            sAxiWriteSlaves(0)  => i2cWriteSlave,
+            sAxiReadMasters(0)  => i2cReadMaster,
+            sAxiReadSlaves(0)   => i2cReadSlave,
+            mAxiWriteMasters    => i2cWriteMasters,
+            mAxiWriteSlaves     => i2cWriteSlaves,
+            mAxiReadMasters     => i2cReadMasters,
+            mAxiReadSlaves      => i2cReadSlaves);
+
       U_SI5394 : entity surf.Si5394I2c
          generic map (
             TPD_G              => TPD_G,
@@ -233,13 +273,31 @@ begin
             losL            => si5394LosL,
             rstL            => si5394RstL,
             -- AXI-Lite Register Interface
-            axilReadMaster  => i2cReadMaster,
-            axilReadSlave   => i2cReadSlave,
-            axilWriteMaster => i2cWriteMaster,
-            axilWriteSlave  => i2cWriteSlave,
+            axilReadMaster  => i2cReadMasters(0),
+            axilReadSlave   => i2cReadSlaves(0),
+            axilWriteMaster => i2cWriteMasters(0),
+            axilWriteSlave  => i2cWriteSlaves(0),
             -- Clocks and Resets
             axilClk         => sysClock,
             axilRst         => sysReset);
+
+      U_CMS : entity axi_pcie_core.CmsBlockDesignWrapper
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            -- Card Management Solution (CMS) Interface
+            cmsHbmCatTrip  => cmsHbmCatTrip,
+            cmsHbmTemp     => cmsHbmTemp,
+            cmsUartRxd     => cmsUartRxd,
+            cmsUartTxd     => cmsUartTxd,
+            cmsGpio        => cmsGpio,
+            -- I2C AXI-Lite Interfaces (axiClk domain)
+            axiClk         => sysClock,
+            axiRst         => sysReset,
+            i2cReadMaster  => i2cReadMasters(1),
+            i2cReadSlave   => i2cReadSlaves(1),
+            i2cWriteMaster => i2cWriteMasters(1),
+            i2cWriteSlave  => i2cWriteSlaves(1));
 
    end generate;
 

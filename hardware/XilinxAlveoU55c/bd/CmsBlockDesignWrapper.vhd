@@ -72,38 +72,80 @@ architecture mapping of CmsBlockDesignWrapper is
          );
    end component CmsBlockDesign;
 
-   signal axiRstL : sl;
+   signal cmsClk         : sl;
+   signal cmsRst         : sl;
+   signal cmsRstL        : sl;
+   signal cmsReadMaster  : AxiLiteReadMasterType;
+   signal cmsReadSlave   : AxiLiteReadSlaveType;
+   signal cmsWriteMaster : AxiLiteWriteMasterType;
+   signal cmsWriteSlave  : AxiLiteWriteSlaveType;
 
 begin
 
-   axiRstL <= not axiRst;
+   U_Bufg : BUFGCE_DIV
+      generic map (
+         BUFGCE_DIVIDE => 5)
+      port map (
+         I   => axiClk,                 -- 250 MHz
+         CE  => '1',
+         CLR => '0',
+         O   => cmsClk);                -- 50 MHz
+
+   U_RstSync : entity surf.RstSync
+      port map (
+         clk      => cmsClk,
+         asyncRst => axiRst,
+         syncRst  => cmsRst);
+
+   U_AxiLiteAsync : entity surf.AxiLiteAsync
+      generic map (
+         TPD_G           => TPD_G,
+         COMMON_CLK_G    => false,
+         NUM_ADDR_BITS_G => 18)
+      port map (
+         -- Slave Interface
+         sAxiClk         => axiClk,
+         sAxiClkRst      => axiRst,
+         sAxiReadMaster  => i2cReadMaster,
+         sAxiReadSlave   => i2cReadSlave,
+         sAxiWriteMaster => i2cWriteMaster,
+         sAxiWriteSlave  => i2cWriteSlave,
+         -- Master Interface
+         mAxiClk         => cmsClk,
+         mAxiClkRst      => cmsRst,
+         mAxiReadMaster  => cmsReadMaster,
+         mAxiReadSlave   => cmsReadSlave,
+         mAxiWriteMaster => cmsWriteMaster,
+         mAxiWriteSlave  => cmsWriteSlave);
+
+   cmsRstL <= not cmsRst;
 
    U_CmsBlockDesign : component CmsBlockDesign
       port map (
-         aclk_ctrl_0                      => axiClk,
-         aresetn_ctrl_0                   => axiRstL,
+         aclk_ctrl_0                      => cmsClk,  -- Must be 50 MHz
+         aresetn_ctrl_0                   => cmsRstL,
          hbm_temp_1_0(6 downto 0)         => cmsHbmTemp(0),
          hbm_temp_2_0(6 downto 0)         => cmsHbmTemp(1),
          interrupt_hbm_cattrip_0(0)       => cmsHbmCatTrip,
-         s_axi_ctrl_0_araddr(17 downto 0) => i2cReadMaster.araddr(17 downto 0),
-         s_axi_ctrl_0_arprot(2 downto 0)  => i2cReadMaster.arprot,
-         s_axi_ctrl_0_arready(0)          => i2cReadSlave.arready,
-         s_axi_ctrl_0_arvalid(0)          => i2cReadMaster.arvalid,
-         s_axi_ctrl_0_awaddr(17 downto 0) => i2cWriteMaster.awaddr(17 downto 0),
-         s_axi_ctrl_0_awprot(2 downto 0)  => i2cWriteMaster.awprot,
-         s_axi_ctrl_0_awready(0)          => i2cWriteSlave.awready,
-         s_axi_ctrl_0_awvalid(0)          => i2cWriteMaster.awvalid,
-         s_axi_ctrl_0_bready(0)           => i2cWriteMaster.bready,
-         s_axi_ctrl_0_bresp(1 downto 0)   => i2cWriteSlave.bresp,
-         s_axi_ctrl_0_bvalid(0)           => i2cWriteSlave.bvalid,
-         s_axi_ctrl_0_rdata(31 downto 0)  => i2cReadSlave.rdata,
-         s_axi_ctrl_0_rready(0)           => i2cReadMaster.rready,
-         s_axi_ctrl_0_rresp(1 downto 0)   => i2cReadSlave.rresp,
-         s_axi_ctrl_0_rvalid(0)           => i2cReadSlave.rvalid,
-         s_axi_ctrl_0_wdata(31 downto 0)  => i2cWriteMaster.wdata,
-         s_axi_ctrl_0_wready(0)           => i2cWriteSlave.wready,
-         s_axi_ctrl_0_wstrb(3 downto 0)   => i2cWriteMaster.wstrb,
-         s_axi_ctrl_0_wvalid(0)           => i2cWriteMaster.wvalid,
+         s_axi_ctrl_0_araddr(17 downto 0) => cmsReadMaster.araddr(17 downto 0),
+         s_axi_ctrl_0_arprot(2 downto 0)  => cmsReadMaster.arprot,
+         s_axi_ctrl_0_arready(0)          => cmsReadSlave.arready,
+         s_axi_ctrl_0_arvalid(0)          => cmsReadMaster.arvalid,
+         s_axi_ctrl_0_awaddr(17 downto 0) => cmsWriteMaster.awaddr(17 downto 0),
+         s_axi_ctrl_0_awprot(2 downto 0)  => cmsWriteMaster.awprot,
+         s_axi_ctrl_0_awready(0)          => cmsWriteSlave.awready,
+         s_axi_ctrl_0_awvalid(0)          => cmsWriteMaster.awvalid,
+         s_axi_ctrl_0_bready(0)           => cmsWriteMaster.bready,
+         s_axi_ctrl_0_bresp(1 downto 0)   => cmsWriteSlave.bresp,
+         s_axi_ctrl_0_bvalid(0)           => cmsWriteSlave.bvalid,
+         s_axi_ctrl_0_rdata(31 downto 0)  => cmsReadSlave.rdata,
+         s_axi_ctrl_0_rready(0)           => cmsReadMaster.rready,
+         s_axi_ctrl_0_rresp(1 downto 0)   => cmsReadSlave.rresp,
+         s_axi_ctrl_0_rvalid(0)           => cmsReadSlave.rvalid,
+         s_axi_ctrl_0_wdata(31 downto 0)  => cmsWriteMaster.wdata,
+         s_axi_ctrl_0_wready(0)           => cmsWriteSlave.wready,
+         s_axi_ctrl_0_wstrb(3 downto 0)   => cmsWriteMaster.wstrb,
+         s_axi_ctrl_0_wvalid(0)           => cmsWriteMaster.wvalid,
          satellite_gpio_0(3 downto 0)     => cmsGpio,
          satellite_uart_0_rxd             => cmsUartRxd,
          satellite_uart_0_txd             => cmsUartTxd);

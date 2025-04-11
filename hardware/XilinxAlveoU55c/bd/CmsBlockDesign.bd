@@ -1,13 +1,13 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x7F67618C6D2F343E",
+      "boundary_crc": "0x7F67618C55113343",
       "device": "xcu55n-fsvh2892-2L-e",
       "gen_directory": "../../../../XilinxVariumC1100DmaLoopback_project.gen/sources_1/bd/bd",
       "name": "CmsBlockDesign",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
-      "tool_version": "2023.1",
+      "tool_version": "2024.2",
       "validated": "true"
     },
     "design_tree": {
@@ -54,7 +54,7 @@
             "value": "32"
           },
           "FREQ_HZ": {
-            "value": "250000000"
+            "value": "50000000"
           },
           "HAS_BRESP": {
             "value": "1"
@@ -286,7 +286,7 @@
             "value_src": "default"
           },
           "FREQ_HZ": {
-            "value": "250000000"
+            "value": "50000000"
           },
           "FREQ_TOLERANCE_HZ": {
             "value": "0",
@@ -345,6 +345,7 @@
     "components": {
       "cms_subsystem_0": {
         "vlnv": "xilinx.com:ip:cms_subsystem:4.0",
+        "ip_revision": "11",
         "xci_name": "CmsBlockDesign_cms_subsystem_0_0",
         "xci_path": "ip/CmsBlockDesign_cms_subsystem_0_0/CmsBlockDesign_cms_subsystem_0_0.xci",
         "inst_hier_path": "cms_subsystem_0",
@@ -484,7 +485,7 @@
                       "width": "13",
                       "usage": "memory"
                     },
-                    "SEG_build_info_host_reg0;/build_info_host/S_AXI/reg0;xilinx.com:ip:shell_utils_build_info:1.0;/build_info_host;S_AXI;NONE;NONE": {
+                    "SEG_build_info_host_reg0;/build_info_host/S_AXI/reg0;xilinx.com:ip:shell_utils_build_info:2.0;/build_info_host;S_AXI;NONE;NONE": {
                       "base_address": "0x2A000",
                       "range": "4K",
                       "width": "12",

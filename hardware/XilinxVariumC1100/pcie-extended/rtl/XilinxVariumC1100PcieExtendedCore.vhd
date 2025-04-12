@@ -31,16 +31,15 @@ use axi_pcie_core.AxiPcieSharedPkg.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity XilinxAlveoU55cCore is
+entity XilinxVariumC1100PcieExtendedCore is
    generic (
       TPD_G                : time                        := 1 ns;
-      SI5394_INIT_FILE_G   : string                      := "Si5394A_GT_REFCLK_156MHz.mem";
       ROGUE_SIM_EN_G       : boolean                     := false;
-      ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
+      ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 16000;
       ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
       BUILD_INFO_G         : BuildInfoType;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
-      DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
+      DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000001";
       DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
       DATAGPU_EN_G         : boolean                     := false;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
@@ -48,8 +47,6 @@ entity XilinxAlveoU55cCore is
       ------------------------
       --  Top Level Interfaces
       ------------------------
-      userClk         : out   sl;
-      hbmRefClk       : out   sl;
       -- DMA Interfaces  (dmaClk domain)
       dmaClk          : out   sl;
       dmaRst          : out   sl;
@@ -78,24 +75,6 @@ entity XilinxAlveoU55cCore is
       -------------------
       --  Top Level Ports
       -------------------
-      -- Card Management Solution (CMS) Interface
-      cmsHbmCatTrip   : in    sl;
-      cmsHbmTemp      : in    Slv7Array(1 downto 0);
-      cmsUartRxd      : in    sl;
-      cmsUartTxd      : out   sl;
-      cmsGpio         : in    slv(3 downto 0);
-      -- System Ports
-      userClkP        : in    sl;
-      userClkN        : in    sl;
-      hbmRefClkP      : in    sl;
-      hbmRefClkN      : in    sl;
-      -- SI5394 Ports
-      si5394Scl       : inout sl;
-      si5394Sda       : inout sl;
-      si5394IrqL      : in    sl;
-      si5394LolL      : in    sl;
-      si5394LosL      : in    sl;
-      si5394RstL      : out   sl;
       -- PCIe Ports
       pciRstL         : in    sl;
       pciRefClkP      : in    slv(0 downto 0);
@@ -104,19 +83,9 @@ entity XilinxAlveoU55cCore is
       pciRxN          : in    slv(7 downto 0);
       pciTxP          : out   slv(7 downto 0);
       pciTxN          : out   slv(7 downto 0));
-end XilinxAlveoU55cCore;
+end XilinxVariumC1100PcieExtendedCore;
 
-architecture mapping of XilinxAlveoU55cCore is
-
-   constant XBAR_I2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(1 downto 0) := (
-      0               => (
-         baseAddr     => x"0000_0000",
-         addrBits     => 14,            -- Si5394I2c only uses 14b of address
-         connectivity => x"FFFF"),
-      1               => (
-         baseAddr     => x"8000_0000",
-         addrBits     => 18,
-         connectivity => x"FFFF"));
+architecture mapping of XilinxVariumC1100PcieExtendedCore is
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -138,37 +107,16 @@ architecture mapping of XilinxAlveoU55cCore is
    signal phyWriteMaster : AxiLiteWriteMasterType;
    signal phyWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
 
-   signal i2cReadMaster  : AxiLiteReadMasterType;
-   signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
-   signal i2cWriteMaster : AxiLiteWriteMasterType;
-   signal i2cWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
-
-   signal i2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
-   signal i2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
-   signal i2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
-   signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
-
-
    signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
    signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
 
-   signal sysClock     : sl;
-   signal sysReset     : sl;
-   signal systemReset  : sl;
-   signal systemResetL : sl;
-   signal cardReset    : sl;
-   signal userClock    : sl;
-   signal dmaIrq       : sl;
-
-   signal bootCsL  : slv(1 downto 0);
-   signal bootSck  : slv(1 downto 0);
-   signal bootMosi : slv(1 downto 0);
-   signal bootMiso : slv(1 downto 0);
-   signal di       : slv(3 downto 0);
-   signal do       : slv(3 downto 0);
-   signal sck      : sl;
+   signal sysClock    : sl;
+   signal sysReset    : sl;
+   signal systemReset : sl;
+   signal cardReset   : sl;
+   signal dmaIrq      : sl;
 
 begin
 
@@ -182,27 +130,14 @@ begin
          rstIn  => systemReset,
          rstOut => dmaRst);
 
-   systemReset  <= sysReset or cardReset;
-   systemResetL <= not(systemReset);
-
-   U_userClk : IBUFDS
-      port map(
-         I  => userClkP,
-         IB => userClkN,
-         O  => userClk);
-
-   U_hbmRefClk : IBUFDS
-      port map(
-         I  => hbmRefClkP,
-         IB => hbmRefClkN,
-         O  => hbmRefClk);
+   systemReset <= sysReset or cardReset;
 
    ---------------
    -- AXI PCIe PHY
    ---------------
    REAL_PCIE : if (not ROGUE_SIM_EN_G) generate
 
-      U_AxiPciePhy : entity axi_pcie_core.XilinxAlveoU55cPciePhyWrapper
+      U_AxiPciePhy : entity axi_pcie_core.XilinxVariumC1100ExtendedPciePhyWrapper
          generic map (
             TPD_G => TPD_G)
          port map (
@@ -238,67 +173,6 @@ begin
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
 
-      U_XBAR : entity surf.AxiLiteCrossbar
-         generic map (
-            TPD_G              => TPD_G,
-            NUM_SLAVE_SLOTS_G  => 1,
-            NUM_MASTER_SLOTS_G => 2,
-            MASTERS_CONFIG_G   => XBAR_I2C_CONFIG_C)
-         port map (
-            axiClk              => sysClock,
-            axiClkRst           => sysReset,
-            sAxiWriteMasters(0) => i2cWriteMaster,
-            sAxiWriteSlaves(0)  => i2cWriteSlave,
-            sAxiReadMasters(0)  => i2cReadMaster,
-            sAxiReadSlaves(0)   => i2cReadSlave,
-            mAxiWriteMasters    => i2cWriteMasters,
-            mAxiWriteSlaves     => i2cWriteSlaves,
-            mAxiReadMasters     => i2cReadMasters,
-            mAxiReadSlaves      => i2cReadSlaves);
-
-      U_SI5394 : entity surf.Si5394I2c
-         generic map (
-            TPD_G              => TPD_G,
-            MEMORY_INIT_FILE_G => SI5394_INIT_FILE_G,
-            I2C_BASE_ADDR_G    => "00",
-            I2C_SCL_FREQ_G     => 100.0E+3,        -- units of Hz
-            AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C)  -- units of Hz
-         port map (
-            -- I2C Ports
-            scl             => si5394Scl,
-            sda             => si5394Sda,
-            -- Misc Interface
-            irqL            => si5394IrqL,
-            lolL            => si5394LolL,
-            losL            => si5394LosL,
-            rstL            => si5394RstL,
-            -- AXI-Lite Register Interface
-            axilReadMaster  => i2cReadMasters(0),
-            axilReadSlave   => i2cReadSlaves(0),
-            axilWriteMaster => i2cWriteMasters(0),
-            axilWriteSlave  => i2cWriteSlaves(0),
-            -- Clocks and Resets
-            axilClk         => sysClock,
-            axilRst         => sysReset);
-
-      U_CMS : entity axi_pcie_core.CmsBlockDesignWrapper
-         generic map (
-            TPD_G => TPD_G)
-         port map (
-            -- Card Management Solution (CMS) Interface
-            cmsHbmCatTrip  => cmsHbmCatTrip,
-            cmsHbmTemp     => cmsHbmTemp,
-            cmsUartRxd     => cmsUartRxd,
-            cmsUartTxd     => cmsUartTxd,
-            cmsGpio        => cmsGpio,
-            -- I2C AXI-Lite Interfaces (axiClk domain)
-            axiClk         => sysClock,
-            axiRst         => sysReset,
-            i2cReadMaster  => i2cReadMasters(1),
-            i2cReadSlave   => i2cReadSlaves(1),
-            i2cWriteMaster => i2cWriteMasters(1),
-            i2cWriteSlave  => i2cWriteSlaves(1));
-
    end generate;
 
    SIM_PCIE : if (ROGUE_SIM_EN_G) generate
@@ -329,11 +203,14 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          BUILD_INFO_G         => BUILD_INFO_G,
          XIL_DEVICE_G         => "ULTRASCALE",
-         BOOT_PROM_G          => "SPIx4",
+         BOOT_PROM_G          => "NONE",
+         EN_DEVICE_DNA_G      => false,
+         EN_ICAP_G            => false,
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
-         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_U55C_C,
+         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_C1100_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DATAGPU_EN_G         => DATAGPU_EN_G,
+         GEN_SYSMON_G         => false,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
@@ -355,11 +232,6 @@ begin
          phyReadSlave        => phyReadSlave,
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
-         -- I2C AXI-Lite Interfaces (axiClk domain)
-         i2cReadMaster       => i2cReadMaster,
-         i2cReadSlave        => i2cReadSlave,
-         i2cWriteMaster      => i2cWriteMaster,
-         i2cWriteSlave       => i2cWriteSlave,
          -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,
@@ -374,39 +246,7 @@ begin
          gpuWriteSlave       => gpuWriteSlave,
          -- Application Force reset
          cardResetOut        => cardReset,
-         cardResetIn         => systemReset,
-         -- SPI Boot Memory Ports
-         spiCsL              => bootCsL,
-         spiSck              => bootSck,
-         spiMosi             => bootMosi,
-         spiMiso             => bootMiso);
-
-   U_STARTUPE3 : STARTUPE3
-      generic map (
-         PROG_USR      => "FALSE",  -- Activate program event security feature. Requires encrypted bitstreams.
-         SIM_CCLK_FREQ => 0.0)  -- Set the Configuration Clock Frequency(ns) for simulation
-      port map (
-         CFGCLK    => open,  -- 1-bit output: Configuration main clock output
-         CFGMCLK   => open,  -- 1-bit output: Configuration internal oscillator clock output
-         DI        => di,  -- 4-bit output: Allow receiving on the D[3:0] input pins
-         EOS       => open,  -- 1-bit output: Active high output signal indicating the End Of Startup.
-         PREQ      => open,  -- 1-bit output: PROGRAM request to fabric output
-         DO        => do,  -- 4-bit input: Allows control of the D[3:0] pin outputs
-         DTS       => "1110",  -- 4-bit input: Allows tristate of the D[3:0] pins
-         FCSBO     => bootCsL(0),  -- 1-bit input: Contols the FCS_B pin for flash access
-         FCSBTS    => '0',              -- 1-bit input: Tristate the FCS_B pin
-         GSR       => '0',  -- 1-bit input: Global Set/Reset input (GSR cannot be used for the port name)
-         GTS       => '0',  -- 1-bit input: Global 3-state input (GTS cannot be used for the port name)
-         KEYCLEARB => '0',  -- 1-bit input: Clear AES Decrypter Key input from Battery-Backed RAM (BBRAM)
-         PACK      => '0',  -- 1-bit input: PROGRAM acknowledge input
-         USRCCLKO  => sck,              -- 1-bit input: User CCLK input
-         USRCCLKTS => '0',  -- 1-bit input: User CCLK 3-state enable input
-         USRDONEO  => '1',  -- 1-bit input: User DONE pin output control
-         USRDONETS => '0');  -- 1-bit input: User DONE 3-state enable output
-
-   do          <= "111" & bootMosi(0);
-   bootMiso(0) <= di(1);
-   sck         <= uOr(bootSck);
+         cardResetIn         => systemReset);
 
    ---------------
    -- AXI PCIe DMA

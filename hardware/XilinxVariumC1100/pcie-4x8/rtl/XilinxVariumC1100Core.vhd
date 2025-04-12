@@ -148,7 +148,6 @@ architecture mapping of XilinxVariumC1100Core is
    signal i2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
    signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-
    signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
    signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;

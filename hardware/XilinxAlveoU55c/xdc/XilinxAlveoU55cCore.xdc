@@ -15,7 +15,7 @@ set_operating_conditions -design_power_budget 63
 ##########
 # System #
 ##########
- 
+
 set_property -dict { PACKAGE_PIN BJ42 IOSTANDARD LVCMOS18 } [get_ports { cmsUartRxd }]
 set_property -dict { PACKAGE_PIN BH42 IOSTANDARD LVCMOS18 } [get_ports { cmsUartTxd }]
 
@@ -130,11 +130,11 @@ set_property PACKAGE_PIN AN11 [get_ports {pciTxP[2]}] ;# Bank 227 - MGTYTXP1_227
 set_property PACKAGE_PIN AM9  [get_ports {pciTxP[1]}] ;# Bank 227 - MGTYTXP2_227
 set_property PACKAGE_PIN AL11 [get_ports {pciTxP[0]}] ;# Bank 227 - MGTYTXP3_227
 
-set_property PACKAGE_PIN AL15 [get_ports {pciRefClkP[1]}]
-set_property PACKAGE_PIN AL14 [get_ports {pciRefClkN[1]}]
+set_property PACKAGE_PIN AL15 [get_ports {pciRefClkP[0]}]
+set_property PACKAGE_PIN AL14 [get_ports {pciRefClkN[0]}]
 
-set_property PACKAGE_PIN AR15 [get_ports {pciRefClkP[0]}]
-set_property PACKAGE_PIN AR14 [get_ports {pciRefClkN[0]}]
+set_property PACKAGE_PIN AR15 [get_ports {pciRefClkP[1]}]
+set_property PACKAGE_PIN AR14 [get_ports {pciRefClkN[1]}]
 
 set_property -dict { PACKAGE_PIN BF41 IOSTANDARD LVCMOS18 } [get_ports {pciRstL}]
 set_false_path -from [get_ports pciRstL]

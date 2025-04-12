@@ -82,3 +82,5 @@ set_clock_groups -asynchronous \
 
 set_clock_groups -asynchronous  -group [get_clocks hbmRefClkP] -group [get_clocks -include_generated_clocks {pciRefClk0}]
 set_clock_groups -asynchronous  -group [get_clocks hbmRefClkP] -group [get_clocks -include_generated_clocks {userClkP}]
+
+connect_debug_port dbg_hub/clk [get_nets {hbmRefClk}]

@@ -1651,8 +1651,17 @@ class CmsSubsystem(pr.Device):
                 node._setSlave(self.proxy)
 
     def _start(self):
+        # Check for the correct Register Map ID
+        regMapId = self.Status.REG_MAP_ID_REG.get(read=True)
+        if (regMapId != 0x74736574):
+            raise ValueError(f"Unexpected REG_MAP_ID_REG value: {hex(regMapId)} (expected 0x74736574)")
+
+        # Perform a reset cycle (active LOW)
         self.MB_RESETN_REG.set(value=0x0, write=True)
         self.MB_RESETN_REG.set(value=0x1, write=True)
+
+        # Wait for the Mailbox to be ready
         while (self.Status.HOST_STATUS2_REG.get(read=True)&0x1) != 1:
             time.sleep(0.001)
+
         super()._start()

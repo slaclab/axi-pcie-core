@@ -15,14 +15,14 @@ set_operating_conditions -design_power_budget 63
 ##########
 # System #
 ##########
+ 
+set_property -dict { PACKAGE_PIN BJ42 IOSTANDARD LVCMOS18 } [get_ports { cmsUartRxd }]
+set_property -dict { PACKAGE_PIN BH42 IOSTANDARD LVCMOS18 } [get_ports { cmsUartTxd }]
 
 set_property -dict { PACKAGE_PIN BE46 IOSTANDARD LVCMOS18 } [get_ports { cmsGpio[0] }]
 set_property -dict { PACKAGE_PIN BH46 IOSTANDARD LVCMOS18 } [get_ports { cmsGpio[1] }]
 set_property -dict { PACKAGE_PIN BF45 IOSTANDARD LVCMOS18 } [get_ports { cmsGpio[2] }]
 set_property -dict { PACKAGE_PIN BF46 IOSTANDARD LVCMOS18 } [get_ports { cmsGpio[3] }]
-
-set_property -dict { PACKAGE_PIN BH12 IOSTANDARD LVCMOS18 } [get_ports { cmsUartTxd }]
-set_property -dict { PACKAGE_PIN BH14 IOSTANDARD LVCMOS18 } [get_ports { cmsUartRxd }]
 
 set_property -dict { PACKAGE_PIN BK10 IOSTANDARD LVDS } [get_ports { userClkP }]
 set_property -dict { PACKAGE_PIN BL10 IOSTANDARD LVDS } [get_ports { userClkN }]

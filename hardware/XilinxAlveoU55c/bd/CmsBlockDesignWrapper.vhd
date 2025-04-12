@@ -118,7 +118,7 @@ begin
          mAxiWriteMaster => cmsWriteMaster,
          mAxiWriteSlave  => cmsWriteSlave);
 
-   cmsRstL <= not cmsRst;
+   cmsRstL <= not(cmsRst);
 
    U_CmsBlockDesign : component CmsBlockDesign
       port map (

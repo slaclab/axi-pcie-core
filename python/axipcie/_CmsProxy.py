@@ -215,99 +215,896 @@ class Status(pr.Device):
             offset      = 0x0014,
         ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '12V_PEX_MAX_REG',
-            # mode        = 'RO',
-            # offset      = 0x0020,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '12V_PEX_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0020,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '12V_PEX_AVG_REG',
-            # mode        = 'RO',
-            # offset      = 0x0024,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '12V_PEX_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0024,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '12V_PEX_INS_REG',
-            # mode        = 'RO',
-            # offset      = 0x0028,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '12V_PEX_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0028,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '3V3_PEX_MAX_REG',
-            # mode        = 'RO',
-            # offset      = 0x002C,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '3V3_PEX_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x002C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '3V3_PEX_AVG_REG',
-            # mode        = 'RO',
-            # offset      = 0x0030,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '3V3_PEX_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0030,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '3V3_PEX_INS_REG',
-            # mode        = 'RO',
-            # offset      = 0x0034,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '3V3_PEX_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0034,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '3V3_AUX_MAX_REG',
-            # mode        = 'RO',
-            # offset      = 0x0038,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '3V3_AUX_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0038,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '3V3_AUX_AVG_REG',
-            # mode        = 'RO',
-            # offset      = 0x003C,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '3V3_AUX_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x003C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '3V3_AUX_INS_REG',
-            # mode        = 'RO',
-            # offset      = 0x0040,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '3V3_AUX_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0040,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '12V_AUX_MAX_REG',
-            # mode        = 'RO',
-            # offset      = 0x0044,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '12V_AUX_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0044,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '12V_AUX_AVG_REG',
-            # mode        = 'RO',
-            # offset      = 0x0048,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '12V_AUX_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0048,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = '12V_AUX_INS_REG',
-            # mode        = 'RO',
-            # offset      = 0x004C,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = '12V_AUX_INS_REG',
+            mode        = 'RO',
+            offset      = 0x004C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = 'DDR4_VPP_BTM_MAX_REG',
-            # mode        = 'RO',
-            # offset      = 0x0050,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = 'DDR4_VPP_BTM_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0050,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = 'DDR4_VPP_BTM_AVG_REG',
-            # mode        = 'RO',
-            # offset      = 0x0054,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = 'DDR4_VPP_BTM_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0054,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        # self.add(pr.RemoteVariable(
-            # name        = 'DDR4_VPP_BTM_INS_REG',
-            # mode        = 'RO',
-            # offset      = 0x0058,
-        # ))
+        self.add(pr.RemoteVariable(
+            name        = 'DDR4_VPP_BTM_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0058,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
 
-        #######################################
-        # TODO: Add more status registers later
-        #######################################
+        self.add(pr.RemoteVariable(
+            name        = 'SYS_5V5_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x005C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'SYS_5V5_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0060,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'SYS_5V5_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0064,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V2_TOP_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0068,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V2_TOP_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x006C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V2_TOP_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0070,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V8_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0074,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V8_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0078,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V8_INS_REG',
+            mode        = 'RO',
+            offset      = 0x007C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC0V85_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0080,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC0V85_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0084,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC0V85_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0088,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'DDR4_VPP_TOP_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x008C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'DDR4_VPP_TOP_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0090,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'DDR4_VPP_TOP_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0094,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'MGT0V9AVCC_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0098,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'MGT0V9AVCC_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x009C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'MGT0V9AVCC_INS_REG',
+            mode        = 'RO',
+            offset      = 0x00A0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12V_SW_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x00A4,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12V_SW_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x00A8,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12V_SW_INS_REG',
+            mode        = 'RO',
+            offset      = 0x00AC,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'MGTAVTT_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x00B0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'MGTAVTT_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x00B4,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'MGTAVTT_INS_REG',
+            mode        = 'RO',
+            offset      = 0x00B8,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V2_BTM_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x00BC,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V2_BTM_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x00C0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V2_BTM_INS_REG',
+            mode        = 'RO',
+            offset      = 0x00C4,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12VPEX_I_IN_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x00C8,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12VPEX_I_IN_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x00CC,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12VPEX_I_IN_INS_REG',
+            mode        = 'RO',
+            offset      = 0x00D0,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12V_AUX_I_IN_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x00D4,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12V_AUX_I_IN_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x00D8,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12V_AUX_I_IN_INS_REG',
+            mode        = 'RO',
+            offset      = 0x00DC,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x00E0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x00E4,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_INS_REG',
+            mode        = 'RO',
+            offset      = 0x00E8,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x00EC,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x00F0,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x00F4,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'FPGA_TEMP_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x00F8,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'FPGA_TEMP_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x00FC,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'FPGA_TEMP_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0100,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'FAN_TEMP_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0104,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'FAN_TEMP_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0108,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'FAN_TEMP_INS_REG',
+            mode        = 'RO',
+            offset      = 0x010C,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        for i in range(4):
+            self.add(pr.RemoteVariable(
+                name        = f'DIMM_TEMP{i}_MAX_REG',
+                mode        = 'RO',
+                offset      = 0x0110+i*0xC,
+                disp        = '{:,d}',
+                units       = 'degC',
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = f'DIMM_TEMP{i}_AVG_REG',
+                mode        = 'RO',
+                offset      = 0x0114+i*0xC,
+                disp        = '{:,d}',
+                units       = 'degC',
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = f'DIMM_TEMP{i}_INS_REG',
+                mode        = 'RO',
+                offset      = 0x0118+i*0xC,
+                disp        = '{:,d}',
+                units       = 'degC',
+            ))
+
+        for i in range(3):
+            self.add(pr.RemoteVariable(
+                name        = f'SE98_TEMP{i}_MAX_REG',
+                mode        = 'RO',
+                offset      = 0x0140+i*0xC,
+                disp        = '{:,d}',
+                units       = 'degC',
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = f'SE98_TEMP{i}_AVG_REG',
+                mode        = 'RO',
+                offset      = 0x0144+i*0xC,
+                disp        = '{:,d}',
+                units       = 'degC',
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = f'SE98_TEMP{i}_INS_REG',
+                mode        = 'RO',
+                offset      = 0x0148+i*0xC,
+                disp        = '{:,d}',
+                units       = 'degC',
+            ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'FAN_SPEED_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0164,
+            disp        = '{:,d}',
+            units       = 'RPM',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'FAN_SPEED_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0168,
+            disp        = '{:,d}',
+            units       = 'RPM',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'FAN_SPEED_INS_REG',
+            mode        = 'RO',
+            offset      = 0x016C,
+            disp        = '{:,d}',
+            units       = 'RPM',
+        ))
+
+        for i in range(4):
+            self.add(pr.RemoteVariable(
+                name        = f'CAGE_TEMP{i}_MAX_REG',
+                mode        = 'RO',
+                offset      = 0x0170+i*0xC,
+                disp        = '{:,d}',
+                units       = 'degC',
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = f'CAGE_TEMP{i}_AVG_REG',
+                mode        = 'RO',
+                offset      = 0x0174+i*0xC,
+                disp        = '{:,d}',
+                units       = 'degC',
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = f'CAGE_TEMP{i}_INS_REG',
+                mode        = 'RO',
+                offset      = 0x0178+i*0xC,
+                disp        = '{:,d}',
+                units       = 'degC',
+            ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_TEMP1_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0260,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_TEMP1_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0264,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_TEMP1_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0268,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC3V3_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x026C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC3V3_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0270,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC3V3_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0274,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '3V3PEX_I_IN_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0278,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '3V3PEX_I_IN_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x027C,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '3V3PEX_I_IN_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0280,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_IO_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0284,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_IO_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0288,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_IO_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x028C,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_1V2_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0290,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_1V2_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0294,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_1V2_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0298,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VPP2V5_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x029C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VPP2V5_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x02A0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VPP2V5_INS_REG',
+            mode        = 'RO',
+            offset      = 0x02A4,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_IO_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x02A8,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_IO_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x02AC,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_IO_INS_REG',
+            mode        = 'RO',
+            offset      = 0x02B0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_TEMP2_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x02B4,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_TEMP2_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x02B8,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_TEMP2_INS_REG',
+            mode        = 'RO',
+            offset      = 0x02BC,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12V_AUX1_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x02C0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12V_AUX1_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x02C4,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '12V_AUX1_INS_REG',
+            mode        = 'RO',
+            offset      = 0x02C8,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_TEMP_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x02CC,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_TEMP_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x02D0,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_TEMP_INS_REG',
+            mode        = 'RO',
+            offset      = 0x02D4,
+            disp        = '{:,d}',
+            units       = 'degC',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'PEX_12V_POWER_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x02D8,
+            disp        = '{:,d}',
+            units       = 'mW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'PEX_12V_POWER_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x02DC,
+            disp        = '{:,d}',
+            units       = 'mW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'PEX_12V_POWER_INS_REG',
+            mode        = 'RO',
+            offset      = 0x02E0,
+            disp        = '{:,d}',
+            units       = 'mW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'PEX_3V3_POWER_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x02E4,
+            disp        = '{:,d}',
+            units       = 'mW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'PEX_3V3_POWER_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x02E8,
+            disp        = '{:,d}',
+            units       = 'mW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'PEX_3V3_POWER_INS_REG',
+            mode        = 'RO',
+            offset      = 0x02EC,
+            disp        = '{:,d}',
+            units       = 'mW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'AUX_3V3_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x02F0,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'AUX_3V3_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x02F4,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'AUX_3V3_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x02F8,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
 
         self.add(pr.RemoteVariable(
             name        = 'HOST_MSG_OFFSET_REG',
@@ -321,9 +1118,503 @@ class Status(pr.Device):
             offset      = 0x030C,
         ))
 
-        #######################################
-        # TODO: Add more status registers later
-        #######################################
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V2_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0314,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V2_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0318,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC1V2_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x031C,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'V12_IN_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0320,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'V12_IN_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0324,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'V12_IN_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0328,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'V12_IN_AUX0_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x032C,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'V12_IN_AUX0_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0330,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'V12_IN_AUX0_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0334,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'V12_IN_AUX1_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0338,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'V12_IN_AUX1_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x033C,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'V12_IN_AUX1_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0340,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCAUX_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0344,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCAUX_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0348,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCAUX_INS_REG',
+            mode        = 'RO',
+            offset      = 0x034C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCAUX_PMC_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0350,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCAUX_PMC_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0354,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCAUX_PMC_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0358,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCRAM_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x035C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCRAM_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0360,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCRAM_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0364,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'POWER_GOOD_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0370,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_POWER_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0374,
+            disp        = '{:,d}',
+            units       = 'mW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_POWER_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0378,
+            disp        = '{:,d}',
+            units       = 'mW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_POWER_INS_REG',
+            mode        = 'RO',
+            offset      = 0x037C,
+            disp        = '{:,d}',
+            units       = 'mW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_VCU_0V9_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0380,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_VCU_0V9_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0384,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCINT_VCU_0V9_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0388,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '1V2_VCCIO_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x038C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '1V2_VCCIO_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0390,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '1V2_VCCIO_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0394,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'GTAVCC_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0398,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'GTAVCC_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x039C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'GTAVCC_INS_REG',
+            mode        = 'RO',
+            offset      = 0x03A0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCSOC_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x03B0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCSOC_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x03B4,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCCSOC_INS_REG',
+            mode        = 'RO',
+            offset      = 0x03B8,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC_5V0_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x03BC,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC_5V0_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x03C0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'VCC_5V0_INS_REG',
+            mode        = 'RO',
+            offset      = 0x03C4,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '2V5_VPP23_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x03C8,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '2V5_VPP23_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x03CC,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = '2V5_VPP23_INS_REG',
+            mode        = 'RO',
+            offset      = 0x03D0,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'GTVCC_AUX_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x03D4,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'GTVCC_AUX_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x03D8,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'GTVCC_AUX_INS_REG',
+            mode        = 'RO',
+            offset      = 0x03DC,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_1v2_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0410,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_1v2_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0414,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HBM_1v2_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0418,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_VCC1V5_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x041C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_VCC1V5_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0420,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_VCC1V5_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0424,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_MGTAVCC_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0428,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_MGTAVCC_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x042C,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_MGTAVCC_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0430,
+            disp        = '{:,d}',
+            units       = 'mV',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_MGTAVTT_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0434,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_MGTAVTT_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0438,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_MGTAVTT_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x043C,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_MGTAVCC_I_MAX_REG',
+            mode        = 'RO',
+            offset      = 0x0440,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_MGTAVCC_I_AVG_REG',
+            mode        = 'RO',
+            offset      = 0x0444,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CMC_MGTAVCC_I_INS_REG',
+            mode        = 'RO',
+            offset      = 0x0448,
+            disp        = '{:,d}',
+            units       = 'mA',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CORE_BUILD_VERSION_REG',
+            mode        = 'RO',
+            offset      = 0x0C4C,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'OEM_ID_REG',
+            mode        = 'RO',
+            offset      = 0x0C50,
+        ))
 
 class CmsSubsystem(pr.Device):
     def __init__(self, pollPeriod=0.0, **kwargs):

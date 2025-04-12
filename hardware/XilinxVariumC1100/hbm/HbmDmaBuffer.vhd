@@ -32,6 +32,9 @@ entity HbmDmaBuffer is
       RD_PEND_THRESH_G  : positive                 := 2048;  -- In units of bytes
       AXIL_BASE_ADDR_G  : slv(31 downto 0));
    port (
+      -- Card Management Solution (CMS) Interface
+      cmsHbmCatTrip    : out sl;
+      cmsHbmTemp       : out Slv7Array(1 downto 0);
       -- HBM Interface
       hbmRefClk        : in  sl;
       hbmCatTrip       : out sl;
@@ -978,11 +981,12 @@ begin
          apb_complete_1      => apbDoneVec(1),
          DRAM_0_STAT_CATTRIP => hbmCatTripVec(0),
          DRAM_1_STAT_CATTRIP => hbmCatTripVec(1),
-         DRAM_0_STAT_TEMP    => open,
-         DRAM_1_STAT_TEMP    => open);
+         DRAM_0_STAT_TEMP    => cmsHbmTemp(0),
+         DRAM_1_STAT_TEMP    => cmsHbmTemp(1));
 
-   hbmCatTrip <= uOr(hbmCatTripVec);
-   apbDone    <= uAnd(apbDoneVec);
+   cmsHbmCatTrip <= uOr(hbmCatTripVec);
+   hbmCatTrip    <= uOr(hbmCatTripVec);
+   apbDone       <= uAnd(apbDoneVec);
 
    U_apbDone : entity surf.Synchronizer
       generic map (

@@ -83,7 +83,7 @@ entity XilinxVariumC1100Core is
       cmsHbmTemp      : in    Slv7Array(1 downto 0);
       cmsUartRxd      : in    sl;
       cmsUartTxd      : out   sl;
-      cmsGpio         : in    slv (3 downto 0);
+      cmsGpio         : in    slv(3 downto 0);
       -- System Ports
       userClkP        : in    sl;
       userClkN        : in    sl;

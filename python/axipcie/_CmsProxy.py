@@ -1,4 +1,6 @@
 #-----------------------------------------------------------------------------
+# https://docs.amd.com/r/en-US/pg348-cms-subsystem
+#-----------------------------------------------------------------------------
 # This file is part of the 'axi-pcie-core'. It is subject to
 # the license terms in the LICENSE.txt file found in the top-level directory
 # of this distribution and at:
@@ -14,7 +16,7 @@ import threading
 import time
 import queue
 
-class _Regs(pr.Device):
+class _Mailbox(pr.Device):
     def __init__(self, pollPeriod=0.0, **kwargs):
         super().__init__(**kwargs)
 
@@ -33,16 +35,6 @@ class _Regs(pr.Device):
             groups    = groups,
             bitSize   = 32,
             bitOffset = 0,
-        ))
-
-        self.add(pr.RemoteVariable(
-            name      = 'HOST_MSG_OFFSET_REG',
-            mode      = 'RW',
-            offset    = 0x28300,
-            groups    = groups,
-            bitSize   = 32,
-            bitOffset = 0,
-            value     = 0x1000, # "Assumes HOST_MSG_OFFSET_REG = 0x1000"
         ))
 
         self.add(pr.RemoteVariable(
@@ -119,7 +111,6 @@ class _Regs(pr.Device):
                 ###########################################################
 
                 # print(f'CONTROL_REG {self.CONTROL_REG.get(read=True):x}')
-                # print(f'HOST_MSG_OFFSET_REG {self.HOST_MSG_OFFSET_REG.get(read=True):x}')
                 # print(f'Address {transaction.address():x}')
                 # print(f'opcode {opcode:x}')
                 # print(f'cageSel {cageSel:x}')
@@ -130,7 +121,7 @@ class _Regs(pr.Device):
                 # 3. The host sets CONTROL_REG[5] to 1 to indicate a new request message is available to CMS firmware.
                 ######################################################################################################
 
-                # self.CONTROL_REG.set(value=0x20, write=True)
+                self.CONTROL_REG.set(value=0x20, write=True)
 
                 #######################################################################################################################
                 # 4. The host polls CONTROL_REG[5] until CMS firmware sets to 0, indicating the CMS response message is in the mailbox.
@@ -178,27 +169,188 @@ class _Regs(pr.Device):
 
 class _ProxySlave(rogue.interfaces.memory.Slave):
 
-    def __init__(self, regs):
+    def __init__(self, mailbox):
         super().__init__(4,4)
-        self._regs = regs
+        self._mailbox = mailbox
 
     def _doTransaction(self, transaction):
-        #print('_ProxySlave._doTransaction')
-        self._regs.proxyTransaction(transaction)
+        self._mailbox.proxyTransaction(transaction)
 
-class CmsProxy(pr.Device):
+class Status(pr.Device):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    def __init__(self, hidden=True, pollPeriod=0.0, **kwargs):
-        super().__init__(hidden=hidden, **kwargs)
+        self.add(pr.RemoteVariable(
+            name        = 'REG_MAP_ID_REG',
+            description = 'Register Map ID. (0x74736574)',
+            mode        = 'RO',
+            offset      = 0x0000,
+        ))
 
-        self.add(_Regs(
-            name    = 'Regs',
+        self.add(pr.RemoteVariable(
+            name        = 'FW_VERSION_REG',
+            description = 'Firmware Version',
+            mode        = 'RO',
+            offset      = 0x0004,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'STATUS_REG',
+            description = 'CMS Status Register',
+            mode        = 'RO',
+            offset      = 0x0008,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'ERROR_REG',
+            description = 'CMS Error Register',
+            mode        = 'RO',
+            offset      = 0x000C,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'PROFILE_NAME_REG',
+            description = 'Software profile',
+            mode        = 'RO',
+            offset      = 0x0014,
+        ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '12V_PEX_MAX_REG',
+            # mode        = 'RO',
+            # offset      = 0x0020,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '12V_PEX_AVG_REG',
+            # mode        = 'RO',
+            # offset      = 0x0024,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '12V_PEX_INS_REG',
+            # mode        = 'RO',
+            # offset      = 0x0028,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '3V3_PEX_MAX_REG',
+            # mode        = 'RO',
+            # offset      = 0x002C,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '3V3_PEX_AVG_REG',
+            # mode        = 'RO',
+            # offset      = 0x0030,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '3V3_PEX_INS_REG',
+            # mode        = 'RO',
+            # offset      = 0x0034,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '3V3_AUX_MAX_REG',
+            # mode        = 'RO',
+            # offset      = 0x0038,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '3V3_AUX_AVG_REG',
+            # mode        = 'RO',
+            # offset      = 0x003C,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '3V3_AUX_INS_REG',
+            # mode        = 'RO',
+            # offset      = 0x0040,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '12V_AUX_MAX_REG',
+            # mode        = 'RO',
+            # offset      = 0x0044,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '12V_AUX_AVG_REG',
+            # mode        = 'RO',
+            # offset      = 0x0048,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = '12V_AUX_INS_REG',
+            # mode        = 'RO',
+            # offset      = 0x004C,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = 'DDR4_VPP_BTM_MAX_REG',
+            # mode        = 'RO',
+            # offset      = 0x0050,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = 'DDR4_VPP_BTM_AVG_REG',
+            # mode        = 'RO',
+            # offset      = 0x0054,
+        # ))
+
+        # self.add(pr.RemoteVariable(
+            # name        = 'DDR4_VPP_BTM_INS_REG',
+            # mode        = 'RO',
+            # offset      = 0x0058,
+        # ))
+
+        #######################################
+        # TODO: Add more status registers later
+        #######################################
+
+        self.add(pr.RemoteVariable(
+            name        = 'HOST_MSG_OFFSET_REG',
+            mode        = 'RO',
+            offset      = 0x0300,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'HOST_STATUS2_REG',
+            mode        = 'RO',
+            offset      = 0x030C,
+        ))
+
+        #######################################
+        # TODO: Add more status registers later
+        #######################################
+
+class CmsSubsystem(pr.Device):
+    def __init__(self, pollPeriod=0.0, **kwargs):
+        super().__init__(**kwargs)
+
+        self.add(pr.RemoteVariable(
+            name        = 'MB_RESETN_REG',
+            description = 'MicroBlaze reset register. Active-Low. Default 0x0 (reset active)',
+            mode        = 'RW',
+            offset      = 0x20000,
+            hidden      = True,
+        ))
+
+        self.add(Status(
+            name    = 'Status',
+            memBase = self,
+            offset  = 0x28000,
+        ))
+
+        self.add(_Mailbox(
+            name    = 'Mailbox',
             memBase = self,
             offset  = 0x0000,
-            hidden  = hidden,
+            hidden  = True,
             pollPeriod = pollPeriod,
         ))
-        self.proxy = _ProxySlave(self.Regs)
+        self.proxy = _ProxySlave(self.Mailbox)
 
     def add(self, node):
         pr.Node.add(self, node)
@@ -206,3 +358,10 @@ class CmsProxy(pr.Device):
         if isinstance(node, pr.Device):
             if node._memBase is None:
                 node._setSlave(self.proxy)
+
+    def _start(self):
+        self.MB_RESETN_REG.set(value=0x0, write=True)
+        self.MB_RESETN_REG.set(value=0x1, write=True)
+        while (self.Status.HOST_STATUS2_REG.get(read=True)&0x1) != 1:
+            time.sleep(0.001)
+        super()._start()

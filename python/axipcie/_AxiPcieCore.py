@@ -178,7 +178,7 @@ class AxiPcieCore(pr.Device):
                     enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                 ))
 
-                self.add(pcie.CmsProxy(
+                self.add(pcie.CmsSubsystem(
                     name   = 'CmsBridge',
                     offset  = 0x8000_0000,
                     memBase = self.AxilBridge.proxy,

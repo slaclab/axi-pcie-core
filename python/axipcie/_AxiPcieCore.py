@@ -17,7 +17,7 @@ import surf.xilinx          as xil
 
 import surf.devices.transceivers as xceiver
 
-import axipcie
+import axipcie as pcie
 import click
 import time
 
@@ -42,12 +42,10 @@ class AxiPcieCore(pr.Device):
         XIL_DEVICE_G     = None
 
         # AxiVersion Module
-        self.add(axipcie.PcieAxiVersion(
+        self.add(pcie.PcieAxiVersion(
             offset       = 0x20000,
             expand       = False,
         ))
-
-
 
         # DMA AXI Stream Inbound Monitor
         self.add(axi.AxiStreamMonAxiL(
@@ -75,7 +73,7 @@ class AxiPcieCore(pr.Device):
 
             # Check if using GpuAsyncCore
             if useGpu:
-                self.add(axipcie.AxiGpuAsyncCore(
+                self.add(pcie.AxiGpuAsyncCore(
                     name     = 'AxiGpuAsyncCore',
                     offset    = 0x28000,
                     expand    = False,
@@ -172,12 +170,27 @@ class AxiPcieCore(pr.Device):
             elif (boardType == 'XilinxAlveoU55c') or (boardType == 'XilinxVariumC1100'):
 
                 XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+                qsfpOffset = [0x0F_00_0000, 0x0F_10_0000]
 
                 self.add(silabs.Si5394(
                     offset  = 0x70000,
                     memBase = self.AxilBridge.proxy,
                     enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                 ))
+
+                self.add(pcie.CmsSubsystem(
+                    name   = 'CmsBridge',
+                    offset  = 0x8000_0000,
+                    memBase = self.AxilBridge.proxy,
+                ))
+
+                for i in range(2):
+                    self.add(xceiver.Qsfp(
+                        name    = f'Qsfp[{i}]',
+                        offset  = qsfpOffset[i],
+                        memBase = self.CmsBridge.proxy,
+                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                    ))
 
             elif (boardType == 'XilinxKcu105'):
                 XIL_DEVICE_G = 'ULTRASCALE'

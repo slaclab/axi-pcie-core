@@ -7,6 +7,7 @@
 # copied, modified, propagated, or distributed except according to the terms
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
+from axipcie._CmsProxy        import *
 from axipcie._AxiGpuAsyncCore import *
 from axipcie._AxiPcieCore     import *
 from axipcie._AxiPcieDma      import *

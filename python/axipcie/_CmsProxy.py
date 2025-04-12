@@ -1625,6 +1625,7 @@ class CmsSubsystem(pr.Device):
             description = 'MicroBlaze reset register. Active-Low. Default 0x0 (reset active)',
             mode        = 'RW',
             offset      = 0x20000,
+            verify      = False,
             hidden      = True,
         ))
 
@@ -1651,17 +1652,21 @@ class CmsSubsystem(pr.Device):
                 node._setSlave(self.proxy)
 
     def _start(self):
+        # Perform a reset cycle (active LOW)
+        self.MB_RESETN_REG.set(value=0x0, write=True)
+        self.MB_RESETN_REG.set(value=0x1, write=True)
+
+        # Wait for the Mailbox to be ready (with 5-second timeout)
+        start_time = time.time()
+        while (self.Status.HOST_STATUS2_REG.get(read=True) & 0x1) != 1:
+            if time.time() - start_time > 5:
+                raise TimeoutError("Timed out waiting for Mailbox to be ready. Double check if you have the latest firmware loaded.  Requires firmware to be built with submodules/axi-pcie-core@v5.5.0 (or later)")
+            time.sleep(0.001)
+
         # Check for the correct Register Map ID
         regMapId = self.Status.REG_MAP_ID_REG.get(read=True)
         if (regMapId != 0x74736574):
             raise ValueError(f"Unexpected REG_MAP_ID_REG value: {hex(regMapId)} (expected 0x74736574)")
 
-        # Perform a reset cycle (active LOW)
-        self.MB_RESETN_REG.set(value=0x0, write=True)
-        self.MB_RESETN_REG.set(value=0x1, write=True)
-
-        # Wait for the Mailbox to be ready
-        while (self.Status.HOST_STATUS2_REG.get(read=True)&0x1) != 1:
-            time.sleep(0.001)
-
+        # Proceed with the rest of the pyrogue.device._start() routine
         super()._start()

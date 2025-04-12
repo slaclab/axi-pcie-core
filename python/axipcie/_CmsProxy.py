@@ -1625,6 +1625,7 @@ class CmsSubsystem(pr.Device):
             description = 'MicroBlaze reset register. Active-Low. Default 0x0 (reset active)',
             mode        = 'RW',
             offset      = 0x20000,
+            verify      = False,
             hidden      = True,
         ))
 
@@ -1659,7 +1660,7 @@ class CmsSubsystem(pr.Device):
         start_time = time.time()
         while (self.Status.HOST_STATUS2_REG.get(read=True) & 0x1) != 1:
             if time.time() - start_time > 5:
-                raise TimeoutError("Timed out waiting for Mailbox to be ready.")
+                raise TimeoutError("Timed out waiting for Mailbox to be ready. Double check if you have the latest firmware loaded.  Requires firmware to be built with submodules/axi-pcie-core@v5.5.0 (or later)")
             time.sleep(0.001)
 
         # Check for the correct Register Map ID

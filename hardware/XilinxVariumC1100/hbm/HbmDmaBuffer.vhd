@@ -480,17 +480,22 @@ architecture mapping of HbmDmaBuffer is
 
    signal sAxisCtrl : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0) := (others => AXI_STREAM_CTRL_INIT_C);
 
-   signal axisReset     : slv(7 downto 0);
-   signal axisRstL      : slv(7 downto 0);
-   signal hbmCatTripVec : slv(1 downto 0);
-   signal apbDoneVec    : slv(1 downto 0);
-   signal apbDone       : sl;
-   signal apbDoneSync   : sl;
-   signal apbRstL       : sl;
-   signal axiReady      : slv(7 downto 0);
-   signal wdataParity   : Slv32Array(7 downto 0) := (others => (others => '0'));
+   signal axisRstVec     : slv(7 downto 0);
+   signal axisReset      : slv(7 downto 0);
+   signal axisRstL       : slv(7 downto 0);
+   signal hbmCatTripVec  : slv(1 downto 0);
+   signal apbDoneVec     : slv(1 downto 0);
+   signal apbDone        : sl;
+   signal apbDoneSync    : sl;
+   signal apbDoneSyncVec : slv(7 downto 0);
+   signal apbRstL        : sl;
+   signal axiReady       : slv(7 downto 0);
+   signal wdataParity    : Slv32Array(7 downto 0) := (others => (others => '0'));
 
 begin
+
+   -- Assign vectorized reset before port map
+   axisRstVec <= (others => axisRst);
 
    -- Help with timing
    U_axisReset : entity surf.RstPipelineVector
@@ -500,7 +505,7 @@ begin
          INV_RST_G => false)
       port map (
          clk    => axisClk,
-         rstIn  => (others => axisRst),
+         rstIn  => axisRstVec,
          rstOut => axisReset);
 
    -- Help with timing
@@ -508,11 +513,11 @@ begin
       generic map (
          TPD_G     => TPD_G,
          WIDTH_G   => 8,
-         INV_RST_G => true)              -- invert reset
+         INV_RST_G => true)             -- invert reset
       port map (
          clk    => axisClk,
-         rstIn  => (others => axisRst),  -- active HIGH
-         rstOut => axisRstL);            -- active LOW
+         rstIn  => axisRstVec,          -- active HIGH
+         rstOut => axisRstL);           -- active LOW
 
    --------------------
    -- AXI-Lite Crossbar
@@ -996,6 +1001,9 @@ begin
          dataIn  => apbDone,
          dataOut => apbDoneSync);
 
+   -- Assign vectorized reset before port map
+   apbDoneSyncVec <= (others => apbDoneSync);
+
    U_axiReady : entity surf.RstPipelineVector
       generic map (
          TPD_G     => TPD_G,
@@ -1003,7 +1011,7 @@ begin
          INV_RST_G => false)
       port map (
          clk    => axisClk,
-         rstIn  => (others => apbDoneSync),
+         rstIn  => apbDoneSyncVec,
          rstOut => axiReady);
 
    U_apbRstL : entity surf.RstSync

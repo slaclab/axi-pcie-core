@@ -1853,7 +1853,7 @@ class CmsSubsystem(pr.Device):
         ))
         self.proxy = _ProxySlave(self.Mailbox)
 
-        if self.moduleType != None:
+        if self.moduleType is not None:
             for i in range(self.numCages):
                 self.add(CmsLowSpeedIo(
                     name       = f'{self.moduleType.capitalize()}LowSpeedIo[{i}]',
@@ -1887,7 +1887,7 @@ class CmsSubsystem(pr.Device):
             raise ValueError(f"Unexpected REG_MAP_ID_REG value: {hex(regMapId)} (expected 0x74736574)")
 
         # Check if we need to enable the QSFP GPIO registers
-        if self.moduleType != None:
+        if self.moduleType is not None:
             self.Mailbox.QsfpGpioEnable.get(read=True) # Token read to update the shadow variable caching
             self.Mailbox.QsfpGpioEnable.set(value=0x1, write=True)
 

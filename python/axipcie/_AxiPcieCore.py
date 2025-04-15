@@ -179,9 +179,11 @@ class AxiPcieCore(pr.Device):
                 ))
 
                 self.add(pcie.CmsSubsystem(
-                    name   = 'CmsBridge',
-                    offset  = 0x8000_0000,
-                    memBase = self.AxilBridge.proxy,
+                    name       = 'CmsBridge',
+                    offset     = 0x8000_0000,
+                    memBase    = self.AxilBridge.proxy,
+                    moduleType = 'QSFP',
+                    numCages   = 2,
                 ))
 
                 for i in range(2):

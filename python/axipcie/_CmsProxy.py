@@ -30,7 +30,7 @@ class _Mailbox(pr.Device):
         groups = ['NoStream','NoState','NoConfig']
 
         self.add(pr.RemoteVariable(
-            name      = 'HbmTempMonEnable.',
+            name      = 'HbmTempMonEnable',
             mode      = 'RW',
             offset    = 0x28018,
             bitSize   = 1,
@@ -46,7 +46,7 @@ class _Mailbox(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name      = 'RebootMicroBlaze.',
+            name      = 'RebootMicroBlaze',
             mode      = 'WO',
             offset    = 0x28018,
             bitSize   = 1,

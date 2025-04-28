@@ -18,20 +18,13 @@ if { $::env(PRJ_PART) != "xcu55c-fsvh2892-2L-e" } {
 # Set the board part
 set_property board_part xilinx.com:au55c:part0:1.0 [current_project]
 
-# Check which type of PCIe build to generate
-if { [info exists ::env(BUILD_PCIE_GEN4)] != 1 || $::env(BUILD_PCIE_GEN4) == 1 } {
-   set pcieType "pcie-4x8"
-} else {
-   set pcieType "pcie-3x16"
-}
-
 # Load local Source Code and Constraints
 loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/misc"
 loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU55cCore.xdc"
 loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoU55cApp.xdc"
 
 # Load the PCIe core
-loadRuckusTcl "$::DIR_PATH/${pcieType}"
+loadRuckusTcl "$::DIR_PATH/pcie-4x8"
 
 # Adding the Si5345 configurations
 add_files -norecurse "$::DIR_PATH/pll-config/Si5394A_GT_REFCLK_156MHz.mem"

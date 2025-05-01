@@ -45,5 +45,3 @@ set_false_path -to [get_pins -hier *sync_reg[0]/D]
 set_false_path -from [get_ports {pciRstL}]
 
 set_property HIGH_PRIORITY true [get_nets {U_Core/REAL_PCIE.U_AxiPciePhy/axiClk}]
-
-connect_debug_port dbg_hub/clk [get_nets {hbmRefClk}]

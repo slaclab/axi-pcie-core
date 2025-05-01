@@ -34,6 +34,7 @@ use unisim.vcomponents.all;
 entity XilinxAlveoU55cCore is
    generic (
       TPD_G                : time                        := 1 ns;
+      QSFP_CDR_DISABLE_G   : boolean                     := false;
       SI5394_INIT_FILE_G   : string                      := "Si5394A_GT_REFCLK_156MHz.mem";
       ROGUE_SIM_EN_G       : boolean                     := false;
       ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
@@ -138,16 +139,15 @@ architecture mapping of XilinxAlveoU55cCore is
    signal phyWriteMaster : AxiLiteWriteMasterType;
    signal phyWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
 
-   signal i2cReadMaster  : AxiLiteReadMasterType;
-   signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
-   signal i2cWriteMaster : AxiLiteWriteMasterType;
-   signal i2cWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
+   signal mI2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
+   signal mI2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal mI2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
+   signal mI2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
    signal i2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
    signal i2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
    signal i2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
    signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
-
 
    signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
@@ -238,23 +238,40 @@ begin
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
 
+      QSFP_CDR_DISABLE : if (QSFP_CDR_DISABLE_G) generate
+         U_CmsQsfpCdrDisable : entity axi_pcie_core.CmsQsfpCdrDisable
+            generic map (
+               TPD_G => TPD_G)
+            port map (
+               -- Monitor External Software
+               extSwWrDet       => mI2cWriteMasters(0).awvalid,
+               extSwRdDet       => mI2cReadMasters(0).arvalid,
+               -- AXI-Lite Register Interface (axilClk domain)
+               axilClk          => sysClock,
+               axilRst          => sysReset,
+               mAxilReadMaster  => mI2cReadMasters(1),
+               mAxilReadSlave   => mI2cReadSlaves(1),
+               mAxilWriteMaster => mI2cWriteMasters(1),
+               mAxilWriteSlave  => mI2cWriteSlaves(1));
+      end generate;
+
       U_XBAR : entity surf.AxiLiteCrossbar
          generic map (
             TPD_G              => TPD_G,
-            NUM_SLAVE_SLOTS_G  => 1,
+            NUM_SLAVE_SLOTS_G  => 2,
             NUM_MASTER_SLOTS_G => 2,
             MASTERS_CONFIG_G   => XBAR_I2C_CONFIG_C)
          port map (
-            axiClk              => sysClock,
-            axiClkRst           => sysReset,
-            sAxiWriteMasters(0) => i2cWriteMaster,
-            sAxiWriteSlaves(0)  => i2cWriteSlave,
-            sAxiReadMasters(0)  => i2cReadMaster,
-            sAxiReadSlaves(0)   => i2cReadSlave,
-            mAxiWriteMasters    => i2cWriteMasters,
-            mAxiWriteSlaves     => i2cWriteSlaves,
-            mAxiReadMasters     => i2cReadMasters,
-            mAxiReadSlaves      => i2cReadSlaves);
+            axiClk           => sysClock,
+            axiClkRst        => sysReset,
+            sAxiWriteMasters => mI2cWriteMasters,
+            sAxiWriteSlaves  => mI2cWriteSlaves,
+            sAxiReadMasters  => mI2cReadMasters,
+            sAxiReadSlaves   => mI2cReadSlaves,
+            mAxiWriteMasters => i2cWriteMasters,
+            mAxiWriteSlaves  => i2cWriteSlaves,
+            mAxiReadMasters  => i2cReadMasters,
+            mAxiReadSlaves   => i2cReadSlaves);
 
       U_SI5394 : entity surf.Si5394I2c
          generic map (
@@ -356,10 +373,10 @@ begin
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
          -- I2C AXI-Lite Interfaces (axiClk domain)
-         i2cReadMaster       => i2cReadMaster,
-         i2cReadSlave        => i2cReadSlave,
-         i2cWriteMaster      => i2cWriteMaster,
-         i2cWriteSlave       => i2cWriteSlave,
+         i2cReadMaster       => mI2cReadMasters(0),
+         i2cReadSlave        => mI2cReadSlaves(0),
+         i2cWriteMaster      => mI2cWriteMasters(0),
+         i2cWriteSlave       => mI2cWriteSlaves(0),
          -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,

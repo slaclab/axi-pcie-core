@@ -16,6 +16,7 @@ import threading
 import time
 import queue
 
+# https://docs.amd.com/r/en-US/pg348-cms-subsystem/Using-the-Mailbox
 class _Mailbox(pr.Device):
     def __init__(self, pollPeriod=0.0, **kwargs):
         super().__init__(**kwargs)
@@ -29,11 +30,52 @@ class _Mailbox(pr.Device):
         groups = ['NoStream','NoState','NoConfig']
 
         self.add(pr.RemoteVariable(
-            name      = 'CONTROL_REG',
+            name      = 'HbmTempMonEnable',
+            mode      = 'RW',
+            offset    = 0x28018,
+            bitSize   = 1,
+            bitOffset = 27,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name      = 'QsfpGpioEnable',
+            mode      = 'RW',
+            offset    = 0x28018,
+            bitSize   = 1,
+            bitOffset = 26,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name      = 'RebootMicroBlaze',
+            mode      = 'WO',
+            offset    = 0x28018,
+            bitSize   = 1,
+            bitOffset = 6,
+        ))
+
+
+        self.add(pr.RemoteVariable(
+            name      = 'CONTROL_REG[5]',
             mode      = 'RW',
             offset    = 0x28018,
             groups    = groups,
-            bitSize   = 32,
+            bitSize   = 1,
+            bitOffset = 5,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name      = 'ResetErrors',
+            mode      = 'WO',
+            offset    = 0x28018,
+            bitSize   = 1,
+            bitOffset = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name      = 'ResetSensors',
+            mode      = 'WO',
+            offset    = 0x28018,
+            bitSize   = 1,
             bitOffset = 0,
         ))
 
@@ -67,14 +109,15 @@ class _Mailbox(pr.Device):
             with self._memLock, transaction.lock():
 
                 if transaction.type() == rogue.interfaces.memory.Write:
-                    transaction.error('AXIL Write tranactions are not supported')
-                    continue
+                    dataBa = bytearray(4)
+                    transaction.getData(dataBa, 0)
+                    data = int.from_bytes(dataBa, 'little', signed=False)
 
                 #######################################################################################
                 # 1. The host checks the availability of the mailbox by confirming CONTROL_REG[5] is 0.
                 #######################################################################################
 
-                while (self.CONTROL_REG.get(read=True)&0x20) != 0:
+                while self.CONTROL_REG[5].get(read=True) != 0:
                     time.sleep(self._pollPeriod)
 
                 ######################################################
@@ -92,25 +135,41 @@ class _Mailbox(pr.Device):
 
                 ###########################################################
                 if opcode == CMS_OP_CARD_INFO_REQ:
+                    if transaction.type() == rogue.interfaces.memory.Write:
+                        transaction.error('CMS_OP_CARD_INFO_REQ are read only registers')
+                        continue
                     self.MAILBOX.set(index=0, value=0x04000000, write=True)
                 ###########################################################
                 elif opcode == CMS_OP_READ_MODULE_LOW_SPEED_IO:
-                    self.MAILBOX.set(index=0, value=0x0D000000, write=True)
-                    self.MAILBOX.set(index=1, value=cageSel,    write=True)
+                    if transaction.type() == rogue.interfaces.memory.Write: # CMS_OP_WRITE_MODULE_LOW_SPEED_IO
+                        self.MAILBOX.set(index=0, value=0x0E000000, write=True)
+                        self.MAILBOX.set(index=1, value=cageSel,    write=True)
+                        self.MAILBOX.set(index=2, value=data,       write=True)
+                    else: # CMS_OP_READ_MODULE_LOW_SPEED_IO
+                        self.MAILBOX.set(index=0, value=0x0D000000, write=True)
+                        self.MAILBOX.set(index=1, value=cageSel,    write=True)
                 ###########################################################
                 elif opcode == CMS_OP_BYTE_READ_MODULE_I2C:
-                    self.MAILBOX.set(index=0, value=0x0F000000, write=True)
-                    self.MAILBOX.set(index=1, value=cageSel,    write=True)
-                    self.MAILBOX.set(index=2, value=pageSel,    write=True)
-                    self.MAILBOX.set(index=3, value=0,          write=True)
-                    self.MAILBOX.set(index=4, value=wordSel,    write=True)
+                    if transaction.type() == rogue.interfaces.memory.Write: # CMS_OP_WRITE_READ_MODULE_I2C
+                        self.MAILBOX.set(index=0, value=0x10000000, write=True)
+                        self.MAILBOX.set(index=1, value=cageSel,    write=True)
+                        self.MAILBOX.set(index=2, value=pageSel,    write=True)
+                        self.MAILBOX.set(index=3, value=0,          write=True)
+                        self.MAILBOX.set(index=4, value=wordSel,    write=True)
+                        self.MAILBOX.set(index=5, value=data,       write=True)
+                    else: # CMS_OP_BYTE_READ_MODULE_I2C
+                        self.MAILBOX.set(index=0, value=0x0F000000, write=True)
+                        self.MAILBOX.set(index=1, value=cageSel,    write=True)
+                        self.MAILBOX.set(index=2, value=pageSel,    write=True)
+                        self.MAILBOX.set(index=3, value=0,          write=True)
+                        self.MAILBOX.set(index=4, value=wordSel,    write=True)
                 ###########################################################
                 else:
                     transaction.error('Unknown operation')
                     continue
                 ###########################################################
 
-                # print(f'CONTROL_REG {self.CONTROL_REG.get(read=True):x}')
+                # print(f'CONTROL_REG[5] {self.CONTROL_REG[5].get(read=True):x}')
                 # print(f'Address {transaction.address():x}')
                 # print(f'opcode {opcode:x}')
                 # print(f'cageSel {cageSel:x}')
@@ -121,13 +180,13 @@ class _Mailbox(pr.Device):
                 # 3. The host sets CONTROL_REG[5] to 1 to indicate a new request message is available to CMS firmware.
                 ######################################################################################################
 
-                self.CONTROL_REG.set(value=0x20, write=True)
+                self.CONTROL_REG[5].set(value=0x1, write=True)
 
                 #######################################################################################################################
                 # 4. The host polls CONTROL_REG[5] until CMS firmware sets to 0, indicating the CMS response message is in the mailbox.
                 #######################################################################################################################
 
-                while (self.CONTROL_REG.get(read=True)&0x20) != 0:
+                while self.CONTROL_REG[5].get(read=True) != 0:
                     time.sleep(self._pollPeriod)
 
                 ################################################################################
@@ -144,7 +203,10 @@ class _Mailbox(pr.Device):
                 #####################################################################################
 
                 ###########################################################
-                if opcode == CMS_OP_CARD_INFO_REQ:
+                if transaction.type() == rogue.interfaces.memory.Write:
+                    transaction.done()
+                ###########################################################
+                elif opcode == CMS_OP_CARD_INFO_REQ:
                     data = self.MAILBOX.get(index=(1+wordSel), read=True)
                 ###########################################################
                 elif opcode == CMS_OP_READ_MODULE_LOW_SPEED_IO:
@@ -1616,9 +1678,156 @@ class Status(pr.Device):
             offset      = 0x0C50,
         ))
 
-class CmsSubsystem(pr.Device):
-    def __init__(self, pollPeriod=0.0, **kwargs):
+# https://docs.amd.com/r/en-US/pg348-cms-subsystem/CMS_OP_WRITE_MODULE_LOW_SPEED_IO-0x0E
+# https://docs.amd.com/r/en-US/pg348-cms-subsystem/CMS_OP_READ_MODULE_LOW_SPEED_IO-0x0D
+class CmsLowSpeedIo(pr.Device):
+    def __init__(self, moduleType=None, **kwargs):
         super().__init__(**kwargs)
+
+        if moduleType=='QSFP':
+
+            self.add(pr.RemoteVariable(
+                name        = 'QSFP_INT_L',
+                description = '(0: Interrupt Set, 1: Interrupt Clear)',
+                mode      = 'RO',
+                offset    = 0x0,
+                bitSize   = 1,
+                bitOffset = 4,
+                enum        = {
+                    0: 'Interrupt Set',
+                    1: 'Interrupt Clear',
+                },
+                hidden = True,
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = 'QSFP_MODPRS_L',
+                description = '(0: Module Present, 1: Module not Present)',
+                mode      = 'RO',
+                offset    = 0x0,
+                bitSize   = 1,
+                bitOffset = 3,
+                enum        = {
+                    0: 'Module Present',
+                    1: 'Module not Present',
+                },
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = 'QSFP_MODSEL_L',
+                description = '(0: Module Selected, 1: Module not Selected)',
+                mode      = 'RO',
+                offset    = 0x0,
+                bitSize   = 1,
+                bitOffset = 2,
+                enum        = {
+                    0: 'Module Selected',
+                    1: 'Module not Selected',
+                },
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = 'QSFP_LPMODE',
+                description = '(0: High Power Mode, 1: Low Power Mode)',
+                mode      = 'RW',
+                offset    = 0x0,
+                bitSize   = 1,
+                bitOffset = 1,
+                enum        = {
+                    0: 'High Power Mode',
+                    1: 'Low Power Mode',
+                },
+            ))
+
+            self.add(pr.RemoteCommand(
+                name        = 'QSFP_RESET_L',
+                description = '(0: Reset Active, 1: Reset Clear)',
+                offset       = 0x0,
+                bitSize      = 1,
+                bitOffset    = 0,
+                function     = lambda cmd: cmd.post(0),
+            ))
+
+        elif moduleType=='DSFP':
+
+            self.add(pr.RemoteVariable(
+                name        = 'DSFP_INT',
+                description = '(0: Interrupt Clear, 1: Interrupt Set)',
+                mode      = 'RO',
+                offset    = 0x0,
+                bitSize   = 1,
+                bitOffset = 4,
+                enum        = {
+                    0: 'Interrupt Clear',
+                    1: 'Interrupt Set',
+                },
+                hidden = True,
+            ))
+
+
+            self.add(pr.RemoteVariable(
+                name        = 'DSFP_PRS',
+                description = '(0: Module not Present, 1: Module Present)',
+                mode      = 'RO',
+                offset    = 0x0,
+                bitSize   = 1,
+                bitOffset = 3,
+                enum        = {
+                    0: 'Module not Present',
+                    1: 'Module Present',
+                },
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = 'DSFP_LPW',
+                description = '(0: High Power Mode, 1: Low Power Mode)',
+                mode      = 'RW',
+                offset    = 0x0,
+                bitSize   = 1,
+                bitOffset = 1,
+                enum        = {
+                    0: 'High Power Mode',
+                    1: 'Low Power Mode',
+                },
+            ))
+
+            self.add(pr.RemoteVariable(
+                name        = 'DSFP_RST',
+                description = '(0: Reset Clear, 1: Reset Active)',
+                mode      = 'RW',
+                offset    = 0x0,
+                bitSize   = 1,
+                bitOffset = 0,
+                enum        = {
+                    0: 'Reset Clear',
+                    1: 'Reset Active',
+                },
+            ))
+
+        elif moduleType=='SFP':
+
+            self.add(pr.RemoteVariable(
+                name        = 'SFP_PRS',
+                description = '(0: Module not Present, 1: Module Present)',
+                mode      = 'RO',
+                offset    = 0x0,
+                bitSize   = 1,
+                bitOffset = 3,
+                enum        = {
+                    0: 'Module not Present',
+                    1: 'Module Present',
+                },
+            ))
+
+        else:
+            raise ValueError(f"Unsupported moduleType '{moduleType}'. Must be one of: 'QSFP', 'DSFP', 'SFP' ")
+
+class CmsSubsystem(pr.Device):
+    def __init__(self, pollPeriod=0.0, moduleType=None, numCages=1, **kwargs):
+        super().__init__(**kwargs)
+
+        self.moduleType = moduleType
+        self.numCages = numCages
 
         self.add(pr.RemoteVariable(
             name        = 'MB_RESETN_REG',
@@ -1644,6 +1853,15 @@ class CmsSubsystem(pr.Device):
         ))
         self.proxy = _ProxySlave(self.Mailbox)
 
+        if self.moduleType is not None:
+            for i in range(self.numCages):
+                self.add(CmsLowSpeedIo(
+                    name       = f'{self.moduleType.capitalize()}LowSpeedIo[{i}]',
+                    memBase    = self.proxy,
+                    moduleType = self.moduleType,
+                    offset     = 0x0D_00_0000+(i*0x00_10_0000),
+                ))
+
     def add(self, node):
         pr.Node.add(self, node)
 
@@ -1667,6 +1885,11 @@ class CmsSubsystem(pr.Device):
         regMapId = self.Status.REG_MAP_ID_REG.get(read=True)
         if (regMapId != 0x74736574):
             raise ValueError(f"Unexpected REG_MAP_ID_REG value: {hex(regMapId)} (expected 0x74736574)")
+
+        # Check if we need to enable the QSFP GPIO registers
+        if self.moduleType is not None:
+            self.Mailbox.QsfpGpioEnable.get(read=True) # Token read to update the shadow variable caching
+            self.Mailbox.QsfpGpioEnable.set(value=0x1, write=True)
 
         # Proceed with the rest of the pyrogue.device._start() routine
         super()._start()

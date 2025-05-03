@@ -25,11 +25,10 @@ library axi_pcie_core;
 
 entity HbmDmaBuffer is
    generic (
-      TPD_G             : time                     := 1 ns;
-      DMA_SIZE_G        : positive range 1 to 8    := 8;
+      TPD_G             : time                  := 1 ns;
+      DMA_SIZE_G        : positive range 1 to 8 := 8;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType;
-      BURST_BYTES_G     : positive range 1 to 4096 := 512;
-      RD_PEND_THRESH_G  : positive                 := 2048;  -- In units of bytes
+      RD_PEND_THRESH_G  : positive              := 4096;  -- In units of bytes
       AXIL_BASE_ADDR_G  : slv(31 downto 0));
    port (
       -- Card Management Solution (CMS) Interface
@@ -427,14 +426,26 @@ architecture mapping of HbmDmaBuffer is
          M00_AXI_RREADY       : out std_logic);
    end component;
 
-   -- HBM MEM AXI Configuration ***before the HbmAxiFifo***
-   constant MEM_AXI_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => 33,               -- 8GB HBM
+   constant DMA_AXI_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => 64,  -- Match 64-bit address for axi_pcie_core.AxiPcieResizer
+      DATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,  -- Matches the AXIS stream because you ***CANNOT*** resize an interleaved AXI stream
+      ID_BITS_C    => 6,                -- Up to 64 IDS
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface
+
+   constant RESIZE_DMA_AXI_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => 64,  -- Match 64-bit address for axi_pcie_core.AxiPcieResizer
       DATA_BYTES_C => 64,               -- 512-bit data interface
+      ID_BITS_C    => 6,                -- Up to 64 IDS
+      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface
+
+   -- HBM MEM AXI Configuration
+   constant HBM_AXI_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => 33,               -- 8GB HBM
+      DATA_BYTES_C => 32,               -- 256-bit data interface
       ID_BITS_C    => 6,                -- Up to 64 IDS
       LEN_BITS_C   => 4);               -- 4-bit awlen/arlen interface
 
-   constant AXI_BUFFER_WIDTH_C : positive := MEM_AXI_CONFIG_C.ADDR_WIDTH_C-3;  -- 8 GB HBM shared between 8 DMA lanes
+   constant AXI_BUFFER_WIDTH_C : positive := HBM_AXI_CONFIG_C.ADDR_WIDTH_C-3;  -- 8 GB HBM shared between 8 DMA lanes
    constant AXI_BASE_ADDR_C : Slv64Array(7 downto 0) := (
       0 => x"0000_0000_0000_0000",
       1 => x"0000_0000_4000_0000",      -- 1GB partitions
@@ -444,18 +455,6 @@ architecture mapping of HbmDmaBuffer is
       5 => x"0000_0001_4000_0000",
       6 => x"0000_0001_8000_0000",
       7 => x"0000_0001_C000_0000");
-
-   constant DMA_AXI_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => 64,  -- Match 64-bit address for axi_pcie_core.AxiPcieResizer
-      DATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,  -- Matches the AXIS stream because you ***CANNOT*** resize an interleaved AXI stream
-      ID_BITS_C    => MEM_AXI_CONFIG_C.ID_BITS_C,
-      LEN_BITS_C   => MEM_AXI_CONFIG_C.LEN_BITS_C);
-
-   constant INT_DMA_AXI_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => 64,  -- Match 64-bit address for axi_pcie_core.AxiPcieResizer
-      DATA_BYTES_C => MEM_AXI_CONFIG_C.DATA_BYTES_C,  -- Actual memory interface width
-      ID_BITS_C    => MEM_AXI_CONFIG_C.ID_BITS_C,
-      LEN_BITS_C   => MEM_AXI_CONFIG_C.LEN_BITS_C);
 
    constant AXIL_XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(DMA_SIZE_G-1 downto 0) := genAxiLiteConfig(DMA_SIZE_G, AXIL_BASE_ADDR_G, 12, 8);
 
@@ -592,7 +591,7 @@ begin
             -- AXI4 Configurations
             AXI_BASE_ADDR_G    => AXI_BASE_ADDR_C(i),
             AXI_CONFIG_G       => DMA_AXI_CONFIG_C,
-            BURST_BYTES_G      => BURST_BYTES_G,
+            BURST_BYTES_G      => 512,  -- HBM is 32B AXI3, 32B x 2^16 AXI3 burst length = 512B
             RD_PEND_THRESH_G   => RD_PEND_THRESH_G)
          port map (
             -- AXI4 Interface (axiClk domain)
@@ -621,7 +620,7 @@ begin
          generic map(
             TPD_G             => TPD_G,
             AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
-            AXI_PCIE_CONFIG_G => INT_DMA_AXI_CONFIG_C)
+            AXI_PCIE_CONFIG_G => RESIZE_DMA_AXI_CONFIG_C)
          port map(
             -- Clock and reset
             axiClk          => axisClk(i),

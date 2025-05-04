@@ -15,8 +15,8 @@ if { $::env(PRJ_PART) != "XCU55N-FSVH2892-2L-E" } {
    puts "\n\nERROR: PRJ_PART was not defined as XCU55N-FSVH2892-2L-E in the Makefile\n\n"; exit -1
 }
 
-# # Set the board part
-# set_property board_part xilinx.com:au55n:part0:1.0 [current_project]
+# Set the board part
+set_property board_part xilinx.com:au55n:part0:1.0 [current_project]
 
 # Load local Source Code and Constraints
 loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/../XilinxAlveoU55c/misc"

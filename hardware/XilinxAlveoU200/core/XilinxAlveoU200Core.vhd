@@ -36,6 +36,7 @@ use unisim.vcomponents.all;
 entity XilinxAlveoU200Core is
    generic (
       TPD_G                : time                        := 1 ns;
+      QSFP_CDR_DISABLE_G   : boolean                     := false;
       ROGUE_SIM_EN_G       : boolean                     := false;
       ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
       ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
@@ -258,38 +259,52 @@ begin
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
 
-      U_QsfpCdrDisable : entity surf.QsfpCdrDisable
-         generic map (
-            TPD_G             => TPD_G,
-            PERIODIC_UPDATE_G => 10,    -- Units of seconds
-            QSFP_BASE_ADDR_G  => QSFP_BASE_ADDR_C,
-            AXIL_CLK_FREQ_G   => DMA_CLK_FREQ_C)
-         port map (
-            -- AXI-Lite Register Interface (axilClk domain)
-            axilClk          => sysClock,
-            axilRst          => sysReset,
-            mAxilReadMaster  => mI2cReadMasters(1),
-            mAxilReadSlave   => mI2cReadSlaves(1),
-            mAxilWriteMaster => mI2cWriteMasters(1),
-            mAxilWriteSlave  => mI2cWriteSlaves(1));
+      QSFP_CDR_DISABLE : if (QSFP_CDR_DISABLE_G) generate
 
-      U_XbarMI2cMux : entity surf.AxiLiteCrossbar
-         generic map (
-            TPD_G              => TPD_G,
-            NUM_SLAVE_SLOTS_G  => 2,
-            NUM_MASTER_SLOTS_G => 1,
-            MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
-         port map (
-            axiClk              => sysClock,
-            axiClkRst           => sysReset,
-            sAxiWriteMasters    => mI2cWriteMasters,
-            sAxiWriteSlaves     => mI2cWriteSlaves,
-            sAxiReadMasters     => mI2cReadMasters,
-            sAxiReadSlaves      => mI2cReadSlaves,
-            mAxiWriteMasters(0) => i2cWriteMaster,
-            mAxiWriteSlaves(0)  => i2cWriteSlave,
-            mAxiReadMasters(0)  => i2cReadMaster,
-            mAxiReadSlaves(0)   => i2cReadSlave);
+         U_QsfpCdrDisable : entity surf.QsfpCdrDisable
+            generic map (
+               TPD_G             => TPD_G,
+               PERIODIC_UPDATE_G => 10,  -- Units of seconds
+               QSFP_BASE_ADDR_G  => QSFP_BASE_ADDR_C,
+               AXIL_CLK_FREQ_G   => DMA_CLK_FREQ_C)
+            port map (
+               -- AXI-Lite Register Interface (axilClk domain)
+               axilClk          => sysClock,
+               axilRst          => sysReset,
+               mAxilReadMaster  => mI2cReadMasters(1),
+               mAxilReadSlave   => mI2cReadSlaves(1),
+               mAxilWriteMaster => mI2cWriteMasters(1),
+               mAxilWriteSlave  => mI2cWriteSlaves(1));
+
+         U_XbarMI2cMux : entity surf.AxiLiteCrossbar
+            generic map (
+               TPD_G              => TPD_G,
+               NUM_SLAVE_SLOTS_G  => 2,
+               NUM_MASTER_SLOTS_G => 1,
+               MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
+            port map (
+               axiClk              => sysClock,
+               axiClkRst           => sysReset,
+               sAxiWriteMasters    => mI2cWriteMasters,
+               sAxiWriteSlaves     => mI2cWriteSlaves,
+               sAxiReadMasters     => mI2cReadMasters,
+               sAxiReadSlaves      => mI2cReadSlaves,
+               mAxiWriteMasters(0) => i2cWriteMaster,
+               mAxiWriteSlaves(0)  => i2cWriteSlave,
+               mAxiReadMasters(0)  => i2cReadMaster,
+               mAxiReadSlaves(0)   => i2cReadSlave);
+
+      end generate;
+
+      BYP_QSFP_CDR_DISABLE : if (not QSFP_CDR_DISABLE_G) generate
+
+         i2cWriteMaster     <= mI2cWriteMasters(0);
+         mI2cWriteSlaves(0) <= i2cWriteSlave;
+
+         i2cReadMaster     <= mI2cReadMasters(0);
+         mI2cReadSlaves(0) <= i2cReadSlave;
+
+      end generate;
 
       U_XbarI2cMux : entity surf.AxiLiteCrossbarI2cMux
          generic map (

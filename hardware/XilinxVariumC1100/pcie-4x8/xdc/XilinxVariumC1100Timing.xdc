@@ -34,6 +34,7 @@ set_clock_groups -asynchronous \
    -group [get_clocks -include_generated_clocks {userClkP}]
 
 set_clock_groups -asynchronous  -group [get_clocks hbmRefClkP] -group [get_clocks -include_generated_clocks {pciRefClk0}]
+set_clock_groups -asynchronous  -group [get_clocks hbmRefClkP] -group [get_clocks -include_generated_clocks {pciRefClk1}]
 set_clock_groups -asynchronous  -group [get_clocks hbmRefClkP] -group [get_clocks -include_generated_clocks {userClkP}]
 
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins U_Core/REAL_PCIE.U_AxiPciePhy/U_AxiPcie/inst/pcie4c_ip_i/inst/XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]] -group [get_clocks dnaClk]

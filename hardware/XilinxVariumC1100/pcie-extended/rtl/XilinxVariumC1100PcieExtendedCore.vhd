@@ -60,6 +60,11 @@ entity XilinxVariumC1100PcieExtendedCore is
       pipIbSlave      : in    AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       pipObMaster     : in    AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
       pipObSlave      : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      -- User General Purpose AXI4 Interfaces (dmaClk domain)
+      usrReadMaster   : in    AxiReadMasterType     := AXI_READ_MASTER_INIT_C;
+      usrReadSlave    : out   AxiReadSlaveType      := AXI_READ_SLAVE_FORCE_C;
+      usrWriteMaster  : in    AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      usrWriteSlave   : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C; 
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk          : in    sl                    := '0';
       appRst          : in    sl                    := '1';
@@ -272,6 +277,11 @@ begin
          axiWriteSlave    => dmaWriteSlave,
          pipObMaster      => intPipObMaster,
          pipObSlave       => intPipObSlave,
+         -- User General Purpose AXI4 Interfaces
+         usrReadMaster    => usrReadMaster,
+         usrReadSlave     => usrReadSlave,
+         usrWriteMaster   => usrWriteMaster,
+         usrWriteSlave    => usrWriteSlave,  
          -- AXI4-Lite Interfaces
          axilReadMasters  => dmaCtrlReadMasters,
          axilReadSlaves   => dmaCtrlReadSlaves,

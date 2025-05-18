@@ -20,7 +20,8 @@ VENDOR_ID = "1a4a"  # SLAC Vendor ID in hex
 DEVICE_ID = "2030"  # DDEV Device ID in hex
 DRIVER_NAME = None  # Optionally set to driver name (e.g., "xhci_hcd")
 
-def find_pci_device_by_id(vendor_id, device_id):
+def find_pci_devices_by_id(vendor_id, device_id):
+    devices = []
     try:
         result = subprocess.check_output(["lspci", "-Dn"]).decode("utf-8")
         for line in result.strip().split("\n"):
@@ -30,12 +31,12 @@ def find_pci_device_by_id(vendor_id, device_id):
                 ids = parts[2].split(":")
                 if len(ids) == 2 and ids[0].lower() == vendor_id.lower() and ids[1].lower() == device_id.lower():
                     print(f"Found device: {line}")
-                    return pci_addr
-        print(f"No PCIe device found with Vendor ID '{vendor_id}' and Device ID '{device_id}'.")
+                    devices.append(pci_addr)
+        if not devices:
+            print(f"No PCIe devices found with Vendor ID '{vendor_id}' and Device ID '{device_id}'.")
     except Exception as e:
         print(f"Error running lspci: {e}")
-    return None
-
+    return devices
 
 def write_sysfs(path, value):
     try:
@@ -77,23 +78,26 @@ def bind_device(pci_addr, driver):
         print(f"Driver {driver} not found. Skipping rebind.")
 
 def main():
-    print(f"Searching for PCIe device containing 'VENDOR_ID={VENDOR_ID} & DEVICE_ID={DEVICE_ID}'...")
-    pci_addr = find_pci_device_by_id(VENDOR_ID,DEVICE_ID)
+    print(f"Searching for PCIe devices with VENDOR_ID={VENDOR_ID} & DEVICE_ID={DEVICE_ID}...")
+    pci_addrs = find_pci_devices_by_id(VENDOR_ID, DEVICE_ID)
 
-    if not pci_addr:
+    if not pci_addrs:
         sys.exit(1)
 
-    unbind_device(pci_addr)
+    for pci_addr in pci_addrs:
+        unbind_device(pci_addr)
     time.sleep(1)
 
-    remove_device(pci_addr)
+    for pci_addr in pci_addrs:
+        remove_device(pci_addr)
     time.sleep(1)
 
     rescan_pci()
     time.sleep(2)
 
     if DRIVER_NAME:
-        bind_device(pci_addr, DRIVER_NAME)
+        for pci_addr in pci_addrs:
+            bind_device(pci_addr, DRIVER_NAME)
 
     print("Done.")
 

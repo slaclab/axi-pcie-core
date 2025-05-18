@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 #-----------------------------------------------------------------------------
-# Title      : BPI/SPIx4/SPIx8 Prom Update
+# Company    : SLAC National Accelerator Laboratory
+#-----------------------------------------------------------------------------
+#  Description: PCIe Device Reinitialization Script
 #-----------------------------------------------------------------------------
 # This file is part of the 'axi-pcie-core'. It is subject to
 # the license terms in the LICENSE.txt file found in the top-level directory

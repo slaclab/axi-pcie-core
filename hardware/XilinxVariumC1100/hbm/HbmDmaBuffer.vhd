@@ -29,6 +29,8 @@ entity HbmDmaBuffer is
       DMA_SIZE_G        : positive range 1 to 8 := 8;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType;
       RD_PEND_THRESH_G  : positive              := 4096;  -- In units of bytes
+      CLKFBOUT_MULT_G   : positive              := 12;  -- 1.2GHz = 12 x 100 MHz
+      CLKOUT0_DIVIDE_G  : positive              := 3;   -- 400MHz = 1.2GHz/3
       AXIL_BASE_ADDR_G  : slv(31 downto 0));
    port (
       -- Card Management Solution (CMS) Interface
@@ -518,8 +520,8 @@ begin
          NUM_CLOCKS_G      => 1,
          -- MMCM attributes
          CLKIN_PERIOD_G    => 10.0,     -- 100 MHz
-         CLKFBOUT_MULT_G   => 12,       -- 1.2GHz = 12 x 100 MHz
-         CLKOUT0_DIVIDE_G  => 3)        -- 400MHz = 1.2GHz/3
+         CLKFBOUT_MULT_G   => CLKFBOUT_MULT_G,
+         CLKOUT0_DIVIDE_G  => CLKOUT0_DIVIDE_G)
       port map(
          -- Clock Input
          clkIn     => userClk,

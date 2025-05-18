@@ -68,7 +68,7 @@ entity XilinxVariumC1100Core is
       usrReadMaster   : in    AxiReadMasterType     := AXI_READ_MASTER_INIT_C;
       usrReadSlave    : out   AxiReadSlaveType      := AXI_READ_SLAVE_FORCE_C;
       usrWriteMaster  : in    AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      usrWriteSlave   : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C; 
+      usrWriteSlave   : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk          : in    sl                    := '0';
       appRst          : in    sl                    := '1';
@@ -458,7 +458,7 @@ begin
          usrReadMaster    => usrReadMaster,
          usrReadSlave     => usrReadSlave,
          usrWriteMaster   => usrWriteMaster,
-         usrWriteSlave    => usrWriteSlave,  
+         usrWriteSlave    => usrWriteSlave,
          -- AXI4-Lite Interfaces
          axilReadMasters  => dmaCtrlReadMasters,
          axilReadSlaves   => dmaCtrlReadSlaves,

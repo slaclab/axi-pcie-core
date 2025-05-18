@@ -480,7 +480,8 @@ architecture mapping of HbmDmaBuffer is
 
    signal sAxisCtrl : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0) := (others => AXI_STREAM_CTRL_INIT_C);
 
-   signal axisRstL : slv(DMA_SIZE_G-1 downto 0);
+   signal axilReset : sl;
+   signal axisRstL  : slv(DMA_SIZE_G-1 downto 0);
 
    signal hbmClk        : sl;
    signal hbmRst        : sl;
@@ -497,6 +498,16 @@ architecture mapping of HbmDmaBuffer is
 
 begin
 
+   -- Help with timing
+   U_axilReset : entity surf.RstPipeline
+      generic map (
+         TPD_G     => TPD_G,
+         INV_RST_G => false)
+      port map (
+         clk    => axilClk,
+         rstIn  => axilRst,
+         rstOut => axilReset);
+
    U_hbmClk : entity surf.ClockManagerUltraScale
       generic map(
          TPD_G             => TPD_G,
@@ -512,7 +523,7 @@ begin
       port map(
          -- Clock Input
          clkIn     => userClk,
-         rstIn     => axilRst,
+         rstIn     => axilReset,
          -- Clock Outputs
          clkOut(0) => hbmClk,
          -- Reset Outputs
@@ -541,7 +552,7 @@ begin
          MASTERS_CONFIG_G   => AXIL_XBAR_CONFIG_C)
       port map (
          axiClk              => axilClk,
-         axiClkRst           => axilRst,
+         axiClkRst           => axilReset,
          sAxiWriteMasters(0) => axilWriteMaster,
          sAxiWriteSlaves(0)  => axilWriteSlave,
          sAxiReadMasters(0)  => axilReadMaster,
@@ -610,7 +621,7 @@ begin
             mAxisSlave      => mAxisSlaves(i),
             -- Optional: AXI-Lite Interface (axilClk domain)
             axilClk         => axilClk,
-            axilRst         => axilRst,
+            axilRst         => axilReset,
             axilReadMaster  => axilReadMasters(i),
             axilReadSlave   => axilReadSlaves(i),
             axilWriteMaster => axilWriteMasters(i),

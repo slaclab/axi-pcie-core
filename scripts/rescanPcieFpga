@@ -16,22 +16,26 @@ import subprocess
 import time
 import sys
 
-KEYWORD = "SLAC"  # Replace with a more specific string if needed
+VENDOR_ID = "1a4a"  # SLAC Vendor ID in hex
+DEVICE_ID = "2030"  # DDEV Device ID in hex
 DRIVER_NAME = None  # Optionally set to driver name (e.g., "xhci_hcd")
 
-def find_pci_device_by_keyword(keyword):
+def find_pci_device_by_id(vendor_id, device_id):
     try:
-        result = subprocess.check_output(["lspci", "-D"]).decode("utf-8")
-        #result = subprocess.check_output(["lspci", "-D"], text=True)
+        result = subprocess.check_output(["lspci", "-Dn"]).decode("utf-8")
         for line in result.strip().split("\n"):
-            if keyword.lower() in line.lower():
-                pci_addr = line.split()[0]
-                print(f"Found device: {line}")
-                return pci_addr
-        print(f"No PCIe device found with keyword '{keyword}'.")
+            parts = line.split()
+            if len(parts) >= 3:
+                pci_addr = parts[0]
+                ids = parts[2].split(":")
+                if len(ids) == 2 and ids[0].lower() == vendor_id.lower() and ids[1].lower() == device_id.lower():
+                    print(f"Found device: {line}")
+                    return pci_addr
+        print(f"No PCIe device found with Vendor ID '{vendor_id}' and Device ID '{device_id}'.")
     except Exception as e:
         print(f"Error running lspci: {e}")
     return None
+
 
 def write_sysfs(path, value):
     try:
@@ -73,17 +77,14 @@ def bind_device(pci_addr, driver):
         print(f"Driver {driver} not found. Skipping rebind.")
 
 def main():
-    print(f"Searching for PCIe device containing '{KEYWORD}'...")
-    pci_addr = find_pci_device_by_keyword(KEYWORD)
+    print(f"Searching for PCIe device containing 'VENDOR_ID={VENDOR_ID} & DEVICE_ID={DEVICE_ID}'...")
+    pci_addr = find_pci_device_by_id(VENDOR_ID,DEVICE_ID)
 
     if not pci_addr:
         sys.exit(1)
 
     unbind_device(pci_addr)
     time.sleep(1)
-
-    print("You should now power-cycle or externally reset the device before continuing...")
-    input("Press ENTER after resetting the device.")
 
     remove_device(pci_addr)
     time.sleep(1)
@@ -100,4 +101,4 @@ if __name__ == "__main__":
     if os.geteuid() != 0:
         print("This script must be run as root (sudo).")
         sys.exit(1)
-    main()  
+    main()

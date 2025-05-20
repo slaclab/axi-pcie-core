@@ -19,6 +19,9 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 
+library unisim;
+use unisim.vcomponents.all;
+
 entity CmsBlockDesignWrapper is
    generic (
       TPD_G : time := 1 ns);

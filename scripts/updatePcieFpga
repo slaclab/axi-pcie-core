@@ -226,22 +226,28 @@ if __name__ == "__main__":
 
     #################################################################
 
-    if args.rescan:
+    #################################################################
+    # running the rescanPcieFpga within updaterPcieFpga locks up the
+    # AxiMem interface to the PCIe card. Run the rescanPcieFpga
+    # script outside of updaterPcieFpga script
+    #################################################################
+    print('\nPlease reboot the computer')
+    # if args.rescan:
 
-        print("Running PCIe rescan (you may be prompted for your sudo password)...")
-        try:
-            subprocess.run(['sudo', sys.executable, os.path.join(baseDir, 'rescanPcieFpga')], check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Rescan failed with error: {e}")
+        # print("Running PCIe rescan (you may be prompted for your sudo password)...")
+        # try:
+            # subprocess.run(['sudo', sys.executable, os.path.join(baseDir, 'rescanPcieFpga')], check=True)
+        # except subprocess.CalledProcessError as e:
+            # print(f"Rescan failed with error: {e}")
 
-        with Root(dev=args.dev) as root:
-            print('#########################################')
-            print('New Firmware Loaded on the PCIe card:')
-            print('#########################################')
-            root.AxiPcieCore.AxiVersion.printStatus()
-            print('#########################################')
+        # with Root(dev=args.dev) as root:
+            # print('#########################################')
+            # print('New Firmware Loaded on the PCIe card:')
+            # print('#########################################')
+            # root.AxiPcieCore.AxiVersion.printStatus()
+            # print('#########################################')
 
-    else:
-        print('\nPlease reboot the computer')
+    # else:
+        # print('\nPlease reboot the computer')
 
     #################################################################

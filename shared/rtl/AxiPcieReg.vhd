@@ -243,8 +243,16 @@ begin
       -- FPGA Fabric Type
       if (XIL_DEVICE_G = "ULTRASCALE") then
          userValues(3) <= x"00000000";
+
       elsif (XIL_DEVICE_G = "7SERIES") then
          userValues(3) <= x"00000001";
+
+      elsif (XIL_DEVICE_G = "ULTRASCALE_PLUS") then
+         userValues(3) <= x"00000002";
+
+      elsif (XIL_DEVICE_G = "VERSAL") then
+         userValues(3) <= x"00000003";
+
       else
          userValues(3) <= x"FFFFFFFF";
       end if;

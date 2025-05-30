@@ -43,5 +43,6 @@ package AxiPcieSharedPkg is
    constant HW_TYPE_ABACO_PC821_KU085_C      : slv(31 downto 0) := x"00_00_00_11";
    constant HW_TYPE_ABACO_PC821_KU115_C      : slv(31 downto 0) := x"00_00_00_12";
    constant HW_TYPE_BITTWARE_XUP_VV8_VU9P_C  : slv(31 downto 0) := x"00_00_00_13";
+   constant HW_TYPE_XILINX_V80_C             : slv(31 downto 0) := x"00_00_00_14";
 
 end package AxiPcieSharedPkg;

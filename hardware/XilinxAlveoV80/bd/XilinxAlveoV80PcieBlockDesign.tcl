@@ -95,7 +95,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES: 
+   # USE CASES:
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -129,7 +129,7 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\ 
+   set list_check_ips "\
 xilinx.com:ip:versal_cips:3.4\
 xilinx.com:ip:axi_noc:1.1\
 "
@@ -244,7 +244,7 @@ proc create_root_design { parentCell } {
   set mAxi [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 mAxi ]
   set_property -dict [ list \
    CONFIG.ADDR_WIDTH {64} \
-   CONFIG.DATA_WIDTH {32} \
+   CONFIG.DATA_WIDTH {512} \
    CONFIG.FREQ_HZ {250000000} \
    CONFIG.NUM_READ_OUTSTANDING {0} \
    CONFIG.NUM_WRITE_OUTSTANDING {0} \
@@ -283,14 +283,14 @@ proc create_root_design { parentCell } {
       CPM_PCIE0_MAX_LINK_SPEED {32.0_GT/s} \
       CPM_PCIE0_MODES {None} \
       CPM_PCIE0_MODE_SELECTION {Advanced} \
-      CPM_PCIE0_MSI_X_OPTIONS {None} \
+      CPM_PCIE0_MSI_X_OPTIONS {MSI-X_External} \
       CPM_PCIE0_NUM_USR_IRQ {1} \
       CPM_PCIE0_PCIE_REGION_0_EN {0} \
       CPM_PCIE0_PCIE_REGION_2_EN {1} \
       CPM_PCIE0_PCIE_REGION_2_SCALE {Gigabytes} \
       CPM_PCIE0_PCIE_REGION_2_SIZE {128} \
-      CPM_PCIE0_PF0_BAR0_BRIDGE_SCALE {Megabytes} \
-      CPM_PCIE0_PF0_BAR0_BRIDGE_SIZE {16} \
+      CPM_PCIE0_PF0_BAR0_BRIDGE_SCALE {Kilobytes} \
+      CPM_PCIE0_PF0_BAR0_BRIDGE_SIZE {4} \
       CPM_PCIE0_PF0_BAR0_BRIDGE_STEERING {CPM_PCIE_NOC_0} \
       CPM_PCIE0_PF0_BAR0_SCALE {Megabytes} \
       CPM_PCIE0_PF0_BAR0_SIZE {16} \

@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xC6E96C1B373D3341",
+      "boundary_crc": "0xEAEE870B3AD2D096",
       "device": "xcv80-lsva4737-2MHP-e-S",
       "gen_directory": "../../../../XilinxAlveoV80DmaLoopback_project.gen/sources_1/bd/XilinxAlveoV80PcieBlockDesign",
       "name": "XilinxAlveoV80PcieBlockDesign",
@@ -616,7 +616,7 @@
             "value_src": "default"
           },
           "DATA_WIDTH": {
-            "value": "32"
+            "value": "512"
           },
           "FREQ_HZ": {
             "value": "250000000"
@@ -798,13 +798,13 @@
           "WDATA": {
             "physical_name": "mAxi_wdata",
             "direction": "O",
-            "left": "31",
+            "left": "511",
             "right": "0"
           },
           "WSTRB": {
             "physical_name": "mAxi_wstrb",
             "direction": "O",
-            "left": "3",
+            "left": "63",
             "right": "0"
           },
           "WLAST": {
@@ -936,7 +936,7 @@
           "RDATA": {
             "physical_name": "mAxi_rdata",
             "direction": "I",
-            "left": "31",
+            "left": "511",
             "right": "0"
           },
           "RRESP": {
@@ -1096,9 +1096,9 @@
           "CPM_CONFIG": {
             "value": [
               "CPM_AXI_SLV_BRIDGE0_BASE_ADDRR_H 0x00000000 CPM_AXI_SLV_BRIDGE1_BASE_ADDRR_H 0x00000000 CPM_PCIE0_ACS_CAP_ON 0 CPM_PCIE0_ARI_CAP_ENABLED 0 CPM_PCIE0_BRIDGE_AXI_SLAVE_IF 1 CPM_PCIE0_CFG_EXT_IF 0",
-              "CPM_PCIE0_CFG_VEND_ID 1A4A CPM_PCIE0_FUNCTIONAL_MODE None CPM_PCIE0_MAX_LINK_SPEED 32.0_GT/s CPM_PCIE0_MODES None CPM_PCIE0_MODE_SELECTION Advanced CPM_PCIE0_MSI_X_OPTIONS None CPM_PCIE0_NUM_USR_IRQ 1",
-              "CPM_PCIE0_PCIE_REGION_0_EN 0 CPM_PCIE0_PCIE_REGION_2_EN 1 CPM_PCIE0_PCIE_REGION_2_SCALE Gigabytes CPM_PCIE0_PCIE_REGION_2_SIZE 128 CPM_PCIE0_PF0_BAR0_BRIDGE_SCALE Megabytes",
-              "CPM_PCIE0_PF0_BAR0_BRIDGE_SIZE 16 CPM_PCIE0_PF0_BAR0_BRIDGE_STEERING CPM_PCIE_NOC_0 CPM_PCIE0_PF0_BAR0_SCALE Megabytes CPM_PCIE0_PF0_BAR0_SIZE 16 CPM_PCIE0_PF0_BASE_CLASS_VALUE 11",
+              "CPM_PCIE0_CFG_VEND_ID 1A4A CPM_PCIE0_FUNCTIONAL_MODE None CPM_PCIE0_MAX_LINK_SPEED 32.0_GT/s CPM_PCIE0_MODES None CPM_PCIE0_MODE_SELECTION Advanced CPM_PCIE0_MSI_X_OPTIONS MSI-X_External",
+              "CPM_PCIE0_NUM_USR_IRQ 1 CPM_PCIE0_PCIE_REGION_0_EN 0 CPM_PCIE0_PCIE_REGION_2_EN 1 CPM_PCIE0_PCIE_REGION_2_SCALE Gigabytes CPM_PCIE0_PCIE_REGION_2_SIZE 128 CPM_PCIE0_PF0_BAR0_BRIDGE_SCALE Kilobytes",
+              "CPM_PCIE0_PF0_BAR0_BRIDGE_SIZE 4 CPM_PCIE0_PF0_BAR0_BRIDGE_STEERING CPM_PCIE_NOC_0 CPM_PCIE0_PF0_BAR0_SCALE Megabytes CPM_PCIE0_PF0_BAR0_SIZE 16 CPM_PCIE0_PF0_BASE_CLASS_VALUE 11",
               "CPM_PCIE0_PF0_CFG_DEV_ID 2030 CPM_PCIE0_PF0_CFG_SUBSYS_ID 2030 CPM_PCIE0_PF0_CFG_SUBSYS_VEND_ID 1A4A CPM_PCIE0_PF0_INTERRUPT_PIN NONE CPM_PCIE0_PF0_MSI_ENABLED 0 CPM_PCIE0_PF0_PM_CAP_PMESUPPORT_D0 0",
               "CPM_PCIE0_PF0_PM_CAP_PMESUPPORT_D1 0 CPM_PCIE0_PF0_PM_CAP_PMESUPPORT_D3HOT 0 CPM_PCIE0_PF0_PM_CAP_SUPP_D1_STATE 0 CPM_PCIE1_ACS_CAP_ON 0 CPM_PCIE1_ARI_CAP_ENABLED 0 CPM_PCIE1_BRIDGE_AXI_SLAVE_IF 1",
               "CPM_PCIE1_CFG_EXT_IF 0 CPM_PCIE1_CFG_VEND_ID 1A4A CPM_PCIE1_COPY_PF0_QDMA_ENABLED 0 CPM_PCIE1_EXT_PCIE_CFG_SPACE_ENABLED None CPM_PCIE1_FUNCTIONAL_MODE AXI_Bridge CPM_PCIE1_MAX_LINK_SPEED 32.0_GT/s",
@@ -1326,20 +1326,6 @@
           "memory_maps": {
             "NOC_CPM_PCIE_0": {
               "address_blocks": {
-                "pspmc_0_psv_noc_pcie_1": {
-                  "base_address": "0x0600000000",
-                  "range": "8G",
-                  "width": "35",
-                  "usage": "memory",
-                  "bank_blocks": {
-                    "SEG_pspmc_0_psv_noc_pcie_1;/pspmc_0/NOCPSPCIE_REGION1/psv_noc_pcie_1;xilinx.com:ip:pspmc:1.4;/pspmc_0;NOC_CPM_PCIE_0;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
-                      "base_address": "0x0600000000",
-                      "range": "8G",
-                      "width": "33",
-                      "usage": "memory"
-                    }
-                  }
-                },
                 "pspmc_0_psv_noc_pcie_0": {
                   "base_address": "0x00E0000000",
                   "range": "256M",
@@ -1350,6 +1336,20 @@
                       "base_address": "0x00E0000000",
                       "range": "256M",
                       "width": "28",
+                      "usage": "memory"
+                    }
+                  }
+                },
+                "pspmc_0_psv_noc_pcie_1": {
+                  "base_address": "0x0600000000",
+                  "range": "8G",
+                  "width": "35",
+                  "usage": "memory",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_noc_pcie_1;/pspmc_0/NOCPSPCIE_REGION1/psv_noc_pcie_1;xilinx.com:ip:pspmc:1.4;/pspmc_0;NOC_CPM_PCIE_0;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0x0600000000",
+                      "range": "8G",
+                      "width": "33",
                       "usage": "memory"
                     }
                   }

@@ -29,6 +29,8 @@ entity HbmDmaBuffer is
       DMA_SIZE_G        : positive range 1 to 8 := 8;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType;
       RD_PEND_THRESH_G  : positive              := 4096;  -- In units of bytes
+      CLKFBOUT_MULT_G   : positive              := 12;  -- 1.2GHz = 12 x 100 MHz
+      CLKOUT0_DIVIDE_G  : positive              := 3;   -- 400MHz = 1.2GHz/3
       AXIL_BASE_ADDR_G  : slv(31 downto 0));
    port (
       -- Card Management Solution (CMS) Interface
@@ -480,7 +482,8 @@ architecture mapping of HbmDmaBuffer is
 
    signal sAxisCtrl : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0) := (others => AXI_STREAM_CTRL_INIT_C);
 
-   signal axisRstL : slv(DMA_SIZE_G-1 downto 0);
+   signal axilReset : sl;
+   signal axisRstL  : slv(DMA_SIZE_G-1 downto 0);
 
    signal hbmClk        : sl;
    signal hbmRst        : sl;
@@ -497,6 +500,16 @@ architecture mapping of HbmDmaBuffer is
 
 begin
 
+   -- Help with timing
+   U_axilReset : entity surf.RstPipeline
+      generic map (
+         TPD_G     => TPD_G,
+         INV_RST_G => false)
+      port map (
+         clk    => axilClk,
+         rstIn  => axilRst,
+         rstOut => axilReset);
+
    U_hbmClk : entity surf.ClockManagerUltraScale
       generic map(
          TPD_G             => TPD_G,
@@ -507,12 +520,12 @@ begin
          NUM_CLOCKS_G      => 1,
          -- MMCM attributes
          CLKIN_PERIOD_G    => 10.0,     -- 100 MHz
-         CLKFBOUT_MULT_G   => 12,       -- 1.2GHz = 12 x 100 MHz
-         CLKOUT0_DIVIDE_G  => 3)        -- 400MHz = 1.2GHz/3
+         CLKFBOUT_MULT_G   => CLKFBOUT_MULT_G,
+         CLKOUT0_DIVIDE_G  => CLKOUT0_DIVIDE_G)
       port map(
          -- Clock Input
          clkIn     => userClk,
-         rstIn     => axilRst,
+         rstIn     => axilReset,
          -- Clock Outputs
          clkOut(0) => hbmClk,
          -- Reset Outputs
@@ -541,7 +554,7 @@ begin
          MASTERS_CONFIG_G   => AXIL_XBAR_CONFIG_C)
       port map (
          axiClk              => axilClk,
-         axiClkRst           => axilRst,
+         axiClkRst           => axilReset,
          sAxiWriteMasters(0) => axilWriteMaster,
          sAxiWriteSlaves(0)  => axilWriteSlave,
          sAxiReadMasters(0)  => axilReadMaster,
@@ -610,7 +623,7 @@ begin
             mAxisSlave      => mAxisSlaves(i),
             -- Optional: AXI-Lite Interface (axilClk domain)
             axilClk         => axilClk,
-            axilRst         => axilRst,
+            axilRst         => axilReset,
             axilReadMaster  => axilReadMasters(i),
             axilReadSlave   => axilReadSlaves(i),
             axilWriteMaster => axilWriteMasters(i),

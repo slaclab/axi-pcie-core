@@ -98,8 +98,12 @@ set_property PACKAGE_PIN G61 [get_ports { mcio1bTxP[1] }] ;# Bank 214 " GTYP_TXP
 set_property PACKAGE_PIN J60 [get_ports { mcio1bTxP[2] }] ;# Bank 214 " GTYP_TXP2_214
 set_property PACKAGE_PIN G59 [get_ports { mcio1bTxP[3] }] ;# Bank 214 " GTYP_TXP3_214
 
-set_property PACKAGE_PIN AB53 [get_ports { mcio2RefClkP }] ;# Bank 218 " GTYP_REFCLKP0_218 "mcio2_100mhz_clk_p"
-create_clock -period 10.000 -name mcio2RefClkP [get_ports {mcio2RefClkP}]
+# set_property PACKAGE_PIN AB53 [get_ports { mcio2RefClkP }] ;# Bank 218 " GTYP_REFCLKP0_218 "mcio2_100mhz_clk_p"
+# create_clock -period 10.000 -name mcio2RefClkP [get_ports {mcio2RefClkP}]
+
+# Using this GT clock for a precision clock reference for the application space
+set_property PACKAGE_PIN AB53 [get_ports { userClkP }] ;# Bank 218 " GTYP_REFCLKP0_218 "mcio2_100mhz_clk_p"
+create_clock -period 10.000 -name userClkP [get_ports {userClkP}]
 
 set_property PACKAGE_PIN D46 [get_ports { mcio2RxP[0] }] ;# Bank 218 " GTYP_RXP0_218
 set_property PACKAGE_PIN B45 [get_ports { mcio2RxP[1] }] ;# Bank 218 " GTYP_RXP1_218

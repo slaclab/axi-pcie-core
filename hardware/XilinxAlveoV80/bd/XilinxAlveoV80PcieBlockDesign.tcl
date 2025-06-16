@@ -20,7 +20,7 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2024.2
+set scripts_vivado_version 2025.1
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -572,7 +572,6 @@ proc create_root_design { parentCell } {
     CONFIG.NUM_NMI {0} \
     CONFIG.NUM_NSI {0} \
     CONFIG.NUM_SI {2} \
-    CONFIG.SI_SIDEBAND_PINS {} \
   ] $axi_noc_mc_ddr4_0
 
 
@@ -599,11 +598,9 @@ proc create_root_design { parentCell } {
   # Create instance: axi_noc_dma_0, and set properties
   set axi_noc_dma_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_noc:1.1 axi_noc_dma_0 ]
   set_property -dict [list \
-    CONFIG.MI_SIDEBAND_PINS {} \
     CONFIG.NUM_CLKS {3} \
     CONFIG.NUM_MI {2} \
     CONFIG.NUM_SI {2} \
-    CONFIG.SI_SIDEBAND_PINS {} \
   ] $axi_noc_dma_0
 
 
@@ -620,7 +617,7 @@ proc create_root_design { parentCell } {
    CONFIG.R_TRAFFIC_CLASS {BEST_EFFORT} \
    CONFIG.W_TRAFFIC_CLASS {BEST_EFFORT} \
    CONFIG.CONNECTIONS {M01_AXI {read_bw {1250} write_bw {1250} read_avg_burst {4} write_avg_burst {4}}} \
-   CONFIG.DEST_IDS {M01_AXI:0x40} \
+   CONFIG.DEST_IDS {M01_AXI:0x80} \
    CONFIG.NOC_PARAMS {} \
    CONFIG.CATEGORY {ps_pcie} \
  ] [get_bd_intf_pins /axi_noc_dma_0/S00_AXI]
@@ -629,7 +626,7 @@ proc create_root_design { parentCell } {
    CONFIG.R_TRAFFIC_CLASS {BEST_EFFORT} \
    CONFIG.W_TRAFFIC_CLASS {BEST_EFFORT} \
    CONFIG.CONNECTIONS {M00_AXI {read_bw {12500} write_bw {12500} read_avg_burst {4} write_avg_burst {4}}} \
-   CONFIG.DEST_IDS {M00_AXI:0x80} \
+   CONFIG.DEST_IDS {M00_AXI:0xc0} \
    CONFIG.NOC_PARAMS {} \
    CONFIG.CATEGORY {pl} \
  ] [get_bd_intf_pins /axi_noc_dma_0/S01_AXI]

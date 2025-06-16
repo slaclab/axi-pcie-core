@@ -47,6 +47,7 @@ entity XilinxAlveoV80Core is
       ------------------------
       --  Top Level Interfaces
       ------------------------
+      userClk         : out   sl;
       -- DMA Interfaces  (dmaClk domain)
       dmaClk          : out   sl;
       dmaRst          : out   sl;
@@ -75,6 +76,9 @@ entity XilinxAlveoV80Core is
       -------------------
       --  Top Level Ports
       -------------------
+      -- System Ports
+      userClkP        : in    sl;
+      userClkN        : in    sl;
       -- PS DDR Ports
       psDdrDq         : inout slv(71 downto 0);
       psDdrDqsT       : inout slv(8 downto 0);
@@ -149,6 +153,19 @@ begin
 
    systemReset  <= sysReset or cardReset;
    systemResetL <= not(systemReset);
+
+   -- https://docs.amd.com/r/en-US/am002-versal-gty-transceivers/Input-Mode
+   U_IBUFDS : IBUFDS_GTE5
+      generic map (
+         REFCLK_EN_TX_PATH  => '0',
+         REFCLK_HROW_CK_SEL => 0,       -- 0: ODIV2 = O
+         REFCLK_ICNTL_RX    => 0)
+      port map (
+         I     => userClkP,
+         IB    => userClkN,
+         CEB   => '0',
+         ODIV2 => userClk,
+         O     => open);
 
    ---------------
    -- AXI PCIe PHY

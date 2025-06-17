@@ -32,6 +32,7 @@ entity XilinxAlveoV80PciePhyWrapper is
    generic (
       TPD_G : time := 1 ns);
    port (
+      userClk        : in    sl;
       -- AXI4 Interfaces
       axiClk         : out   sl;
       axiRst         : out   sl;
@@ -190,12 +191,10 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          );
    end component;
 
-   signal plRefClk : sl;
-   signal plRstN   : sl;
-
-   signal clk  : sl;
-   signal rst  : sl;
-   signal rstL : sl;
+   signal clk    : sl;
+   signal rst    : sl;
+   signal rstL   : sl;
+   signal plRstN : sl;
 
    signal sAxilAwaddr : slv(31 downto 0);
    signal sAxilAraddr : slv(31 downto 0);
@@ -227,33 +226,6 @@ begin
          usrIrqAck => usrIrqAck,
          usrIrqReq => usrIrqReq);
 
-   -- U_Pll : entity surf.ClockManagerVersal
-   -- generic map(
-   -- TPD_G             => TPD_G,
-   -- TYPE_G            => "PLL",
-   -- INPUT_BUFG_G      => false,
-   -- FB_BUFG_G         => true,
-   -- RST_IN_POLARITY_G => '0',      -- Active LOW reset
-   -- NUM_CLOCKS_G      => 2,
-   -- -- MMCM attributes
-   -- CLKIN_PERIOD_G    => 4.0,      -- 250 MHz
-   -- CLKFBOUT_MULT_G   => 10,        -- 2.5 GHz = 10 x 250 MHz
-   -- CLKOUT0_DIVIDE_G  => 10,        -- 250 MHz = 2.5 GHz / 10
-   -- CLKOUT1_DIVIDE_G  => 16)       -- 156.25 MHz = 2.5 GHz / 16
-   -- port map(
-   -- -- Clock Input
-   -- clkIn     => plRefClk,
-   -- rstIn     => plRstN,
-   -- -- Clock Outputs
-   -- clkOut(0) => clk,
-   -- clkOut(1) => auxClk,
-   -- -- Reset Outputs
-   -- rstOut(0) => rst,
-   -- rstOut(1) => auxRst);
-
-   -- rstL <= not(rst);
-
-   clk <= plRefClk;
    U_RstSync : entity surf.RstSync
       generic map(
          TPD_G          => TPD_G,
@@ -272,7 +244,7 @@ begin
          -- Clocks and Resets
          dmaClk             => clk,
          dmaRstN            => rstL,
-         plRefClk           => plRefClk,
+         plRefClk           => clk,
          plRstN             => plRstN,
          -- Interrupt Interface
          dmaIrq             => usrIrqReq,

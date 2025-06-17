@@ -139,6 +139,9 @@ architecture mapping of XilinxAlveoV80Core is
    signal cardReset    : sl;
    signal dmaIrq       : sl;
 
+   signal userGtClk : sl;
+   signal userClock : sl;
+
 begin
 
    dmaClk <= sysClock;
@@ -164,8 +167,23 @@ begin
          I     => userClkP,
          IB    => userClkN,
          CEB   => '0',
-         ODIV2 => userClk,
+         ODIV2 => userGtClk,
          O     => open);
+
+   -- https://docs.amd.com/r/en-US/ug1353-versal-architecture-ai-libraries/BUFG_GT
+   U_BUFG_GT : BUFG_GT
+      generic map (
+         SIM_DEVICE => "VERSAL_HBM")
+      port map (
+         I       => userGtClk,
+         CE      => '1',
+         CEMASK  => '1',
+         CLR     => '0',
+         CLRMASK => '1',
+         DIV     => "000",
+         O       => userClock);
+
+   userClk <= userClock;
 
    ---------------
    -- AXI PCIe PHY
@@ -176,6 +194,7 @@ begin
          generic map (
             TPD_G => TPD_G)
          port map (
+            userClk        => userClock,
             -- AXI4 Interfaces
             axiClk         => sysClock,
             axiRst         => sysReset,

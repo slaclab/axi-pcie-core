@@ -141,7 +141,7 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          sAxi_rlast         : out   std_logic_vector (0 to 0);
          sAxi_rvalid        : out   std_logic_vector (0 to 0);
          sAxi_rready        : in    std_logic_vector (0 to 0);
-         mAxi_awid          : out   std_logic_vector (1 downto 0);
+         mAxi_awid          : out   std_logic_vector (15 downto 0);
          mAxi_awaddr        : out   std_logic_vector (63 downto 0);
          mAxi_awlen         : out   std_logic_vector (7 downto 0);
          mAxi_awsize        : out   std_logic_vector (2 downto 0);
@@ -151,7 +151,7 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          mAxi_awprot        : out   std_logic_vector (2 downto 0);
          mAxi_awregion      : out   std_logic_vector (3 downto 0);
          mAxi_awqos         : out   std_logic_vector (3 downto 0);
-         mAxi_awuser        : out   std_logic_vector (17 downto 0);
+         mAxi_awuser        : out   std_logic_vector (31 downto 0);
          mAxi_awvalid       : out   std_logic_vector (0 to 0);
          mAxi_awready       : in    std_logic_vector (0 to 0);
          mAxi_wdata         : out   std_logic_vector (511 downto 0);
@@ -159,11 +159,11 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          mAxi_wlast         : out   std_logic_vector (0 to 0);
          mAxi_wvalid        : out   std_logic_vector (0 to 0);
          mAxi_wready        : in    std_logic_vector (0 to 0);
-         mAxi_bid           : in    std_logic_vector (1 downto 0);
+         mAxi_bid           : in    std_logic_vector (15 downto 0);
          mAxi_bresp         : in    std_logic_vector (1 downto 0);
          mAxi_bvalid        : in    std_logic_vector (0 to 0);
          mAxi_bready        : out   std_logic_vector (0 to 0);
-         mAxi_arid          : out   std_logic_vector (1 downto 0);
+         mAxi_arid          : out   std_logic_vector (15 downto 0);
          mAxi_araddr        : out   std_logic_vector (63 downto 0);
          mAxi_arlen         : out   std_logic_vector (7 downto 0);
          mAxi_arsize        : out   std_logic_vector (2 downto 0);
@@ -173,15 +173,19 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          mAxi_arprot        : out   std_logic_vector (2 downto 0);
          mAxi_arregion      : out   std_logic_vector (3 downto 0);
          mAxi_arqos         : out   std_logic_vector (3 downto 0);
-         mAxi_aruser        : out   std_logic_vector (17 downto 0);
+         mAxi_aruser        : out   std_logic_vector (31 downto 0);
          mAxi_arvalid       : out   std_logic_vector (0 to 0);
          mAxi_arready       : in    std_logic_vector (0 to 0);
-         mAxi_rid           : in    std_logic_vector (1 downto 0);
+         mAxi_rid           : in    std_logic_vector (15 downto 0);
          mAxi_rdata         : in    std_logic_vector (511 downto 0);
          mAxi_rresp         : in    std_logic_vector (1 downto 0);
          mAxi_rlast         : in    std_logic_vector (0 to 0);
          mAxi_rvalid        : in    std_logic_vector (0 to 0);
          mAxi_rready        : out   std_logic_vector (0 to 0);
+         mAxi_buser         : in    std_logic;
+         mAxi_ruser         : in    std_logic_vector (127 downto 0);
+         mAxi_wid           : out   std_logic_vector (15 downto 0);
+         mAxi_wuser         : out   std_logic_vector (127 downto 0);
          dmaClk             : in    std_logic;
          plRstN             : out   std_logic;
          plRefClk           : out   std_logic;
@@ -226,15 +230,16 @@ begin
          usrIrqAck => usrIrqAck,
          usrIrqReq => usrIrqReq);
 
-   U_RstSync : entity surf.RstSync
+   U_PwrUpRst : entity surf.PwrUpRst
       generic map(
          TPD_G          => TPD_G,
-         IN_POLARITY_G  => '0',         -- Active LOW reset
-         OUT_POLARITY_G => '0')         -- Active LOW reset
+         IN_POLARITY_G  => '0',                          -- Active LOW reset
+         OUT_POLARITY_G => '0',                          -- Active LOW reset
+         DURATION_G     => getTimeRatio(250.0E+6, 1.0))  -- 1 s reset
       port map(
-         clk      => clk,
-         asyncRst => plRstN,
-         syncRst  => rstL);
+         clk    => clk,
+         arst   => plRstN,
+         rstOut => rstL);
 
    -------------------
    -- AXI PCIe IP Core
@@ -271,11 +276,12 @@ begin
          mAxi_wlast(0)      => regWriteMaster.wlast,
          mAxi_wvalid(0)     => regWriteMaster.wvalid,
          mAxi_wready(0)     => regWriteSlave.wready,
-         mAxi_bid           => regWriteSlave.bid(1 downto 0),
+         mAxi_bid           => regWriteSlave.bid(15 downto 0),
          -- mAxi_bresp         => regWriteSlave.bresp(1 downto 0),
          mAxi_bresp         => AXI_RESP_OK_C,  -- Always respond OK
          mAxi_bvalid(0)     => regWriteSlave.bvalid,
-         mAxi_bready(0)     => regWriteMaster.bready,
+         maxi_buser         => '0',
+         maxi_ruser         => (others => '0'),
          mAxi_araddr        => regReadMaster.araddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
          mAxi_arlen         => regReadMaster.arlen(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0),
          mAxi_arsize        => regReadMaster.arsize(2 downto 0),
@@ -285,21 +291,19 @@ begin
          mAxi_arready(0)    => regReadSlave.arready,
          mAxi_arlock(0)     => regReadMaster.arlock(0),
          mAxi_arcache       => regReadMaster.arcache,
-         mAxi_rid           => regReadSlave.rid(1 downto 0),
+         mAxi_rid           => regReadSlave.rid(15 downto 0),
          mAxi_rdata         => regReadSlave.rdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
          -- mAxi_rresp         => regReadSlave.rresp(1 downto 0),
          mAxi_rresp         => AXI_RESP_OK_C,  -- Always respond OK
          mAxi_rlast(0)      => regReadSlave.rlast,
          mAxi_rvalid(0)     => regReadSlave.rvalid,
          mAxi_rready(0)     => regReadMaster.rready,
-         mAxi_arid          => regReadMaster.arid(1 downto 0),
+         mAxi_arid          => regReadMaster.arid(15 downto 0),
          mAxi_arqos         => regReadMaster.arqos(3 downto 0),
          mAxi_arregion      => regReadMaster.arregion(3 downto 0),
-         mAxi_aruser        => open,
-         mAxi_awid          => regWriteMaster.awid(1 downto 0),
+         mAxi_awid          => regWriteMaster.awid(15 downto 0),
          mAxi_awqos         => regWriteMaster.awqos(3 downto 0),
          mAxi_awregion      => regWriteMaster.awregion(3 downto 0),
-         mAxi_awuser        => open,
          -- PS DDR Interface
          psDDR_dq           => psDdrDq,
          psDDR_dqs_t        => psDdrDqsT,

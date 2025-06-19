@@ -336,7 +336,7 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PF0_BAR0_64BIT {0} \
       CPM_PCIE1_PF0_BAR0_BRIDGE_SCALE {Megabytes} \
       CPM_PCIE1_PF0_BAR0_BRIDGE_SIZE {16} \
-      CPM_PCIE1_PF0_BAR0_BRIDGE_STEERING {CPM_PCIE_NOC_1} \
+      CPM_PCIE1_PF0_BAR0_BRIDGE_STEERING {CPM_PL_AXI1} \
       CPM_PCIE1_PF0_BAR0_PREFETCHABLE {0} \
       CPM_PCIE1_PF0_BAR0_QDMA_64BIT {0} \
       CPM_PCIE1_PF0_BAR0_QDMA_ENABLED {0} \
@@ -394,9 +394,9 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PORT_TYPE {PCI_Express_Endpoint_device} \
       CPM_PCIE1_TL_PF_ENABLE_REG {1} \
       CPM_PL_AXI0_EN {0} \
-      CPM_PL_AXI1_EN {0} \
+      CPM_PL_AXI1_EN {1} \
       PS_USE_PS_NOC_PCI_0 {0} \
-      PS_USE_PS_NOC_PCI_1 {1} \
+      PS_USE_PS_NOC_PCI_1 {0} \
     } \
     CONFIG.PS_PL_CONNECTIVITY_MODE {Custom} \
     CONFIG.PS_PMC_CONFIG { \
@@ -598,9 +598,10 @@ proc create_root_design { parentCell } {
   # Create instance: axi_noc_dma_0, and set properties
   set axi_noc_dma_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_noc:1.1 axi_noc_dma_0 ]
   set_property -dict [list \
-    CONFIG.NUM_CLKS {3} \
-    CONFIG.NUM_MI {2} \
-    CONFIG.NUM_SI {2} \
+    CONFIG.MI_SIDEBAND_PINS {} \
+    CONFIG.NUM_CLKS {2} \
+    CONFIG.NUM_MI {1} \
+    CONFIG.NUM_SI {1} \
   ] $axi_noc_dma_0
 
 
@@ -609,27 +610,13 @@ proc create_root_design { parentCell } {
  ] [get_bd_intf_pins /axi_noc_dma_0/M00_AXI]
 
   set_property -dict [ list \
-   CONFIG.APERTURES {{0x202_0000_0000 1G}} \
-   CONFIG.CATEGORY {pl} \
- ] [get_bd_intf_pins /axi_noc_dma_0/M01_AXI]
-
-  set_property -dict [ list \
    CONFIG.R_TRAFFIC_CLASS {BEST_EFFORT} \
    CONFIG.W_TRAFFIC_CLASS {BEST_EFFORT} \
-   CONFIG.CONNECTIONS {M01_AXI {read_bw {1250} write_bw {1250} read_avg_burst {4} write_avg_burst {4}}} \
-   CONFIG.DEST_IDS {M01_AXI:0x80} \
+   CONFIG.CONNECTIONS {M00_AXI {read_bw {125} write_bw {12500} read_avg_burst {4} write_avg_burst {4}}} \
+   CONFIG.DEST_IDS {M00_AXI:0x80} \
    CONFIG.NOC_PARAMS {} \
-   CONFIG.CATEGORY {ps_pcie} \
+   CONFIG.CATEGORY {pl} \
  ] [get_bd_intf_pins /axi_noc_dma_0/S00_AXI]
-
-  set_property -dict [ list \
-   CONFIG.R_TRAFFIC_CLASS {BEST_EFFORT} \
-   CONFIG.W_TRAFFIC_CLASS {BEST_EFFORT} \
-   CONFIG.CONNECTIONS {M00_AXI {read_bw {12500} write_bw {12500} read_avg_burst {4} write_avg_burst {4}}} \
-   CONFIG.DEST_IDS {M00_AXI:0xc0} \
-   CONFIG.NOC_PARAMS {} \
-   CONFIG.CATEGORY {pl} \
- ] [get_bd_intf_pins /axi_noc_dma_0/S01_AXI]
 
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {S00_AXI} \
@@ -639,30 +626,24 @@ proc create_root_design { parentCell } {
    CONFIG.ASSOCIATED_BUSIF {M00_AXI} \
  ] [get_bd_pins /axi_noc_dma_0/aclk1]
 
-  set_property -dict [ list \
-   CONFIG.ASSOCIATED_BUSIF {M01_AXI:S01_AXI} \
- ] [get_bd_pins /axi_noc_dma_0/aclk2]
-
   # Create interface connections
   connect_bd_intf_net -intf_net axi_noc_0_M00_AXI [get_bd_intf_pins cips/NOC_CPM_PCIE_0] [get_bd_intf_pins axi_noc_dma_0/M00_AXI]
-  connect_bd_intf_net -intf_net axi_noc_dma_0_M01_AXI [get_bd_intf_ports mAxi] [get_bd_intf_pins axi_noc_dma_0/M01_AXI]
   connect_bd_intf_net -intf_net axi_noc_mc_ddr4_0_CH0_DDR4_0 [get_bd_intf_pins axi_noc_mc_ddr4_0/CH0_DDR4_0] [get_bd_intf_ports psDDR]
-  connect_bd_intf_net -intf_net cips_CPM_PCIE_NOC_1 [get_bd_intf_pins cips/CPM_PCIE_NOC_1] [get_bd_intf_pins axi_noc_dma_0/S00_AXI]
+  connect_bd_intf_net -intf_net cips_CPM_PL_AXI1 [get_bd_intf_ports mAxi] [get_bd_intf_pins cips/CPM_PL_AXI1]
   connect_bd_intf_net -intf_net cips_LPD_AXI_NOC_0 [get_bd_intf_pins cips/LPD_AXI_NOC_0] [get_bd_intf_pins axi_noc_mc_ddr4_0/S01_AXI]
   connect_bd_intf_net -intf_net cips_PCIE1_GT [get_bd_intf_pins cips/PCIE1_GT] [get_bd_intf_ports gtPcie]
   connect_bd_intf_net -intf_net cips_PMC_NOC_AXI_0 [get_bd_intf_pins cips/PMC_NOC_AXI_0] [get_bd_intf_pins axi_noc_mc_ddr4_0/S00_AXI]
   connect_bd_intf_net -intf_net gt_pcie_refclk_1 [get_bd_intf_ports gtPcieRefClk] [get_bd_intf_pins cips/gt_refclk1]
-  connect_bd_intf_net -intf_net sAxi_1 [get_bd_intf_ports sAxi] [get_bd_intf_pins axi_noc_dma_0/S01_AXI]
+  connect_bd_intf_net -intf_net sAxi_1 [get_bd_intf_ports sAxi] [get_bd_intf_pins axi_noc_dma_0/S00_AXI]
   connect_bd_intf_net -intf_net sys_clk0_0_1 [get_bd_intf_ports psDdrClk] [get_bd_intf_pins axi_noc_mc_ddr4_0/sys_clk0]
 
   # Create port connections
   connect_bd_net -net aclk3_0_1  [get_bd_ports dmaClk] \
   [get_bd_pins cips/dma1_intrfc_clk] \
-  [get_bd_pins axi_noc_dma_0/aclk2]
+  [get_bd_pins cips/cpm_pl_axi1_clk] \
+  [get_bd_pins axi_noc_dma_0/aclk0]
   connect_bd_net -net cips_bridge1_usr_irq_ack  [get_bd_pins cips/bridge1_usr_irq_ack] \
   [get_bd_ports dmaAck]
-  connect_bd_net -net cips_cpm_pcie_noc_axi1_clk  [get_bd_pins cips/cpm_pcie_noc_axi1_clk] \
-  [get_bd_pins axi_noc_dma_0/aclk0]
   connect_bd_net -net cips_lpd_axi_noc_clk  [get_bd_pins cips/lpd_axi_noc_clk] \
   [get_bd_pins axi_noc_mc_ddr4_0/aclk1]
   connect_bd_net -net cips_noc_cpm_pcie_axi0_clk  [get_bd_pins cips/noc_cpm_pcie_axi0_clk] \
@@ -679,7 +660,7 @@ proc create_root_design { parentCell } {
   [get_bd_pins cips/dma1_intrfc_resetn]
 
   # Create address segments
-  assign_bd_address -offset 0x020200000000 -range 0x40000000 -with_name SEG_mAxi1_Reg -target_address_space [get_bd_addr_spaces cips/CPM_PCIE_NOC_1] [get_bd_addr_segs mAxi/Reg] -force
+  assign_bd_address -offset 0x00000000 -range 0x01000000 -target_address_space [get_bd_addr_spaces cips/CPM_PL_AXI1] [get_bd_addr_segs mAxi/Reg] -force
   assign_bd_address -offset 0x050000000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/LPD_AXI_NOC_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S01_AXI/C1_DDR_CH1] -force
   assign_bd_address -offset 0x00000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/LPD_AXI_NOC_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S01_AXI/C1_DDR_LOW0] -force
   assign_bd_address -offset 0x050000000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/PMC_NOC_AXI_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S00_AXI/C0_DDR_CH1] -force

@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xEAEE870B3AD2D096",
+      "boundary_crc": "0xA82F2343A58B8905",
       "device": "xcv80-lsva4737-2MHP-e-S",
       "gen_directory": "../../../../XilinxAlveoV80DmaLoopback_project.gen/sources_1/bd/bd",
       "name": "XilinxAlveoV80PcieBlockDesign",
@@ -606,16 +606,16 @@
             "value": "64"
           },
           "ARUSER_WIDTH": {
-            "value": "18",
-            "value_src": "ip_prop"
+            "value": "32",
+            "value_src": "auto_prop"
           },
           "AWUSER_WIDTH": {
-            "value": "18",
-            "value_src": "ip_prop"
+            "value": "32",
+            "value_src": "auto_prop"
           },
           "BUSER_WIDTH": {
-            "value": "0",
-            "value_src": "default"
+            "value": "1",
+            "value_src": "auto_prop"
           },
           "CLK_DOMAIN": {
             "value": "XilinxAlveoV80PcieBlockDesign_dmaClk",
@@ -629,43 +629,43 @@
           },
           "HAS_BRESP": {
             "value": "1",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "HAS_BURST": {
             "value": "1",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "HAS_CACHE": {
             "value": "1",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "HAS_LOCK": {
             "value": "1",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "HAS_PROT": {
             "value": "1",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "HAS_QOS": {
             "value": "1",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "HAS_REGION": {
             "value": "1",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "HAS_RRESP": {
             "value": "1",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "HAS_WSTRB": {
             "value": "1",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "ID_WIDTH": {
-            "value": "2",
-            "value_src": "ip_prop"
+            "value": "16",
+            "value_src": "auto_prop"
           },
           "INSERT_VIP": {
             "value": "0",
@@ -673,21 +673,21 @@
           },
           "MAX_BURST_LENGTH": {
             "value": "256",
-            "value_src": "ip_prop"
+            "value_src": "default"
           },
           "NUM_READ_OUTSTANDING": {
             "value": "0"
           },
           "NUM_READ_THREADS": {
-            "value": "4",
-            "value_src": "ip_prop"
+            "value": "1",
+            "value_src": "default_prop"
           },
           "NUM_WRITE_OUTSTANDING": {
             "value": "0"
           },
           "NUM_WRITE_THREADS": {
-            "value": "4",
-            "value_src": "ip_prop"
+            "value": "1",
+            "value_src": "default_prop"
           },
           "PHASE": {
             "value": "0.0",
@@ -698,27 +698,27 @@
           },
           "READ_WRITE_MODE": {
             "value": "READ_WRITE",
-            "value_src": "const_prop"
+            "value_src": "auto_prop"
           },
           "RUSER_BITS_PER_BYTE": {
             "value": "0",
-            "value_src": "ip_prop"
+            "value_src": "default"
           },
           "RUSER_WIDTH": {
-            "value": "0",
-            "value_src": "default"
+            "value": "128",
+            "value_src": "auto_prop"
           },
           "SUPPORTS_NARROW_BURST": {
             "value": "1",
-            "value_src": "ip_prop"
+            "value_src": "default"
           },
           "WUSER_BITS_PER_BYTE": {
             "value": "0",
-            "value_src": "ip_prop"
+            "value_src": "default"
           },
           "WUSER_WIDTH": {
-            "value": "0",
-            "value_src": "default"
+            "value": "128",
+            "value_src": "auto_prop"
           }
         },
         "memory_map_ref": "mAxi",
@@ -726,7 +726,7 @@
           "AWID": {
             "physical_name": "mAxi_awid",
             "direction": "O",
-            "left": "1",
+            "left": "15",
             "right": "0"
           },
           "AWADDR": {
@@ -786,7 +786,7 @@
           "AWUSER": {
             "physical_name": "mAxi_awuser",
             "direction": "O",
-            "left": "17",
+            "left": "31",
             "right": "0"
           },
           "AWVALID": {
@@ -834,7 +834,7 @@
           "BID": {
             "physical_name": "mAxi_bid",
             "direction": "I",
-            "left": "1",
+            "left": "15",
             "right": "0"
           },
           "BRESP": {
@@ -858,7 +858,7 @@
           "ARID": {
             "physical_name": "mAxi_arid",
             "direction": "O",
-            "left": "1",
+            "left": "15",
             "right": "0"
           },
           "ARADDR": {
@@ -918,7 +918,7 @@
           "ARUSER": {
             "physical_name": "mAxi_aruser",
             "direction": "O",
-            "left": "17",
+            "left": "31",
             "right": "0"
           },
           "ARVALID": {
@@ -936,7 +936,7 @@
           "RID": {
             "physical_name": "mAxi_rid",
             "direction": "I",
-            "left": "1",
+            "left": "15",
             "right": "0"
           },
           "RDATA": {
@@ -967,6 +967,28 @@
             "physical_name": "mAxi_rready",
             "direction": "O",
             "left": "0",
+            "right": "0"
+          },
+          "BUSER": {
+            "physical_name": "mAxi_buser",
+            "direction": "I"
+          },
+          "RUSER": {
+            "physical_name": "mAxi_ruser",
+            "direction": "I",
+            "left": "127",
+            "right": "0"
+          },
+          "WID": {
+            "physical_name": "mAxi_wid",
+            "direction": "O",
+            "left": "15",
+            "right": "0"
+          },
+          "WUSER": {
+            "physical_name": "mAxi_wuser",
+            "direction": "O",
+            "left": "127",
             "right": "0"
           }
         }
@@ -1114,7 +1136,7 @@
               "0x0000008080000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_3 0x00000080C0000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_4 0x0000008100000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_5 0x0000008140000000",
               "CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_0 0x000000803FFFFFFFF CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_1 0x000000807FFFFFFFF CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_2 0x00000080BFFFFFFFF",
               "CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_3 0x00000080FFFFFFFFF CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_4 0x000000813FFFFFFFF CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_5 0x000000817FFFFFFFF CPM_PCIE1_PF0_BAR0_64BIT 0",
-              "CPM_PCIE1_PF0_BAR0_BRIDGE_SCALE Megabytes CPM_PCIE1_PF0_BAR0_BRIDGE_SIZE 16 CPM_PCIE1_PF0_BAR0_BRIDGE_STEERING CPM_PCIE_NOC_1 CPM_PCIE1_PF0_BAR0_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR0_QDMA_64BIT 0",
+              "CPM_PCIE1_PF0_BAR0_BRIDGE_SCALE Megabytes CPM_PCIE1_PF0_BAR0_BRIDGE_SIZE 16 CPM_PCIE1_PF0_BAR0_BRIDGE_STEERING CPM_PL_AXI1 CPM_PCIE1_PF0_BAR0_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR0_QDMA_64BIT 0",
               "CPM_PCIE1_PF0_BAR0_QDMA_ENABLED 0 CPM_PCIE1_PF0_BAR0_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR0_QDMA_SCALE Kilobytes CPM_PCIE1_PF0_BAR0_QDMA_SIZE 4 CPM_PCIE1_PF0_BAR0_QDMA_TYPE AXI_Bridge_Master",
               "CPM_PCIE1_PF0_BAR0_SIZE 16 CPM_PCIE1_PF0_BAR1_BRIDGE_ENABLED 0 CPM_PCIE1_PF0_BAR2_QDMA_64BIT 0 CPM_PCIE1_PF0_BAR2_QDMA_ENABLED 0 CPM_PCIE1_PF0_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR2_QDMA_SCALE",
               "Kilobytes CPM_PCIE1_PF0_BAR2_QDMA_SIZE 4 CPM_PCIE1_PF0_BAR2_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF0_BASE_CLASS_VALUE 11 CPM_PCIE1_PF0_CFG_DEV_ID 2030 CPM_PCIE1_PF0_CFG_SUBSYS_ID 2030",
@@ -1125,7 +1147,7 @@
               "CPM_PCIE1_PF1_BAR2_QDMA_64BIT 0 CPM_PCIE1_PF1_BAR2_QDMA_ENABLED 0 CPM_PCIE1_PF1_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF1_BAR2_QDMA_SCALE Kilobytes CPM_PCIE1_PF1_BAR2_QDMA_SIZE 4",
               "CPM_PCIE1_PF1_BAR2_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF1_BASE_CLASS_VALUE 05 CPM_PCIE1_PF1_CFG_DEV_ID 0 CPM_PCIE1_PF1_CFG_SUBSYS_ID 0 CPM_PCIE1_PF1_CFG_SUBSYS_VEND_ID 0",
               "CPM_PCIE1_PF1_MSIX_CAP_TABLE_OFFSET 50000 CPM_PCIE1_PF1_MSIX_CAP_TABLE_SIZE 8 CPM_PCIE1_PF1_MSIX_ENABLED 1 CPM_PCIE1_PF1_PCIEBAR2AXIBAR_QDMA_2 0x0000020200000000 CPM_PCIE1_PF1_SUB_CLASS_VALUE 00",
-              "CPM_PCIE1_PL_LINK_CAP_MAX_LINK_WIDTH X8 CPM_PCIE1_PORT_TYPE PCI_Express_Endpoint_device CPM_PCIE1_TL_PF_ENABLE_REG 1 CPM_PL_AXI0_EN 0 CPM_PL_AXI1_EN 0 PS_USE_PS_NOC_PCI_0 0 PS_USE_PS_NOC_PCI_1 1"
+              "CPM_PCIE1_PL_LINK_CAP_MAX_LINK_WIDTH X8 CPM_PCIE1_PORT_TYPE PCI_Express_Endpoint_device CPM_PCIE1_TL_PF_ENABLE_REG 1 CPM_PL_AXI0_EN 0 CPM_PL_AXI1_EN 1 PS_USE_PS_NOC_PCI_0 0 PS_USE_PS_NOC_PCI_1 0"
             ]
           },
           "PS_PL_CONNECTIVITY_MODE": {
@@ -1319,14 +1341,14 @@
             "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
             "memory_map_ref": "NOC_CPM_PCIE_0"
           },
-          "CPM_PCIE_NOC_1": {
+          "CPM_PL_AXI1": {
             "mode": "Master",
             "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
             "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
-            "address_space_ref": "CPM_PCIE_NOC_1",
+            "address_space_ref": "CPM_PL_AXI1",
             "base_address": {
               "minimum": "0x00000000",
-              "maximum": "0x0FFFFFFFFFFF",
+              "maximum": "0x0003FFFFFFFFFFFF",
               "width": "64"
             },
             "bd_attributes": {
@@ -1398,18 +1420,22 @@
           },
           "address_spaces": {
             "CPM_PCIE_NOC_1": {
+              "range": "16T",
+              "width": "44"
+            },
+            "CPM_PL_AXI1": {
               "range": "16E",
               "width": "64",
               "local_memory_map": {
-                "name": "CPM_PCIE_NOC_1",
+                "name": "CPM_PL_AXI1",
                 "description": "Address Space Segments",
                 "address_blocks": {
-                  "CPM_PCIE_NOC_1:APERTURE_0": {
-                    "name": "CPM_PCIE_NOC_1:APERTURE_0",
+                  "CPM_PL_AXI1:APERTURE_0": {
+                    "name": "CPM_PL_AXI1:APERTURE_0",
                     "display_name": "APERTURE_0",
                     "base_address": "0x00000000",
-                    "range": "16T",
-                    "width": "44",
+                    "range": "1P",
+                    "width": "50",
                     "usage": "register"
                   }
                 }
@@ -1738,13 +1764,13 @@
         "has_run_ip_tcl": "true",
         "parameters": {
           "NUM_CLKS": {
-            "value": "3"
+            "value": "2"
           },
           "NUM_MI": {
-            "value": "2"
+            "value": "1"
           },
           "NUM_SI": {
-            "value": "2"
+            "value": "1"
           }
         },
         "interface_ports": {
@@ -1754,48 +1780,13 @@
             "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
             "parameters": {
               "CATEGORY": {
-                "value": "ps_pcie"
-              },
-              "CONNECTIONS": {
-                "value": "M01_AXI {read_bw {1250} write_bw {1250} read_avg_burst {4} write_avg_burst {4}}"
-              },
-              "DEST_IDS": {
-                "value": "M01_AXI:0x80"
-              },
-              "R_TRAFFIC_CLASS": {
-                "value": "BEST_EFFORT"
-              },
-              "W_TRAFFIC_CLASS": {
-                "value": "BEST_EFFORT"
-              }
-            },
-            "bridges": [
-              "M01_AXI"
-            ],
-            "bd_attributes": {
-              "BRIDGES": {
-                "value": "M01_AXI",
-                "value_src": "auto"
-              },
-              "TYPE": {
-                "value": "INTERIOR",
-                "value_src": "auto"
-              }
-            }
-          },
-          "S01_AXI": {
-            "mode": "Slave",
-            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
-            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
-            "parameters": {
-              "CATEGORY": {
                 "value": "pl"
               },
               "CONNECTIONS": {
-                "value": "M00_AXI {read_bw {12500} write_bw {12500} read_avg_burst {4} write_avg_burst {4}}"
+                "value": "M00_AXI {read_bw {125} write_bw {12500} read_avg_burst {4} write_avg_burst {4}}"
               },
               "DEST_IDS": {
-                "value": "M00_AXI:0xc0"
+                "value": "M00_AXI:0x80"
               },
               "R_TRAFFIC_CLASS": {
                 "value": "BEST_EFFORT"
@@ -1838,30 +1829,6 @@
                 "value_src": "auto"
               }
             }
-          },
-          "M01_AXI": {
-            "mode": "Master",
-            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
-            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
-            "parameters": {
-              "APERTURES": {
-                "value": "{0x202_0000_0000 1G}"
-              },
-              "CATEGORY": {
-                "value": "pl"
-              }
-            },
-            "base_address": {
-              "minimum": "0x020100000000",
-              "maximum": "0x0FFFFFFFFFFF",
-              "width": "64"
-            },
-            "bd_attributes": {
-              "TYPE": {
-                "value": "INTERIOR",
-                "value_src": "auto"
-              }
-            }
           }
         }
       }
@@ -1873,22 +1840,16 @@
           "axi_noc_dma_0/M00_AXI"
         ]
       },
-      "axi_noc_dma_0_M01_AXI": {
-        "interface_ports": [
-          "mAxi",
-          "axi_noc_dma_0/M01_AXI"
-        ]
-      },
       "axi_noc_mc_ddr4_0_CH0_DDR4_0": {
         "interface_ports": [
           "axi_noc_mc_ddr4_0/CH0_DDR4_0",
           "psDDR"
         ]
       },
-      "cips_CPM_PCIE_NOC_1": {
+      "cips_CPM_PL_AXI1": {
         "interface_ports": [
-          "cips/CPM_PCIE_NOC_1",
-          "axi_noc_dma_0/S00_AXI"
+          "mAxi",
+          "cips/CPM_PL_AXI1"
         ]
       },
       "cips_LPD_AXI_NOC_0": {
@@ -1918,7 +1879,7 @@
       "sAxi_1": {
         "interface_ports": [
           "sAxi",
-          "axi_noc_dma_0/S01_AXI"
+          "axi_noc_dma_0/S00_AXI"
         ]
       },
       "sys_clk0_0_1": {
@@ -1933,19 +1894,14 @@
         "ports": [
           "dmaClk",
           "cips/dma1_intrfc_clk",
-          "axi_noc_dma_0/aclk2"
+          "cips/cpm_pl_axi1_clk",
+          "axi_noc_dma_0/aclk0"
         ]
       },
       "cips_bridge1_usr_irq_ack": {
         "ports": [
           "cips/bridge1_usr_irq_ack",
           "dmaAck"
-        ]
-      },
-      "cips_cpm_pcie_noc_axi1_clk": {
-        "ports": [
-          "cips/cpm_pcie_noc_axi1_clk",
-          "axi_noc_dma_0/aclk0"
         ]
       },
       "cips_lpd_axi_noc_clk": {
@@ -2035,8 +1991,17 @@
             "segments": {
               "SEG_mAxi1_Reg": {
                 "address_block": "/mAxi/Reg",
-                "offset": "0x0000020200000000",
+                "offset": "0x20200000000",
                 "range": "1G"
+              }
+            }
+          },
+          "CPM_PL_AXI1": {
+            "segments": {
+              "SEG_mAxi_Reg": {
+                "address_block": "/mAxi/Reg",
+                "offset": "0x0000000000000000",
+                "range": "16M"
               }
             }
           },

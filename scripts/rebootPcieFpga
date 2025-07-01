@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+#-----------------------------------------------------------------------------
+# Company    : SLAC National Accelerator Laboratory
+#-----------------------------------------------------------------------------
+#  Description: BPI/SPIx4/SPIx8 Reprogrmming Script
+#-----------------------------------------------------------------------------
+# This file is part of the 'axi-pcie-core'. It is subject to
+# the license terms in the LICENSE.txt file found in the top-level directory
+# of this distribution and at:
+#    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+# No part of the 'axi-pcie-core', including this file, may be
+# copied, modified, propagated, or distributed except according to the terms
+# contained in the LICENSE.txt file.
+#-----------------------------------------------------------------------------
+
+import pyrogue as pr
+import os
+import importlib
+import subprocess
+import argparse
+
+baseDir = os.path.dirname(os.path.realpath(__file__))
+
+print(f"Basedir = {baseDir}")
+
+# First see if surf and axipcie are already in the python path
+try:
+    import surf
+    import axipcie
+
+# Otherwise assume it is relative in a standard development directory structure
+except:
+    pr.addLibraryPath(baseDir + '/../python')
+    pr.addLibraryPath(baseDir + '/../../surf/python')
+
+import sys
+import glob
+import argparse
+import rogue.hardware.axi
+import axipcie as pcie
+from collections import OrderedDict as odict
+
+#################################################################
+
+def promptForImageNumber(imgLst):
+    for i,l in enumerate(imgLst.items()):
+        print('{} : {}'.format(i,l[0]))
+    print('{} : {}'.format(len(imgLst),"Exit"))
+    selection = input('Enter image to program into the PCIe card\'s PROM: ')
+    idx = int(selection) if selection else len(imgLst)
+    if idx < 0 or idx >= len(imgLst):
+        return None
+    return list(imgLst.items())[idx]
+
+#################################################################
+
+class Root(pr.Root):
+    def __init__(self, dev='', **kwargs):
+        super().__init__(pollEn=False, initRead=True, **kwargs)
+
+        # Create the stream interface
+        self.memMap = rogue.hardware.axi.AxiMemMap(dev)
+
+        # Add Base Device
+        self.add(pcie.AxiPcieCore(
+            memBase = self.memMap,
+            useBpi  = True,
+            useSpi  = True,
+        ))
+
+#################################################################
+
+if __name__ == "__main__":
+
+    # Set the argument parser
+    parser = argparse.ArgumentParser()
+
+    # Convert str to bool
+    argBool = lambda s: s.lower() in ['true', 't', 'yes', '1']
+
+    # Add arguments
+    parser.add_argument(
+        "--dev",
+        type     = str,
+        required = False,
+        default  = "/dev/datadev_0",
+        help     = "path to device",
+    )
+
+    parser.add_argument(
+        "--rescan",
+        type     = argBool,
+        required = False,
+        default  = True,
+        help     = 'Rescan PCIe devices after update',
+    )
+
+    # Get the arguments
+    args = parser.parse_args()
+
+    #################################################################
+
+    with Root(dev=args.dev) as root:
+
+        # Create useful pointers
+        AxiVersion = root.AxiPcieCore.AxiVersion
+
+        # Printout Current AxiVersion status
+        print('#########################################')
+        print('Current Firmware Loaded on the PCIe card:')
+        print('#########################################')
+        AxiVersion.printStatus()
+        print('#########################################')
+
+        AxiVersion.FpgaReload()
+
+    #################################################################
+    # running the rescanPcieFpga within updaterPcieFpga locks up the
+    # AxiMem interface to the PCIe card. Run the rescanPcieFpga
+    # script outside of updaterPcieFpga script
+    #################################################################
+    print('\nPlease reboot the computer')
+    # if args.rescan:
+
+        # print("Running PCIe rescan (you may be prompted for your sudo password)...")
+        # try:
+            # subprocess.run(['sudo', sys.executable, os.path.join(baseDir, 'rescanPcieFpga')], check=True)
+        # except subprocess.CalledProcessError as e:
+            # print(f"Rescan failed with error: {e}")
+
+        # with Root(dev=args.dev) as root:
+            # print('#########################################')
+            # print('New Firmware Loaded on the PCIe card:')
+            # print('#########################################')
+            # root.AxiPcieCore.AxiVersion.printStatus()
+            # print('#########################################')
+
+    # else:
+        # print('\nPlease reboot the computer')
+
+    #################################################################

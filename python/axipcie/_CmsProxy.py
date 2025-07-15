@@ -1681,7 +1681,7 @@ class Status(pr.Device):
 # https://docs.amd.com/r/en-US/pg348-cms-subsystem/CMS_OP_WRITE_MODULE_LOW_SPEED_IO-0x0E
 # https://docs.amd.com/r/en-US/pg348-cms-subsystem/CMS_OP_READ_MODULE_LOW_SPEED_IO-0x0D
 class CmsLowSpeedIo(pr.Device):
-    def __init__(self, moduleType=None, **kwargs):
+    def __init__(self, moduleType=None, tryCount=1, **kwargs):
         super().__init__(**kwargs)
 
         if moduleType=='QSFP':
@@ -1689,63 +1689,67 @@ class CmsLowSpeedIo(pr.Device):
             self.add(pr.RemoteVariable(
                 name        = 'QSFP_INT_L',
                 description = '(0: Interrupt Set, 1: Interrupt Clear)',
-                mode      = 'RO',
-                offset    = 0x0,
-                bitSize   = 1,
-                bitOffset = 4,
+                mode        = 'RO',
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 4,
                 enum        = {
                     0: 'Interrupt Set',
                     1: 'Interrupt Clear',
                 },
-                hidden = True,
+                hidden      = True,
+                retryCount  = tryCount,
             ))
 
             self.add(pr.RemoteVariable(
                 name        = 'QSFP_MODPRS_L',
                 description = '(0: Module Present, 1: Module not Present)',
-                mode      = 'RO',
-                offset    = 0x0,
-                bitSize   = 1,
-                bitOffset = 3,
+                mode        = 'RO',
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 3,
                 enum        = {
                     0: 'Module Present',
                     1: 'Module not Present',
                 },
+                retryCount  = tryCount,
             ))
 
             self.add(pr.RemoteVariable(
                 name        = 'QSFP_MODSEL_L',
                 description = '(0: Module Selected, 1: Module not Selected)',
-                mode      = 'RO',
-                offset    = 0x0,
-                bitSize   = 1,
-                bitOffset = 2,
+                mode        = 'RO',
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 2,
                 enum        = {
                     0: 'Module Selected',
                     1: 'Module not Selected',
                 },
+                retryCount  = tryCount,
             ))
 
             self.add(pr.RemoteVariable(
                 name        = 'QSFP_LPMODE',
                 description = '(0: High Power Mode, 1: Low Power Mode)',
-                mode      = 'RW',
-                offset    = 0x0,
-                bitSize   = 1,
-                bitOffset = 1,
+                mode        = 'RW',
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 1,
                 enum        = {
                     0: 'High Power Mode',
                     1: 'Low Power Mode',
                 },
+                retryCount  = tryCount,
             ))
 
             self.add(pr.RemoteCommand(
                 name        = 'QSFP_RESET_L',
                 description = '(0: Reset Active, 1: Reset Clear)',
-                offset       = 0x0,
-                bitSize      = 1,
-                bitOffset    = 0,
-                function     = lambda cmd: cmd.post(0),
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 0,
+                function    = lambda cmd: cmd.post(0),
             ))
 
         elif moduleType=='DSFP':
@@ -1753,55 +1757,59 @@ class CmsLowSpeedIo(pr.Device):
             self.add(pr.RemoteVariable(
                 name        = 'DSFP_INT',
                 description = '(0: Interrupt Clear, 1: Interrupt Set)',
-                mode      = 'RO',
-                offset    = 0x0,
-                bitSize   = 1,
-                bitOffset = 4,
+                mode        = 'RO',
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 4,
                 enum        = {
                     0: 'Interrupt Clear',
                     1: 'Interrupt Set',
                 },
-                hidden = True,
+                hidden      = True,
+                retryCount  = tryCount,
             ))
 
 
             self.add(pr.RemoteVariable(
                 name        = 'DSFP_PRS',
                 description = '(0: Module not Present, 1: Module Present)',
-                mode      = 'RO',
-                offset    = 0x0,
-                bitSize   = 1,
-                bitOffset = 3,
+                mode        = 'RO',
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 3,
                 enum        = {
                     0: 'Module not Present',
                     1: 'Module Present',
                 },
+                retryCount  = tryCount,
             ))
 
             self.add(pr.RemoteVariable(
                 name        = 'DSFP_LPW',
                 description = '(0: High Power Mode, 1: Low Power Mode)',
-                mode      = 'RW',
-                offset    = 0x0,
-                bitSize   = 1,
-                bitOffset = 1,
+                mode        = 'RW',
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 1,
                 enum        = {
                     0: 'High Power Mode',
                     1: 'Low Power Mode',
                 },
+                retryCount  = tryCount,
             ))
 
             self.add(pr.RemoteVariable(
                 name        = 'DSFP_RST',
                 description = '(0: Reset Clear, 1: Reset Active)',
-                mode      = 'RW',
-                offset    = 0x0,
-                bitSize   = 1,
-                bitOffset = 0,
+                mode        = 'RW',
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 0,
                 enum        = {
                     0: 'Reset Clear',
                     1: 'Reset Active',
                 },
+                retryCount  = tryCount,
             ))
 
         elif moduleType=='SFP':
@@ -1809,14 +1817,15 @@ class CmsLowSpeedIo(pr.Device):
             self.add(pr.RemoteVariable(
                 name        = 'SFP_PRS',
                 description = '(0: Module not Present, 1: Module Present)',
-                mode      = 'RO',
-                offset    = 0x0,
-                bitSize   = 1,
-                bitOffset = 3,
+                mode        = 'RO',
+                offset      = 0x0,
+                bitSize     = 1,
+                bitOffset   = 3,
                 enum        = {
                     0: 'Module not Present',
                     1: 'Module Present',
                 },
+                retryCount  = tryCount,
             ))
 
         else:
@@ -1858,6 +1867,7 @@ class CmsSubsystem(pr.Device):
                 self.add(CmsLowSpeedIo(
                     name       = f'{self.moduleType.capitalize()}LowSpeedIo[{i}]',
                     memBase    = self.proxy,
+                    tryCount   = 3,
                     moduleType = self.moduleType,
                     offset     = 0x0D_00_0000+(i*0x00_10_0000),
                 ))

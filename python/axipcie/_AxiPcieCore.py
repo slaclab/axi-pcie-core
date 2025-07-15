@@ -188,10 +188,11 @@ class AxiPcieCore(pr.Device):
 
                 for i in range(2):
                     self.add(xceiver.Qsfp(
-                        name    = f'Qsfp[{i}]',
-                        offset  = qsfpOffset[i],
-                        memBase = self.CmsBridge.proxy,
-                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                        name     = f'Qsfp[{i}]',
+                        offset   = qsfpOffset[i],
+                        memBase  = self.CmsBridge.proxy,
+                        tryCount = 3,
+                        enabled  = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                     ))
 
             elif (boardType == 'XilinxKcu105'):

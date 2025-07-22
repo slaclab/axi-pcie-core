@@ -256,9 +256,43 @@ if __name__ == "__main__":
 
     if args.rescan and (pci_addr != ''):
 
-        cmd = ["bash", f"{baseDir}/rescanPcieFpga.sh", args.dev]
-        with subprocess.Popen(cmd, stdout=sys.stdout, stderr=sys.stderr) as proc:
-            proc.wait()
+        def write_sysfs(path, value):
+            try:
+                with open(path, 'w') as f:
+                    f.write(value)
+            except Exception as e:
+                print(f"Error writing to {path}: {e}")
+                sys.exit(1)
+
+        def unbind_device():
+            path = f"/sys/bus/pci/devices/{pci_addr}/driver/unbind"
+            if os.path.exists(path):
+                print(f"Unbinding {pci_addr}")
+                write_sysfs(path, pci_addr)
+            else:
+                print(f"No driver bound or invalid device: {pci_addr}")
+
+        def remove_device():
+            path = f"/sys/bus/pci/devices/{pci_addr}/remove"
+            if os.path.exists(path):
+                print(f"Removing {pci_addr} from PCI bus")
+                write_sysfs(path, "1")
+            else:
+                print(f"Device {pci_addr} not found in sysfs")
+
+        def rescan_pci():
+            path = "/sys/bus/pci/rescan"
+            print("Rescanning PCI bus")
+            write_sysfs(path, "1")
+
+        unbind_device()
+        time.sleep(1)
+
+        remove_device()
+        time.sleep(1)
+
+        rescan_pci()
+        time.sleep(1)
 
         # Wait for /dev node to return
         for i in range(10):

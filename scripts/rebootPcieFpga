@@ -34,6 +34,8 @@ except:
     pr.addLibraryPath(baseDir + '/../../surf/python')
 
 import sys
+import re
+import time
 import glob
 import argparse
 import rogue.hardware.axi
@@ -42,15 +44,21 @@ from collections import OrderedDict as odict
 
 #################################################################
 
-def promptForImageNumber(imgLst):
-    for i,l in enumerate(imgLst.items()):
-        print('{} : {}'.format(i,l[0]))
-    print('{} : {}'.format(len(imgLst),"Exit"))
-    selection = input('Enter image to program into the PCIe card\'s PROM: ')
-    idx = int(selection) if selection else len(imgLst)
-    if idx < 0 or idx >= len(imgLst):
-        return None
-    return list(imgLst.items())[idx]
+def get_pcie_address(dev):
+    dev = dev.split('/')[-1]  # Strip path if needed
+    try:
+        with open(f'/proc/{dev}', "r", encoding='utf-8', errors='ignore') as file:
+            pcie_address = ''
+            for line in file:
+                if 'Up Time Count' in line and '4294967295' in line:
+                    print('\nPlease reboot the computer or manually remove/rescan PCIe card\n')
+                    exit()
+                match = re.match(r'^PCIe\[BUS:NUM:SLOT.FUNC\]\s*:\s*(.*)', line)
+                if match:
+                    pcie_address = match.group(1).strip()
+            return pcie_address
+    except FileNotFoundError:
+        return ''
 
 #################################################################
 
@@ -60,12 +68,13 @@ class Root(pr.Root):
 
         # Create the stream interface
         self.memMap = rogue.hardware.axi.AxiMemMap(dev)
+        self.addInterface(self.memMap)
 
         # Add Base Device
         self.add(pcie.AxiPcieCore(
             memBase = self.memMap,
-            useBpi  = True,
-            useSpi  = True,
+            useBpi  = False,
+            useSpi  = False,
         ))
 
 #################################################################
@@ -98,6 +107,13 @@ if __name__ == "__main__":
     # Get the arguments
     args = parser.parse_args()
 
+    # Check if we need to run as sudo
+    pci_addr = get_pcie_address(args.dev)
+    if args.rescan and (pci_addr != '') and (os.geteuid() != 0):
+        print("This script must be run as root (sudo).")
+        print("\n\n\ne.g. sudo -E $(which python) scripts/rebootPcieFpga.py\n\n\n")
+        exit()
+
     #################################################################
 
     with Root(dev=args.dev) as root:
@@ -115,27 +131,66 @@ if __name__ == "__main__":
         AxiVersion.FpgaReload()
 
     #################################################################
-    # running the rescanPcieFpga within updaterPcieFpga locks up the
-    # AxiMem interface to the PCIe card. Run the rescanPcieFpga
-    # script outside of updaterPcieFpga script
-    #################################################################
-    print('\nPlease reboot the computer')
-    # if args.rescan:
 
-        # print("Running PCIe rescan (you may be prompted for your sudo password)...")
-        # try:
-            # subprocess.run(['sudo', sys.executable, os.path.join(baseDir, 'rescanPcieFpga')], check=True)
-        # except subprocess.CalledProcessError as e:
-            # print(f"Rescan failed with error: {e}")
+    if args.rescan and (pci_addr != ''):
 
-        # with Root(dev=args.dev) as root:
-            # print('#########################################')
-            # print('New Firmware Loaded on the PCIe card:')
-            # print('#########################################')
-            # root.AxiPcieCore.AxiVersion.printStatus()
-            # print('#########################################')
+        def write_sysfs(path, value):
+            try:
+                with open(path, 'w') as f:
+                    f.write(value)
+            except Exception as e:
+                print(f"Error writing to {path}: {e}")
+                sys.exit(1)
 
-    # else:
-        # print('\nPlease reboot the computer')
+        def unbind_device():
+            path = f"/sys/bus/pci/devices/{pci_addr}/driver/unbind"
+            if os.path.exists(path):
+                print(f"Unbinding {pci_addr}")
+                write_sysfs(path, pci_addr)
+            else:
+                print(f"No driver bound or invalid device: {pci_addr}")
+
+        def remove_device():
+            path = f"/sys/bus/pci/devices/{pci_addr}/remove"
+            if os.path.exists(path):
+                print(f"Removing {pci_addr} from PCI bus")
+                write_sysfs(path, "1")
+            else:
+                print(f"Device {pci_addr} not found in sysfs")
+
+        def rescan_pci():
+            path = "/sys/bus/pci/rescan"
+            print("Rescanning PCI bus")
+            write_sysfs(path, "1")
+
+        unbind_device()
+        time.sleep(1)
+
+        remove_device()
+        time.sleep(1)
+
+        rescan_pci()
+        time.sleep(1)
+
+        # Wait for /dev node to return
+        for i in range(10):
+            if os.path.exists(args.dev):
+                time.sleep(1)  # Give driver time to initialize
+                break
+            time.sleep(0.5)
+        else:
+            print(f"[ERROR] Device node {args.dev} not found after rescan.")
+            sys.exit(1)
+
+        # Print the new firmware string
+        with Root(dev=args.dev) as root:
+            print('#########################################')
+            print('New Firmware Loaded on the PCIe card:')
+            print('#########################################')
+            root.AxiPcieCore.AxiVersion.printStatus()
+            print('#########################################')
+
+    else:
+        print('\nPlease reboot the computer')
 
     #################################################################

@@ -34,11 +34,31 @@ except:
     pr.addLibraryPath(baseDir + '/../../surf/python')
 
 import sys
+import re
+import time
 import glob
 import argparse
 import rogue.hardware.axi
 import axipcie as pcie
 from collections import OrderedDict as odict
+
+#################################################################
+
+def get_pcie_address(dev):
+    dev = dev.split('/')[-1]  # Strip path if needed
+    try:
+        with open(f'/proc/{dev}', "r", encoding='utf-8', errors='ignore') as file:
+            pcie_address = ''
+            for line in file:
+                if 'Up Time Count' in line and '4294967295' in line:
+                    print('\nPlease reboot the computer or manually remove/rescan PCIe card\n')
+                    exit()
+                match = re.match(r'^PCIe\[BUS:NUM:SLOT.FUNC\]\s*:\s*(.*)', line)
+                if match:
+                    pcie_address = match.group(1).strip()
+            return pcie_address
+    except FileNotFoundError:
+        return ''
 
 #################################################################
 
@@ -115,12 +135,26 @@ if __name__ == "__main__":
         "--rescan",
         type     = argBool,
         required = False,
-        default  = True,
+        ########################################################################################################
+        # There's a bug with the AxiMemMap::AxiMemMap: General Error: Failed to open device file: /dev/datadev_0
+        # if you run the rescanPcieFpga.sh script inside this python script.  I suspect that the
+        # rogue.hardware.axi.AxiMemMap(dev) is not properly close in rogue in the root.stop() routine
+        # So....setting the default to False to now and TODO to debug this issue later
+        ########################################################################################################
+        # default  = True,
+        default  = False,
         help     = 'Rescan PCIe devices after update',
     )
 
     # Get the arguments
     args = parser.parse_args()
+
+    # Check if we need to run as sudo
+    pci_addr = get_pcie_address(args.dev)
+    if args.rescan and (pci_addr != '') and (os.geteuid() != 0):
+        print("This script must be run as root (sudo).")
+        print("\n\n\ne.g. sudo -E $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR\n\n\n")
+        exit()
 
     if args.package is not None:
         BasePackage = importlib.import_module(args.package)
@@ -226,28 +260,31 @@ if __name__ == "__main__":
 
     #################################################################
 
-    #################################################################
-    # running the rescanPcieFpga within updaterPcieFpga locks up the
-    # AxiMem interface to the PCIe card. Run the rescanPcieFpga
-    # script outside of updaterPcieFpga script
-    #################################################################
-    print('\nPlease reboot the computer')
-    # if args.rescan:
+    if args.rescan and (pci_addr != ''):
 
-        # print("Running PCIe rescan (you may be prompted for your sudo password)...")
-        # try:
-            # subprocess.run(['sudo', sys.executable, os.path.join(baseDir, 'rescanPcieFpga')], check=True)
-        # except subprocess.CalledProcessError as e:
-            # print(f"Rescan failed with error: {e}")
+        cmd = ["bash", f"{baseDir}/rescanPcieFpga.sh", args.dev]
+        with subprocess.Popen(cmd, stdout=sys.stdout, stderr=sys.stderr) as proc:
+            proc.wait()
 
-        # with Root(dev=args.dev) as root:
-            # print('#########################################')
-            # print('New Firmware Loaded on the PCIe card:')
-            # print('#########################################')
-            # root.AxiPcieCore.AxiVersion.printStatus()
-            # print('#########################################')
+        # Wait for /dev node to return
+        for i in range(10):
+            if os.path.exists(args.dev):
+                time.sleep(1)  # Give driver time to initialize
+                break
+            time.sleep(0.5)
+        else:
+            print(f"[ERROR] Device node {args.dev} not found after rescan.")
+            sys.exit(1)
 
-    # else:
-        # print('\nPlease reboot the computer')
+        # Print the new firmware string
+        with Root(dev=args.dev) as root:
+            print('#########################################')
+            print('New Firmware Loaded on the PCIe card:')
+            print('#########################################')
+            root.AxiPcieCore.AxiVersion.printStatus()
+            print('#########################################')
+
+    else:
+        print('\nPlease reboot the computer')
 
     #################################################################

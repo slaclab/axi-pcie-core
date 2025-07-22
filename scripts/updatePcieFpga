@@ -80,6 +80,7 @@ class Root(pr.Root):
 
         # Create the stream interface
         self.memMap = rogue.hardware.axi.AxiMemMap(dev)
+        self.addInterface(self.memMap)
 
         # Add Base Device
         self.add(pcie.AxiPcieCore(
@@ -135,14 +136,7 @@ if __name__ == "__main__":
         "--rescan",
         type     = argBool,
         required = False,
-        ########################################################################################################
-        # There's a bug with the AxiMemMap::AxiMemMap: General Error: Failed to open device file: /dev/datadev_0
-        # if you run the rescanPcieFpga.sh script inside this python script.  I suspect that the
-        # rogue.hardware.axi.AxiMemMap(dev) is not properly close in rogue in the root.stop() routine
-        # So....setting the default to False to now and TODO to debug this issue later
-        ########################################################################################################
-        # default  = True,
-        default  = False,
+        default  = True,
         help     = 'Rescan PCIe devices after update',
     )
 

@@ -13,6 +13,12 @@
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
 
+# Enforce script to be run as root
+if [ "$EUID" -ne 0 ]; then
+  echo "Error: This script must be run using sudo or root." >&2
+  exit 1
+fi
+
 # Check if device path argument is provided
 if [ -z "$1" ]; then
   echo "Usage: $0 /dev/datadev_0"

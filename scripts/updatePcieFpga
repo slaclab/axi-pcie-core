@@ -64,9 +64,6 @@ def get_pcie_address(dev):
         with open(f'/proc/{dev}', "r", encoding='utf-8', errors='ignore') as file:
             pcie_address = ''
             for line in file:
-                if 'Up Time Count' in line and '4294967295' in line:
-                    print('\nPlease reboot the computer or manually remove/rescan PCIe card\n')
-                    exit()
                 match = re.match(r'^PCIe\[BUS:NUM:SLOT.FUNC\]\s*:\s*(.*)', line)
                 if match:
                     pcie_address = match.group(1).strip()
@@ -262,17 +259,26 @@ if __name__ == "__main__":
                     pri = ent[0] + '.' + ent[1]
 
                 # Load the primary MCS file
-                PROM_PRI.LoadMcsFile(pri)
+                try:
+                    PROM_PRI._LoadMcsFile(pri, iprogPrint=False)
+                except TypeError:
+                    PROM_PRI._LoadMcsFile(pri)
 
                 # Update the programing done flag
                 progDone = PROM_PRI._progDone
 
                 # Check for secondary PROM
                 if (promType == 'SPIx8'):
+
                     # Check if the primary MCS failed
                     if PROM_PRI._progDone:
+
                         # Load the secondary MCS file
-                        PROM_SEC.LoadMcsFile(sec)
+                        try:
+                            PROM_SEC._LoadMcsFile(sec, iprogPrint=False)
+                        except TypeError:
+                            PROM_SEC._LoadMcsFile(sec)
+
                     # Update the programing done flag
                     progDone = PROM_PRI._progDone and PROM_SEC._progDone
 
@@ -295,35 +301,48 @@ if __name__ == "__main__":
                 print(f"Error writing to {path}: {e}")
                 sys.exit(1)
 
-        def unbind_device():
-            path = f"/sys/bus/pci/devices/{pci_addr}/driver/unbind"
+        def unbind_device(pcieAddr):
+            path = f"/sys/bus/pci/devices/{pcieAddr}/driver/unbind"
             if os.path.exists(path):
-                print(f"Unbinding {pci_addr}")
-                write_sysfs(path, pci_addr)
+                print(f"Unbinding {pcieAddr}")
+                write_sysfs(path, pcieAddr)
             else:
-                print(f"No driver bound or invalid device: {pci_addr}")
+                print(f"No driver bound or invalid device: {pcieAddr}")
 
-        def remove_device():
-            path = f"/sys/bus/pci/devices/{pci_addr}/remove"
+        def remove_device(pcieAddr):
+            path = f"/sys/bus/pci/devices/{pcieAddr}/remove"
             if os.path.exists(path):
-                print(f"Removing {pci_addr} from PCI bus")
+                print(f"Removing {pcieAddr} from PCI bus")
                 write_sysfs(path, "1")
             else:
-                print(f"Device {pci_addr} not found in sysfs")
+                print(f"Device {pcieAddr} not found in sysfs")
 
-        def rescan_pci():
+        def rescan_pci(pcieAddr):
             path = "/sys/bus/pci/rescan"
             print("Rescanning PCI bus")
             write_sysfs(path, "1")
 
-        unbind_device()
-        time.sleep(1)
+        def rescan_top(pcieAddr):
+            unbind_device(pcieAddr)
+            time.sleep(1)
 
-        remove_device()
-        time.sleep(1)
+            remove_device(pcieAddr)
+            time.sleep(1)
 
-        rescan_pci()
-        time.sleep(1)
+            rescan_pci(pcieAddr)
+            time.sleep(1)
+
+        # Get all matching /proc/datadev* entries
+        devices = glob.glob("/dev/datadev*")
+
+        # Loop through all the devices
+        for device in devices:
+
+            # Check if we need to rescan device
+            if check_if_need_rescan(device):
+
+                # Perform the rescan procedure for given device
+                rescan_top(get_pcie_address(device))
 
         # Wait for /dev node to return
         for i in range(10):

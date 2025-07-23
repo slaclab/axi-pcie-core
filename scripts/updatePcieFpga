@@ -44,6 +44,20 @@ from collections import OrderedDict as odict
 
 #################################################################
 
+def check_if_need_rescan(dev):
+    dev = dev.split('/')[-1]  # Strip path if needed
+    try:
+        with open(f'/proc/{dev}', "r", encoding='utf-8', errors='ignore') as file:
+            pcie_address = ''
+            for line in file:
+                if 'Up Time Count' in line and '4294967295' in line:
+                    return True
+            return False
+    except FileNotFoundError:
+        return False
+
+#################################################################
+
 def get_pcie_address(dev):
     dev = dev.split('/')[-1]  # Strip path if needed
     try:
@@ -125,14 +139,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--type",
-        type     = str,
-        default  = None,
-        required = False,
-        help     = "prom type",
-    )
-
-    parser.add_argument(
         "--rescan",
         type     = argBool,
         required = False,
@@ -150,6 +156,14 @@ if __name__ == "__main__":
 
     # Get the arguments
     args = parser.parse_args()
+
+    # Check if PCIe endpoint needs rescan outside of this script
+    if check_if_need_rescan(args.dev):
+        print("\n\nUnable to reprogram FPGA as lost of PCIe link.")
+        print("Please reboot or rescan to recover\n")
+        print("Here's a rescan script that you can use:")
+        print(f"{baseDir}/rescanPcieFpga.sh\n\n")
+        exit()
 
     # Check if we need to run as sudo
     pci_addr = get_pcie_address(args.dev)
@@ -174,10 +188,14 @@ if __name__ == "__main__":
         # Create useful pointers
         AxiVersion = root.AxiPcieCore.AxiVersion
 
-        if args.type is None:
+        # Check if not the primary PCIe endpoint on the PCIe card
+        if AxiVersion.BOOT_PROM_G.get() != 0xFFFFFFFF:
             promType   = AxiVersion.BOOT_PROM_G.getDisp()
         else:
-            promType   = args.type
+            print("\n\nNo PROM type detected!!!")
+            print("This is likely due to this PCIe interface not being the primary one on the PCIe card")
+            print("Please use the primary interface with has the PROM type defined for reprogramming the card\n\n")
+            exit()
 
         # Case on PROM type
         if (promType == 'BPI'):

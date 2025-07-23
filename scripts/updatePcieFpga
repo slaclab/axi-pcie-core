@@ -148,7 +148,7 @@ if __name__ == "__main__":
         type     = argBool,
         required = False,
         default  = False,
-        help     = 'Rescan PCIe devices after update',
+        help     = 'Debug Only: used for speeding up rescan testing by bypassing the PROM programming stage',
     )
 
     # Get the arguments

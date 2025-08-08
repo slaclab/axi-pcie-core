@@ -44,15 +44,26 @@ from collections import OrderedDict as odict
 
 #################################################################
 
-def get_pcie_address(dev):
+def check_if_need_rescan(dev):
     dev = dev.split('/')[-1]  # Strip path if needed
     try:
         with open(f'/proc/{dev}', "r", encoding='utf-8', errors='ignore') as file:
             pcie_address = ''
             for line in file:
                 if 'Up Time Count' in line and '4294967295' in line:
-                    print('\nPlease reboot the computer or manually remove/rescan PCIe card\n')
-                    exit()
+                    return True
+            return False
+    except FileNotFoundError:
+        return False
+
+#################################################################
+
+def get_pcie_address(dev):
+    dev = dev.split('/')[-1]  # Strip path if needed
+    try:
+        with open(f'/proc/{dev}', "r", encoding='utf-8', errors='ignore') as file:
+            pcie_address = ''
+            for line in file:
                 match = re.match(r'^PCIe\[BUS:NUM:SLOT.FUNC\]\s*:\s*(.*)', line)
                 if match:
                     pcie_address = match.group(1).strip()
@@ -125,14 +136,6 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--type",
-        type     = str,
-        default  = None,
-        required = False,
-        help     = "prom type",
-    )
-
-    parser.add_argument(
         "--rescan",
         type     = argBool,
         required = False,
@@ -140,8 +143,24 @@ if __name__ == "__main__":
         help     = 'Rescan PCIe devices after update',
     )
 
+    parser.add_argument(
+        "--bypass_reprogramming",
+        type     = argBool,
+        required = False,
+        default  = False,
+        help     = 'Debug Only: used for speeding up rescan testing by bypassing the PROM programming stage',
+    )
+
     # Get the arguments
     args = parser.parse_args()
+
+    # Check if PCIe endpoint needs rescan outside of this script
+    if check_if_need_rescan(args.dev):
+        print("\n\nUnable to reprogram FPGA as lost of PCIe link.")
+        print("Please reboot or rescan to recover\n")
+        print("Here's a rescan script that you can use:")
+        print(f"{baseDir}/rescanPcieFpga.sh\n\n")
+        exit()
 
     # Check if we need to run as sudo
     pci_addr = get_pcie_address(args.dev)
@@ -166,10 +185,14 @@ if __name__ == "__main__":
         # Create useful pointers
         AxiVersion = root.AxiPcieCore.AxiVersion
 
-        if args.type is None:
+        # Check if not the primary PCIe endpoint on the PCIe card
+        if AxiVersion.BOOT_PROM_G.get() != 0xFFFFFFFF:
             promType   = AxiVersion.BOOT_PROM_G.getDisp()
         else:
-            promType   = args.type
+            print("\n\nNo PROM type detected!!!")
+            print("This is likely due to this PCIe interface not being the primary one on the PCIe card")
+            print("Please use the primary interface with has the PROM type defined for reprogramming the card\n\n")
+            exit()
 
         # Case on PROM type
         if (promType == 'BPI'):
@@ -188,69 +211,83 @@ if __name__ == "__main__":
         AxiVersion.printStatus()
         print('#########################################')
 
-        # Get a list of images, using .mcs first
-        imgLst = odict()
+        if args.bypass_reprogramming:
+            print('\nReloading FPGA firmware from PROM ....')
+            AxiVersion.FpgaReload()
 
-        curImageName = AxiVersion.ImageName.get()
-        prefLst = glob.glob('{}/{}*.mcs*'.format(args.path,curImageName))
+        else:
+            # Get a list of images, using .mcs first
+            imgLst = odict()
 
-        rawLst = glob.glob('{}/*.mcs*'.format(args.path))
-        for l in prefLst + rawLst:
+            curImageName = AxiVersion.ImageName.get()
+            prefLst = glob.glob('{}/{}*.mcs*'.format(args.path,curImageName))
 
-            # Determine suffix
-            if '.mcs.gz' in l:
-                suff = 'mcs.gz'
-            else:
-                suff = 'mcs'
+            rawLst = glob.glob('{}/*.mcs*'.format(args.path))
+            for l in prefLst + rawLst:
 
-            # Get basename
-            l = l.replace('_primary.mcs.gz','')
-            l = l.replace('_secondary.mcs.gz','')
-            l = l.replace('_primary.mcs','')
-            l = l.replace('_secondary.mcs','')
-            l = l.replace('.mcs.gz','')
-            l = l.replace('.mcs','')
+                # Determine suffix
+                if '.mcs.gz' in l:
+                    suff = 'mcs.gz'
+                else:
+                    suff = 'mcs'
 
-            # Store entry
-            imgLst[l] = suff
+                # Get basename
+                l = l.replace('_primary.mcs.gz','')
+                l = l.replace('_secondary.mcs.gz','')
+                l = l.replace('_primary.mcs','')
+                l = l.replace('_secondary.mcs','')
+                l = l.replace('.mcs.gz','')
+                l = l.replace('.mcs','')
 
-        ent = promptForImageNumber(imgLst)
-        if ent is not None:
-            # Check if firmware matches curImageName
-            newImageName = os.path.basename(ent[0])
-            if not newImageName.startswith(curImageName):
-                resp = str(input('Selected image does not match current image {}.\nAre you sure? (y/n): '.format(curImageName)))
-                if resp != "y":
-                    ent = promptForImageNumber(imgLst)
+                # Store entry
+                imgLst[l] = suff
 
-        if ent is not None:
-            if (promType == 'SPIx8'):
-                pri = ent[0] + '_primary.' + ent[1]
-                sec = ent[0] + '_secondary.' + ent[1]
-            else:
-                pri = ent[0] + '.' + ent[1]
+            ent = promptForImageNumber(imgLst)
+            if ent is not None:
+                # Check if firmware matches curImageName
+                newImageName = os.path.basename(ent[0])
+                if not newImageName.startswith(curImageName):
+                    resp = str(input('Selected image does not match current image {}.\nAre you sure? (y/n): '.format(curImageName)))
+                    if resp != "y":
+                        ent = promptForImageNumber(imgLst)
 
-            # Load the primary MCS file
-            PROM_PRI.LoadMcsFile(pri)
+            if ent is not None:
+                if (promType == 'SPIx8'):
+                    pri = ent[0] + '_primary.' + ent[1]
+                    sec = ent[0] + '_secondary.' + ent[1]
+                else:
+                    pri = ent[0] + '.' + ent[1]
 
-            # Update the programing done flag
-            progDone = PROM_PRI._progDone
+                # Load the primary MCS file
+                try:
+                    PROM_PRI._LoadMcsFile(pri, iprogPrint=False)
+                except TypeError:
+                    PROM_PRI._LoadMcsFile(pri)
 
-            # Check for secondary PROM
-            if (promType == 'SPIx8'):
-                # Check if the primary MCS failed
-                if PROM_PRI._progDone:
-                    # Load the secondary MCS file
-                    PROM_SEC.LoadMcsFile(sec)
                 # Update the programing done flag
-                progDone = PROM_PRI._progDone and PROM_SEC._progDone
+                progDone = PROM_PRI._progDone
 
-            # Check if programming was successful
-            if (progDone):
-                print('\nReloading FPGA firmware from PROM ....')
-                AxiVersion.FpgaReload()
-            else:
-                raise ValueError('Failed to program FPGA')
+                # Check for secondary PROM
+                if (promType == 'SPIx8'):
+
+                    # Check if the primary MCS failed
+                    if PROM_PRI._progDone:
+
+                        # Load the secondary MCS file
+                        try:
+                            PROM_SEC._LoadMcsFile(sec, iprogPrint=False)
+                        except TypeError:
+                            PROM_SEC._LoadMcsFile(sec)
+
+                    # Update the programing done flag
+                    progDone = PROM_PRI._progDone and PROM_SEC._progDone
+
+                # Check if programming was successful
+                if (progDone):
+                    print('\nReloading FPGA firmware from PROM ....')
+                    AxiVersion.FpgaReload()
+                else:
+                    raise ValueError('Failed to program FPGA')
 
     #################################################################
 
@@ -264,35 +301,48 @@ if __name__ == "__main__":
                 print(f"Error writing to {path}: {e}")
                 sys.exit(1)
 
-        def unbind_device():
-            path = f"/sys/bus/pci/devices/{pci_addr}/driver/unbind"
+        def unbind_device(pcieAddr):
+            path = f"/sys/bus/pci/devices/{pcieAddr}/driver/unbind"
             if os.path.exists(path):
-                print(f"Unbinding {pci_addr}")
-                write_sysfs(path, pci_addr)
+                print(f"Unbinding {pcieAddr}")
+                write_sysfs(path, pcieAddr)
             else:
-                print(f"No driver bound or invalid device: {pci_addr}")
+                print(f"No driver bound or invalid device: {pcieAddr}")
 
-        def remove_device():
-            path = f"/sys/bus/pci/devices/{pci_addr}/remove"
+        def remove_device(pcieAddr):
+            path = f"/sys/bus/pci/devices/{pcieAddr}/remove"
             if os.path.exists(path):
-                print(f"Removing {pci_addr} from PCI bus")
+                print(f"Removing {pcieAddr} from PCI bus")
                 write_sysfs(path, "1")
             else:
-                print(f"Device {pci_addr} not found in sysfs")
+                print(f"Device {pcieAddr} not found in sysfs")
 
-        def rescan_pci():
+        def rescan_pci(pcieAddr):
             path = "/sys/bus/pci/rescan"
             print("Rescanning PCI bus")
             write_sysfs(path, "1")
 
-        unbind_device()
-        time.sleep(1)
+        def rescan_top(pcieAddr):
+            unbind_device(pcieAddr)
+            time.sleep(1)
 
-        remove_device()
-        time.sleep(1)
+            remove_device(pcieAddr)
+            time.sleep(1)
 
-        rescan_pci()
-        time.sleep(1)
+            rescan_pci(pcieAddr)
+            time.sleep(1)
+
+        # Get all matching /proc/datadev* entries
+        devices = glob.glob("/dev/datadev*")
+
+        # Loop through all the devices
+        for device in devices:
+
+            # Check if we need to rescan device
+            if check_if_need_rescan(device):
+
+                # Perform the rescan procedure for given device
+                rescan_top(get_pcie_address(device))
 
         # Wait for /dev node to return
         for i in range(10):

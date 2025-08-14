@@ -344,20 +344,15 @@ if __name__ == "__main__":
                 # Perform the rescan procedure for given device
                 rescan_top(get_pcie_address(device))
 
-        # Wait for /dev node to return
-        for i in range(10):
-            if os.path.exists(args.dev):
-                time.sleep(1)  # Give driver time to initialize
-                break
-            time.sleep(0.5)
-        else:
-            print(f"[ERROR] Device node {args.dev} not found after rescan.")
-            sys.exit(1)
-
-        # Check if there are missing devices after rescan (issue with older server nodes)
-        if devices.sort() != glob.glob("/dev/datadev*").sort():
-            print('\nPlease reboot the computer')
-            sys.exit(1)
+                # Wait for device node to return
+                for i in range(10):
+                    if os.path.exists(device):
+                        time.sleep(1)  # Give driver time to initialize
+                        break
+                    time.sleep(0.5)
+                else:
+                    print('\nPlease reboot the computer')
+                    sys.exit(1)
 
         # Print the new firmware string
         with Root(dev=args.dev) as root:

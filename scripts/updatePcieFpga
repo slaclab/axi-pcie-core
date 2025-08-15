@@ -169,6 +169,9 @@ if __name__ == "__main__":
         print("\n\n\ne.g. sudo -E $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR\n\n\n")
         exit()
 
+    # Get a sorted list of all matching /proc/datadev* entries
+    devices = sorted(glob.glob("/dev/datadev*"))
+
     if args.package is not None:
         BasePackage = importlib.import_module(args.package)
         args.path = BasePackage.ImageDir
@@ -319,7 +322,7 @@ if __name__ == "__main__":
 
         def rescan_pci(pcieAddr):
             path = "/sys/bus/pci/rescan"
-            print("Rescanning PCI bus")
+            print("Rescanning PCI bus\n")
             write_sysfs(path, "1")
 
         def rescan_top(pcieAddr):
@@ -332,8 +335,8 @@ if __name__ == "__main__":
             rescan_pci(pcieAddr)
             time.sleep(1)
 
-        # Get all matching /proc/datadev* entries
-        devices = glob.glob("/dev/datadev*")
+        # Allow for settling time for the FPGA reload to finish
+        time.sleep(1)
 
         # Loop through all the devices
         for device in devices:
@@ -344,15 +347,22 @@ if __name__ == "__main__":
                 # Perform the rescan procedure for given device
                 rescan_top(get_pcie_address(device))
 
-                # Wait for device node to return
+                # Wait for /dev node to return
                 for i in range(10):
                     if os.path.exists(device):
                         time.sleep(1)  # Give driver time to initialize
                         break
                     time.sleep(0.5)
                 else:
+                    print(f"[WARNING] Device node {device} not found after rescan.")
                     print('\nPlease reboot the computer')
                     sys.exit(1)
+
+        # Check if there are missing devices after rescan
+        if devices != sorted(glob.glob("/dev/datadev*")):
+            print("[WARNING] Mismatch between list of datadev devices before and after rescan")
+            print('\nPlease reboot the computer')
+            sys.exit(1)
 
         # Print the new firmware string
         with Root(dev=args.dev) as root:
@@ -366,7 +376,7 @@ if __name__ == "__main__":
         # Check if rescan and other driver
         if args.rescan and (pci_addr == ''):
             print('\nUnable to do rescan due to older driver')
-            print('Update to aes-stream-drivers@6.7.1 (other later) for this feature support\n')
+            print('Update kernel driver to aes-stream-drivers@6.7.1 (other later) for this feature support\n')
 
         # Prompt the user to reboot the machine
         print('\nPlease reboot the computer')

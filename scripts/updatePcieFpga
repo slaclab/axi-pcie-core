@@ -154,6 +154,11 @@ if __name__ == "__main__":
     # Get the arguments
     args = parser.parse_args()
 
+    # Check if args.dev does not exists
+    if not os.path.exists(args.dev):
+        print(f"\n[ERROR]: {args.dev} does NOT exists\n")
+        sys.exit(1)
+
     # Check if PCIe endpoint needs rescan outside of this script
     if check_if_need_rescan(args.dev):
         print("\n\nUnable to reprogram FPGA as lost of PCIe link.")

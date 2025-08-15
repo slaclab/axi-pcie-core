@@ -363,6 +363,12 @@ if __name__ == "__main__":
             print('#########################################')
 
     else:
+        # Check if rescan and other driver
+        if args.rescan and (pci_addr == ''):
+            print('\nUnable to do rescan due to older driver')
+            print('Update to aes-stream-drivers@6.7.1 (other later) for this feature support\n')
+
+        # Prompt the user to reboot the machine
         print('\nPlease reboot the computer')
 
     #################################################################

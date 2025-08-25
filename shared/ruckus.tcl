@@ -12,8 +12,8 @@ if { [info exists ::env(OVERRIDE_SUBMODULE_LOCKS)] != 1 || $::env(OVERRIDE_SUBMO
    puts "*********************************************************\n\n"
 }
 
-# Check for version 2023.1 of Vivado (or later)
-if { [VersionCheck 2023.1] < 0 } {exit -1}
+# Check for version 2020.1 of Vivado (or later)
+if { [VersionCheck 2020.1] < 0 } {exit -1}
 
 # Load Source Code
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
@@ -32,6 +32,3 @@ loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcie32BCrossbarIpCore"
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcie64BCrossbarIpCore"
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/AxiPcieResize"
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip/SystemManagementCore"
-
-# Skip the utilization check during placement
-set_param place.skipUtilizationCheck 1

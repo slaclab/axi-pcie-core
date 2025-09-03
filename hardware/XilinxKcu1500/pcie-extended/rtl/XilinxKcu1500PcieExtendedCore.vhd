@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : XilinxKcu1500PcieExtendedCore.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for KCU1500 board: Extended PCIe Ports  (PCIe GEN3 x 8 lanes)
@@ -19,7 +18,6 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
 
-
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
@@ -28,6 +26,7 @@ use surf.AxiPkg.all;
 
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
+use axi_pcie_core.AxiPcieSharedPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -42,6 +41,7 @@ entity XilinxKcu1500PcieExtendedCore is
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000001";
       DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
+      DATAGPU_EN_G         : boolean                     := false;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (
       ------------------------
@@ -67,6 +67,11 @@ entity XilinxKcu1500PcieExtendedCore is
       appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
       appWriteMaster  : out AxiLiteWriteMasterType;
       appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      -- GPU AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
+      gpuReadMaster   : out AxiLiteReadMasterType;
+      gpuReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      gpuWriteMaster  : out AxiLiteWriteMasterType;
+      gpuWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
@@ -201,7 +206,10 @@ begin
          EN_DEVICE_DNA_G      => false,
          EN_ICAP_G            => false,
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
+         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_KCU1500_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
+         DATAGPU_EN_G         => DATAGPU_EN_G,
+         GEN_SYSMON_G         => false,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
@@ -230,6 +238,11 @@ begin
          appReadSlave        => appReadSlave,
          appWriteMaster      => appWriteMaster,
          appWriteSlave       => appWriteSlave,
+         -- (Optional) GPU AXI-Lite Interfaces
+         gpuReadMaster       => gpuReadMaster,
+         gpuReadSlave        => gpuReadSlave,
+         gpuWriteMaster      => gpuWriteMaster,
+         gpuWriteSlave       => gpuWriteSlave,
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset);

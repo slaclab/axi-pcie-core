@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 #-----------------------------------------------------------------------------
-# Title      : BPI/SPIx4/SPIx8 Prom Update
+# Company    : SLAC National Accelerator Laboratory
 #-----------------------------------------------------------------------------
-# This file is part of the 'axi-pcie-core'. It is subject to 
-# the license terms in the LICENSE.txt file found in the top-level directory 
-# of this distribution and at: 
-#    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html. 
-# No part of the 'axi-pcie-core', including this file, may be 
-# copied, modified, propagated, or distributed except according to the terms 
+#  Description: BPI/SPIx4/SPIx8 Reprogrmming Script
+#-----------------------------------------------------------------------------
+# This file is part of the 'axi-pcie-core'. It is subject to
+# the license terms in the LICENSE.txt file found in the top-level directory
+# of this distribution and at:
+#    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+# No part of the 'axi-pcie-core', including this file, may be
+# copied, modified, propagated, or distributed except according to the terms
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
 
 import pyrogue as pr
 import os
 import importlib
+import subprocess
+import argparse
 
 baseDir = os.path.dirname(os.path.realpath(__file__))
 
@@ -30,11 +34,44 @@ except:
     pr.addLibraryPath(baseDir + '/../../surf/python')
 
 import sys
+import re
+import time
 import glob
 import argparse
 import rogue.hardware.axi
 import axipcie as pcie
 from collections import OrderedDict as odict
+
+#################################################################
+
+def check_if_need_rescan(dev):
+    dev = dev.split('/')[-1]  # Strip path if needed
+    try:
+        with open(f'/proc/{dev}', "r", encoding='utf-8', errors='ignore') as file:
+            pcie_address = ''
+            for line in file:
+                if 'Up Time Count' in line and '4294967295' in line:
+                    return True
+            return False
+    except FileNotFoundError:
+        return False
+
+#################################################################
+
+def get_pcie_address(dev):
+    dev = dev.split('/')[-1]  # Strip path if needed
+    try:
+        with open(f'/proc/{dev}', "r", encoding='utf-8', errors='ignore') as file:
+            pcie_address = ''
+            for line in file:
+                match = re.match(r'^PCIe\[BUS:NUM:SLOT.FUNC\]\s*:\s*(.*)', line)
+                if match:
+                    pcie_address = match.group(1).strip()
+            return pcie_address
+    except FileNotFoundError:
+        return ''
+
+#################################################################
 
 def promptForImageNumber(imgLst):
     for i,l in enumerate(imgLst.items()):
@@ -46,46 +83,99 @@ def promptForImageNumber(imgLst):
         return None
     return list(imgLst.items())[idx]
 
-if __name__ == "__main__": 
+#################################################################
+
+class Root(pr.Root):
+    def __init__(self, dev='', **kwargs):
+        super().__init__(pollEn=False, initRead=True, **kwargs)
+
+        # Create the stream interface
+        self.memMap = rogue.hardware.axi.AxiMemMap(dev)
+        self.addInterface(self.memMap)
+
+        # Add Base Device
+        self.add(pcie.AxiPcieCore(
+            memBase = self.memMap,
+            useBpi  = True,
+            useSpi  = True,
+        ))
+
+#################################################################
+
+if __name__ == "__main__":
 
     # Set the argument parser
     parser = argparse.ArgumentParser()
 
+    # Convert str to bool
+    argBool = lambda s: s.lower() in ['true', 't', 'yes', '1']
+
     # Add arguments
     parser.add_argument(
-        "--dev", 
+        "--dev",
         type     = str,
         required = False,
         default  = "/dev/datadev_0",
         help     = "path to device",
-    ) 
+    )
 
     parser.add_argument(
-        "--package", 
+        "--package",
         type     = str,
         default  = None,
         required = False,
         help     = "path to images",
-    )  
+    )
 
     parser.add_argument(
-        "--path", 
+        "--path",
         type     = str,
         default  = None,
         required = False,
         help     = "path to images",
-    )  
+    )
 
     parser.add_argument(
-        "--type", 
-        type     = str,
-        default  = None,
+        "--rescan",
+        type     = argBool,
         required = False,
-        help     = "prom type",
-    )  
+        default  = True,
+        help     = 'Rescan PCIe devices after update',
+    )
+
+    parser.add_argument(
+        "--bypass_reprogramming",
+        type     = argBool,
+        required = False,
+        default  = False,
+        help     = 'Debug Only: used for speeding up rescan testing by bypassing the PROM programming stage',
+    )
 
     # Get the arguments
     args = parser.parse_args()
+
+    # Check if args.dev does not exists
+    if not os.path.exists(args.dev):
+        print(f"\n[ERROR]: {args.dev} does NOT exists\n")
+        sys.exit(1)
+
+    # Check if PCIe endpoint needs rescan outside of this script
+    if check_if_need_rescan(args.dev):
+        print("\n\nUnable to reprogram FPGA as lost of PCIe link.")
+        print("Please reboot or rescan to recover\n")
+        print("Here's a rescan script that you can use:")
+        print(f"{baseDir}/rescanPcieFpga.sh\n\n")
+        exit()
+
+    # Check if we need to run as sudo
+    pci_addr = get_pcie_address(args.dev)
+    if args.rescan and (pci_addr != '') and (os.geteuid() != 0):
+        print("This script must be run as root (sudo).")
+        print("\n\n\ne.g. sudo -E $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR\n\n\n")
+        exit()
+
+    # Get a sorted list of all matching /proc/datadev* entries
+    devices = sorted(glob.glob("/dev/datadev*"))
 
     if args.package is not None:
         BasePackage = importlib.import_module(args.package)
@@ -96,115 +186,204 @@ if __name__ == "__main__":
         parser.print_help()
         exit()
 
-    # Set base
-    base = pr.Root(name='PcieTop',description='',pollEn=False)
+    #################################################################
 
-    # Create the stream interface
-    memMap = rogue.hardware.axi.AxiMemMap(args.dev)
+    with Root(dev=args.dev) as root:
 
-    # Add Base Device
-    base.add(pcie.AxiPcieCore(
-        memBase = memMap,
-        useBpi  = True,
-        useSpi  = True,
-    ))
+        # Create useful pointers
+        AxiVersion = root.AxiPcieCore.AxiVersion
 
-    # Start the system
-    base.start()
-
-    # Read all the variables
-    base.ReadAll()
-
-    # Create useful pointers
-    AxiVersion = base.AxiPcieCore.AxiVersion
-
-    if args.type is None:
-        promType   = AxiVersion.BOOT_PROM_G.getDisp()
-    else:
-        promType   = args.type
-
-    # Case on PROM type
-    if (promType == 'BPI'):
-        PROM_PRI = base.AxiPcieCore.AxiMicronMt28ew
-    elif (promType == 'SPIx8') or (promType == 'SPIx4'):
-        PROM_PRI = base.AxiPcieCore.AxiMicronN25Q[0]
-        if (promType == 'SPIx8'):
-            PROM_SEC = base.AxiPcieCore.AxiMicronN25Q[1]
-    else:
-        raise ValueError('Invalid promType')
-
-    # Printout Current AxiVersion status
-    print('#########################################')
-    print('Current Firmware Loaded on the PCIe card:')
-    print('#########################################')
-    AxiVersion.printStatus()
-    print('#########################################')
-
-    # Get a list of images, using .mcs first
-    imgLst = odict()
-
-    curImageName = AxiVersion.ImageName.get()
-    prefLst = glob.glob('{}/{}*.mcs*'.format(args.path,curImageName))
-
-    rawLst = glob.glob('{}/*.mcs*'.format(args.path))
-    for l in prefLst + rawLst:
-
-        # Determine suffix
-        if '.mcs.gz' in l:
-            suff = 'mcs.gz'
+        # Check if not the primary PCIe endpoint on the PCIe card
+        if AxiVersion.BOOT_PROM_G.get() != 0xFFFFFFFF:
+            promType   = AxiVersion.BOOT_PROM_G.getDisp()
         else:
-            suff = 'mcs'
+            print("\n\nNo PROM type detected!!!")
+            print("This is likely due to this PCIe interface not being the primary one on the PCIe card")
+            print("Please use the primary interface with has the PROM type defined for reprogramming the card\n\n")
+            exit()
 
-        # Get basename
-        l = l.replace('_primary.mcs.gz','')
-        l = l.replace('_secondary.mcs.gz','')
-        l = l.replace('_primary.mcs','')
-        l = l.replace('_secondary.mcs','')
-        l = l.replace('.mcs.gz','')    
-        l = l.replace('.mcs','')
-
-        # Store entry
-        imgLst[l] = suff
-
-    ent = promptForImageNumber(imgLst)
-    if ent is not None:
-        # Check if firmware matches curImageName
-        newImageName = os.path.basename(ent[0])
-        if not newImageName.startswith(curImageName):
-            resp = str(input('Selected image does not match current image {}.\nAre you sure? (y/n): '.format(curImageName)))
-            if resp != "y":
-                ent = promptForImageNumber(imgLst)
-
-    if ent is not None:
-        if (promType == 'SPIx8'):
-            pri = ent[0] + '_primary.' + ent[1]
-            sec = ent[0] + '_secondary.' + ent[1]
+        # Case on PROM type
+        if (promType == 'BPI'):
+            PROM_PRI = root.AxiPcieCore.AxiMicronMt28ew
+        elif (promType == 'SPIx8') or (promType == 'SPIx4'):
+            PROM_PRI = root.AxiPcieCore.AxiMicronN25Q[0]
+            if (promType == 'SPIx8'):
+                PROM_SEC = root.AxiPcieCore.AxiMicronN25Q[1]
         else:
-            pri = ent[0] + '.' + ent[1]
+            raise ValueError('Invalid promType')
 
-        # Load the primary MCS file
-        PROM_PRI.LoadMcsFile(pri)  
+        # Printout Current AxiVersion status
+        print('#########################################')
+        print('Current Firmware Loaded on the PCIe card:')
+        print('#########################################')
+        AxiVersion.printStatus()
+        print('#########################################')
 
-        # Update the programing done flag
-        progDone = PROM_PRI._progDone
-
-        # Check for secondary PROM
-        if (promType == 'SPIx8'):
-            # Check if the primary MCS failed
-            if PROM_PRI._progDone: 
-                # Load the secondary MCS file
-                PROM_SEC.LoadMcsFile(sec)  
-            # Update the programing done flag
-            progDone = PROM_PRI._progDone and PROM_SEC._progDone
-
-        # Check if programming was successful
-        if (progDone):
+        if args.bypass_reprogramming:
             print('\nReloading FPGA firmware from PROM ....')
             AxiVersion.FpgaReload()
-            print('\nPlease reboot the computer')
+
         else:
-            print('Failed to program FPGA')
-        
-    # Close out
-    base.stop()
-    exit()
+            # Get a list of images, using .mcs first
+            imgLst = odict()
+
+            curImageName = AxiVersion.ImageName.get()
+            prefLst = glob.glob('{}/{}*.mcs*'.format(args.path,curImageName))
+
+            rawLst = glob.glob('{}/*.mcs*'.format(args.path))
+            for l in prefLst + rawLst:
+
+                # Determine suffix
+                if '.mcs.gz' in l:
+                    suff = 'mcs.gz'
+                else:
+                    suff = 'mcs'
+
+                # Get basename
+                l = l.replace('_primary.mcs.gz','')
+                l = l.replace('_secondary.mcs.gz','')
+                l = l.replace('_primary.mcs','')
+                l = l.replace('_secondary.mcs','')
+                l = l.replace('.mcs.gz','')
+                l = l.replace('.mcs','')
+
+                # Store entry
+                imgLst[l] = suff
+
+            ent = promptForImageNumber(imgLst)
+            if ent is not None:
+                # Check if firmware matches curImageName
+                newImageName = os.path.basename(ent[0])
+                if not newImageName.startswith(curImageName):
+                    resp = str(input('Selected image does not match current image {}.\nAre you sure? (y/n): '.format(curImageName)))
+                    if resp != "y":
+                        ent = promptForImageNumber(imgLst)
+
+            if ent is not None:
+                if (promType == 'SPIx8'):
+                    pri = ent[0] + '_primary.' + ent[1]
+                    sec = ent[0] + '_secondary.' + ent[1]
+                else:
+                    pri = ent[0] + '.' + ent[1]
+
+                # Load the primary MCS file
+                try:
+                    PROM_PRI._LoadMcsFile(pri, iprogPrint=False)
+                except TypeError:
+                    PROM_PRI._LoadMcsFile(pri)
+
+                # Update the programing done flag
+                progDone = PROM_PRI._progDone
+
+                # Check for secondary PROM
+                if (promType == 'SPIx8'):
+
+                    # Check if the primary MCS failed
+                    if PROM_PRI._progDone:
+
+                        # Load the secondary MCS file
+                        try:
+                            PROM_SEC._LoadMcsFile(sec, iprogPrint=False)
+                        except TypeError:
+                            PROM_SEC._LoadMcsFile(sec)
+
+                    # Update the programing done flag
+                    progDone = PROM_PRI._progDone and PROM_SEC._progDone
+
+                # Check if programming was successful
+                if (progDone):
+                    print('\nReloading FPGA firmware from PROM ....')
+                    AxiVersion.FpgaReload()
+                else:
+                    raise ValueError('Failed to program FPGA')
+
+    #################################################################
+
+    if args.rescan and (pci_addr != ''):
+
+        def write_sysfs(path, value):
+            try:
+                with open(path, 'w') as f:
+                    f.write(value)
+            except Exception as e:
+                print(f"Error writing to {path}: {e}")
+                sys.exit(1)
+
+        def unbind_device(pcieAddr):
+            path = f"/sys/bus/pci/devices/{pcieAddr}/driver/unbind"
+            if os.path.exists(path):
+                print(f"Unbinding {pcieAddr}")
+                write_sysfs(path, pcieAddr)
+            else:
+                print(f"No driver bound or invalid device: {pcieAddr}")
+
+        def remove_device(pcieAddr):
+            path = f"/sys/bus/pci/devices/{pcieAddr}/remove"
+            if os.path.exists(path):
+                print(f"Removing {pcieAddr} from PCI bus")
+                write_sysfs(path, "1")
+            else:
+                print(f"Device {pcieAddr} not found in sysfs")
+
+        def rescan_pci(pcieAddr):
+            path = "/sys/bus/pci/rescan"
+            print("Rescanning PCI bus\n")
+            write_sysfs(path, "1")
+
+        def rescan_top(pcieAddr):
+            unbind_device(pcieAddr)
+            time.sleep(1)
+
+            remove_device(pcieAddr)
+            time.sleep(1)
+
+            rescan_pci(pcieAddr)
+            time.sleep(1)
+
+        # Allow for settling time for the FPGA reload to finish
+        time.sleep(1)
+
+        # Loop through all the devices
+        for device in devices:
+
+            # Check if we need to rescan device
+            if check_if_need_rescan(device):
+
+                # Perform the rescan procedure for given device
+                rescan_top(get_pcie_address(device))
+
+                # Wait for /dev node to return
+                for i in range(10):
+                    if os.path.exists(device):
+                        time.sleep(1)  # Give driver time to initialize
+                        break
+                    time.sleep(0.5)
+                else:
+                    print(f"[WARNING] Device node {device} not found after rescan.")
+                    print('\nPlease reboot the computer')
+                    sys.exit(1)
+
+        # Check if there are missing devices after rescan
+        if devices != sorted(glob.glob("/dev/datadev*")):
+            print("[WARNING] Mismatch between list of datadev devices before and after rescan")
+            print('\nPlease reboot the computer')
+            sys.exit(1)
+
+        # Print the new firmware string
+        with Root(dev=args.dev) as root:
+            print('#########################################')
+            print('New Firmware Loaded on the PCIe card:')
+            print('#########################################')
+            root.AxiPcieCore.AxiVersion.printStatus()
+            print('#########################################')
+
+    else:
+        # Check if rescan and other driver
+        if args.rescan and (pci_addr == ''):
+            print('\nUnable to do rescan due to older driver')
+            print('Update kernel driver to aes-stream-drivers@6.7.1 (other later) for this feature support\n')
+
+        # Prompt the user to reboot the machine
+        print('\nPlease reboot the computer')
+
+    #################################################################

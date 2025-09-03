@@ -60,8 +60,8 @@
 # ASYNC CLOCK GROUPINGS
 ###############################################################################
 # sys_clk vs TXOUTCLK
-set_clock_groups -asynchronous -group [get_clocks -of_objects [get_ports sys_clk]] -group [get_clocks -of_objects [get_pins -hierarchical -filter {NAME =~ *gen_channel_container[*].*gen_gtye4_channel_inst[*].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]]
-set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins -hierarchical -filter {NAME =~ *gen_channel_container[*].*gen_gtye4_channel_inst[*].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_ports sys_clk]]
+set_clock_groups -asynchronous -group [get_clocks -of_objects [get_ports sys_clk]] -group [get_clocks -of_objects [get_pins -hierarchical -filter {NAME =~ *gen_channel_container[27].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]]
+set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins -hierarchical -filter {NAME =~ *gen_channel_container[27].*gen_gtye4_channel_inst[3].GTYE4_CHANNEL_PRIM_INST/TXOUTCLK}]] -group [get_clocks -of_objects [get_ports sys_clk]]
 #
 # sys_clk vs intclk
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]] -group [get_clocks -of_objects [get_ports sys_clk]]
@@ -75,3 +75,12 @@ set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins gt_top_i
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_ports sys_clk]] -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/O]]
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/O]] -group [get_clocks -of_objects [get_ports sys_clk]]
 #
+#
+create_waiver -internal -quiet -user pcie4c_uscale_plus -tags 1015842 -type METHODOLOGY -id TIMING-3 -description "added waiver as TXOUTCLK period is intentionally overriding as DRP ports used to change the configuration/speed dynamically in runtime"  -scope \
+  -objects [get_pins -hierarchical -filter {NAME =~ *gen_channel_container[27].*gen_gtye4_channel_inst[3].GT*E4_CHANNEL_PRIM_INST/TXOUTCLK}]
+#
+create_waiver -internal -quiet -user pcie4c_uscale_plus -tags 1015842 -type METHODOLOGY -id TIMING-1 -description "added waiver as TXOUTCLK period is intentionally overriding as DRP ports used to change the configuration/speed dynamically in runtime"  -scope \
+  -objects [get_pins -hierarchical -filter {NAME =~ *gen_channel_container[27].*gen_gtye4_channel_inst[3].GT*E4_CHANNEL_PRIM_INST/TXOUTCLK}]
+#
+create_waiver -internal -quiet -user pcie4c_uscale_plus -tags 1015842 -type METHODOLOGY -id TIMING-3 -description "added waiver for int clock BUFG_GT usecase and this clock will be used for small portion of the logic before perst is deasserted/removed"  -scope \
+  -objects [get_pins -filter {REF_PIN_NAME=~*O} -of_objects [get_cells -hierarchical -filter {NAME =~ *phy_clk_i/bufg_gt_intclk}]]

@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : AxiPcieGpuAsyncCore.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Support for GpuDirectAsync like data transport to/from a GPU
@@ -32,8 +31,8 @@ use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPcieGpuAsyncCore is
    generic (
-      TPD_G             : time := 1 ns;
-      NUM_CHAN_G        : positive range 1 to 4 := 1;
+      TPD_G             : time                  := 1 ns;
+      MAX_BUFFERS_G     : integer range 1 to 16 := 4;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -50,6 +49,9 @@ entity AxiPcieGpuAsyncCore is
       sAxisSlave      : out AxiStreamSlaveType;
       mAxisMaster     : out AxiStreamMasterType;
       mAxisSlave      : in  AxiStreamSlaveType;
+      -- AXI Stream Interface bypass (axisClk domain)
+      bypassMaster    : out AxiStreamMasterType;
+      bypassSlave     : in  AxiStreamSlaveType;
       -- AXI4 Interfaces (axiClk domain)
       axiClk          : in  sl;
       axiRst          : in  sl;
@@ -81,15 +83,24 @@ architecture mapping of AxiPcieGpuAsyncCore is
    signal dmaRdDescRet    : AxiReadDmaDescRetType;
    signal dmaRdDescRetAck : sl;
 
-   signal awCache         : slv(3 downto 0);
-   signal arCache         : slv(3 downto 0);
+   signal dynamicRouteMasks : Slv8Array(1 downto 0);
+   signal dynamicRouteDests : Slv8Array(1 downto 0);
+   signal mAxisDemuxMasters : AxiStreamMasterArray(1 downto 0);
+   signal mAxisDemuxSlaves  : AxiStreamSlaveArray(1 downto 0);
 
-   signal sAxisMasterInt  : AxiStreamMasterType;
-   signal sAxisSlaveInt   : AxiStreamSlaveType;
-   signal mAxisMasterInt  : AxiStreamMasterType;
-   signal mAxisSlaveInt   : AxiStreamSlaveType;
+   signal awCache : slv(3 downto 0);
+   signal arCache : slv(3 downto 0);
+
+   signal sAxisMasterInt : AxiStreamMasterType;
+   signal sAxisSlaveInt  : AxiStreamSlaveType;
+   signal mAxisMasterInt : AxiStreamMasterType;
+   signal mAxisSlaveInt  : AxiStreamSlaveType;
 
 begin
+
+   -- direct connection to Pcie core from Demux
+   bypassMaster        <= mAxisDemuxMasters(1);
+   mAxisDemuxSlaves(1) <= bypassSlave;
 
    ------------------------------
    -- AXI-Lite Control/Monitoring
@@ -97,6 +108,7 @@ begin
    U_AxiPcieGpuAsyncControl : entity axi_pcie_core.AxiPcieGpuAsyncControl
       generic map (
          TPD_G            => TPD_G,
+         MAX_BUFFERS_G    => MAX_BUFFERS_G,
          DMA_AXI_CONFIG_G => AXI_PCIE_CONFIG_C)
       port map (
          axilClk           => axilClk,
@@ -107,6 +119,8 @@ begin
          axilWriteSlave    => axilWriteSlave,
          axiClk            => axiClk,
          axiRst            => axiRst,
+         dynamicRouteMasks => dynamicRouteMasks,
+         dynamicRouteDests => dynamicRouteDests,
          awCache           => awCache,
          dmaWrDescReq      => dmaWrDescReq,
          dmaWrDescAck      => dmaWrDescAck,
@@ -117,10 +131,28 @@ begin
          dmaRdDescRet      => dmaRdDescRet,
          dmaRdDescRetAck   => dmaRdDescRetAck);
 
+   ------------------------------
+   -- AXI-Stream Demux
+   ------------------------------
+   AxiStreamDeMux_inst : entity surf.AxiStreamDeMux
+      generic map (
+         TPD_G         => TPD_G,
+         NUM_MASTERS_G => 2,
+         MODE_G        => "DYNAMIC")
+      port map (
+         axisClk           => axisClk,
+         axisRst           => axisRst,
+         dynamicRouteMasks => dynamicRouteMasks,
+         dynamicRouteDests => dynamicRouteDests,
+         sAxisMaster       => sAxisMaster,
+         sAxisSlave        => sAxisSlave,
+         mAxisMasters      => mAxisDemuxMasters,
+         mAxisSlaves       => mAxisDemuxSlaves
+         );
+
    ------------------------------------
    -- Stream receiver to GPU DMA
    ------------------------------------
-
    AxisRxFifo : entity surf.AxiStreamFifoV2
       generic map (
          -- General Configurations
@@ -135,19 +167,19 @@ begin
       port map (
          sAxisClk    => axisClk,
          sAxisRst    => axisRst,
-         sAxisMaster => sAxisMaster,
-         sAxisSlave  => sAxisSlave,
+         sAxisMaster => mAxisDemuxMasters(0),
+         sAxisSlave  => mAxisDemuxSlaves(0),
          mAxisClk    => axiClk,
          mAxisRst    => axiRst,
          mAxisMaster => sAxisMasterInt,
          mAxisSlave  => sAxisSlaveInt);
 
-   U_DmaWrite: entity surf.AxiStreamDmaV2Write
+   U_DmaWrite : entity surf.AxiStreamDmaV2Write
       generic map (
-         TPD_G             => TPD_G,
-         AXI_READY_EN_G    => true,
-         AXIS_CONFIG_G     => PCIE_AXIS_CONFIG_C,
-         AXI_CONFIG_G      => AXI_PCIE_CONFIG_C)
+         TPD_G          => TPD_G,
+         AXI_READY_EN_G => true,
+         AXIS_CONFIG_G  => PCIE_AXIS_CONFIG_C,
+         AXI_CONFIG_G   => AXI_PCIE_CONFIG_C)
       port map (
          axiClk          => axiClk,
          axiRst          => axiRst,
@@ -165,7 +197,7 @@ begin
    -- Stream transmitter from GPU DMA
    ------------------------------------
 
-   U_DmaRead: entity surf.AxiStreamDmaV2Read
+   U_DmaRead : entity surf.AxiStreamDmaV2Read
       generic map (
          TPD_G           => TPD_G,
          AXIS_READY_EN_G => true,

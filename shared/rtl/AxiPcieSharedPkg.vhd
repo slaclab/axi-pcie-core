@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : AxiPcieSharedPkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Shared Package file for AXI PCIe Core

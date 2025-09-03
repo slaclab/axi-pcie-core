@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : XilinxKcu116Core.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for Xilinx KCU11P board (PCIe GEN3 x 8 lanes)
@@ -18,7 +17,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
-
 
 library surf;
 use surf.StdRtlPkg.all;
@@ -43,6 +41,7 @@ entity XilinxKcu116Core is
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
       DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
+      DATAGPU_EN_G         : boolean                     := false;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (
       ------------------------
@@ -57,12 +56,17 @@ entity XilinxKcu116Core is
       dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk          : in  sl;
-      appRst          : in  sl;
+      appClk          : in  sl                    := '0';
+      appRst          : in  sl                    := '1';
       appReadMaster   : out AxiLiteReadMasterType;
-      appReadSlave    : in  AxiLiteReadSlaveType;
+      appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
       appWriteMaster  : out AxiLiteWriteMasterType;
-      appWriteSlave   : in  AxiLiteWriteSlaveType;
+      appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      -- GPU AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
+      gpuReadMaster   : out AxiLiteReadMasterType;
+      gpuReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      gpuWriteMaster  : out AxiLiteWriteMasterType;
+      gpuWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
@@ -197,6 +201,7 @@ begin
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
          PCIE_HW_TYPE_G       => HW_TYPE_XILINX_KCU116_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
+         DATAGPU_EN_G         => DATAGPU_EN_G,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
@@ -223,6 +228,11 @@ begin
          appReadSlave        => appReadSlave,
          appWriteMaster      => appWriteMaster,
          appWriteSlave       => appWriteSlave,
+         -- (Optional) GPU AXI-Lite Interfaces
+         gpuReadMaster       => gpuReadMaster,
+         gpuReadSlave        => gpuReadSlave,
+         gpuWriteMaster      => gpuWriteMaster,
+         gpuWriteSlave       => gpuWriteSlave,
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset,

@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : AxiPcieReg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI-Lite Crossbar and Register Access
@@ -16,7 +15,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiPkg.all;
@@ -26,7 +24,6 @@ use surf.AxiLitePkg.all;
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
 use axi_pcie_core.AxiPcieSharedPkg.all;
-use surf.AxiMicronP30Pkg.all;
 
 entity AxiPcieReg is
    generic (
@@ -41,8 +38,10 @@ entity AxiPcieReg is
       PCIE_HW_TYPE_G       : slv(31 downto 0)            := HW_TYPE_UNDEFINED_C;
       EN_DEVICE_DNA_G      : boolean                     := true;
       EN_ICAP_G            : boolean                     := true;
-      DMA_SIZE_G           : positive range 1 to 16      := 1;
-      APP_CLK_IS_AXI_CLK_G : boolean := false);
+      APP_CLK_IS_AXI_CLK_G : boolean                     := false;
+      DATAGPU_EN_G         : boolean                     := false;
+      GEN_SYSMON_G         : boolean                     := true;
+      DMA_SIZE_G           : positive range 1 to 16      := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)
       axiClk              : in  sl;
@@ -75,6 +74,11 @@ entity AxiPcieReg is
       appReadSlave        : in  AxiLiteReadSlaveType;
       appWriteMaster      : out AxiLiteWriteMasterType;
       appWriteSlave       : in  AxiLiteWriteSlaveType;
+      -- GPU AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
+      gpuReadMaster       : out AxiLiteReadMasterType;
+      gpuReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
+      gpuWriteMaster      : out AxiLiteWriteMasterType;
+      gpuWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
       -- Application Force reset
       cardResetIn         : in  sl;
       cardResetOut        : out sl;
@@ -99,19 +103,21 @@ architecture mapping of AxiPcieReg is
    constant DMA_INDEX_C     : natural := 0;
    constant PHY_INDEX_C     : natural := 1;
    constant VERSION_INDEX_C : natural := 2;
-   constant BPI_INDEX_C     : natural := 3;
-   constant SPI0_INDEX_C    : natural := 4;
-   constant SPI1_INDEX_C    : natural := 5;
-   constant AXIS_MON_IB_C   : natural := 6;
-   constant AXIS_MON_OB_C   : natural := 7;
-   constant I2C_INDEX_C     : natural := 8;
+   constant SYSMON_INDEX_C  : natural := 3;
+   constant GPU_INDEX_C     : natural := 4;
+   constant BPI_INDEX_C     : natural := 5;
+   constant SPI0_INDEX_C    : natural := 6;
+   constant SPI1_INDEX_C    : natural := 7;
+   constant AXIS_MON_IB_C   : natural := 8;
+   constant AXIS_MON_OB_C   : natural := 9;
+   constant I2C_INDEX_C     : natural := 10;
    -- constant APP0_INDEX_C    : natural := XXX; -- Now used for PIP interface
-   constant APP1_INDEX_C    : natural := 9;
-   constant APP2_INDEX_C    : natural := 10;
-   constant APP3_INDEX_C    : natural := 11;
-   constant APP4_INDEX_C    : natural := 12;
+   constant APP1_INDEX_C    : natural := 11;
+   constant APP2_INDEX_C    : natural := 12;
+   constant APP3_INDEX_C    : natural := 13;
+   constant APP4_INDEX_C    : natural := 14;
 
-   constant NUM_AXI_MASTERS_C : natural := 13;
+   constant NUM_AXI_MASTERS_C : natural := 15;
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       DMA_INDEX_C     => (
@@ -124,7 +130,15 @@ architecture mapping of AxiPcieReg is
          connectivity => x"FFFF"),
       VERSION_INDEX_C => (
          baseAddr     => x"0002_0000",
-         addrBits     => 16,
+         addrBits     => 14,
+         connectivity => x"FFFF"),
+      SYSMON_INDEX_C  => (
+         baseAddr     => x"0002_4000",
+         addrBits     => 14,
+         connectivity => x"FFFF"),
+      GPU_INDEX_C     => (
+         baseAddr     => x"0002_8000",
+         addrBits     => 15,
          connectivity => x"FFFF"),
       BPI_INDEX_C     => (
          baseAddr     => x"0003_0000",
@@ -288,8 +302,11 @@ begin
       -- PCIe Hardware Type
       userValues(9) <= PCIE_HW_TYPE_G;
 
+      -- Set whether the DATAGPU mode is enabled
+      userValues(10)(0) <= ite(DATAGPU_EN_G, '1', '0');
+
       -- Set unused to zero
-      for i in 63 downto 10 loop
+      for i in 63 downto 11 loop
          userValues(i) <= x"00000000";
       end loop;
 
@@ -414,6 +431,46 @@ begin
          userReset      => cardResetOut,
          -- Optional: user values
          userValues     => userValues);
+
+   -------------------------
+   -- AXI-Lite Sysmon Module
+   -------------------------
+   GEN_SYSMON : if (GEN_SYSMON_G) generate
+      U_Sysmon : entity axi_pcie_core.Sysmon
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            -- AXI-Lite Interface
+            axilClk         => axiClk,
+            axilRst         => axiRst,
+            axilReadMaster  => axilReadMasters(SYSMON_INDEX_C),
+            axilReadSlave   => axilReadSlaves(SYSMON_INDEX_C),
+            axilWriteMaster => axilWriteMasters(SYSMON_INDEX_C),
+            axilWriteSlave  => axilWriteSlaves(SYSMON_INDEX_C));
+   end generate;
+   --------------------------------------
+   -- Map the AXI-Lite to AxiGpuAsyncCore
+   --------------------------------------
+   U_GpuAsync : entity surf.AxiLiteAsync
+      generic map (
+         TPD_G           => TPD_G,
+         COMMON_CLK_G    => false,
+         NUM_ADDR_BITS_G => 15)
+      port map (
+         -- Slave Interface
+         sAxiClk         => axiClk,
+         sAxiClkRst      => axiRst,
+         sAxiReadMaster  => axilReadMasters(GPU_INDEX_C),
+         sAxiReadSlave   => axilReadSlaves(GPU_INDEX_C),
+         sAxiWriteMaster => axilWriteMasters(GPU_INDEX_C),
+         sAxiWriteSlave  => axilWriteSlaves(GPU_INDEX_C),
+         -- Master Interface
+         mAxiClk         => appClk,
+         mAxiClkRst      => appRstInt,
+         mAxiReadMaster  => gpuReadMaster,
+         mAxiReadSlave   => gpuReadSlave,
+         mAxiWriteMaster => gpuWriteMaster,
+         mAxiWriteSlave  => gpuWriteSlave);
 
    -----------------------------
    -- AXI-Lite Boot Flash Module

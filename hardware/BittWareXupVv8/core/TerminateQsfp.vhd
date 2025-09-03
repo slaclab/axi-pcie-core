@@ -27,8 +27,13 @@ use unisim.vcomponents.all;
 
 entity TerminateQsfp is
    generic (
-      TPD_G           : time := 1 ns;
-      AXIL_CLK_FREQ_G : real := 125.0E+6);  -- units of Hz
+      TPD_G           : time    := 1 ns;
+      SIMULATION_G    : boolean := true;
+      AXIL_CLK_FREQ_G : real    := 125.0E+6;  -- units of Hz
+      QSFP_HIGH_G     : integer := 31;
+      QSFP_LOW_G      : integer := 0;
+      REFCLK_HIGH_G   : integer := 7;
+      REFCLK_LOW_G    : integer := 0);
    port (
       -- AXI-Lite Interface
       axilClk         : in  sl;
@@ -41,12 +46,12 @@ entity TerminateQsfp is
       --  Application Ports
       ---------------------
       -- QSFP[31:0] Ports
-      qsfpRefClkP     : in  slv(7 downto 0);
-      qsfpRefClkN     : in  slv(7 downto 0);
-      qsfpRxP         : in  slv(31 downto 0);
-      qsfpRxN         : in  slv(31 downto 0);
-      qsfpTxP         : out slv(31 downto 0);
-      qsfpTxN         : out slv(31 downto 0));
+      qsfpRefClkP     : in  slv(REFCLK_HIGH_G downto REFCLK_LOW_G);
+      qsfpRefClkN     : in  slv(REFCLK_HIGH_G downto REFCLK_LOW_G);
+      qsfpRxP         : in  slv(QSFP_HIGH_G downto QSFP_LOW_G);
+      qsfpRxN         : in  slv(QSFP_HIGH_G downto QSFP_LOW_G);
+      qsfpTxP         : out slv(QSFP_HIGH_G downto QSFP_LOW_G);
+      qsfpTxN         : out slv(QSFP_HIGH_G downto QSFP_LOW_G));
 end TerminateQsfp;
 
 architecture mapping of TerminateQsfp is
@@ -62,16 +67,17 @@ architecture mapping of TerminateQsfp is
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
 
-   signal refClk     : slv(7 downto 0);
-   signal refClkBufg : slv(7 downto 0);
-   signal refClkFreq : Slv32Array(7 downto 0);
+   signal refClk     : slv(7 downto 0)        := (others => '0');
+   signal refClkBufg : slv(7 downto 0)        := (others => '0');
+   signal refClkFreq : Slv32Array(7 downto 0) := (others => (others => '0'));
 
 begin
 
    U_QSFP : entity surf.Gtye4ChannelDummy
       generic map (
-         TPD_G   => TPD_G,
-         WIDTH_G => 32)
+         TPD_G        => TPD_G,
+         SIMULATION_G => SIMULATION_G,
+         WIDTH_G      => (QSFP_HIGH_G-QSFP_LOW_G)+1)
       port map (
          refClk => axilClk,
          gtRxP  => qsfpRxP,
@@ -79,7 +85,7 @@ begin
          gtTxP  => qsfpTxP,
          gtTxN  => qsfpTxN);
 
-   GEN_VEC : for i in 7 downto 0 generate
+   GEN_VEC : for i in REFCLK_HIGH_G downto REFCLK_LOW_G generate
 
       U_IBUFDS : IBUFDS_GTE4
          generic map (
@@ -102,7 +108,9 @@ begin
             CLRMASK => '1',
             DIV     => "000",           -- Divide-by-1
             O       => refClkBufg(i));
+   end generate GEN_VEC;
 
+   GEN_CLK_FREQ : for i in 7 downto 0 generate
       U_appClkFreq : entity surf.SyncClockFreq
          generic map (
             TPD_G          => TPD_G,
@@ -116,8 +124,7 @@ begin
             clkIn   => refClkBufg(i),
             locClk  => axilClk,
             refClk  => axilClk);
-
-   end generate GEN_VEC;
+   end generate GEN_CLK_FREQ;
 
    comb : process (axilReadMaster, axilRst, axilWriteMaster, r, refClkFreq) is
       variable v      : RegType;

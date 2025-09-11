@@ -31,8 +31,9 @@ use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPcieGpuAsyncCore is
    generic (
-      TPD_G             : time                  := 1 ns;
-      MAX_BUFFERS_G     : integer range 1 to 16 := 4;
+      TPD_G             : time                    := 1 ns;
+      MAX_BUFFERS_G     : integer range 1 to 16   := 4;
+      BURST_BYTES_G     : integer range 1 to 4096 := 4096;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -178,6 +179,7 @@ begin
       generic map (
          TPD_G          => TPD_G,
          AXI_READY_EN_G => true,
+         BURST_BYTES_G  => BURST_BYTES_G,
          AXIS_CONFIG_G  => PCIE_AXIS_CONFIG_C,
          AXI_CONFIG_G   => AXI_PCIE_CONFIG_C)
       port map (
@@ -196,11 +198,11 @@ begin
    ------------------------------------
    -- Stream transmitter from GPU DMA
    ------------------------------------
-
    U_DmaRead : entity surf.AxiStreamDmaV2Read
       generic map (
          TPD_G           => TPD_G,
          AXIS_READY_EN_G => true,
+         BURST_BYTES_G   => BURST_BYTES_G,
          AXIS_CONFIG_G   => PCIE_AXIS_CONFIG_C,
          AXI_CONFIG_G    => AXI_PCIE_CONFIG_C)
       port map (

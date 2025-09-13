@@ -27,7 +27,7 @@ use unisim.vcomponents.all;
 entity TerminateQsfp is
    generic (
       TPD_G           : time    := 1 ns;
-      SIMULATION_G    : boolean := true;
+      SIMULATION_G    : boolean := false;
       AXIL_CLK_FREQ_G : real    := 125.0E+6;  -- units of Hz
       QSFP_HIGH_G     : integer := 31;
       QSFP_LOW_G      : integer := 0;

@@ -27,7 +27,7 @@ use unisim.vcomponents.all;
 entity TerminateQsfp is
    generic (
       TPD_G           : time    := 1 ns;
-      SIMULATION_G    : boolean := true;
+      SIMULATION_G    : boolean := false;
       AXIL_CLK_FREQ_G : real    := 125.0E+6;  -- units of Hz
       QSFP_HIGH_G     : integer := 31;
       QSFP_LOW_G      : integer := 0;
@@ -66,8 +66,9 @@ architecture mapping of TerminateQsfp is
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
 
-   signal refClk     : slv(7 downto 0)        := (others => '0');
-   signal refClkBufg : slv(7 downto 0)        := (others => '0');
+   signal refClk     : slv(REFCLK_HIGH_G downto REFCLK_LOW_G) := (others => '0');
+   signal refClkBufg : slv(REFCLK_HIGH_G downto REFCLK_LOW_G) := (others => '0');
+
    signal refClkFreq : Slv32Array(7 downto 0) := (others => (others => '0'));
 
 begin
@@ -107,9 +108,7 @@ begin
             CLRMASK => '1',
             DIV     => "000",           -- Divide-by-1
             O       => refClkBufg(i));
-   end generate GEN_VEC;
 
-   GEN_CLK_FREQ : for i in 7 downto 0 generate
       U_appClkFreq : entity surf.SyncClockFreq
          generic map (
             TPD_G          => TPD_G,
@@ -123,7 +122,8 @@ begin
             clkIn   => refClkBufg(i),
             locClk  => axilClk,
             refClk  => axilClk);
-   end generate GEN_CLK_FREQ;
+
+   end generate GEN_VEC;
 
    comb : process (axilReadMaster, axilRst, axilWriteMaster, r, refClkFreq) is
       variable v      : RegType;

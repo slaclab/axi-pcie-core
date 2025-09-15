@@ -171,7 +171,7 @@ if __name__ == "__main__":
     pci_addr = get_pcie_address(args.dev)
     if args.rescan and (pci_addr != '') and (os.geteuid() != 0):
         print("This script must be run as root (sudo).")
-        print("\n\n\ne.g. sudo -E $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR>\n\n\n")
+        print("\n\n\ne.g. sudo -u $(whoami) $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR>\n\n\n")
         exit()
 
     # Get a sorted list of all matching /proc/datadev* entries

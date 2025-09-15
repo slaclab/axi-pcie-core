@@ -171,7 +171,7 @@ if __name__ == "__main__":
     pci_addr = get_pcie_address(args.dev)
     if args.rescan and (pci_addr != '') and (os.geteuid() != 0):
         print("This script must be run as root (sudo).")
-        print("\n\n\ne.g. sudo -u $(whoami) $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR>\n\n\n")
+        print("\n\n\ne.g. sudo $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR>\n\n\n")
         exit()
 
     # Get a sorted list of all matching /proc/datadev* entries
@@ -249,6 +249,17 @@ if __name__ == "__main__":
 
                 # Store entry
                 imgLst[l] = suff
+
+            if not imgLst:
+                if args.rescan:
+                    print("No files detected and running as root (sudo).")
+                    print("This is likely due to lack of permission for root (sudo).")
+                    print("\n\n\ne.g. python scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR> --rescan 0\n\n\n")
+                    print("Note: Using \"--rescan 0\" will disable the rescan feature and require a reboot after programming\n\n\n")
+                else:
+                    print("Programming (.mcs, .mcs.gz) files NOT detected!")
+                    print(f"Please double check {args.path} path for neccesary programming files")
+                exit()
 
             ent = promptForImageNumber(imgLst)
             if ent is not None:

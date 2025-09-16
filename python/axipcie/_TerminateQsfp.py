@@ -11,17 +11,16 @@
 import pyrogue as pr
 
 class TerminateQsfp(pr.Device):
-    def __init__(self,numRefClk=4,**kwargs):
+    def __init__(self, numRefClk=4, refClkLowIndex=0, **kwargs):
         super().__init__(**kwargs)
 
-        self.addRemoteVariables(
-            name         = 'RefClkFreq',
-            offset       = 0x0,
-            bitSize      = 32,
-            mode         = 'RO',
-            number       = numRefClk,
-            stride       = 4,
-            disp         = '{:d}',
-            units        = 'Hz',
-            pollInterval = 1,
-        )
+        for i in range(refClkLowIndex, refClkLowIndex+numRefClk):
+            self.add(pr.RemoteVariable(
+                name         = f'RefClkFreq[{i}]',
+                offset       = 0x4*i,
+                bitSize      = 32,
+                mode         = 'RO',
+                disp         = '{:d}',
+                units        = 'Hz',
+                pollInterval = 1,
+            ))

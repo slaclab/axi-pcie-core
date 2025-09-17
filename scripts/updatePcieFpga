@@ -261,6 +261,9 @@ if __name__ == "__main__":
                     print(f"Please double check {args.path} path for neccesary programming files")
                 exit()
 
+            # Sort image dict reverse alphabetically
+            # This usually puts the newest images first
+            imgLst = odict(reversed(sorted(imgLst.items())))
             ent = promptForImageNumber(imgLst)
             if ent is not None:
                 # Check if firmware matches curImageName

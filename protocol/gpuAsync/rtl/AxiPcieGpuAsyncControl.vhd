@@ -110,6 +110,7 @@ architecture mapping of AxiPcieGpuAsyncControl is
       dmaWrDescRetAck         : sl;
       dmaRdDescReq            : AxiReadDmaDescReqType;
       dmaRdDescRetAck         : sl;
+      axisDeMuxSelect         : sl;
       dynamicRouteMasks       : Slv8Array(1 downto 0);
       dynamicRouteDests       : Slv8Array(1 downto 0);
    end record;
@@ -153,6 +154,7 @@ architecture mapping of AxiPcieGpuAsyncControl is
       dmaWrDescRetAck         => '0',
       dmaRdDescReq            => AXI_READ_DMA_DESC_REQ_INIT_C,
       dmaRdDescRetAck         => '0',
+      axisDeMuxSelect         => '1',   -- 1 = GPU path
       dynamicRouteMasks       => (0 => x"00", 1 => x"FF"),
       dynamicRouteDests       => (0 => x"00", 1 => x"FF"));
 
@@ -254,12 +256,13 @@ begin
       axiSlaveRegisterR(axilEp, x"024", 0, r.axiWriteErrorVal);
       axiSlaveRegisterR(axilEp, x"028", 0, r.axiReadErrorVal);
 
-      axiSlaveRegister (axilEp, x"02C", 0, v.dynamicRouteMasks(0));
-      axiSlaveRegister (axilEp, x"02C", 8, v.dynamicRouteDests(0));
-      axiSlaveRegister (axilEp, x"02C", 16, v.dynamicRouteMasks(1));
-      axiSlaveRegister (axilEp, x"02C", 24, v.dynamicRouteDests(1));
+      axiSlaveRegisterR(axilEp, x"02C", 0, r.dynamicRouteMasks(0));
+      axiSlaveRegisterR(axilEp, x"02C", 8, r.dynamicRouteDests(0));
+      axiSlaveRegisterR(axilEp, x"02C", 16, r.dynamicRouteMasks(1));
+      axiSlaveRegisterR(axilEp, x"02C", 24, r.dynamicRouteDests(1));
       axiSlaveRegisterR(axilEp, x"030", 0, toSlv(2, 8));  -- version number, >= 1 if gpu enabled
       axiSlaveRegisterR(axilEp, x"034", 0, r.axiWriteTimeoutErrorCnt);
+      axiSlaveRegister (axilEp, x"038", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
 
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)
@@ -419,6 +422,22 @@ begin
             end if;
 
       end case;
+
+      -- Check for GPU path
+      if r.axisDeMuxSelect = '1' then
+         v.dynamicRouteMasks(0) := x"00";
+         v.dynamicRouteMasks(1) := x"FF";
+         v.dynamicRouteDests(0) := x"00";
+         v.dynamicRouteDests(1) := x"FF";
+
+      -- Else using CPU path
+      else
+         v.dynamicRouteMasks(1) := x"00";
+         v.dynamicRouteMasks(0) := x"FF";
+         v.dynamicRouteDests(1) := x"00";
+         v.dynamicRouteDests(0) := x"FF";
+
+      end if;
 
       --------------------------------------------------------------------------------------------
       -- Outputs

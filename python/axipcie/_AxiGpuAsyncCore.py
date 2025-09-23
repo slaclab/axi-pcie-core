@@ -198,11 +198,11 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'AxisDeMuxSelect',
-            offset       = 0x038,
-            bitSize      = 1,
-            mode         = 'RW', # Exposed to userspace as read/write
-            enum        = {
+            name    = 'AxisDeMuxSelect',
+            offset  = 0x038,
+            bitSize = 1,
+            mode    = 'RW', # Exposed to userspace as read/write
+            enum    = {
                 0x0: 'CPU_path',
                 0x1: 'GPU_path',
             },

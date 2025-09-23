@@ -166,7 +166,9 @@ class AxiGpuAsyncCore(pr.Device):
                 offset       = 0x02C,
                 bitSize      = 8,
                 bitOffset    = 16*i+0,
-                mode         = 'RW', # Exposed to userspace as read/write
+                mode         = 'RO',
+                pollInterval = 1,
+                hidden       = True,
             ))
 
             self.add(pr.RemoteVariable(
@@ -174,7 +176,9 @@ class AxiGpuAsyncCore(pr.Device):
                 offset       = 0x02C,
                 bitSize      = 8,
                 bitOffset    = 16*i+8,
-                mode         = 'RW', # Exposed to userspace as read/write
+                mode         = 'RO',
+                pollInterval = 1,
+                hidden       = True,
             ))
 
         self.add(pr.RemoteVariable(
@@ -191,6 +195,17 @@ class AxiGpuAsyncCore(pr.Device):
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name    = 'AxisDeMuxSelect',
+            offset  = 0x038,
+            bitSize = 1,
+            mode    = 'RW', # Exposed to userspace as read/write
+            enum    = {
+                0x0: 'CPU_path',
+                0x1: 'GPU_path',
+            },
         ))
 
         for i in range(maxBuffers):

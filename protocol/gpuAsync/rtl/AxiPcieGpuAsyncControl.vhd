@@ -30,9 +30,10 @@ use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPcieGpuAsyncControl is
    generic (
-      TPD_G            : time                  := 1 ns;
-      MAX_BUFFERS_G    : integer range 1 to 16 := 4;
-      DMA_AXI_CONFIG_G : AxiConfigType);
+      TPD_G               : time                  := 1 ns;
+      DEFAULT_DEMUX_SEL_G : sl                    := '1';  -- 1: GPU path, 0: CPU path
+      MAX_BUFFERS_G       : integer range 1 to 16 := 4;
+      DMA_AXI_CONFIG_G    : AxiConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
       axilClk         : in  sl;
@@ -154,7 +155,7 @@ architecture mapping of AxiPcieGpuAsyncControl is
       dmaWrDescRetAck         => '0',
       dmaRdDescReq            => AXI_READ_DMA_DESC_REQ_INIT_C,
       dmaRdDescRetAck         => '0',
-      axisDeMuxSelect         => '1',   -- 1 = GPU path
+      axisDeMuxSelect         => DEFAULT_DEMUX_SEL_G,
       dynamicRouteMasks       => (0 => x"00", 1 => x"FF"),
       dynamicRouteDests       => (0 => x"00", 1 => x"FF"));
 

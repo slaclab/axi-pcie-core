@@ -313,8 +313,8 @@ begin
          NUM_CLOCKS_G      => 1,
          -- MMCM attributes
          CLKIN_PERIOD_G    => 10.0,     -- 100 MHz
-         CLKFBOUT_MULT_G   => 9,        -- 900MHz = 9 x 100 MHz
-         CLKOUT0_DIVIDE_G  => 2)        -- 450MHz = 900MHz/2
+         CLKFBOUT_MULT_G   => 12,       -- 1.2GHz = 12 x 100 MHz
+         CLKOUT0_DIVIDE_G  => 3)        -- 400MHz = 1.2GHz/3
       port map(
          -- Clock Input
          clkIn     => userClk,
@@ -398,7 +398,7 @@ begin
             AXI_BASE_ADDR_G    => AXI_BASE_ADDR_C(i),
             AXI_CONFIG_G       => DMA_AXI_CONFIG_C,
             BURST_BYTES_G      => 512,  -- HBM is 32B AXI3, 32B x 2^16 AXI3 burst length = 512B
-            RD_PEND_THRESH_G   => 32*512)  -- HbmDmaBufferV2Fifo configured for 32 acceptance on the read path
+            RD_PEND_THRESH_G   => 8*512)  -- HbmDmaBufferV2Fifo configured for 32 acceptance on the read path
          port map (
             -- AXI4 Interface (axiClk domain)
             axiClk          => axisClk(i),

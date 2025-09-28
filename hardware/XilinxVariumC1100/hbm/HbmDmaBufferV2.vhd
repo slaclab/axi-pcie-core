@@ -329,7 +329,7 @@ begin
    U_hbmRstL : entity surf.RstPipelineVector
       generic map (
          TPD_G     => TPD_G,
-         WIDTH_G   => 8,
+         WIDTH_G   => 2,
          INV_RST_G => true)             -- invert reset
       port map (
          clk    => hbmClk,

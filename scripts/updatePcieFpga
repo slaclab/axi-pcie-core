@@ -13,11 +13,19 @@
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
 
-import pyrogue as pr
 import os
+import re
+import sys
+import time
+import glob
+import argparse
+import rogue.hardware.axi
+
 import importlib
 import subprocess
-import argparse
+
+from collections import OrderedDict as odict
+import pyrogue as pr
 
 baseDir = os.path.dirname(os.path.realpath(__file__))
 
@@ -25,22 +33,13 @@ print(f"Basedir = {baseDir}")
 
 # First see if surf and axipcie are already in the python path
 try:
-    import surf
-    import axipcie
+    import axipcie as pcie
 
 # Otherwise assume it is relative in a standard development directory structure
-except:
+except: # noqa: E722
     pr.addLibraryPath(baseDir + '/../python')
     pr.addLibraryPath(baseDir + '/../../surf/python')
-
-import sys
-import re
-import time
-import glob
-import argparse
-import rogue.hardware.axi
-import axipcie as pcie
-from collections import OrderedDict as odict
+    import axipcie as pcie
 
 #################################################################
 
@@ -48,7 +47,6 @@ def check_if_need_rescan(dev):
     dev = dev.split('/')[-1]  # Strip path if needed
     try:
         with open(f'/proc/{dev}', "r", encoding='utf-8', errors='ignore') as file:
-            pcie_address = ''
             for line in file:
                 if 'Up Time Count' in line and '4294967295' in line:
                     return True
@@ -108,7 +106,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Convert str to bool
-    argBool = lambda s: s.lower() in ['true', 't', 'yes', '1']
+    def argBool(s: str) -> bool:
+        return s.lower() in ['true', 't', 'yes', '1']
 
     # Add arguments
     parser.add_argument(
@@ -230,25 +229,25 @@ if __name__ == "__main__":
             curImageName = AxiVersion.ImageName.get()
             prefLst = glob.glob('{}/{}*.mcs*'.format(args.path,curImageName))
 
-            rawLst = glob.glob('{}/*.mcs*'.format(args.path))
-            for l in prefLst + rawLst:
+            raw_files = glob.glob(f"{args.path}/*.mcs*")
+            for filename in prefLst + raw_files:
 
                 # Determine suffix
-                if '.mcs.gz' in l:
-                    suff = 'mcs.gz'
+                if filename.endswith(".mcs.gz"):
+                    suffix = "mcs.gz"
                 else:
-                    suff = 'mcs'
+                    suffix = "mcs"
 
                 # Get basename
-                l = l.replace('_primary.mcs.gz','')
-                l = l.replace('_secondary.mcs.gz','')
-                l = l.replace('_primary.mcs','')
-                l = l.replace('_secondary.mcs','')
-                l = l.replace('.mcs.gz','')
-                l = l.replace('.mcs','')
+                base = filename.replace("_primary.mcs.gz", "")
+                base = base.replace("_secondary.mcs.gz", "")
+                base = base.replace("_primary.mcs", "")
+                base = base.replace("_secondary.mcs", "")
+                base = base.replace(".mcs.gz", "")
+                base = base.replace(".mcs", "")
 
                 # Store entry
-                imgLst[l] = suff
+                imgLst[base] = suffix
 
             if not imgLst:
                 if args.rescan:

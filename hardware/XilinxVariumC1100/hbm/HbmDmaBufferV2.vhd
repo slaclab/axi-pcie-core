@@ -398,7 +398,8 @@ begin
             AXI_BASE_ADDR_G    => AXI_BASE_ADDR_C(i),
             AXI_CONFIG_G       => DMA_AXI_CONFIG_C,
             BURST_BYTES_G      => 512,  -- HBM is 32B AXI3, 32B x 2^16 AXI3 burst length = 512B
-            RD_PEND_THRESH_G   => 8*512)  -- HbmDmaBufferV2Fifo configured for 32 acceptance on the read path
+            RD_PEND_THRESH_G   => 8*512)
+            -- RD_PEND_THRESH_G   => 32*512)  -- AXI3 read locks up with 32*512
          port map (
             -- AXI4 Interface (axiClk domain)
             axiClk          => axisClk(i),

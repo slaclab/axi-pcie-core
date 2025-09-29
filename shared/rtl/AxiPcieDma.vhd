@@ -96,24 +96,24 @@ architecture mapping of AxiPcieDma is
       ID_BITS_C    => AXI_PCIE_CONFIG_C.ID_BITS_C,
       LEN_BITS_C   => AXI_PCIE_CONFIG_C.LEN_BITS_C);
 
-   signal dmaReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0);
-   signal dmaReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0);
-   signal dmaWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0);
-   signal dmaWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0);
+   signal dmaReadMasters  : AxiReadMasterArray(DMA_SIZE_G downto 0)  := (others => AXI_READ_MASTER_INIT_C);
+   signal dmaReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G downto 0)   := (others => AXI_READ_SLAVE_INIT_C);
+   signal dmaWriteMasters : AxiWriteMasterArray(DMA_SIZE_G downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
+   signal dmaWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G downto 0)  := (others => AXI_WRITE_SLAVE_INIT_C);
 
-   signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G+1 downto 0);
-   signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G+1 downto 0);
-   signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G+1 downto 0);
-   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G+1 downto 0);
+   signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G+1 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
+   signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G+1 downto 0)   := (others => AXI_READ_SLAVE_INIT_C);
+   signal axiWriteMasters : AxiWriteMasterArray(DMA_SIZE_G+1 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
+   signal axiWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G+1 downto 0)  := (others => AXI_WRITE_SLAVE_INIT_C);
 
-   signal sAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-   signal sAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+   signal sAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
+   signal sAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
 
-   signal mAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-   signal mAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-   signal mAxisCtrl    : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0);
+   signal mAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
+   signal mAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
+   signal mAxisCtrl    : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0)   := (others => AXI_STREAM_CTRL_UNUSED_C);
 
-   signal axisReset : slv(DMA_SIZE_G-1 downto 0);
+   signal axisReset : slv(DMA_SIZE_G-1 downto 0) := (others => '0');
 
    attribute dont_touch              : string;
    attribute dont_touch of axisReset : signal is "true";

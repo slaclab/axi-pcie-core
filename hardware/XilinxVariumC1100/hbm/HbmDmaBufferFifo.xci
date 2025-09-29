@@ -1,10 +1,10 @@
 {
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
-    "xci_name": "HbmAxiFifo",
+    "xci_name": "HbmDmaBufferFifo",
     "component_reference": "xilinx.com:ip:axi_interconnect:1.7",
     "ip_revision": "24",
-    "gen_directory": "../../../../XilinxVariumC1100HbmTester_project.gen/sources_1/ip/HbmAxiFifo",
+    "gen_directory": "../../../../XilinxVariumC1100HbmTester_project.gen/sources_1/ip/HbmDmaBufferFifo",
     "parameters": {
       "component_parameters": {
         "NUM_SLAVE_PORTS": [ { "value": "1", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -197,7 +197,7 @@
         "S15_AXI_REGISTER": [ { "value": "1", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "M00_AXI_REGISTER": [ { "value": "1", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "ACLK_PERIOD": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "Component_Name": [ { "value": "HbmAxiFifo", "resolve_type": "user", "usage": "all" } ],
+        "Component_Name": [ { "value": "HbmDmaBufferFifo", "resolve_type": "user", "usage": "all" } ],
         "SYNCHRONIZATION_STAGES": [ { "value": "2", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "S00_AXI_ACLK_RATIO": [ { "value": "1:1", "resolve_type": "user", "usage": "all" } ],
         "S01_AXI_ACLK_RATIO": [ { "value": "1:1", "resolve_type": "user", "usage": "all" } ],
@@ -445,7 +445,7 @@
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
         "IPREVISION": [ { "value": "24" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "../../../../XilinxVariumC1100HbmTester_project.gen/sources_1/ip/HbmAxiFifo" } ],
+        "OUTPUTDIR": [ { "value": "../../../../XilinxVariumC1100HbmTester_project.gen/sources_1/ip/HbmDmaBufferFifo" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
         "SWVERSION": [ { "value": "2024.2" } ],

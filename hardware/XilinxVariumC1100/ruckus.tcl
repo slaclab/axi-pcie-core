@@ -23,11 +23,17 @@ loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/../XilinxAlveoU55c/misc"
 loadConstraints               -path "$::DIR_PATH/../XilinxAlveoU55c/xdc/XilinxAlveoU55cCore.xdc"
 loadConstraints               -path "$::DIR_PATH/../XilinxAlveoU55c/xdc/XilinxAlveoU55cApp.xdc"
 
-# Load the HBM core
+# Load the HBM Buffer Version 1
 loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBuffer.vhd"
-loadIpCore -path "$::DIR_PATH/hbm/HbmDmaBufferIpCore.xci"
-loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmAxiFifo.dcp"
-# loadIpCore -path "$::DIR_PATH/hbm/HbmAxiFifo.xci"
+loadIpCore                    -path "$::DIR_PATH/hbm/HbmDmaBufferIpCore.xci"
+# loadIpCore                  -path "$::DIR_PATH/hbm/HbmDmaBufferFifo.xci"
+loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferFifo.dcp"
+
+# Load the HBM Buffer Version 2
+loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferV2.vhd"
+loadIpCore                    -path "$::DIR_PATH/hbm/HbmDmaBufferV2IpCore.xci"
+# loadIpCore                  -path "$::DIR_PATH/hbm/HbmDmaBufferV2Fifo.xci"
+loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferV2Fifo.dcp"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/pcie-4x8"

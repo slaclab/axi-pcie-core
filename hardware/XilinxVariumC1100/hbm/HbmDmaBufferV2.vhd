@@ -47,11 +47,14 @@ entity HbmDmaBufferV2 is
       -- Trigger Event streams (eventClk domain)
       eventClk         : in  slv(DMA_SIZE_G-1 downto 0);
       eventTrigMsgCtrl : out AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0) := (others => AXI_STREAM_CTRL_INIT_C);
-      -- AXI Stream Interface (axisClk domain)
-      axisClk          : in  slv(DMA_SIZE_G-1 downto 0);
-      axisRst          : in  slv(DMA_SIZE_G-1 downto 0);
+      -- Inbound AXIS Interface (sAxisClk domain)
+      sAxisClk         : in  slv(DMA_SIZE_G-1 downto 0);
+      sAxisRst         : in  slv(DMA_SIZE_G-1 downto 0);
       sAxisMasters     : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       sAxisSlaves      : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      -- Outbound AXIS Interface (mAxisClk domain)
+      mAxisClk         : in  slv(DMA_SIZE_G-1 downto 0);
+      mAxisRst         : in  slv(DMA_SIZE_G-1 downto 0);
       mAxisMasters     : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
       mAxisSlaves      : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0));
 end HbmDmaBufferV2;
@@ -227,26 +230,22 @@ architecture mapping of HbmDmaBufferV2 is
          M00_AXI_RREADY       : out std_logic);
    end component;
 
-   constant DMA_AXI_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => 64,  -- Match 64-bit address for axi_pcie_core.AxiPcieResizer
-      DATA_BYTES_C => DMA_AXIS_CONFIG_G.TDATA_BYTES_C,  -- Matches the AXIS stream because you ***CANNOT*** resize an interleaved AXI stream
-      ID_BITS_C    => 6,                -- Up to 64 IDS
-      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface
+   constant AXIS_CONFIG_C : AxiStreamConfigType := (
+      TSTRB_EN_C    => false,
+      TDATA_BYTES_C => (512/8),         -- 512-bit interface
+      TDEST_BITS_C  => 8,
+      TID_BITS_C    => 3,
+      TKEEP_MODE_C  => TKEEP_COUNT_C,  -- AXI DMA V2 uses TKEEP_COUNT_C to help meet timing
+      TUSER_BITS_C  => 4,
+      TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
-   constant RESIZE_DMA_AXI_CONFIG_C : AxiConfigType := (
-      ADDR_WIDTH_C => 64,  -- Match 64-bit address for axi_pcie_core.AxiPcieResizer
-      DATA_BYTES_C => 64,               -- 512-bit data interface
-      ID_BITS_C    => 6,                -- Up to 64 IDS
-      LEN_BITS_C   => 8);               -- 8-bit awlen/arlen interface
-
-   -- HBM MEM AXI Configuration
-   constant HBM_AXI_CONFIG_C : AxiConfigType := (
+   constant AXI_CONFIG_C : AxiConfigType := (
       ADDR_WIDTH_C => 33,               -- 8GB HBM
-      DATA_BYTES_C => 32,               -- 256-bit data interface
+      DATA_BYTES_C => AXIS_CONFIG_C.TDATA_BYTES_C,  -- Matches the AXIS stream because you ***CANNOT*** resize an interleaved AXI stream
       ID_BITS_C    => 6,                -- Up to 64 IDS
       LEN_BITS_C   => 4);               -- 4-bit awlen/arlen interface
 
-   constant AXI_BUFFER_WIDTH_C : positive := HBM_AXI_CONFIG_C.ADDR_WIDTH_C-1;  -- 8 GB HBM shared between 2 DMA lanes
+   constant AXI_BUFFER_WIDTH_C : positive := AXI_CONFIG_C.ADDR_WIDTH_C-1;  -- 8 GB HBM shared between 2 DMA lanes
    constant AXI_BASE_ADDR_C : Slv64Array(1 downto 0) := (
       0 => x"0000_0000_0000_0000",
       1 => x"0000_0001_0000_0000");     -- 4GB partitions
@@ -263,32 +262,34 @@ architecture mapping of HbmDmaBufferV2 is
    signal axiReadMasters  : AxiReadMasterArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
    signal axiReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G-1 downto 0)   := (others => AXI_READ_SLAVE_INIT_C);
 
-   signal fifoWriteMasters : AxiWriteMasterArray(DMA_SIZE_G-1 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
-   signal fifoWriteSlaves  : AxiWriteSlaveArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_WRITE_SLAVE_INIT_C);
-   signal fifoReadMasters  : AxiReadMasterArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
-   signal fifoReadSlaves   : AxiReadSlaveArray(DMA_SIZE_G-1 downto 0)   := (others => AXI_READ_SLAVE_INIT_C);
-
    signal hbmWriteMasters : AxiWriteMasterArray(1 downto 0) := (others => AXI_WRITE_MASTER_INIT_C);
    signal hbmWriteSlaves  : AxiWriteSlaveArray(1 downto 0)  := (others => AXI_WRITE_SLAVE_INIT_C);
    signal hbmReadMasters  : AxiReadMasterArray(1 downto 0)  := (others => AXI_READ_MASTER_INIT_C);
    signal hbmReadSlaves   : AxiReadSlaveArray(1 downto 0)   := (others => AXI_READ_SLAVE_INIT_C);
 
-   signal sAxisCtrl : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0) := (others => AXI_STREAM_CTRL_INIT_C);
+   signal ibAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
+   signal ibAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
+   signal ibAxisCtrl    : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0)   := (others => AXI_STREAM_CTRL_INIT_C);
+
+   signal obAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
+   signal obAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
 
    signal axilReset : sl;
-   signal axisRstL  : slv(DMA_SIZE_G-1 downto 0);
+
+   signal axiClk   : sl;
+   signal axiRst   : sl;
+   signal axiRstL  : sl;
+   signal axiReady : sl;
 
    signal hbmClk        : sl;
    signal hbmRst        : sl;
-   signal hbmRstVec     : slv(1 downto 0);
-   signal hbmRstL       : slv(1 downto 0);
+   signal hbmRstL       : sl;
    signal hbmCatTripVec : slv(1 downto 0);
 
    signal apbDoneVec : slv(1 downto 0);
    signal apbDone    : sl;
    signal apbRstL    : sl;
 
-   signal axiReady    : slv(DMA_SIZE_G-1 downto 0);
    signal wdataParity : Slv32Array(1 downto 0) := (others => (others => '0'));
 
 begin
@@ -310,31 +311,25 @@ begin
          INPUT_BUFG_G      => false,
          FB_BUFG_G         => true,
          RST_IN_POLARITY_G => '1',
-         NUM_CLOCKS_G      => 1,
+         NUM_CLOCKS_G      => 2,
          -- MMCM attributes
          CLKIN_PERIOD_G    => 10.0,     -- 100 MHz
-         CLKFBOUT_MULT_G   => 13,       -- 1.3GHz = 13 x 100 MHz
-         CLKOUT0_DIVIDE_G  => 3)        -- 433MHz = 1.3GHz/3
+         CLKFBOUT_MULT_G   => 12,       -- 1.2GHz = 9 x 100 MHz
+         CLKOUT0_DIVIDE_G  => 3,        -- 400MHz = 1.2GHz/3
+         CLKOUT1_DIVIDE_G  => 4)        -- 300MHz = 1.2GHz/4
       port map(
          -- Clock Input
          clkIn     => userClk,
          rstIn     => axilReset,
          -- Clock Outputs
          clkOut(0) => hbmClk,
+         clkOut(1) => axiClk,
          -- Reset Outputs
-         rstOut(0) => hbmRst);
+         rstOut(0) => hbmRst,
+         rstOut(1) => axiRst);
 
-   -- Help with timing
-   hbmRstVec <= (others => hbmRst);
-   U_hbmRstL : entity surf.RstPipelineVector
-      generic map (
-         TPD_G     => TPD_G,
-         WIDTH_G   => 2,
-         INV_RST_G => true)             -- invert reset
-      port map (
-         clk    => hbmClk,
-         rstIn  => hbmRstVec,           -- active HIGH
-         rstOut => hbmRstL);            -- active LOW
+   hbmRstL <= not(hbmRst);
+   axiRstL <= not(axiRst);
 
    --------------------
    -- AXI-Lite Crossbar
@@ -364,25 +359,46 @@ begin
             TPD_G => TPD_G)
          port map (
             clk     => eventClk(i),
-            dataIn  => sAxisCtrl(i).pause,
+            dataIn  => ibAxisCtrl(i).pause,
             dataOut => eventTrigMsgCtrl(i).pause);
 
-      U_axisRstL : entity surf.RstPipeline
+      U_IbFifo : entity surf.AxiStreamFifoV2
          generic map (
-            TPD_G     => TPD_G,
-            INV_RST_G => true)          -- invert reset
+            TPD_G               => TPD_G,
+            FIFO_ADDR_WIDTH_G   => 9,
+            VALID_BURST_MODE_G  => true,
+            VALID_THOLD_G       => (512/64),  -- 512B bursting
+            SLAVE_AXI_CONFIG_G  => DMA_AXIS_CONFIG_G,
+            MASTER_AXI_CONFIG_G => AXIS_CONFIG_C)
          port map (
-            clk    => axisClk(i),
-            rstIn  => axisRst(i),       -- active HIGH
-            rstOut => axisRstL(i));     -- active LOW
+            -- Inbound AXIS Stream
+            sAxisClk    => sAxisClk(i),
+            sAxisRst    => sAxisRst(i),
+            sAxisMaster => sAxisMasters(i),
+            sAxisSlave  => sAxisSlaves(i),
+            -- Outbound AXIS Stream
+            mAxisClk    => axiClk,
+            mAxisRst    => axiRst,
+            mAxisMaster => ibAxisMasters(i),
+            mAxisSlave  => ibAxisSlaves(i));
 
-      U_axiReady : entity surf.Synchronizer
+      U_ObFifo : entity surf.AxiStreamFifoV2
          generic map (
-            TPD_G => TPD_G)
+            TPD_G               => TPD_G,
+            FIFO_ADDR_WIDTH_G   => 9,
+            SLAVE_AXI_CONFIG_G  => AXIS_CONFIG_C,
+            MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_G)
          port map (
-            clk     => axisClk(i),
-            dataIn  => apbDone,
-            dataOut => axiReady(i));
+            -- Inbound AXIS Stream
+            sAxisClk    => axiClk,
+            sAxisRst    => axiRst,
+            sAxisMaster => obAxisMasters(i),
+            sAxisSlave  => obAxisSlaves(i),
+            -- Outbound AXIS Stream
+            mAxisClk    => mAxisClk(i),
+            mAxisRst    => mAxisRst(i),
+            mAxisMaster => mAxisMasters(i),
+            mAxisSlave  => mAxisSlaves(i));
 
       U_AxiFifo : entity surf.AxiStreamDmaV2Fifo
          generic map (
@@ -394,28 +410,27 @@ begin
             SYNTH_MODE_G       => "xpm",
             MEMORY_TYPE_G      => "ultra",
             -- AXI Stream Configurations
-            AXIS_CONFIG_G      => DMA_AXIS_CONFIG_G,
+            AXIS_CONFIG_G      => AXIS_CONFIG_C,
             -- AXI4 Configurations
             AXI_BASE_ADDR_G    => AXI_BASE_ADDR_C(i),
-            AXI_CONFIG_G       => DMA_AXI_CONFIG_C,
+            AXI_CONFIG_G       => AXI_CONFIG_C,
             BURST_BYTES_G      => 512,  -- HBM is 32B AXI3, 32B x 2^16 AXI3 burst length = 512B
-            -- RD_PEND_THRESH_G   => 32*512)  -- AXI3 read locks up with 32*512
             RD_PEND_THRESH_G   => 8*512)  -- Same as HbmDmaBuffer.vhd
          port map (
             -- AXI4 Interface (axiClk domain)
-            axiClk          => axisClk(i),
-            axiRst          => axisRst(i),
-            axiReady        => axiReady(i),
+            axiClk          => axiClk,
+            axiRst          => axiRst,
+            axiReady        => axiReady,
             axiReadMaster   => axiReadMasters(i),
             axiReadSlave    => axiReadSlaves(i),
             axiWriteMaster  => axiWriteMasters(i),
             axiWriteSlave   => axiWriteSlaves(i),
             -- AXI Stream Interface (axiClk domain)
-            sAxisMaster     => sAxisMasters(i),
-            sAxisSlave      => sAxisSlaves(i),
-            sAxisCtrl       => sAxisCtrl(i),
-            mAxisMaster     => mAxisMasters(i),
-            mAxisSlave      => mAxisSlaves(i),
+            sAxisMaster     => ibAxisMasters(i),
+            sAxisSlave      => ibAxisSlaves(i),
+            sAxisCtrl       => ibAxisCtrl(i),
+            mAxisMaster     => obAxisMasters(i),
+            mAxisSlave      => obAxisSlaves(i),
             -- Optional: AXI-Lite Interface (axilClk domain)
             axilClk         => axilClk,
             axilRst         => axilReset,
@@ -424,70 +439,50 @@ begin
             axilWriteMaster => axilWriteMasters(i),
             axilWriteSlave  => axilWriteSlaves(i));
 
-      U_Resizer : entity axi_pcie_core.AxiPcieResizer
-         generic map(
-            TPD_G             => TPD_G,
-            AXI_DMA_CONFIG_G  => DMA_AXI_CONFIG_C,
-            AXI_PCIE_CONFIG_G => RESIZE_DMA_AXI_CONFIG_C)
-         port map(
-            -- Clock and reset
-            axiClk          => axisClk(i),
-            axiRst          => axisRst(i),
-            -- Slave Port
-            sAxiReadMaster  => axiReadMasters(i),
-            sAxiReadSlave   => axiReadSlaves(i),
-            sAxiWriteMaster => axiWriteMasters(i),
-            sAxiWriteSlave  => axiWriteSlaves(i),
-            -- Master Port
-            mAxiReadMaster  => fifoReadMasters(i),
-            mAxiReadSlave   => fifoReadSlaves(i),
-            mAxiWriteMaster => fifoWriteMasters(i),
-            mAxiWriteSlave  => fifoWriteSlaves(i));
-
       U_HbmAxiFifo : HbmDmaBufferV2Fifo
          port map (
-            INTERCONNECT_ACLK    => axisClk(i),
-            INTERCONNECT_ARESETN => axisRstL(i),
+            INTERCONNECT_ACLK    => axiClk,
+            INTERCONNECT_ARESETN => axiRstL,
             -- SLAVE[0]
             S00_AXI_ARESET_OUT_N => open,
-            S00_AXI_ACLK         => axisClk(i),
+            S00_AXI_ACLK         => axiClk,
             S00_AXI_AWID(0)      => '0',
-            S00_AXI_AWADDR       => fifoWriteMasters(i).awaddr(32 downto 0),
-            S00_AXI_AWLEN        => fifoWriteMasters(i).awlen,
-            S00_AXI_AWSIZE       => fifoWriteMasters(i).awsize,
-            S00_AXI_AWBURST      => fifoWriteMasters(i).awburst,
-            S00_AXI_AWLOCK       => fifoWriteMasters(i).awlock(0),
-            S00_AXI_AWCACHE      => fifoWriteMasters(i).awcache,
-            S00_AXI_AWPROT       => fifoWriteMasters(i).awprot,
-            S00_AXI_AWQOS        => fifoWriteMasters(i).awqos,
-            S00_AXI_AWVALID      => fifoWriteMasters(i).awvalid,
-            S00_AXI_AWREADY      => fifoWriteSlaves(i).awready,
-            S00_AXI_WDATA        => fifoWriteMasters(i).wdata(511 downto 0),
-            S00_AXI_WSTRB        => fifoWriteMasters(i).wstrb(63 downto 0),
-            S00_AXI_WLAST        => fifoWriteMasters(i).wlast,
-            S00_AXI_WVALID       => fifoWriteMasters(i).wvalid,
-            S00_AXI_WREADY       => fifoWriteSlaves(i).wready,
-            S00_AXI_BID          => fifoWriteSlaves(i).bid(0 downto 0),
-            S00_AXI_BRESP        => fifoWriteSlaves(i).bresp,
-            S00_AXI_BVALID       => fifoWriteSlaves(i).bvalid,
-            S00_AXI_BREADY       => fifoWriteMasters(i).bready,
+            S00_AXI_AWADDR       => axiWriteMasters(i).awaddr(32 downto 0),
+            S00_AXI_AWLEN        => axiWriteMasters(i).awlen,
+            S00_AXI_AWSIZE       => axiWriteMasters(i).awsize,
+            S00_AXI_AWBURST      => axiWriteMasters(i).awburst,
+            S00_AXI_AWLOCK       => axiWriteMasters(i).awlock(0),
+            S00_AXI_AWCACHE      => axiWriteMasters(i).awcache,
+            S00_AXI_AWPROT       => axiWriteMasters(i).awprot,
+            S00_AXI_AWQOS        => axiWriteMasters(i).awqos,
+            S00_AXI_AWVALID      => axiWriteMasters(i).awvalid,
+            S00_AXI_AWREADY      => axiWriteSlaves(i).awready,
+            S00_AXI_WDATA        => axiWriteMasters(i).wdata(511 downto 0),
+            S00_AXI_WSTRB        => axiWriteMasters(i).wstrb(63 downto 0),
+            S00_AXI_WLAST        => axiWriteMasters(i).wlast,
+            S00_AXI_WVALID       => axiWriteMasters(i).wvalid,
+            S00_AXI_WREADY       => axiWriteSlaves(i).wready,
+            S00_AXI_BID          => axiWriteSlaves(i).bid(0 downto 0),
+            S00_AXI_BRESP        => axiWriteSlaves(i).bresp,
+            S00_AXI_BVALID       => axiWriteSlaves(i).bvalid,
+            S00_AXI_BREADY       => axiWriteMasters(i).bready,
             S00_AXI_ARID(0)      => '0',
-            S00_AXI_ARADDR       => fifoReadMasters(i).araddr(32 downto 0),
-            S00_AXI_ARLEN        => fifoReadMasters(i).arlen,
-            S00_AXI_ARSIZE       => fifoReadMasters(i).arsize,
-            S00_AXI_ARBURST      => fifoReadMasters(i).arburst,
-            S00_AXI_ARLOCK       => fifoReadMasters(i).arlock(0),
-            S00_AXI_ARCACHE      => fifoReadMasters(i).arcache,
-            S00_AXI_ARPROT       => fifoReadMasters(i).arprot,
-            S00_AXI_ARQOS        => fifoReadMasters(i).arqos,
-            S00_AXI_ARVALID      => fifoReadMasters(i).arvalid,
-            S00_AXI_ARREADY      => fifoReadSlaves(i).arready,
-            S00_AXI_RID          => fifoReadSlaves(i).rid(0 downto 0),
-            S00_AXI_RDATA        => fifoReadSlaves(i).rdata(511 downto 0),
-            S00_AXI_RRESP        => fifoReadSlaves(i).rresp,
-            S00_AXI_RLAST        => fifoReadSlaves(i).rlast,
-            S00_AXI_RVALID       => fifoReadSlaves(i).rvalid,
-            S00_AXI_RREADY       => fifoReadMasters(i).rready,
+            S00_AXI_ARADDR       => axiReadMasters(i).araddr(32 downto 0),
+            S00_AXI_ARLEN        => axiReadMasters(i).arlen,
+            S00_AXI_ARSIZE       => axiReadMasters(i).arsize,
+            S00_AXI_ARBURST      => axiReadMasters(i).arburst,
+            S00_AXI_ARLOCK       => axiReadMasters(i).arlock(0),
+            S00_AXI_ARCACHE      => axiReadMasters(i).arcache,
+            S00_AXI_ARPROT       => axiReadMasters(i).arprot,
+            S00_AXI_ARQOS        => axiReadMasters(i).arqos,
+            S00_AXI_ARVALID      => axiReadMasters(i).arvalid,
+            S00_AXI_ARREADY      => axiReadSlaves(i).arready,
+            S00_AXI_RID          => axiReadSlaves(i).rid(0 downto 0),
+            S00_AXI_RDATA        => axiReadSlaves(i).rdata(511 downto 0),
+            S00_AXI_RRESP        => axiReadSlaves(i).rresp,
+            S00_AXI_RLAST        => axiReadSlaves(i).rlast,
+            S00_AXI_RVALID       => axiReadSlaves(i).rvalid,
+            S00_AXI_RREADY       => axiReadMasters(i).rready,
             -- MASTER
             M00_AXI_ARESET_OUT_N => open,
             M00_AXI_ACLK         => hbmClk,
@@ -529,12 +524,16 @@ begin
             M00_AXI_RVALID       => hbmReadSlaves(i).rvalid,
             M00_AXI_RREADY       => hbmReadMasters(i).rready);
 
-      -- Calculate the WDATA parity bits
-      GEN_VEC : for j in 31 downto 0 generate
-         wdataParity(i)(j) <= oddParity(hbmWriteMasters(i).wdata(8*j+7 downto 8*j));
-      end generate;
-
    end generate;
+
+   process(hbmWriteMasters)
+   begin
+      for i in DMA_SIZE_G-1 downto 0 loop
+         for j in 31 downto 0 loop
+            wdataParity(i)(j) <= oddParity(hbmWriteMasters(i).wdata(8*j+7 downto 8*j));
+         end loop;
+      end loop;
+   end process;
 
    U_HBM : HbmDmaBufferV2IpCore
       port map (
@@ -543,7 +542,7 @@ begin
          HBM_REF_CLK_1       => hbmRefClk,
          -- AXI_00 Interface
          AXI_00_ACLK         => hbmClk,
-         AXI_00_ARESET_N     => hbmRstL(0),
+         AXI_00_ARESET_N     => hbmRstL,
          AXI_00_ARADDR       => hbmReadMasters(0).araddr(32 downto 0),
          AXI_00_ARBURST      => hbmReadMasters(0).arburst,
          AXI_00_ARID         => hbmReadMasters(0).arid(5 downto 0),
@@ -577,7 +576,7 @@ begin
          AXI_00_BVALID       => hbmWriteSlaves(0).bvalid,
          -- AXI_16 Interface
          AXI_16_ACLK         => hbmClk,
-         AXI_16_ARESET_N     => hbmRstL(1),
+         AXI_16_ARESET_N     => hbmRstL,
          AXI_16_ARADDR       => hbmReadMasters(1).araddr(32 downto 0),
          AXI_16_ARBURST      => hbmReadMasters(1).arburst,
          AXI_16_ARID         => hbmReadMasters(1).arid(5 downto 0),
@@ -633,5 +632,13 @@ begin
          clk      => hbmRefClk,
          asyncRst => hbmRst,
          syncRst  => apbRstL);
+
+   U_axiReady : entity surf.Synchronizer
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk     => axiClk,
+         dataIn  => apbDone,
+         dataOut => axiReady);
 
 end mapping;

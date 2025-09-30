@@ -387,6 +387,7 @@ begin
       U_AxiFifo : entity surf.AxiStreamDmaV2Fifo
          generic map (
             TPD_G              => TPD_G,
+            REVERSE_INDEX_G    => true,  -- true if using a reserve bit ordering of indexes (helpful if load balancing on HBM memory)
             -- FIFO Configuration
             BUFF_FRAME_WIDTH_G => AXI_BUFFER_WIDTH_C-12,  -- Optimized to fix into 1 URAM (12-bit address) for free list
             AXI_BUFFER_WIDTH_G => AXI_BUFFER_WIDTH_C,

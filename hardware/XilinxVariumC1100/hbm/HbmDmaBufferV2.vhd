@@ -289,9 +289,9 @@ architecture mapping of HbmDmaBufferV2 is
    signal hbmRstL       : slv(1 downto 0);
    signal hbmCatTripVec : slv(1 downto 0);
 
-   signal apbRstL    : slv(1 downto 0);
    signal apbDoneVec : slv(1 downto 0);
    signal apbDone    : sl;
+   signal apbRstL    : sl;
 
    signal wdataParity : Slv32Array(1 downto 0) := (others => (others => '0'));
 
@@ -318,9 +318,9 @@ begin
          NUM_CLOCKS_G      => 2,
          -- MMCM attributes
          CLKIN_PERIOD_G    => 10.0,     -- 100 MHz
-         CLKFBOUT_MULT_G   => 12,       -- 1.2GHz = 12 x 100 MHz
-         CLKOUT0_DIVIDE_G  => 3,        -- 400MHz = 1.2GHz/3
-         CLKOUT1_DIVIDE_G  => 4)        -- 300MHz = 1.2GHz/4
+         CLKFBOUT_MULT_G   => 13,       -- 1.3GHz = 13 x 100 MHz
+         CLKOUT0_DIVIDE_G  => 3,        -- 433MHz = 1.3GHz/3
+         CLKOUT1_DIVIDE_G  => 4)        -- 325MHz = 1.3GHz/4
       port map(
          -- Clock Input
          clkIn     => userClk,
@@ -569,15 +569,6 @@ begin
             M00_AXI_RVALID       => hbmReadSlaves(i).rvalid,
             M00_AXI_RREADY       => hbmReadMasters(i).rready);
 
-      U_apbRstL : entity surf.RstSync
-         generic map (
-            TPD_G          => TPD_G,
-            OUT_POLARITY_G => '0')      -- active LOW
-         port map (
-            clk      => hbmRefClk,
-            asyncRst => hbmRstVec(i),
-            syncRst  => apbRstL(i));
-
    end generate;
 
    process(hbmWriteMasters)
@@ -665,8 +656,8 @@ begin
          -- APB Interface
          APB_0_PCLK          => hbmRefClk,
          APB_1_PCLK          => hbmRefClk,
-         APB_0_PRESET_N      => apbRstL(0),
-         APB_1_PRESET_N      => apbRstL(1),
+         APB_0_PRESET_N      => apbRstL,
+         APB_1_PRESET_N      => apbRstL,
          apb_complete_0      => apbDoneVec(0),
          apb_complete_1      => apbDoneVec(1),
          DRAM_0_STAT_CATTRIP => hbmCatTripVec(0),
@@ -677,5 +668,14 @@ begin
    cmsHbmCatTrip <= uOr(hbmCatTripVec);
    hbmCatTrip    <= uOr(hbmCatTripVec);
    apbDone       <= uAnd(apbDoneVec);
+
+   U_apbRstL : entity surf.RstSync
+      generic map (
+         TPD_G          => TPD_G,
+         OUT_POLARITY_G => '0')         -- active LOW
+      port map (
+         clk      => hbmRefClk,
+         asyncRst => hbmReset,
+         syncRst  => apbRstL);
 
 end mapping;

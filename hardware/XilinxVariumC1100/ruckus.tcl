@@ -46,3 +46,6 @@ add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/pll-config/Si5394A_GT_REFCL
 loadSource -lib axi_pcie_core -path "$::DIR_PATH/../XilinxAlveoU55c/bd/CmsBlockDesignWrapper.vhd"
 loadBlockDesign -path "$::DIR_PATH/../XilinxAlveoU55c/bd/CmsBlockDesign.bd"
 # loadBlockDesign -path "$::DIR_PATH/../XilinxAlveoU55c/bd/CmsBlockDesign.tcl"
+
+# Do not include the CmsBlockDesign in the simulations
+set_property USED_IN_SIMULATION 0 [get_files CmsBlockDesign.bd]

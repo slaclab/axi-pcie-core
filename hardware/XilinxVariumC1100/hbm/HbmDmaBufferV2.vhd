@@ -276,14 +276,17 @@ architecture mapping of HbmDmaBufferV2 is
 
    signal axilReset : sl;
 
-   signal axiClk   : sl;
-   signal axiRst   : sl;
-   signal axiRstL  : sl;
-   signal axiReady : sl;
+   signal axiClk    : sl;
+   signal axiReset  : sl;
+   signal axiRstVec : slv(1 downto 0);
+   signal axiRst    : slv(1 downto 0);
+   signal axiRstL   : slv(1 downto 0);
+   signal axiReady  : slv(1 downto 0);
 
    signal hbmClk        : sl;
-   signal hbmRst        : sl;
-   signal hbmRstL       : sl;
+   signal hbmReset      : sl;
+   signal hbmRstVec     : slv(1 downto 0);
+   signal hbmRstL       : slv(1 downto 0);
    signal hbmCatTripVec : slv(1 downto 0);
 
    signal apbDoneVec : slv(1 downto 0);
@@ -304,6 +307,7 @@ begin
          rstIn  => axilRst,
          rstOut => axilReset);
 
+   -- Generate the HBM and AXI clocks/resets
    U_hbmClk : entity surf.ClockManagerUltraScale
       generic map(
          TPD_G             => TPD_G,
@@ -314,9 +318,9 @@ begin
          NUM_CLOCKS_G      => 2,
          -- MMCM attributes
          CLKIN_PERIOD_G    => 10.0,     -- 100 MHz
-         CLKFBOUT_MULT_G   => 12,       -- 1.2GHz = 9 x 100 MHz
-         CLKOUT0_DIVIDE_G  => 3,        -- 400MHz = 1.2GHz/3
-         CLKOUT1_DIVIDE_G  => 4)        -- 300MHz = 1.2GHz/4
+         CLKFBOUT_MULT_G   => 13,       -- 1.3GHz = 13 x 100 MHz
+         CLKOUT0_DIVIDE_G  => 3,        -- 433MHz = 1.3GHz/3
+         CLKOUT1_DIVIDE_G  => 4)        -- 325MHz = 1.3GHz/4
       port map(
          -- Clock Input
          clkIn     => userClk,
@@ -325,11 +329,44 @@ begin
          clkOut(0) => hbmClk,
          clkOut(1) => axiClk,
          -- Reset Outputs
-         rstOut(0) => hbmRst,
-         rstOut(1) => axiRst);
+         rstOut(0) => hbmReset,
+         rstOut(1) => axiReset);
 
-   hbmRstL <= not(hbmRst);
-   axiRstL <= not(axiRst);
+   hbmRstVec <= (others => hbmReset);
+   axiRstVec <= (others => axiReset);
+
+   -- Help with timing
+   U_hbmRstL : entity surf.RstPipelineVector
+      generic map (
+         TPD_G     => TPD_G,
+         WIDTH_G   => 2,
+         INV_RST_G => true)             -- invert reset
+      port map (
+         clk    => hbmClk,
+         rstIn  => hbmRstVec,           -- active HIGH
+         rstOut => hbmRstL);            -- active LOW
+
+   -- Help with timing
+   U_axiRstL : entity surf.RstPipelineVector
+      generic map (
+         TPD_G     => TPD_G,
+         WIDTH_G   => 2,
+         INV_RST_G => true)             -- invert reset
+      port map (
+         clk    => axiClk,
+         rstIn  => axiRstVec,           -- active HIGH
+         rstOut => axiRstL);            -- active LOW
+
+   -- Help with timing
+   U_axiRst : entity surf.RstPipelineVector
+      generic map (
+         TPD_G     => TPD_G,
+         WIDTH_G   => 2,
+         INV_RST_G => false)
+      port map (
+         clk    => axiClk,
+         rstIn  => axiRstVec,           -- active HIGH
+         rstOut => axiRst);             -- active HIGH
 
    --------------------
    -- AXI-Lite Crossbar
@@ -378,7 +415,7 @@ begin
             sAxisSlave  => sAxisSlaves(i),
             -- Outbound AXIS Stream
             mAxisClk    => axiClk,
-            mAxisRst    => axiRst,
+            mAxisRst    => axiRst(i),
             mAxisMaster => ibAxisMasters(i),
             mAxisSlave  => ibAxisSlaves(i));
 
@@ -391,7 +428,7 @@ begin
          port map (
             -- Inbound AXIS Stream
             sAxisClk    => axiClk,
-            sAxisRst    => axiRst,
+            sAxisRst    => axiRst(i),
             sAxisMaster => obAxisMasters(i),
             sAxisSlave  => obAxisSlaves(i),
             -- Outbound AXIS Stream
@@ -399,6 +436,14 @@ begin
             mAxisRst    => mAxisRst(i),
             mAxisMaster => mAxisMasters(i),
             mAxisSlave  => mAxisSlaves(i));
+
+      U_axiReady : entity surf.Synchronizer
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            clk     => axiClk,
+            dataIn  => apbDone,
+            dataOut => axiReady(i));
 
       U_AxiFifo : entity surf.AxiStreamDmaV2Fifo
          generic map (
@@ -419,8 +464,8 @@ begin
          port map (
             -- AXI4 Interface (axiClk domain)
             axiClk          => axiClk,
-            axiRst          => axiRst,
-            axiReady        => axiReady,
+            axiRst          => axiRst(i),
+            axiReady        => axiReady(i),
             axiReadMaster   => axiReadMasters(i),
             axiReadSlave    => axiReadSlaves(i),
             axiWriteMaster  => axiWriteMasters(i),
@@ -442,7 +487,7 @@ begin
       U_HbmAxiFifo : HbmDmaBufferV2Fifo
          port map (
             INTERCONNECT_ACLK    => axiClk,
-            INTERCONNECT_ARESETN => axiRstL,
+            INTERCONNECT_ARESETN => axiRstL(i),
             -- SLAVE[0]
             S00_AXI_ARESET_OUT_N => open,
             S00_AXI_ACLK         => axiClk,
@@ -542,7 +587,7 @@ begin
          HBM_REF_CLK_1       => hbmRefClk,
          -- AXI_00 Interface
          AXI_00_ACLK         => hbmClk,
-         AXI_00_ARESET_N     => hbmRstL,
+         AXI_00_ARESET_N     => hbmRstL(0),
          AXI_00_ARADDR       => hbmReadMasters(0).araddr(32 downto 0),
          AXI_00_ARBURST      => hbmReadMasters(0).arburst,
          AXI_00_ARID         => hbmReadMasters(0).arid(5 downto 0),
@@ -576,7 +621,7 @@ begin
          AXI_00_BVALID       => hbmWriteSlaves(0).bvalid,
          -- AXI_16 Interface
          AXI_16_ACLK         => hbmClk,
-         AXI_16_ARESET_N     => hbmRstL,
+         AXI_16_ARESET_N     => hbmRstL(1),
          AXI_16_ARADDR       => hbmReadMasters(1).araddr(32 downto 0),
          AXI_16_ARBURST      => hbmReadMasters(1).arburst,
          AXI_16_ARID         => hbmReadMasters(1).arid(5 downto 0),
@@ -630,15 +675,7 @@ begin
          OUT_POLARITY_G => '0')         -- active LOW
       port map (
          clk      => hbmRefClk,
-         asyncRst => hbmRst,
+         asyncRst => hbmReset,
          syncRst  => apbRstL);
-
-   U_axiReady : entity surf.Synchronizer
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         clk     => axiClk,
-         dataIn  => apbDone,
-         dataOut => axiReady);
 
 end mapping;

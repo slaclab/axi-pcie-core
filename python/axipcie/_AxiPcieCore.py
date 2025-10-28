@@ -28,6 +28,7 @@ class AxiPcieCore(pr.Device):
                  useBpi      = False,
                  useGpu      = False,
                  useSpi      = False,
+                 useSfp      = [False, False],
                  numDmaLanes = 1,
                  boardType   = None,
                  extended    = False,
@@ -147,25 +148,42 @@ class AxiPcieCore(pr.Device):
                     XIL_DEVICE_G = 'ULTRASCALE'
                     qsfpOffset = [0x74_000,0x71_000]
 
+
                     for i in range(2):
-                        self.add(xceiver.Qsfp(
-                            name    = f'Qsfp[{i}]',
-                            offset  = qsfpOffset[i],
-                            memBase = self.AxilBridge.proxy,
-                            enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                        ))
+                        if not useSfp[i]:
+                            self.add(xceiver.Qsfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = qsfpOffset[i],
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
+                        else:
+                            self.add(xceiver.Sfp(
+                                name    = f'Sfp[{i}]',
+                                offset  = qsfpOffset[i],
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
 
                 elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250') or (boardType == 'XilinxAlveoU280'):
 
                     XIL_DEVICE_G = 'ULTRASCALE_PLUS'
 
                     for i in range(2):
-                        self.add(xceiver.Qsfp(
-                            name    = f'Qsfp[{i}]',
-                            offset  = i*0x1000+0x70000,
-                            memBase = self.AxilBridge.proxy,
-                            enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                        ))
+                        if not useSfp[i]:
+                            self.add(xceiver.Qsfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = i*0x1000+0x70000,
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
+                        else:
+                            self.add(xceiver.Sfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = i*0x1000+0x70000,
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
 
                     self.add(silabs.Si570(
                         name = 'Si570',
@@ -194,12 +212,20 @@ class AxiPcieCore(pr.Device):
                     ))
 
                     for i in range(2):
-                        self.add(xceiver.Qsfp(
-                            name    = f'Qsfp[{i}]',
-                            offset  = qsfpOffset[i],
-                            memBase = self.CmsBridge.proxy,
-                            enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                        ))
+                        if not useSfp[i]:
+                            self.add(xceiver.Qsfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = qsfpOffset[i],
+                                memBase = self.CmsBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
+                        else:
+                            self.add(xceiver.Sfp(
+                                name    = f'Sfp[{i}]',
+                                offset  = qsfpOffset[i],
+                                memBase = self.CmsBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
 
                 elif (boardType == 'XilinxKcu105'):
                     XIL_DEVICE_G = 'ULTRASCALE'

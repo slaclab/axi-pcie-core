@@ -28,6 +28,7 @@ class AxiPcieCore(pr.Device):
                  useBpi      = False,
                  useGpu      = False,
                  useSpi      = False,
+                 useSfp      = [False, False],
                  numDmaLanes = 1,
                  boardType   = None,
                  extended    = False,
@@ -105,110 +106,142 @@ class AxiPcieCore(pr.Device):
                     offset = 0x70000,
                 ))
 
-            # Check for the SLAC GEN4 PGP Card
-            if (boardType == 'AbacoPc821'):
-                XIL_DEVICE_G = 'ULTRASCALE'
+                # Check for the SLAC GEN4 PGP Card
+                if (boardType == 'AbacoPc821'):
+                    XIL_DEVICE_G = 'ULTRASCALE'
 
-            elif (boardType == 'AlphaDataKu3'):
-                XIL_DEVICE_G = 'ULTRASCALE'
+                elif (boardType == 'AlphaDataKu3'):
+                    XIL_DEVICE_G = 'ULTRASCALE'
 
-            elif (boardType == 'BittWareXupVv8'):
-                XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+                elif (boardType == 'BittWareXupVv8'):
+                    XIL_DEVICE_G = 'ULTRASCALE_PLUS'
 
-            elif (boardType == 'SlacPgpCardG4'):
+                elif (boardType == 'SlacPgpCardG4'):
 
-                XIL_DEVICE_G = 'ULTRASCALE'
+                    XIL_DEVICE_G = 'ULTRASCALE'
 
-                for i in range(2):
-                    self.add(xceiver.Qsfp(
-                        name    = f'Qsfp[{i}]',
-                        offset  = i*0x1000+0x70000,
+                    for i in range(2):
+                        self.add(xceiver.Qsfp(
+                            name    = f'Qsfp[{i}]',
+                            offset  = i*0x1000+0x70000,
+                            memBase = self.AxilBridge.proxy,
+                            enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                        ))
+
+                    self.add(xceiver.Sfp(
+                        name        = 'Sfp',
+                        offset      = 0x72000,
+                        memBase     = self.AxilBridge.proxy,
+                        enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                    ))
+
+                    self.add(nxp.Sa56004x(
+                        name        = 'BoardTemp',
+                        description = 'This device monitors the board temperature and FPGA junction temperature',
+                        offset      = 0x73000,
+                        memBase     = self.AxilBridge.proxy,
+                        enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                    ))
+
+                elif (boardType == 'XilinxKcu1500'):
+
+                    XIL_DEVICE_G = 'ULTRASCALE'
+                    qsfpOffset = [0x74_000,0x71_000]
+
+
+                    for i in range(2):
+                        if not useSfp[i]:
+                            self.add(xceiver.Qsfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = qsfpOffset[i],
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
+                        else:
+                            self.add(xceiver.Sfp(
+                                name    = f'Sfp[{i}]',
+                                offset  = qsfpOffset[i],
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
+
+                elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250') or (boardType == 'XilinxAlveoU280'):
+
+                    XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+
+                    for i in range(2):
+                        if not useSfp[i]:
+                            self.add(xceiver.Qsfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = i*0x1000+0x70000,
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
+                        else:
+                            self.add(xceiver.Sfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = i*0x1000+0x70000,
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
+
+                    self.add(silabs.Si570(
+                        name = 'Si570',
+                        factory_freq = 156.25,
+                        offset = 0x70000 + 0x2000,
+                        memBase = self.AxilBridge.proxy,
+                        enabled = False))
+
+                elif (boardType == 'XilinxAlveoU55c') or (boardType == 'XilinxVariumC1100'):
+
+                    XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+                    qsfpOffset = [0x0F_00_0000, 0x0F_10_0000]
+
+                    self.add(silabs.Si5394(
+                        offset  = 0x70000,
                         memBase = self.AxilBridge.proxy,
                         enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                     ))
 
-                self.add(xceiver.Sfp(
-                    name        = 'Sfp',
-                    offset      = 0x72000,
-                    memBase     = self.AxilBridge.proxy,
-                    enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                ))
-
-                self.add(nxp.Sa56004x(
-                    name        = 'BoardTemp',
-                    description = 'This device monitors the board temperature and FPGA junction temperature',
-                    offset      = 0x73000,
-                    memBase     = self.AxilBridge.proxy,
-                    enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                ))
-
-            elif (boardType == 'XilinxKcu1500'):
-
-                XIL_DEVICE_G = 'ULTRASCALE'
-                qsfpOffset = [0x74_000,0x71_000]
-
-                for i in range(2):
-                    self.add(xceiver.Qsfp(
-                        name    = f'Qsfp[{i}]',
-                        offset  = qsfpOffset[i],
-                        memBase = self.AxilBridge.proxy,
-                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                    self.add(pcie.CmsSubsystem(
+                        name       = 'CmsBridge',
+                        offset     = 0x8000_0000,
+                        memBase    = self.AxilBridge.proxy,
+                        moduleType = 'QSFP',
+                        numCages   = 2,
                     ))
 
-            elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250') or (boardType == 'XilinxAlveoU280'):
+                    for i in range(2):
+                        if not useSfp[i]:
+                            self.add(xceiver.Qsfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = qsfpOffset[i],
+                                memBase = self.CmsBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
+                        else:
+                            self.add(xceiver.Sfp(
+                                name    = f'Sfp[{i}]',
+                                offset  = qsfpOffset[i],
+                                memBase = self.CmsBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
 
-                XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+                elif (boardType == 'XilinxKcu105'):
+                    XIL_DEVICE_G = 'ULTRASCALE'
 
-                for i in range(2):
-                    self.add(xceiver.Qsfp(
-                        name    = f'Qsfp[{i}]',
-                        offset  = i*0x1000+0x70000,
-                        memBase = self.AxilBridge.proxy,
-                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                elif (boardType == 'XilinxKcu116') or (boardType == 'XilinxVcu128'):
+                    XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+
+                # SysMon Module
+                if XIL_DEVICE_G is not None:
+                    self.add(xil.AxiSysMonUltraScale(
+                        offset       = 0x24000,
+                        simpleViewList = [ 'Temperature',   'VccInt',   'VccAux',   'VccBram',
+                                        'MaxTemperature','MaxVccInt','MaxVccAux','MaxVccBram',
+                                        'MinTemperature','MinVccInt','MinVccAux','MinVccBram'],
+                        XIL_DEVICE_G = XIL_DEVICE_G,
                     ))
-
-            elif (boardType == 'XilinxAlveoU55c') or (boardType == 'XilinxVariumC1100'):
-
-                XIL_DEVICE_G = 'ULTRASCALE_PLUS'
-                qsfpOffset = [0x0F_00_0000, 0x0F_10_0000]
-
-                self.add(silabs.Si5394(
-                    offset  = 0x70000,
-                    memBase = self.AxilBridge.proxy,
-                    enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                ))
-
-                self.add(pcie.CmsSubsystem(
-                    name       = 'CmsBridge',
-                    offset     = 0x8000_0000,
-                    memBase    = self.AxilBridge.proxy,
-                    moduleType = 'QSFP',
-                    numCages   = 2,
-                ))
-
-                for i in range(2):
-                    self.add(xceiver.Qsfp(
-                        name    = f'Qsfp[{i}]',
-                        offset  = qsfpOffset[i],
-                        memBase = self.CmsBridge.proxy,
-                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                    ))
-
-            elif (boardType == 'XilinxKcu105'):
-                XIL_DEVICE_G = 'ULTRASCALE'
-
-            elif (boardType == 'XilinxKcu116') or (boardType == 'XilinxVcu128'):
-                XIL_DEVICE_G = 'ULTRASCALE_PLUS'
-
-        # SysMon Module
-        if XIL_DEVICE_G is not None:
-            self.add(xil.AxiSysMonUltraScale(
-                offset       = 0x24000,
-                simpleViewList = [ 'Temperature',   'VccInt',   'VccAux',   'VccBram',
-                                'MaxTemperature','MaxVccInt','MaxVccAux','MaxVccBram',
-                                'MinTemperature','MinVccInt','MinVccAux','MinVccBram'],
-                XIL_DEVICE_G = XIL_DEVICE_G,
-            ))
 
     def _start(self):
         super()._start()
@@ -216,12 +249,12 @@ class AxiPcieCore(pr.Device):
         # Check if not a simulation and armed for start
         if not (self.sim) and (self.startArmed):
 
-            # Get the number of DMA lanes built in the firmware
-            DMA_SIZE_G = self.AxiVersion.DMA_SIZE_G.get()
+            # # Get the number of DMA lanes built in the firmware
+            # DMA_SIZE_G = self.AxiVersion.DMA_SIZE_G.get()
 
-            # Check if the number of software DMA lanes does not match the hardware
-            if ( self.numDmaLanes is not DMA_SIZE_G ):
-                click.secho(f'WARNING: {self.path}.numDmaLanes = {self.numDmaLanes} != {self.path}.AxiVersion.DMA_SIZE_G = {DMA_SIZE_G}', bg='cyan')
+            # # Check if the number of software DMA lanes does not match the hardware
+            # if ( self.numDmaLanes is not DMA_SIZE_G ):
+            #     click.secho(f'WARNING: {self.path}.numDmaLanes = {self.numDmaLanes} != {self.path}.AxiVersion.DMA_SIZE_G = {DMA_SIZE_G}', bg='cyan')
 
             # Get the hardware type built in the firmware
             PCIE_HW_TYPE_G = self.AxiVersion.PCIE_HW_TYPE_G.getDisp()

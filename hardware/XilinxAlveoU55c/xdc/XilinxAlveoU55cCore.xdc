@@ -8,9 +8,30 @@
 ## the terms contained in the LICENSE.txt file.
 ##############################################################################
 
-set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_Core}]
-
 set_operating_conditions -design_power_budget 63
+
+#######################
+# Placement Constraints
+#######################
+
+set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_Core}]
+set_property USER_SLR_ASSIGNMENT SLR0 [get_cells {U_ExtendedCore}]
+
+# SLR1: Left Side = NORTH_WEST_GRP
+create_pblock NORTH_WEST_GRP
+resize_pblock [get_pblocks NORTH_WEST_GRP] -add {CLOCKREGION_X0Y4:CLOCKREGION_X3Y7}
+
+# SLR1: Right Side = NORTH_EAST_GRP
+create_pblock NORTH_EAST_GRP
+resize_pblock [get_pblocks NORTH_EAST_GRP] -add {CLOCKREGION_X4Y4:CLOCKREGION_X7Y7}
+
+# SLR0: Left Side = SOUTH_WEST_GRP
+create_pblock SOUTH_WEST_GRP
+resize_pblock [get_pblocks SOUTH_WEST_GRP] -add {CLOCKREGION_X0Y0:CLOCKREGION_X3Y3}
+
+# SLR0: Right Side = SOUTH_EAST_GRP
+create_pblock SOUTH_EAST_GRP
+resize_pblock [get_pblocks SOUTH_EAST_GRP] -add {CLOCKREGION_X4Y0:CLOCKREGION_X7Y3}
 
 ##########
 # System #

@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: HBM DMA buffer
+-- Description: HBM DMA buffer - optimized for 25Gb/s per DMA lane
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -28,9 +28,6 @@ entity HbmDmaBuffer is
       TPD_G             : time                  := 1 ns;
       DMA_SIZE_G        : positive range 1 to 8 := 8;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType;
-      RD_PEND_THRESH_G  : positive              := 4096;  -- In units of bytes
-      CLKFBOUT_MULT_G   : positive              := 12;  -- 1.2GHz = 12 x 100 MHz
-      CLKOUT0_DIVIDE_G  : positive              := 3;   -- 400MHz = 1.2GHz/3
       AXIL_BASE_ADDR_G  : slv(31 downto 0));
    port (
       -- Card Management Solution (CMS) Interface
@@ -342,7 +339,7 @@ architecture mapping of HbmDmaBuffer is
          );
    end component;
 
-   component HbmAxiFifo
+   component HbmDmaBufferFifo
       port (
          INTERCONNECT_ACLK    : in  std_logic;
          INTERCONNECT_ARESETN : in  std_logic;
@@ -520,8 +517,8 @@ begin
          NUM_CLOCKS_G      => 1,
          -- MMCM attributes
          CLKIN_PERIOD_G    => 10.0,     -- 100 MHz
-         CLKFBOUT_MULT_G   => CLKFBOUT_MULT_G,
-         CLKOUT0_DIVIDE_G  => CLKOUT0_DIVIDE_G)
+         CLKFBOUT_MULT_G   => 10,       -- 1.0GHz = 10 x 100 MHz
+         CLKOUT0_DIVIDE_G  => 4)        -- 250MHz = 1.0GHz/4
       port map(
          -- Clock Input
          clkIn     => userClk,
@@ -605,7 +602,7 @@ begin
             AXI_BASE_ADDR_G    => AXI_BASE_ADDR_C(i),
             AXI_CONFIG_G       => DMA_AXI_CONFIG_C,
             BURST_BYTES_G      => 512,  -- HBM is 32B AXI3, 32B x 2^16 AXI3 burst length = 512B
-            RD_PEND_THRESH_G   => RD_PEND_THRESH_G)
+            RD_PEND_THRESH_G   => 8*512)  -- HbmDmaBufferFifo configured for 8 acceptance on the read path
          port map (
             -- AXI4 Interface (axiClk domain)
             axiClk          => axisClk(i),
@@ -649,7 +646,7 @@ begin
             mAxiWriteMaster => fifoWriteMasters(i),
             mAxiWriteSlave  => fifoWriteSlaves(i));
 
-      U_HbmAxiFifo : HbmAxiFifo
+      U_HbmAxiFifo : HbmDmaBufferFifo
          port map (
             INTERCONNECT_ACLK    => axisClk(i),
             INTERCONNECT_ARESETN => axisRstL(i),

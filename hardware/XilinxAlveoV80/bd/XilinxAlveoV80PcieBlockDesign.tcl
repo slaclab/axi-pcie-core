@@ -333,7 +333,8 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_3 {0x00000080FFFFFFFFF} \
       CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_4 {0x000000813FFFFFFFF} \
       CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_5 {0x000000817FFFFFFFF} \
-      CPM_PCIE1_PF0_BAR0_64BIT {0} \
+      CPM_PCIE1_PF0_BAR0_64BIT {1} \
+      CPM_PCIE1_PF0_BAR0_BRIDGE_64BIT {1} \
       CPM_PCIE1_PF0_BAR0_BRIDGE_SCALE {Megabytes} \
       CPM_PCIE1_PF0_BAR0_BRIDGE_SIZE {16} \
       CPM_PCIE1_PF0_BAR0_BRIDGE_STEERING {CPM_PL_AXI1} \
@@ -598,7 +599,6 @@ proc create_root_design { parentCell } {
   # Create instance: axi_noc_dma_0, and set properties
   set axi_noc_dma_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_noc:1.1 axi_noc_dma_0 ]
   set_property -dict [list \
-    CONFIG.MI_SIDEBAND_PINS {} \
     CONFIG.NUM_CLKS {2} \
     CONFIG.NUM_MI {1} \
     CONFIG.NUM_SI {1} \

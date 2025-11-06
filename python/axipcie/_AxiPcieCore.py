@@ -113,8 +113,35 @@ class AxiPcieCore(pr.Device):
                 elif (boardType == 'AlphaDataKu3'):
                     XIL_DEVICE_G = 'ULTRASCALE'
 
-                elif (boardType == 'BittWareXupVv8'):
+                elif (boardType == 'BittWareXupVv8Vu9p') or (boardType == 'BittWareXupVv8Vu13p'):
+
                     XIL_DEVICE_G = 'ULTRASCALE_PLUS'
+
+                    self.add(pcie.BittWareXupVv8QsfpGpio(
+                        name    = 'QsfpGpio',
+                        offset  = 0x73000,
+                        memBase = self.AxilBridge.proxy,
+                        enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                    ))
+
+                    if len(useSfp) != 4:
+                        useSfp = [False for _ in range(4)]
+
+                    for i in range(4):
+                        if not useSfp[i]:
+                            self.add(xceiver.Qsfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = i*0x1000+0x74000,
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
+                        else:
+                            self.add(xceiver.Sfp(
+                                name    = f'Qsfp[{i}]',
+                                offset  = i*0x1000+0x74000,
+                                memBase = self.AxilBridge.proxy,
+                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                            ))
 
                 elif (boardType == 'SlacPgpCardG4'):
 

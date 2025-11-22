@@ -227,6 +227,7 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x00_00_00_0B: 'XilinxKcu105',
                 0x00_00_00_0C: 'XilinxKcu116',
                 0x00_00_00_0D: 'XilinxKcu1500',
+                0x00_00_10_0D: 'XilinxKcu1500Extended',
                 0x00_00_00_0E: 'XilinxVcu128',
                 0x00_00_00_0F: 'XilinxAlveoU55C',
                 0x00_00_00_10: 'XilinxVariumC1100',

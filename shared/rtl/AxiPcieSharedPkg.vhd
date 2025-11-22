@@ -37,6 +37,7 @@ package AxiPcieSharedPkg is
    constant HW_TYPE_XILINX_KCU105_C          : slv(31 downto 0) := x"00_00_00_0B";
    constant HW_TYPE_XILINX_KCU116_C          : slv(31 downto 0) := x"00_00_00_0C";
    constant HW_TYPE_XILINX_KCU1500_C         : slv(31 downto 0) := x"00_00_00_0D";
+   constant HW_TYPE_XILINX_KCU1500_EXT_C     : slv(31 downto 0) := x"00_00_10_0D";
    constant HW_TYPE_XILINX_VCU128_C          : slv(31 downto 0) := x"00_00_00_0E";
    constant HW_TYPE_XILINX_U55C_C            : slv(31 downto 0) := x"00_00_00_0F";
    constant HW_TYPE_XILINX_C1100_C           : slv(31 downto 0) := x"00_00_00_10";

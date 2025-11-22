@@ -230,6 +230,7 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x00_00_00_0E: 'XilinxVcu128',
                 0x00_00_00_0F: 'XilinxAlveoU55C',
                 0x00_00_00_10: 'XilinxVariumC1100',
+                0x00_00_10_10: 'XilinxVariumC1100Extended',
                 0x00_00_00_11: 'AbacoPc821Ku085',
                 0x00_00_00_12: 'AbacoPc821Ku115',
                 0x00_00_00_13: 'BittWareXupVv8Vu9p',

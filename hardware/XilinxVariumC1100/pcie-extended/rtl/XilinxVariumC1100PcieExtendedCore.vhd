@@ -212,7 +212,7 @@ begin
          EN_DEVICE_DNA_G      => false,
          EN_ICAP_G            => false,
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
-         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_C1100_C,
+         PCIE_HW_TYPE_G       => HW_TYPE_XILINX_C1100_EXT_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DATAGPU_EN_G         => DATAGPU_EN_G,
          GEN_SYSMON_G         => false,

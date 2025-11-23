@@ -23,6 +23,8 @@ use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 use surf.AxiStreamPkg.all;
 use surf.AxiPkg.all;
+use surf.I2cPkg.all;
+use surf.I2cMuxPkg.all;
 
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
@@ -33,6 +35,7 @@ use unisim.vcomponents.all;
 entity BittWareXupVv8Core is
    generic (
       TPD_G                : time                        := 1 ns;
+      QSFP_CDR_DISABLE_G   : boolean                     := false;
       ROGUE_SIM_EN_G       : boolean                     := false;
       ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
       ROGUE_SIM_CH_COUNT_G : natural range 1 to 256      := 256;
@@ -46,51 +49,78 @@ entity BittWareXupVv8Core is
       ------------------------
       --  Top Level Interfaces
       ------------------------
-      userClk100      : out sl;
+      userClk100      : out   sl;
       -- DMA Interfaces  (dmaClk domain)
-      dmaClk          : out sl;
-      dmaRst          : out sl;
-      dmaBuffGrpPause : out slv(7 downto 0);
-      dmaObMasters    : out AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaObSlaves     : in  AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-      dmaIbMasters    : in  AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
-      dmaIbSlaves     : out AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaClk          : out   sl;
+      dmaRst          : out   sl;
+      dmaBuffGrpPause : out   slv(7 downto 0);
+      dmaObMasters    : out   AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaObSlaves     : in    AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
+      dmaIbMasters    : in    AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
+      dmaIbSlaves     : out   AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
       -- PIP Interface [0x00080000:0009FFFF] (dmaClk domain)
-      pipIbMaster     : out AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipIbSlave      : in  AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
-      pipObMaster     : in  AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
-      pipObSlave      : out AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipIbMaster     : out   AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipIbSlave      : in    AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      pipObMaster     : in    AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      pipObSlave      : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
-      appClk          : in  sl                    := '0';
-      appRst          : in  sl                    := '1';
-      appReadMaster   : out AxiLiteReadMasterType;
-      appReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      appWriteMaster  : out AxiLiteWriteMasterType;
-      appWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      appClk          : in    sl                    := '0';
+      appRst          : in    sl                    := '1';
+      appReadMaster   : out   AxiLiteReadMasterType;
+      appReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      appWriteMaster  : out   AxiLiteWriteMasterType;
+      appWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -- GPU AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
-      gpuReadMaster   : out AxiLiteReadMasterType;
-      gpuReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      gpuWriteMaster  : out AxiLiteWriteMasterType;
-      gpuWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      gpuReadMaster   : out   AxiLiteReadMasterType;
+      gpuReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      gpuWriteMaster  : out   AxiLiteWriteMasterType;
+      gpuWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
       -- FPGA I2C Master
-      fpgaI2cMasterL  : out sl;
+      fpgaI2cMasterL  : out   sl;
+      i2cScl          : inout sl;
+      i2cSda          : inout sl;
       -- System Ports
-      userClkP        : in  sl;
-      userClkN        : in  sl;
+      userClkP        : in    sl;
+      userClkN        : in    sl;
       -- PCIe Ports
-      pciRstL         : in  sl;
-      pciRefClkP      : in  sl;
-      pciRefClkN      : in  sl;
-      pciRxP          : in  slv(15 downto 0);
-      pciRxN          : in  slv(15 downto 0);
-      pciTxP          : out slv(15 downto 0);
-      pciTxN          : out slv(15 downto 0));
+      pciRstL         : in    sl;
+      pciRefClkP      : in    sl;
+      pciRefClkN      : in    sl;
+      pciRxP          : in    slv(15 downto 0);
+      pciRxN          : in    slv(15 downto 0);
+      pciTxP          : out   slv(15 downto 0);
+      pciTxN          : out   slv(15 downto 0));
 end BittWareXupVv8Core;
 
 architecture mapping of BittWareXupVv8Core is
+
+   constant I2C_SCL_FREQ_C  : real := 100.0E+3;  -- units of Hz
+   constant I2C_MIN_PULSE_C : real := 100.0E-9;  -- units of seconds
+
+   constant XBAR_MI2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
+      0               => (
+         baseAddr     => x"00000000",
+         addrBits     => 31,
+         connectivity => x"FFFF"));
+
+   constant XBAR_I2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(7 downto 0) := genAxiLiteConfig(8, x"0007_0000", 16, 12);
+
+   constant QSFP_BASE_ADDR_C : Slv32Array(3 downto 0) := (
+      0 => x"0007_4000",
+      1 => x"0007_5000",
+      2 => x"0007_6000",
+      3 => x"0007_7000");
+
+   constant GPIO_DEVICE_MAP_C : I2cAxiLiteDevArray(0 to 0) := (
+      0              => MakeI2cAxiLiteDevType(
+         i2cAddress  => "0100000",      -- PCA9555
+         dataSize    => 8,              -- in units of bits
+         addrSize    => 8,              -- in units of bits
+         endianness  => '0',            -- Little endian
+         repeatStart => '1'));          -- Repeat Start
 
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
@@ -116,6 +146,31 @@ architecture mapping of BittWareXupVv8Core is
    signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
    signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
+
+   signal mI2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
+   signal mI2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal mI2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
+   signal mI2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+
+   signal i2cReadMaster  : AxiLiteReadMasterType;
+   signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
+   signal i2cWriteMaster : AxiLiteWriteMasterType;
+   signal i2cWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
+
+   signal i2cReadMasters  : AxiLiteReadMasterArray(7 downto 0);
+   signal i2cReadSlaves   : AxiLiteReadSlaveArray(7 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal i2cWriteMasters : AxiLiteWriteMasterArray(7 downto 0);
+   signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(7 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+
+   signal i2ci : i2c_in_type;
+   signal i2coVec : i2c_out_array(8 downto 0) := (
+      others    => (
+         scl    => '1',
+         scloen => '1',
+         sda    => '1',
+         sdaoen => '1',
+         enable => '0'));
+   signal i2co : i2c_out_type;
 
    signal sysClock     : sl;
    signal sysReset     : sl;
@@ -150,7 +205,7 @@ begin
 
    -- 0 = FPGA has control of I2C chains shared with the BMC.
    -- 1 = BMC  has control of I2C chains shared with the FPGA (default)
-   fpgaI2cMasterL <= '1';
+   fpgaI2cMasterL <= '0';
 
    U_IBUFDS : IBUFDS
       port map(
@@ -198,6 +253,156 @@ begin
 
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
+
+      QSFP_CDR_DISABLE : if (QSFP_CDR_DISABLE_G) generate
+
+         U_QsfpCdrDisable : entity surf.QsfpCdrDisable
+            generic map (
+               TPD_G             => TPD_G,
+               PERIODIC_UPDATE_G => 10,  -- Units of seconds
+               QSFP_BASE_ADDR_G  => QSFP_BASE_ADDR_C,
+               AXIL_CLK_FREQ_G   => DMA_CLK_FREQ_C)
+            port map (
+               -- AXI-Lite Register Interface (axilClk domain)
+               axilClk          => sysClock,
+               axilRst          => sysReset,
+               mAxilReadMaster  => mI2cReadMasters(1),
+               mAxilReadSlave   => mI2cReadSlaves(1),
+               mAxilWriteMaster => mI2cWriteMasters(1),
+               mAxilWriteSlave  => mI2cWriteSlaves(1));
+
+         U_XbarMI2cMux : entity surf.AxiLiteCrossbar
+            generic map (
+               TPD_G              => TPD_G,
+               NUM_SLAVE_SLOTS_G  => 2,
+               NUM_MASTER_SLOTS_G => 1,
+               MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
+            port map (
+               axiClk              => sysClock,
+               axiClkRst           => sysReset,
+               sAxiWriteMasters    => mI2cWriteMasters,
+               sAxiWriteSlaves     => mI2cWriteSlaves,
+               sAxiReadMasters     => mI2cReadMasters,
+               sAxiReadSlaves      => mI2cReadSlaves,
+               mAxiWriteMasters(0) => i2cWriteMaster,
+               mAxiWriteSlaves(0)  => i2cWriteSlave,
+               mAxiReadMasters(0)  => i2cReadMaster,
+               mAxiReadSlaves(0)   => i2cReadSlave);
+
+      end generate;
+
+      BYP_QSFP_CDR_DISABLE : if (not QSFP_CDR_DISABLE_G) generate
+
+         i2cWriteMaster     <= mI2cWriteMasters(0);
+         mI2cWriteSlaves(0) <= i2cWriteSlave;
+
+         i2cReadMaster     <= mI2cReadMasters(0);
+         mI2cReadSlaves(0) <= i2cReadSlave;
+
+      end generate;
+
+      U_XbarI2cMux : entity surf.AxiLiteCrossbarI2cMux
+         generic map (
+            TPD_G              => TPD_G,
+            -- I2C MUX Generics
+            MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_TCA9548_C,
+            I2C_MUX_ADDR_G     => b"1110_010",
+            I2C_SCL_FREQ_G     => I2C_SCL_FREQ_C,
+            I2C_MIN_PULSE_G    => I2C_MIN_PULSE_C,
+            AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C,
+            -- AXI-Lite Crossbar Generics
+            NUM_MASTER_SLOTS_G => 8,
+            MASTERS_CONFIG_G   => XBAR_I2C_CONFIG_C)
+         port map (
+            -- Clocks and Resets
+            axilClk           => sysClock,
+            axilRst           => sysReset,
+            -- Slave AXI-Lite Interface
+            sAxilWriteMaster  => i2cWriteMaster,
+            sAxilWriteSlave   => i2cWriteSlave,
+            sAxilReadMaster   => i2cReadMaster,
+            sAxilReadSlave    => i2cReadSlave,
+            -- Master AXI-Lite Interfaces
+            mAxilWriteMasters => i2cWriteMasters,
+            mAxilWriteSlaves  => i2cWriteSlaves,
+            mAxilReadMasters  => i2cReadMasters,
+            mAxilReadSlaves   => i2cReadSlaves,
+            -- I2C MUX Ports
+            i2ci              => i2ci,
+            i2co              => i2coVec(8));
+
+      U_PCA9555 : entity surf.AxiI2cRegMasterCore
+         generic map (
+            TPD_G           => TPD_G,
+            I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+            I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
+            DEVICE_MAP_G    => GPIO_DEVICE_MAP_C,
+            AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
+         port map (
+            -- I2C Ports
+            i2ci           => i2ci,
+            i2co           => i2coVec(3),
+            -- AXI-Lite Register Interface
+            axiReadMaster  => i2cReadMasters(3),
+            axiReadSlave   => i2cReadSlaves(3),
+            axiWriteMaster => i2cWriteMasters(3),
+            axiWriteSlave  => i2cWriteSlaves(3),
+            -- Clocks and Resets
+            axiClk         => sysClock,
+            axiRst         => sysReset);
+
+      GEN_VEC :
+      for i in 3 downto 0 generate
+
+         U_QSFP : entity surf.Sff8472Core
+            generic map (
+               TPD_G           => TPD_G,
+               I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+               I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
+               AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
+            port map (
+               -- I2C Ports
+               i2ci           => i2ci,
+               i2co           => i2coVec(4+i),
+               -- AXI-Lite Register Interface
+               axiReadMaster  => i2cReadMasters(4+i),
+               axiReadSlave   => i2cReadSlaves(4+i),
+               axiWriteMaster => i2cWriteMasters(4+i),
+               axiWriteSlave  => i2cWriteSlaves(4+i),
+               -- Clocks and Resets
+               axiClk         => sysClock,
+               axiRst         => sysReset);
+
+      end generate GEN_VEC;
+
+      process(i2cReadMasters, i2cWriteMasters, i2coVec)
+         variable tmp : i2c_out_type;
+      begin
+         -- Init
+         tmp := i2coVec(8);
+         -- Check for TXN after XBAR/I2C_MUX
+         for i in 3 to 7 loop
+            if (i2cWriteMasters(i).awvalid = '1') or (i2cReadMasters(i).arvalid = '1') then
+               tmp := i2coVec(i);
+            end if;
+         end loop;
+         -- Return result
+         i2co <= tmp;
+      end process;
+
+      IOBUF_SCL : IOBUF
+         port map (
+            O  => i2ci.scl,
+            IO => i2cScl,
+            I  => i2co.scl,
+            T  => i2co.scloen);
+
+      IOBUF_SDA : IOBUF
+         port map (
+            O  => i2ci.sda,
+            IO => i2cSda,
+            I  => i2co.sda,
+            T  => i2co.sdaoen);
 
    end generate;
 
@@ -255,6 +460,11 @@ begin
          phyReadSlave        => phyReadSlave,
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
+         -- I2C AXI-Lite Interfaces
+         i2cReadMaster       => mI2cReadMasters(0),
+         i2cReadSlave        => mI2cReadSlaves(0),
+         i2cWriteMaster      => mI2cWriteMasters(0),
+         i2cWriteSlave       => mI2cWriteSlaves(0),
          -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,

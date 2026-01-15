@@ -310,27 +310,27 @@ begin
    -- Generate the HBM and AXI clocks/resets
    U_hbmClk : entity surf.ClockManagerUltraScale
       generic map(
-         TPD_G             => TPD_G,
-         TYPE_G            => "PLL",
-         INPUT_BUFG_G      => false,
-         FB_BUFG_G         => true,
-         RST_IN_POLARITY_G => '1',
-         NUM_CLOCKS_G      => 2,
+         TPD_G              => TPD_G,
+         TYPE_G             => "MMCM",
+         INPUT_BUFG_G       => false,
+         FB_BUFG_G          => true,
+         RST_IN_POLARITY_G  => '1',
+         NUM_CLOCKS_G       => 2,
          -- MMCM attributes
-         CLKIN_PERIOD_G    => 10.0,     -- 100 MHz
-         CLKFBOUT_MULT_G   => 13,       -- 1.3GHz = 13 x 100 MHz
-         CLKOUT0_DIVIDE_G  => 3,        -- 433MHz = 1.3GHz/3
-         CLKOUT1_DIVIDE_G  => 4)        -- 325MHz = 1.3GHz/4
+         CLKIN_PERIOD_G     => 10.0,    -- 100 MHz
+         CLKFBOUT_MULT_F_G  => 13.5,    -- 1.35GHz = 13.5 x 1.35GHz
+         CLKOUT0_DIVIDE_F_G => 4.0,     -- 337MHz = 1.5GHz/4
+         CLKOUT1_DIVIDE_G   => 3)       -- 450MHz = 1.35GHz/3
       port map(
          -- Clock Input
          clkIn     => userClk,
          rstIn     => axilReset,
          -- Clock Outputs
-         clkOut(0) => hbmClk,
-         clkOut(1) => axiClk,
+         clkOut(0) => axiClk,
+         clkOut(1) => hbmClk,
          -- Reset Outputs
-         rstOut(0) => hbmReset,
-         rstOut(1) => axiReset);
+         rstOut(0) => axiReset,
+         rstOut(1) => hbmReset);
 
    hbmRstVec <= (others => hbmReset);
    axiRstVec <= (others => axiReset);

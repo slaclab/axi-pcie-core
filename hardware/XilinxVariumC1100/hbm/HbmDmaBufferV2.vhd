@@ -65,76 +65,76 @@ architecture mapping of HbmDmaBufferV2 is
       port (
          HBM_REF_CLK_0       : in  std_logic;
          HBM_REF_CLK_1       : in  std_logic;
-         AXI_00_ACLK         : in  std_logic;
-         AXI_00_ARESET_N     : in  std_logic;
-         AXI_00_ARADDR       : in  std_logic_vector(32 downto 0);
-         AXI_00_ARBURST      : in  std_logic_vector(1 downto 0);
-         AXI_00_ARID         : in  std_logic_vector(5 downto 0);
-         AXI_00_ARLEN        : in  std_logic_vector(3 downto 0);
-         AXI_00_ARSIZE       : in  std_logic_vector(2 downto 0);
-         AXI_00_ARVALID      : in  std_logic;
-         AXI_00_AWADDR       : in  std_logic_vector(32 downto 0);
-         AXI_00_AWBURST      : in  std_logic_vector(1 downto 0);
-         AXI_00_AWID         : in  std_logic_vector(5 downto 0);
-         AXI_00_AWLEN        : in  std_logic_vector(3 downto 0);
-         AXI_00_AWSIZE       : in  std_logic_vector(2 downto 0);
-         AXI_00_AWVALID      : in  std_logic;
-         AXI_00_RREADY       : in  std_logic;
-         AXI_00_BREADY       : in  std_logic;
-         AXI_00_WDATA        : in  std_logic_vector(255 downto 0);
-         AXI_00_WLAST        : in  std_logic;
-         AXI_00_WSTRB        : in  std_logic_vector(31 downto 0);
-         AXI_00_WDATA_PARITY : in  std_logic_vector(31 downto 0);
-         AXI_00_WVALID       : in  std_logic;
-         AXI_16_ACLK         : in  std_logic;
-         AXI_16_ARESET_N     : in  std_logic;
-         AXI_16_ARADDR       : in  std_logic_vector(32 downto 0);
-         AXI_16_ARBURST      : in  std_logic_vector(1 downto 0);
-         AXI_16_ARID         : in  std_logic_vector(5 downto 0);
-         AXI_16_ARLEN        : in  std_logic_vector(3 downto 0);
-         AXI_16_ARSIZE       : in  std_logic_vector(2 downto 0);
-         AXI_16_ARVALID      : in  std_logic;
-         AXI_16_AWADDR       : in  std_logic_vector(32 downto 0);
-         AXI_16_AWBURST      : in  std_logic_vector(1 downto 0);
-         AXI_16_AWID         : in  std_logic_vector(5 downto 0);
-         AXI_16_AWLEN        : in  std_logic_vector(3 downto 0);
-         AXI_16_AWSIZE       : in  std_logic_vector(2 downto 0);
-         AXI_16_AWVALID      : in  std_logic;
-         AXI_16_RREADY       : in  std_logic;
-         AXI_16_BREADY       : in  std_logic;
-         AXI_16_WDATA        : in  std_logic_vector(255 downto 0);
-         AXI_16_WLAST        : in  std_logic;
-         AXI_16_WSTRB        : in  std_logic_vector(31 downto 0);
-         AXI_16_WDATA_PARITY : in  std_logic_vector(31 downto 0);
-         AXI_16_WVALID       : in  std_logic;
+         AXI_08_ACLK         : in  std_logic;
+         AXI_08_ARESET_N     : in  std_logic;
+         AXI_08_ARADDR       : in  std_logic_vector(32 downto 0);
+         AXI_08_ARBURST      : in  std_logic_vector(1 downto 0);
+         AXI_08_ARID         : in  std_logic_vector(5 downto 0);
+         AXI_08_ARLEN        : in  std_logic_vector(3 downto 0);
+         AXI_08_ARSIZE       : in  std_logic_vector(2 downto 0);
+         AXI_08_ARVALID      : in  std_logic;
+         AXI_08_AWADDR       : in  std_logic_vector(32 downto 0);
+         AXI_08_AWBURST      : in  std_logic_vector(1 downto 0);
+         AXI_08_AWID         : in  std_logic_vector(5 downto 0);
+         AXI_08_AWLEN        : in  std_logic_vector(3 downto 0);
+         AXI_08_AWSIZE       : in  std_logic_vector(2 downto 0);
+         AXI_08_AWVALID      : in  std_logic;
+         AXI_08_RREADY       : in  std_logic;
+         AXI_08_BREADY       : in  std_logic;
+         AXI_08_WDATA        : in  std_logic_vector(255 downto 0);
+         AXI_08_WLAST        : in  std_logic;
+         AXI_08_WSTRB        : in  std_logic_vector(31 downto 0);
+         AXI_08_WDATA_PARITY : in  std_logic_vector(31 downto 0);
+         AXI_08_WVALID       : in  std_logic;
+         AXI_24_ACLK         : in  std_logic;
+         AXI_24_ARESET_N     : in  std_logic;
+         AXI_24_ARADDR       : in  std_logic_vector(32 downto 0);
+         AXI_24_ARBURST      : in  std_logic_vector(1 downto 0);
+         AXI_24_ARID         : in  std_logic_vector(5 downto 0);
+         AXI_24_ARLEN        : in  std_logic_vector(3 downto 0);
+         AXI_24_ARSIZE       : in  std_logic_vector(2 downto 0);
+         AXI_24_ARVALID      : in  std_logic;
+         AXI_24_AWADDR       : in  std_logic_vector(32 downto 0);
+         AXI_24_AWBURST      : in  std_logic_vector(1 downto 0);
+         AXI_24_AWID         : in  std_logic_vector(5 downto 0);
+         AXI_24_AWLEN        : in  std_logic_vector(3 downto 0);
+         AXI_24_AWSIZE       : in  std_logic_vector(2 downto 0);
+         AXI_24_AWVALID      : in  std_logic;
+         AXI_24_RREADY       : in  std_logic;
+         AXI_24_BREADY       : in  std_logic;
+         AXI_24_WDATA        : in  std_logic_vector(255 downto 0);
+         AXI_24_WLAST        : in  std_logic;
+         AXI_24_WSTRB        : in  std_logic_vector(31 downto 0);
+         AXI_24_WDATA_PARITY : in  std_logic_vector(31 downto 0);
+         AXI_24_WVALID       : in  std_logic;
          APB_0_PCLK          : in  std_logic;
          APB_0_PRESET_N      : in  std_logic;
          APB_1_PCLK          : in  std_logic;
          APB_1_PRESET_N      : in  std_logic;
-         AXI_00_ARREADY      : out std_logic;
-         AXI_00_AWREADY      : out std_logic;
-         AXI_00_RDATA_PARITY : out std_logic_vector(31 downto 0);
-         AXI_00_RDATA        : out std_logic_vector(255 downto 0);
-         AXI_00_RID          : out std_logic_vector(5 downto 0);
-         AXI_00_RLAST        : out std_logic;
-         AXI_00_RRESP        : out std_logic_vector(1 downto 0);
-         AXI_00_RVALID       : out std_logic;
-         AXI_00_WREADY       : out std_logic;
-         AXI_00_BID          : out std_logic_vector(5 downto 0);
-         AXI_00_BRESP        : out std_logic_vector(1 downto 0);
-         AXI_00_BVALID       : out std_logic;
-         AXI_16_ARREADY      : out std_logic;
-         AXI_16_AWREADY      : out std_logic;
-         AXI_16_RDATA_PARITY : out std_logic_vector(31 downto 0);
-         AXI_16_RDATA        : out std_logic_vector(255 downto 0);
-         AXI_16_RID          : out std_logic_vector(5 downto 0);
-         AXI_16_RLAST        : out std_logic;
-         AXI_16_RRESP        : out std_logic_vector(1 downto 0);
-         AXI_16_RVALID       : out std_logic;
-         AXI_16_WREADY       : out std_logic;
-         AXI_16_BID          : out std_logic_vector(5 downto 0);
-         AXI_16_BRESP        : out std_logic_vector(1 downto 0);
-         AXI_16_BVALID       : out std_logic;
+         AXI_08_ARREADY      : out std_logic;
+         AXI_08_AWREADY      : out std_logic;
+         AXI_08_RDATA_PARITY : out std_logic_vector(31 downto 0);
+         AXI_08_RDATA        : out std_logic_vector(255 downto 0);
+         AXI_08_RID          : out std_logic_vector(5 downto 0);
+         AXI_08_RLAST        : out std_logic;
+         AXI_08_RRESP        : out std_logic_vector(1 downto 0);
+         AXI_08_RVALID       : out std_logic;
+         AXI_08_WREADY       : out std_logic;
+         AXI_08_BID          : out std_logic_vector(5 downto 0);
+         AXI_08_BRESP        : out std_logic_vector(1 downto 0);
+         AXI_08_BVALID       : out std_logic;
+         AXI_24_ARREADY      : out std_logic;
+         AXI_24_AWREADY      : out std_logic;
+         AXI_24_RDATA_PARITY : out std_logic_vector(31 downto 0);
+         AXI_24_RDATA        : out std_logic_vector(255 downto 0);
+         AXI_24_RID          : out std_logic_vector(5 downto 0);
+         AXI_24_RLAST        : out std_logic;
+         AXI_24_RRESP        : out std_logic_vector(1 downto 0);
+         AXI_24_RVALID       : out std_logic;
+         AXI_24_WREADY       : out std_logic;
+         AXI_24_BID          : out std_logic_vector(5 downto 0);
+         AXI_24_BRESP        : out std_logic_vector(1 downto 0);
+         AXI_24_BVALID       : out std_logic;
          apb_complete_0      : out std_logic;
          apb_complete_1      : out std_logic;
          DRAM_0_STAT_CATTRIP : out std_logic;
@@ -585,74 +585,74 @@ begin
          -- Reference Clocks
          HBM_REF_CLK_0       => hbmRefClk,
          HBM_REF_CLK_1       => hbmRefClk,
-         -- AXI_00 Interface
-         AXI_00_ACLK         => hbmClk,
-         AXI_00_ARESET_N     => hbmRstL(0),
-         AXI_00_ARADDR       => hbmReadMasters(0).araddr(32 downto 0),
-         AXI_00_ARBURST      => hbmReadMasters(0).arburst,
-         AXI_00_ARID         => hbmReadMasters(0).arid(5 downto 0),
-         AXI_00_ARLEN        => hbmReadMasters(0).arlen(3 downto 0),  -- 4-bits = AXI3
-         AXI_00_ARSIZE       => hbmReadMasters(0).arsize,
-         AXI_00_ARVALID      => hbmReadMasters(0).arvalid,
-         AXI_00_AWADDR       => hbmWriteMasters(0).awaddr(32 downto 0),
-         AXI_00_AWBURST      => hbmWriteMasters(0).awburst,
-         AXI_00_AWID         => hbmWriteMasters(0).awid(5 downto 0),
-         AXI_00_AWLEN        => hbmWriteMasters(0).awlen(3 downto 0),  -- 4-bits = AXI3
-         AXI_00_AWSIZE       => hbmWriteMasters(0).awsize,
-         AXI_00_AWVALID      => hbmWriteMasters(0).awvalid,
-         AXI_00_RREADY       => hbmReadMasters(0).rready,
-         AXI_00_BREADY       => hbmWriteMasters(0).bready,
-         AXI_00_WDATA        => hbmWriteMasters(0).wdata(255 downto 0),
-         AXI_00_WLAST        => hbmWriteMasters(0).wlast,
-         AXI_00_WSTRB        => hbmWriteMasters(0).wstrb(31 downto 0),
-         AXI_00_WDATA_PARITY => wdataParity(0),
-         AXI_00_WVALID       => hbmWriteMasters(0).wvalid,
-         AXI_00_ARREADY      => hbmReadSlaves(0).arready,
-         AXI_00_AWREADY      => hbmWriteSlaves(0).awready,
-         AXI_00_RDATA_PARITY => open,
-         AXI_00_RDATA        => hbmReadSlaves(0).rdata(255 downto 0),
-         AXI_00_RID          => open,
-         AXI_00_RLAST        => hbmReadSlaves(0).rlast,
-         AXI_00_RRESP        => hbmReadSlaves(0).rresp,
-         AXI_00_RVALID       => hbmReadSlaves(0).rvalid,
-         AXI_00_WREADY       => hbmWriteSlaves(0).wready,
-         AXI_00_BID          => open,
-         AXI_00_BRESP        => hbmWriteSlaves(0).bresp,
-         AXI_00_BVALID       => hbmWriteSlaves(0).bvalid,
-         -- AXI_16 Interface
-         AXI_16_ACLK         => hbmClk,
-         AXI_16_ARESET_N     => hbmRstL(1),
-         AXI_16_ARADDR       => hbmReadMasters(1).araddr(32 downto 0),
-         AXI_16_ARBURST      => hbmReadMasters(1).arburst,
-         AXI_16_ARID         => hbmReadMasters(1).arid(5 downto 0),
-         AXI_16_ARLEN        => hbmReadMasters(1).arlen(3 downto 0),  -- 4-bits = AXI3
-         AXI_16_ARSIZE       => hbmReadMasters(1).arsize,
-         AXI_16_ARVALID      => hbmReadMasters(1).arvalid,
-         AXI_16_AWADDR       => hbmWriteMasters(1).awaddr(32 downto 0),
-         AXI_16_AWBURST      => hbmWriteMasters(1).awburst,
-         AXI_16_AWID         => hbmWriteMasters(1).awid(5 downto 0),
-         AXI_16_AWLEN        => hbmWriteMasters(1).awlen(3 downto 0),  -- 4-bits = AXI3
-         AXI_16_AWSIZE       => hbmWriteMasters(1).awsize,
-         AXI_16_AWVALID      => hbmWriteMasters(1).awvalid,
-         AXI_16_RREADY       => hbmReadMasters(1).rready,
-         AXI_16_BREADY       => hbmWriteMasters(1).bready,
-         AXI_16_WDATA        => hbmWriteMasters(1).wdata(255 downto 0),
-         AXI_16_WLAST        => hbmWriteMasters(1).wlast,
-         AXI_16_WSTRB        => hbmWriteMasters(1).wstrb(31 downto 0),
-         AXI_16_WDATA_PARITY => wdataParity(1),
-         AXI_16_WVALID       => hbmWriteMasters(1).wvalid,
-         AXI_16_ARREADY      => hbmReadSlaves(1).arready,
-         AXI_16_AWREADY      => hbmWriteSlaves(1).awready,
-         AXI_16_RDATA_PARITY => open,
-         AXI_16_RDATA        => hbmReadSlaves(1).rdata(255 downto 0),
-         AXI_16_RID          => open,
-         AXI_16_RLAST        => hbmReadSlaves(1).rlast,
-         AXI_16_RRESP        => hbmReadSlaves(1).rresp,
-         AXI_16_RVALID       => hbmReadSlaves(1).rvalid,
-         AXI_16_WREADY       => hbmWriteSlaves(1).wready,
-         AXI_16_BID          => open,
-         AXI_16_BRESP        => hbmWriteSlaves(1).bresp,
-         AXI_16_BVALID       => hbmWriteSlaves(1).bvalid,
+         -- AXI_08 Interface
+         AXI_08_ACLK         => hbmClk,
+         AXI_08_ARESET_N     => hbmRstL(0),
+         AXI_08_ARADDR       => hbmReadMasters(0).araddr(32 downto 0),
+         AXI_08_ARBURST      => hbmReadMasters(0).arburst,
+         AXI_08_ARID         => hbmReadMasters(0).arid(5 downto 0),
+         AXI_08_ARLEN        => hbmReadMasters(0).arlen(3 downto 0),  -- 4-bits = AXI3
+         AXI_08_ARSIZE       => hbmReadMasters(0).arsize,
+         AXI_08_ARVALID      => hbmReadMasters(0).arvalid,
+         AXI_08_AWADDR       => hbmWriteMasters(0).awaddr(32 downto 0),
+         AXI_08_AWBURST      => hbmWriteMasters(0).awburst,
+         AXI_08_AWID         => hbmWriteMasters(0).awid(5 downto 0),
+         AXI_08_AWLEN        => hbmWriteMasters(0).awlen(3 downto 0),  -- 4-bits = AXI3
+         AXI_08_AWSIZE       => hbmWriteMasters(0).awsize,
+         AXI_08_AWVALID      => hbmWriteMasters(0).awvalid,
+         AXI_08_RREADY       => hbmReadMasters(0).rready,
+         AXI_08_BREADY       => hbmWriteMasters(0).bready,
+         AXI_08_WDATA        => hbmWriteMasters(0).wdata(255 downto 0),
+         AXI_08_WLAST        => hbmWriteMasters(0).wlast,
+         AXI_08_WSTRB        => hbmWriteMasters(0).wstrb(31 downto 0),
+         AXI_08_WDATA_PARITY => wdataParity(0),
+         AXI_08_WVALID       => hbmWriteMasters(0).wvalid,
+         AXI_08_ARREADY      => hbmReadSlaves(0).arready,
+         AXI_08_AWREADY      => hbmWriteSlaves(0).awready,
+         AXI_08_RDATA_PARITY => open,
+         AXI_08_RDATA        => hbmReadSlaves(0).rdata(255 downto 0),
+         AXI_08_RID          => open,
+         AXI_08_RLAST        => hbmReadSlaves(0).rlast,
+         AXI_08_RRESP        => hbmReadSlaves(0).rresp,
+         AXI_08_RVALID       => hbmReadSlaves(0).rvalid,
+         AXI_08_WREADY       => hbmWriteSlaves(0).wready,
+         AXI_08_BID          => open,
+         AXI_08_BRESP        => hbmWriteSlaves(0).bresp,
+         AXI_08_BVALID       => hbmWriteSlaves(0).bvalid,
+         -- AXI_24 Interface
+         AXI_24_ACLK         => hbmClk,
+         AXI_24_ARESET_N     => hbmRstL(1),
+         AXI_24_ARADDR       => hbmReadMasters(1).araddr(32 downto 0),
+         AXI_24_ARBURST      => hbmReadMasters(1).arburst,
+         AXI_24_ARID         => hbmReadMasters(1).arid(5 downto 0),
+         AXI_24_ARLEN        => hbmReadMasters(1).arlen(3 downto 0),  -- 4-bits = AXI3
+         AXI_24_ARSIZE       => hbmReadMasters(1).arsize,
+         AXI_24_ARVALID      => hbmReadMasters(1).arvalid,
+         AXI_24_AWADDR       => hbmWriteMasters(1).awaddr(32 downto 0),
+         AXI_24_AWBURST      => hbmWriteMasters(1).awburst,
+         AXI_24_AWID         => hbmWriteMasters(1).awid(5 downto 0),
+         AXI_24_AWLEN        => hbmWriteMasters(1).awlen(3 downto 0),  -- 4-bits = AXI3
+         AXI_24_AWSIZE       => hbmWriteMasters(1).awsize,
+         AXI_24_AWVALID      => hbmWriteMasters(1).awvalid,
+         AXI_24_RREADY       => hbmReadMasters(1).rready,
+         AXI_24_BREADY       => hbmWriteMasters(1).bready,
+         AXI_24_WDATA        => hbmWriteMasters(1).wdata(255 downto 0),
+         AXI_24_WLAST        => hbmWriteMasters(1).wlast,
+         AXI_24_WSTRB        => hbmWriteMasters(1).wstrb(31 downto 0),
+         AXI_24_WDATA_PARITY => wdataParity(1),
+         AXI_24_WVALID       => hbmWriteMasters(1).wvalid,
+         AXI_24_ARREADY      => hbmReadSlaves(1).arready,
+         AXI_24_AWREADY      => hbmWriteSlaves(1).awready,
+         AXI_24_RDATA_PARITY => open,
+         AXI_24_RDATA        => hbmReadSlaves(1).rdata(255 downto 0),
+         AXI_24_RID          => open,
+         AXI_24_RLAST        => hbmReadSlaves(1).rlast,
+         AXI_24_RRESP        => hbmReadSlaves(1).rresp,
+         AXI_24_RVALID       => hbmReadSlaves(1).rvalid,
+         AXI_24_WREADY       => hbmWriteSlaves(1).wready,
+         AXI_24_BID          => open,
+         AXI_24_BRESP        => hbmWriteSlaves(1).bresp,
+         AXI_24_BVALID       => hbmWriteSlaves(1).bvalid,
          -- APB Interface
          APB_0_PCLK          => hbmRefClk,
          APB_1_PCLK          => hbmRefClk,

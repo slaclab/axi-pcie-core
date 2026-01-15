@@ -423,6 +423,8 @@ begin
          generic map (
             TPD_G               => TPD_G,
             FIFO_ADDR_WIDTH_G   => 9,
+            VALID_BURST_MODE_G  => true,
+            VALID_THOLD_G       => (4096/64),  -- 4kB bursting
             SLAVE_AXI_CONFIG_G  => AXIS_CONFIG_C,
             MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_G)
          port map (

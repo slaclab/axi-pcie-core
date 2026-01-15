@@ -317,9 +317,9 @@ begin
          RST_IN_POLARITY_G  => '1',
          NUM_CLOCKS_G       => 2,
          -- MMCM attributes
-         CLKIN_PERIOD_G     => 10.0,    -- 100 MHz
-         CLKFBOUT_MULT_F_G  => 13.5,    -- 1.35GHz = 13.5 x 1.35GHz
-         CLKOUT0_DIVIDE_F_G => 4.0,     -- 337MHz = 1.5GHz/4
+         CLKIN_PERIOD_G     => 10.0,    -- 100MHz
+         CLKFBOUT_MULT_F_G  => 13.5,    -- 1.35GHz = 13.5 x 100MHz
+         CLKOUT0_DIVIDE_F_G => 3.75,    -- 360MHz = 1.35GHz/3.75
          CLKOUT1_DIVIDE_G   => 3)       -- 450MHz = 1.35GHz/3
       port map(
          -- Clock Input

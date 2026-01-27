@@ -267,7 +267,7 @@ begin
       axiSlaveRegisterR(axilEp, x"02C", 8, r.dynamicRouteDests(0));
       axiSlaveRegisterR(axilEp, x"02C", 16, r.dynamicRouteMasks(1));
       axiSlaveRegisterR(axilEp, x"02C", 24, r.dynamicRouteDests(1));
-      axiSlaveRegisterR(axilEp, x"030", 0, toSlv(2, 8));  -- version number, >= 1 if gpu enabled
+      axiSlaveRegisterR(axilEp, x"030", 0, toSlv(3, 8));  -- version number, >= 1 if gpu enabled
       axiSlaveRegisterR(axilEp, x"034", 0, r.axiWriteTimeoutErrorCnt);
       axiSlaveRegister (axilEp, x"038", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
 

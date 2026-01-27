@@ -33,7 +33,7 @@ entity AxiPcieGpuAsyncCore is
    generic (
       TPD_G               : time                    := 1 ns;
       DEFAULT_DEMUX_SEL_G : sl                      := '1';  -- 1: GPU path, 0: CPU path
-      MAX_BUFFERS_G       : integer range 1 to 16   := 4;
+      MAX_BUFFERS_G       : integer range 1 to 256  := 4;
       BURST_BYTES_G       : integer range 1 to 4096 := 4096;
       DMA_AXIS_CONFIG_G   : AxiStreamConfigType);
    port (
@@ -98,11 +98,40 @@ architecture mapping of AxiPcieGpuAsyncCore is
    signal mAxisMasterInt : AxiStreamMasterType;
    signal mAxisSlaveInt  : AxiStreamSlaveType;
 
+   signal readMaster  : AxiLiteReadMasterType;
+   signal writeMaster : AxiLiteWriteMasterType;
+
 begin
 
    -- direct connection to Pcie core from Demux
    bypassMaster        <= mAxisDemuxMasters(1);
    mAxisDemuxSlaves(1) <= bypassSlave;
+
+   process(axilReadMaster, axilWriteMaster)
+      variable readMasterTmp  : AxiLiteReadMasterType;
+      variable writeMasterTmp : AxiLiteWriteMasterType;
+   begin
+      -- Init
+      readMasterTmp  := axilReadMaster;
+      writeMasterTmp := axilWriteMaster;
+
+      -------------------------------------------------------
+      -- Mask off the address mask outside of 15 bit range
+      -- so we can use hex values in axiSlaveRegister()
+      -------------------------------------------------------
+      --      GPU_INDEX_C     => (
+      --      baseAddr     => x"0002_8000",
+      --      addrBits     => 15,
+      --      connectivity => x"FFFF"),
+      -------------------------------------------------------
+      readMasterTmp.araddr(31 downto 15)  := (others => '0');
+      writeMasterTmp.awaddr(31 downto 15) := (others => '0');
+
+      -- Outputs
+      readMaster  <= readMasterTmp;
+      writeMaster <= writeMasterTmp;
+
+   end process;
 
    ------------------------------
    -- AXI-Lite Control/Monitoring
@@ -116,9 +145,9 @@ begin
       port map (
          axilClk           => axilClk,
          axilRst           => axilRst,
-         axilReadMaster    => axilReadMaster,
+         axilReadMaster    => readMaster,
          axilReadSlave     => axilReadSlave,
-         axilWriteMaster   => axilWriteMaster,
+         axilWriteMaster   => writeMaster,
          axilWriteSlave    => axilWriteSlave,
          axiClk            => axiClk,
          axiRst            => axiRst,
@@ -150,8 +179,7 @@ begin
          sAxisMaster       => sAxisMaster,
          sAxisSlave        => sAxisSlave,
          mAxisMasters      => mAxisDemuxMasters,
-         mAxisSlaves       => mAxisDemuxSlaves
-         );
+         mAxisSlaves       => mAxisDemuxSlaves);
 
    ------------------------------------
    -- Stream receiver to GPU DMA

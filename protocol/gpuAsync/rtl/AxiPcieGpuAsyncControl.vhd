@@ -30,9 +30,9 @@ use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPcieGpuAsyncControl is
    generic (
-      TPD_G               : time                  := 1 ns;
-      DEFAULT_DEMUX_SEL_G : sl                    := '1';  -- 1: GPU path, 0: CPU path
-      MAX_BUFFERS_G       : integer range 1 to 16 := 4;
+      TPD_G               : time                   := 1 ns;
+      DEFAULT_DEMUX_SEL_G : sl                     := '1';  -- 1: GPU path, 0: CPU path
+      MAX_BUFFERS_G       : integer range 1 to 256 := 4;
       DMA_AXI_CONFIG_G    : AxiConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -86,11 +86,11 @@ architecture mapping of AxiPcieGpuAsyncControl is
       awcache                 : slv(3 downto 0);
       arcache                 : slv(3 downto 0);
       writeEnable             : sl;
-      writeCount              : slv(3 downto 0);
+      writeCount              : slv(7 downto 0);
       readEnable              : sl;
-      readCount               : slv(3 downto 0);
-      nextWriteIdx            : slv(3 downto 0);
-      nextReadIdx             : slv(3 downto 0);
+      readCount               : slv(7 downto 0);
+      nextWriteIdx            : slv(7 downto 0);
+      nextReadIdx             : slv(7 downto 0);
       remoteWriteAddrL        : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteWriteAddrH        : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteWriteSize         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
@@ -244,60 +244,54 @@ begin
       --------------------------------------------------------------------------------------------
       axiSlaveWaitTxn(axilEp, writeMaster, readMaster, v.writeSlave, v.readSlave);
 
-      axiSlaveRegister (axilEp, x"004", 0, v.arcache);
-      axiSlaveRegister (axilEp, x"004", 8, v.awcache);
-      axiSlaveRegisterR(axilEp, x"004", 16, toSlv(DMA_AXI_CONFIG_G.DATA_BYTES_C, 8));
-      axiSlaveRegisterR(axilEp, x"004", 24, toSlv(MAX_BUFFERS_G, 5));
+      axiSlaveRegister (axilEp, x"0004", 0, v.arcache);
+      axiSlaveRegister (axilEp, x"0004", 8, v.awcache);
+      axiSlaveRegisterR(axilEp, x"0004", 16, toSlv(DMA_AXI_CONFIG_G.DATA_BYTES_C, 8));
+      axiSlaveRegisterR(axilEp, x"0004", 24, toSlv(MAX_BUFFERS_G, 8));
 
-      axiSlaveRegister (axilEp, x"008", 0, v.writeCount);
-      axiSlaveRegister (axilEp, x"008", 8, v.writeEnable);
-      axiSlaveRegister (axilEp, x"008", 16, v.readCount);
-      axiSlaveRegister (axilEp, x"008", 24, v.readEnable);
+      axiSlaveRegister (axilEp, x"0008", 0, v.writeCount);
+      axiSlaveRegister (axilEp, x"0008", 8, v.writeEnable);
+      axiSlaveRegister (axilEp, x"0008", 16, v.readCount);
+      axiSlaveRegister (axilEp, x"0008", 24, v.readEnable);
 
-      axiSlaveRegisterR(axilEp, x"010", 0, r.rxFrameCnt);
-      axiSlaveRegisterR(axilEp, x"014", 0, r.txFrameCnt);
-      axiSlaveRegisterR(axilEp, x"018", 0, r.axiWriteErrorCnt);
-      axiSlaveRegisterR(axilEp, x"01C", 0, r.axiReadErrorCnt);
+      axiSlaveRegisterR(axilEp, x"0010", 0, r.rxFrameCnt);
+      axiSlaveRegisterR(axilEp, x"0014", 0, r.txFrameCnt);
+      axiSlaveRegisterR(axilEp, x"0018", 0, r.axiWriteErrorCnt);
+      axiSlaveRegisterR(axilEp, x"001C", 0, r.axiReadErrorCnt);
 
-      axiSlaveRegister (axilEp, x"020", 0, v.cntRst);
-      axiSlaveRegisterR(axilEp, x"024", 0, r.axiWriteErrorVal);
-      axiSlaveRegisterR(axilEp, x"028", 0, r.axiReadErrorVal);
+      axiSlaveRegister (axilEp, x"0020", 0, v.cntRst);
+      axiSlaveRegisterR(axilEp, x"0024", 0, r.axiWriteErrorVal);
+      axiSlaveRegisterR(axilEp, x"0028", 0, r.axiReadErrorVal);
 
-      axiSlaveRegisterR(axilEp, x"02C", 0, r.dynamicRouteMasks(0));
-      axiSlaveRegisterR(axilEp, x"02C", 8, r.dynamicRouteDests(0));
-      axiSlaveRegisterR(axilEp, x"02C", 16, r.dynamicRouteMasks(1));
-      axiSlaveRegisterR(axilEp, x"02C", 24, r.dynamicRouteDests(1));
-      axiSlaveRegisterR(axilEp, x"030", 0, toSlv(3, 8));  -- version number, >= 1 if gpu enabled
-      axiSlaveRegisterR(axilEp, x"034", 0, r.axiWriteTimeoutErrorCnt);
-      axiSlaveRegister (axilEp, x"038", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
+      axiSlaveRegisterR(axilEp, x"002C", 0, r.dynamicRouteMasks(0));
+      axiSlaveRegisterR(axilEp, x"002C", 8, r.dynamicRouteDests(0));
+      axiSlaveRegisterR(axilEp, x"002C", 16, r.dynamicRouteMasks(1));
+      axiSlaveRegisterR(axilEp, x"002C", 24, r.dynamicRouteDests(1));
+      axiSlaveRegisterR(axilEp, x"0030", 0, toSlv(4, 8));  -- version number, >= 1 if gpu enabled
+      axiSlaveRegisterR(axilEp, x"0034", 0, r.axiWriteTimeoutErrorCnt);
+      axiSlaveRegister (axilEp, x"0038", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
 
-      axiSlaveRegisterR(axilEp, x"03C", 0, r.minWriteBuffer);
-      axiSlaveRegisterR(axilEp, x"040", 0, r.minReadBuffer);
+      axiSlaveRegisterR(axilEp, x"003C", 0, r.minWriteBuffer);
+      axiSlaveRegisterR(axilEp, x"0040", 0, r.minReadBuffer);
 
       for i in 0 to MAX_BUFFERS_G-1 loop
-         axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)
-         axiSlaveRegister (axilEp, toSlv(256+i*16+4, 12), 0, v.remoteWriteAddrH(i));  -- 0x1x4 (x = 0,1,2,3....)
-         axiSlaveRegister (axilEp, toSlv(256+i*16+8, 12), 0, v.remoteWriteSize(i));  -- 0x1x8 (x = 0,1,2,3....)
+         axiSlaveRegister (axilEp, toSlv(1*4096+i*16+0, 16), 0, v.remoteWriteAddrL(i));  -- 0x1XX0
+         axiSlaveRegister (axilEp, toSlv(1*4096+i*16+4, 16), 0, v.remoteWriteAddrH(i));  -- 0x1XX4
+         axiSlaveRegister (axilEp, toSlv(1*4096+i*16+8, 16), 0, v.remoteWriteSize(i));  -- 0x1XX8
+         axiWrDetect (axilEp, toSlv(1*4096+i*16+12, 16), v.remoteWriteEn(i));  -- 0x1XXC
       end loop;
 
       for i in 0 to MAX_BUFFERS_G-1 loop
-         axiSlaveRegister (axilEp, toSlv(512+i*16+0, 12), 0, v.remoteReadAddrL(i));  -- 0x2x0 (x = 0,1,2,3....)
-         axiSlaveRegister (axilEp, toSlv(512+i*16+4, 12), 0, v.remoteReadAddrH(i));  -- 0x2x4 (x = 0,1,2,3....)
+         axiSlaveRegister (axilEp, toSlv(2*4096+i*16+0, 16), 0, v.remoteReadAddrL(i));  -- 0x2XX0
+         axiSlaveRegister (axilEp, toSlv(2*4096+i*16+4, 16), 0, v.remoteReadAddrH(i));  -- 0x2XX4
+         axiSlaveRegister (axilEp, toSlv(2*4096+i*16+8, 16), 0, v.remoteReadSize(i));  -- 0x2XX8
+         axiWrDetect (axilEp, toSlv(2*4096+i*16+12, 16), v.remoteReadEn(i));  -- 0x2XXC
       end loop;
 
       for i in 0 to MAX_BUFFERS_G-1 loop
-         axiWrDetect (axilEp, toSlv(768+i*4, 12), v.remoteWriteEn(i));  -- 0x30x (x = 0,4,8,C....)
-      end loop;
-
-      for i in 0 to MAX_BUFFERS_G-1 loop
-         axiSlaveRegister (axilEp, toSlv(1024+i*4, 12), 0, v.remoteReadSize(i));  -- 0x40x (x = 0,4,8,C....)
-         axiWrDetect (axilEp, toSlv(1024+i*4, 12), v.remoteReadEn(i));  -- 0x40x (x = 0,4,8,C....)
-      end loop;
-
-      for i in 0 to MAX_BUFFERS_G-1 loop
-         axiSlaveRegisterR(axilEp, toSlv(1280+i*16+0, 12), 0, r.totLatency(i));  -- 0x5x0 (x = 0,4,8,C....)
-         axiSlaveRegisterR(axilEp, toSlv(1280+i*16+4, 12), 0, r.gpuLatency(i));  -- 0x5x4 (x = 0,4,8,C....)
-         axiSlaveRegisterR(axilEp, toSlv(1280+i*16+8, 12), 0, r.wrLatency(i));  -- 0x5x8 (x = 0,4,8,C....)
+         axiSlaveRegisterR(axilEp, toSlv(3*4096+i*16+0, 16), 0, r.totLatency(i));  -- 0x3XX0
+         axiSlaveRegisterR(axilEp, toSlv(3*4096+i*16+4, 16), 0, r.gpuLatency(i));  -- 0x3XX4
+         axiSlaveRegisterR(axilEp, toSlv(3*4096+i*16+8, 16), 0, r.wrLatency(i));  -- 0x3XX8
       end loop;
 
       -- Closeout the transaction
@@ -324,7 +318,7 @@ begin
                v.dmaWrDescAck.contEn     := '0';
                v.dmaWrDescAck.metaEnable := '1';
 
-               v.dmaWrDescAck.buffId(3 downto 0) := r.nextWriteIdx;
+               v.dmaWrDescAck.buffId(7 downto 0) := r.nextWriteIdx;
 
                v.dmaWrDescAck.metaAddr(31 downto 0)  := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx));
                v.dmaWrDescAck.metaAddr(63 downto 32) := r.remoteWriteAddrH(conv_integer(r.nextWriteIdx));
@@ -366,8 +360,8 @@ begin
             if dmaWrDescRet.valid = '1' then
                v.dmaWrDescRetAck := '1';
 
-               v.wrLatencyEn(conv_integer(dmaWrDescRet.buffId(3 downto 0)))  := '0';
-               v.gpuLatencyEn(conv_integer(dmaWrDescRet.buffId(3 downto 0))) := '1';
+               v.wrLatencyEn(conv_integer(dmaWrDescRet.buffId(7 downto 0)))  := '0';
+               v.gpuLatencyEn(conv_integer(dmaWrDescRet.buffId(7 downto 0))) := '1';
 
                if dmaWrDescRet.result /= "0000" then
                   v.axiWriteErrorCnt := r.axiWriteErrorCnt + 1;
@@ -407,7 +401,7 @@ begin
                end if;
 
                v.dmaRdDescReq.valid              := '1';
-               v.dmaRdDescReq.buffId(3 downto 0) := r.nextReadIdx;
+               v.dmaRdDescReq.buffId(7 downto 0) := r.nextReadIdx;
 
                v.dmaRdDescReq.firstUser := x"02";
                v.dmaRdDescReq.lastUser  := (others => '0');
@@ -431,7 +425,7 @@ begin
             if dmaRdDescRet.valid = '1' then
                v.dmaRdDescRetAck := '1';
 
-               v.totLatencyEn(conv_integer(dmaRdDescRet.buffId(3 downto 0))) := '0';
+               v.totLatencyEn(conv_integer(dmaRdDescRet.buffId(7 downto 0))) := '0';
 
                if dmaRdDescRet.result /= "000" then
                   v.axiReadErrorCnt := r.axiReadErrorCnt + 1;

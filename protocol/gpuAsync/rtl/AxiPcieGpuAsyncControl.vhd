@@ -107,6 +107,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
       wrLatencyEn             : slv(MAX_BUFFERS_G-1 downto 0);
       readSlave               : AxiLiteReadSlaveType;
       writeSlave              : AxiLiteWriteSlaveType;
+      minWriteBuffer          : slv(31 downto 0);
+      minReadBuffer           : slv(31 downto 0);
       dmaWrDescAck            : AxiWriteDmaDescAckType;
       dmaWrDescRetAck         : sl;
       dmaRdDescReq            : AxiReadDmaDescReqType;
@@ -151,6 +153,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
       wrLatencyEn             => (others => '0'),
       readSlave               => AXI_LITE_READ_SLAVE_INIT_C,
       writeSlave              => AXI_LITE_WRITE_SLAVE_INIT_C,
+      minWriteBuffer          => (others => '0'),
+      minReadBuffer           => (others => '0'),
       dmaWrDescAck            => AXI_WRITE_DMA_DESC_ACK_INIT_C,
       dmaWrDescRetAck         => '0',
       dmaRdDescReq            => AXI_READ_DMA_DESC_REQ_INIT_C,
@@ -196,8 +200,10 @@ begin
    ---------------------
    comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet, r,
                    readMaster, writeMaster) is
-      variable v      : RegType;
-      variable axilEp : AxiLiteEndPointType;
+      variable v          : RegType;
+      variable axilEp     : AxiLiteEndPointType;
+      variable wrBuffSize : natural;
+      variable rdBuffSize : natural;
    begin
       -- Latch the current value
       v := r;
@@ -265,6 +271,9 @@ begin
       axiSlaveRegisterR(axilEp, x"034", 0, r.axiWriteTimeoutErrorCnt);
       axiSlaveRegister (axilEp, x"038", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
 
+      axiSlaveRegisterR(axilEp, x"03C", 0, r.minWriteBuffer);
+      axiSlaveRegisterR(axilEp, x"040", 0, r.minReadBuffer);
+
       for i in 0 to MAX_BUFFERS_G-1 loop
          axiSlaveRegister (axilEp, toSlv(256+i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1x0 (x = 0,1,2,3....)
          axiSlaveRegister (axilEp, toSlv(256+i*16+4, 12), 0, v.remoteWriteAddrH(i));  -- 0x1x4 (x = 0,1,2,3....)
@@ -294,6 +303,12 @@ begin
       -- Closeout the transaction
       axiSlaveDefault(axilEp, v.writeSlave, v.readSlave, AXI_RESP_DECERR_C);
       --------------------------------------------------------------------------------------------
+
+      -- Update the minimum available buffers diagnostic register
+      wrBuffSize := conv_integer(onesCount(r.remoteWriteEn));
+      if (r.cntRst = '1') or (wrBuffSize < r.minWriteBuffer) then
+         v.minWriteBuffer := toSlv(wrBuffSize, 32);
+      end if;
 
       -- rx State Machine
       case r.rxState is
@@ -369,6 +384,12 @@ begin
       end case;
 
       --------------------------------------------------------------------------------------------
+
+      -- Update the minimum available buffers diagnostic register
+      rdBuffSize := conv_integer(onesCount(r.remoteReadEn));
+      if (r.cntRst = '1') or (rdBuffSize < r.minReadBuffer) then
+         v.minReadBuffer := toSlv(rdBuffSize, 32);
+      end if;
 
       -- tx State Machine
       case r.txState is

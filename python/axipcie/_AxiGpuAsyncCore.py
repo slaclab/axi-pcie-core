@@ -272,7 +272,7 @@ class AxiGpuAsyncCore(pr.Device):
 
             self.add(pr.RemoteVariable(
                 name         = f'RemoteReadSize[{i}]',
-                offset       = 0x2008 + i*4,
+                offset       = 0x2008 + i*16,
                 bitSize      = 32,
                 mode         = kernelVarMode,
                 pollInterval = 1,

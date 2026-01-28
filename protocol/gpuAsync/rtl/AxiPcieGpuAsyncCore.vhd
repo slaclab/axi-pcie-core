@@ -98,40 +98,11 @@ architecture mapping of AxiPcieGpuAsyncCore is
    signal mAxisMasterInt : AxiStreamMasterType;
    signal mAxisSlaveInt  : AxiStreamSlaveType;
 
-   signal readMaster  : AxiLiteReadMasterType;
-   signal writeMaster : AxiLiteWriteMasterType;
-
 begin
 
    -- direct connection to Pcie core from Demux
    bypassMaster        <= mAxisDemuxMasters(1);
    mAxisDemuxSlaves(1) <= bypassSlave;
-
-   process(axilReadMaster, axilWriteMaster)
-      variable readMasterTmp  : AxiLiteReadMasterType;
-      variable writeMasterTmp : AxiLiteWriteMasterType;
-   begin
-      -- Init
-      readMasterTmp  := axilReadMaster;
-      writeMasterTmp := axilWriteMaster;
-
-      -------------------------------------------------------
-      -- Mask off the address mask outside of 15 bit range
-      -- so we can use hex values in axiSlaveRegister()
-      -------------------------------------------------------
-      --      GPU_INDEX_C     => (
-      --      baseAddr     => x"0002_8000",
-      --      addrBits     => 15,
-      --      connectivity => x"FFFF"),
-      -------------------------------------------------------
-      readMasterTmp.araddr(31 downto 15)  := (others => '0');
-      writeMasterTmp.awaddr(31 downto 15) := (others => '0');
-
-      -- Outputs
-      readMaster  <= readMasterTmp;
-      writeMaster <= writeMasterTmp;
-
-   end process;
 
    ------------------------------
    -- AXI-Lite Control/Monitoring
@@ -145,9 +116,9 @@ begin
       port map (
          axilClk           => axilClk,
          axilRst           => axilRst,
-         axilReadMaster    => readMaster,
+         axilReadMaster    => axilReadMaster,
          axilReadSlave     => axilReadSlave,
-         axilWriteMaster   => writeMaster,
+         axilWriteMaster   => axilWriteMaster,
          axilWriteSlave    => axilWriteSlave,
          axiClk            => axiClk,
          axiRst            => axiRst,

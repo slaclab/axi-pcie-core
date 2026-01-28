@@ -173,11 +173,20 @@ architecture mapping of AxiPcieGpuAsyncControl is
 
 begin
 
+      -------------------------------------------------------
+      -- Mask off the address mask outside of 15 bit range
+      -- so we can use hex values in axiSlaveRegister()
+      -------------------------------------------------------
+      --      GPU_INDEX_C     => (
+      --      baseAddr     => x"0002_8000",
+      --      addrBits     => 15,
+      --      connectivity => x"FFFF"),
+      -------------------------------------------------------
    U_AxiLiteAsync : entity surf.AxiLiteAsync
       generic map (
          TPD_G           => TPD_G,
          COMMON_CLK_G    => false,
-         NUM_ADDR_BITS_G => 12)
+         NUM_ADDR_BITS_G => 15)
       port map (
          -- Slave Interface
          sAxiClk         => axilClk,
@@ -193,7 +202,6 @@ begin
          mAxiReadSlave   => readSlave,
          mAxiWriteMaster => writeMaster,
          mAxiWriteSlave  => writeSlave);
-
 
    ---------------------
    -- State Machine

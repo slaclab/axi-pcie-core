@@ -94,11 +94,11 @@ architecture mapping of AxiPcieGpuAsyncControl is
       remoteWriteAddrL        : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteWriteAddrH        : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteWriteSize         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      remoteWriteEn           : slv(MAX_BUFFERS_G-1 downto 0);
+      remoteWriteEn           : slv(255 downto 0);
       remoteReadAddrL         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteReadAddrH         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteReadSize          : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      remoteReadEn            : slv(MAX_BUFFERS_G-1 downto 0);
+      remoteReadEn            : slv(255 downto 0);
       totLatency              : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       totLatencyEn            : slv(MAX_BUFFERS_G-1 downto 0);
       gpuLatency              : Slv32Array(MAX_BUFFERS_G-1 downto 0);
@@ -107,8 +107,12 @@ architecture mapping of AxiPcieGpuAsyncControl is
       wrLatencyEn             : slv(MAX_BUFFERS_G-1 downto 0);
       readSlaves              : AxiLiteReadSlaveArray(3 downto 0);
       writeSlaves             : AxiLiteWriteSlaveArray(3 downto 0);
-      minWriteBuffer          : slv(31 downto 0);
-      minReadBuffer           : slv(31 downto 0);
+      minWriteBuffer          : slv(8 downto 0);
+      minReadBuffer           : slv(8 downto 0);
+      wrBuffSizeVec           : Slv9Array(7 downto 0);
+      rdBuffSizeVec           : Slv9Array(7 downto 0);
+      wrBuffSize              : slv(8 downto 0);
+      rdBuffSize              : slv(8 downto 0);
       dmaWrDescAck            : AxiWriteDmaDescAckType;
       dmaWrDescRetAck         : sl;
       dmaRdDescReq            : AxiReadDmaDescReqType;
@@ -155,6 +159,10 @@ architecture mapping of AxiPcieGpuAsyncControl is
       writeSlaves             => (others => AXI_LITE_WRITE_SLAVE_INIT_C),
       minWriteBuffer          => (others => '0'),
       minReadBuffer           => (others => '0'),
+      wrBuffSizeVec           => (others => (others => '0')),
+      rdBuffSizeVec           => (others => (others => '0')),
+      wrBuffSize              => (others => '0'),
+      rdBuffSize              => (others => '0'),
       dmaWrDescAck            => AXI_WRITE_DMA_DESC_ACK_INIT_C,
       dmaWrDescRetAck         => '0',
       dmaRdDescReq            => AXI_READ_DMA_DESC_REQ_INIT_C,
@@ -233,10 +241,8 @@ begin
    ---------------------
    comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet, r,
                    readMasters, writeMasters) is
-      variable v          : RegType;
-      variable axilEp     : AxiLiteEndpointArray(3 downto 0);
-      variable wrBuffSize : natural;
-      variable rdBuffSize : natural;
+      variable v      : RegType;
+      variable axilEp : AxiLiteEndpointArray(3 downto 0);
    begin
       -- Latch the current value
       v := r;
@@ -363,12 +369,28 @@ begin
       axiSlaveDefault(axilEp(3), v.writeSlaves(3), v.readSlaves(3), AXI_RESP_DECERR_C);
 
       --------------------------------------------------------------------------------------------
-
       -- Update the minimum available buffers diagnostic register
-      wrBuffSize := conv_integer(onesCount(r.remoteWriteEn));
-      if (r.cntRst = '1') or (wrBuffSize < r.minWriteBuffer) then
-         v.minWriteBuffer := toSlv(wrBuffSize, 32);
+      --------------------------------------------------------------------------------------------
+
+      -- Pipeline the calculation to help with making timing
+      v.wrBuffSize := (others => '0');
+      v.rdBuffSize := (others => '0');
+      for i in 0 to 7 loop
+         v.wrBuffSizeVec(i) := toSlv(conv_integer(onesCount(r.remoteWriteEn(32*i+31 downto 32*i))), 9);
+         v.wrBuffSize       := v.wrBuffSize + r.wrBuffSizeVec(i);
+         v.rdBuffSizeVec(i) := toSlv(conv_integer(onesCount(r.remoteReadEn(32*i+31 downto 32*i))), 9);
+         v.rdBuffSize       := v.rdBuffSize + r.rdBuffSizeVec(i);
+      end loop;
+
+      if (r.cntRst = '1') or (r.wrBuffSize < r.minWriteBuffer) then
+         v.minWriteBuffer := r.wrBuffSize;
       end if;
+
+      if (r.cntRst = '1') or (r.rdBuffSize < r.minReadBuffer) then
+         v.minReadBuffer := r.rdBuffSize;
+      end if;
+
+      --------------------------------------------------------------------------------------------
 
       -- rx State Machine
       case r.rxState is
@@ -444,12 +466,6 @@ begin
       end case;
 
       --------------------------------------------------------------------------------------------
-
-      -- Update the minimum available buffers diagnostic register
-      rdBuffSize := conv_integer(onesCount(r.remoteReadEn));
-      if (r.cntRst = '1') or (rdBuffSize < r.minReadBuffer) then
-         v.minReadBuffer := toSlv(rdBuffSize, 32);
-      end if;
 
       -- tx State Machine
       case r.txState is

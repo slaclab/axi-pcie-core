@@ -32,7 +32,8 @@ entity AxiPcieGpuAsyncControl is
    generic (
       TPD_G               : time                   := 1 ns;
       DEFAULT_DEMUX_SEL_G : sl                     := '1';  -- 1: GPU path, 0: CPU path
-      MAX_BUFFERS_G       : integer range 1 to 256 := 4;
+      -- MAX_BUFFERS_G       : integer range 1 to 256 := 4;
+      MAX_BUFFERS_G       : integer range 1 to 128 := 4;  -- TODO: resolve the timing closure issues when MAX_BUFFERS_G=256
       DMA_AXI_CONFIG_G    : AxiConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)

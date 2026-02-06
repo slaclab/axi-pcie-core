@@ -313,7 +313,7 @@ begin
 
                v.dmaWrDescAck.metaAddr(31 downto 0)  := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx));
                v.dmaWrDescAck.metaAddr(63 downto 32) := r.remoteWriteAddrH(conv_integer(r.nextWriteIdx));
-               v.dmaWrDescAck.address(31 downto 0)   := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx)) + DMA_AXI_CONFIG_G.DATA_BYTES_C; -- always keep metadata 32 bytes long
+               v.dmaWrDescAck.address(31 downto 0)   := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx)) + 8; --DMA_AXI_CONFIG_G.DATA_BYTES_C; -- always keep metadata 32 bytes long
                v.dmaWrDescAck.address(63 downto 32)  := r.remoteWriteAddrH(conv_integer(r.nextWriteIdx));
 
                if r.remoteWriteEn(conv_integer(r.nextWriteIdx)) = '1' or r.writeEnable = '0' then

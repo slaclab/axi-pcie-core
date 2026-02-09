@@ -75,6 +75,26 @@ architecture mapping of AxiPcieGpuAsyncCore is
       TUSER_BITS_C  => 8,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
+   constant NUM_AXI_MASTERS_C : natural := 3;
+   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
+      0               => (
+         baseAddr     => x"0002_8000",  -- 0x0002_8000:0x0002_BFFF
+         addrBits     => 14,
+         connectivity => x"FFFF"),
+      1               => (
+         baseAddr     => x"0002_C000",
+         addrBits     => 12,
+         connectivity => x"FFFF"),
+      2               => (
+         baseAddr     => x"0002_E000",
+         addrBits     => 12,
+         connectivity => x"FFFF"));
+
+   signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
+   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXI_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
+   signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXI_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+
    signal dmaWrDescReq    : AxiWriteDmaDescReqType;
    signal dmaWrDescAck    : AxiWriteDmaDescAckType;
    signal dmaWrDescRet    : AxiWriteDmaDescRetType;
@@ -104,6 +124,27 @@ begin
    bypassMaster        <= mAxisDemuxMasters(1);
    mAxisDemuxSlaves(1) <= bypassSlave;
 
+   --------------------
+   -- AXI-Lite Crossbar
+   --------------------
+   U_XBAR : entity surf.AxiLiteCrossbar
+      generic map (
+         TPD_G              => TPD_G,
+         NUM_SLAVE_SLOTS_G  => 1,
+         NUM_MASTER_SLOTS_G => NUM_AXI_MASTERS_C,
+         MASTERS_CONFIG_G   => XBAR_CONFIG_C)
+      port map (
+         axiClk              => axilClk,
+         axiClkRst           => axilRst,
+         sAxiWriteMasters(0) => axilWriteMaster,
+         sAxiWriteSlaves(0)  => axilWriteSlave,
+         sAxiReadMasters(0)  => axilReadMaster,
+         sAxiReadSlaves(0)   => axilReadSlave,
+         mAxiWriteMasters    => axilWriteMasters,
+         mAxiWriteSlaves     => axilWriteSlaves,
+         mAxiReadMasters     => axilReadMasters,
+         mAxiReadSlaves      => axilReadSlaves);
+
    ------------------------------
    -- AXI-Lite Control/Monitoring
    ------------------------------
@@ -116,10 +157,10 @@ begin
       port map (
          axilClk           => axilClk,
          axilRst           => axilRst,
-         axilReadMaster    => axilReadMaster,
-         axilReadSlave     => axilReadSlave,
-         axilWriteMaster   => axilWriteMaster,
-         axilWriteSlave    => axilWriteSlave,
+         axilReadMaster    => axilReadMasters(0),
+         axilReadSlave     => axilReadSlaves(0),
+         axilWriteMaster   => axilWriteMasters(0),
+         axilWriteSlave    => axilWriteSlaves(0),
          axiClk            => axiClk,
          axiRst            => axiRst,
          dynamicRouteMasks => dynamicRouteMasks,
@@ -240,5 +281,52 @@ begin
          mAxisMaster => mAxisMaster,
          mAxisSlave  => mAxisSlave);
 
-end mapping;
+   ---------------------------------
+   -- Monitor the GPU Inbound Stream
+   ---------------------------------
+   U_GpuIbAxisMon : entity surf.AxiStreamMonAxiL
+      generic map(
+         TPD_G            => TPD_G,
+         COMMON_CLK_G     => false,
+         AXIS_CLK_FREQ_G  => DMA_CLK_FREQ_C,
+         AXIS_NUM_SLOTS_G => 1,
+         AXIS_CONFIG_G    => PCIE_AXIS_CONFIG_C)
+      port map(
+         -- AXIS Stream Interface
+         axisClk          => axiClk,
+         axisRst          => axiRst,
+         axisMasters(0)   => sAxisMasterInt,
+         axisSlaves(0)    => sAxisSlaveInt,
+         -- AXI lite slave port for register access
+         axilClk          => axilClk,
+         axilRst          => axilRst,
+         sAxilWriteMaster => axilWriteMasters(1),
+         sAxilWriteSlave  => axilWriteSlaves(1),
+         sAxilReadMaster  => axilReadMasters(1),
+         sAxilReadSlave   => axilReadSlaves(1));
 
+   ---------------------------------
+   -- Monitor the GPU Inbound Stream
+   ---------------------------------
+   U_GpuObAxisMon : entity surf.AxiStreamMonAxiL
+      generic map(
+         TPD_G            => TPD_G,
+         COMMON_CLK_G     => false,
+         AXIS_CLK_FREQ_G  => DMA_CLK_FREQ_C,
+         AXIS_NUM_SLOTS_G => 1,
+         AXIS_CONFIG_G    => PCIE_AXIS_CONFIG_C)
+      port map(
+         -- AXIS Stream Interface
+         axisClk          => axiClk,
+         axisRst          => axiRst,
+         axisMasters(0)   => mAxisMasterInt,
+         axisSlaves(0)    => mAxisSlaveInt,
+         -- AXI lite slave port for register access
+         axilClk          => axilClk,
+         axilRst          => axilRst,
+         sAxilWriteMaster => axilWriteMasters(2),
+         sAxilWriteSlave  => axilWriteSlaves(2),
+         sAxilReadMaster  => axilReadMasters(2),
+         sAxilReadSlave   => axilReadSlaves(2));
+
+end mapping;

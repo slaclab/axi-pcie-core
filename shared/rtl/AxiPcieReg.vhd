@@ -455,7 +455,7 @@ begin
       generic map (
          TPD_G           => TPD_G,
          COMMON_CLK_G    => false,
-         NUM_ADDR_BITS_G => 15)
+         NUM_ADDR_BITS_G => 24)
       port map (
          -- Slave Interface
          sAxiClk         => axiClk,

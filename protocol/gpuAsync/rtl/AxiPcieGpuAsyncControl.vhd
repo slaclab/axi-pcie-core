@@ -74,100 +74,116 @@ architecture mapping of AxiPcieGpuAsyncControl is
    type StateType is (IDLE_S, MOVE_S);
 
    type RegType is record
+      -- Misc. Signals
+      cntRst                  : sl;
+      -- Write/RX Signals
       rxState                 : StateType;
-      txState                 : StateType;
       rxFrameCnt              : slv(31 downto 0);
-      txFrameCnt              : slv(31 downto 0);
       axiWriteErrorCnt        : slv(31 downto 0);
       axiWriteTimeoutErrorCnt : slv(31 downto 0);
       axiWriteErrorVal        : slv(3 downto 0);
-      axiReadErrorCnt         : slv(31 downto 0);
-      axiReadErrorVal         : slv(2 downto 0);
-      cntRst                  : sl;
       awcache                 : slv(3 downto 0);
-      arcache                 : slv(3 downto 0);
       writeEnable             : sl;
       writeCount              : slv(7 downto 0);
-      readEnable              : sl;
-      readCount               : slv(7 downto 0);
       nextWriteIdx            : slv(7 downto 0);
-      nextReadIdx             : slv(7 downto 0);
       remoteWriteAddrL        : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteWriteAddrH        : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteWriteSize         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteWriteEn           : slv(255 downto 0);
+      -- Read/TX Signals
+      txState                 : StateType;
+      txFrameCnt              : slv(31 downto 0);
+      axiReadErrorCnt         : slv(31 downto 0);
+      axiReadErrorVal         : slv(2 downto 0);
+      arcache                 : slv(3 downto 0);
+      readEnable              : sl;
+      readCount               : slv(7 downto 0);
+      nextReadIdx             : slv(7 downto 0);
       remoteReadAddrL         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteReadAddrH         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteReadSize          : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteReadEn            : slv(255 downto 0);
+      -- Latency Measurements
       totLatency              : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       totLatencyEn            : slv(MAX_BUFFERS_G-1 downto 0);
       gpuLatency              : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       gpuLatencyEn            : slv(MAX_BUFFERS_G-1 downto 0);
       wrLatency               : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       wrLatencyEn             : slv(MAX_BUFFERS_G-1 downto 0);
-      readSlaves              : AxiLiteReadSlaveArray(3 downto 0);
-      writeSlaves             : AxiLiteWriteSlaveArray(3 downto 0);
+      -- Buffer Measurements
       minWriteBuffer          : slv(8 downto 0);
       minReadBuffer           : slv(8 downto 0);
       wrBuffSizeVec           : Slv9Array(7 downto 0);
       rdBuffSizeVec           : Slv9Array(7 downto 0);
       wrBuffSize              : slv(8 downto 0);
       rdBuffSize              : slv(8 downto 0);
+      -- DMA Control
       dmaWrDescAck            : AxiWriteDmaDescAckType;
       dmaWrDescRetAck         : sl;
       dmaRdDescReq            : AxiReadDmaDescReqType;
       dmaRdDescRetAck         : sl;
+      -- AXI-Lite Control
+      readSlaves              : AxiLiteReadSlaveArray(3 downto 0);
+      writeSlaves             : AxiLiteWriteSlaveArray(3 downto 0);
+      -- DEMUX Control
       axisDeMuxSelect         : sl;
       dynamicRouteMasks       : Slv8Array(1 downto 0);
       dynamicRouteDests       : Slv8Array(1 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
+      -- Misc. Signals
+      cntRst                  => '0',
+      -- Write/RX Signals
       rxState                 => IDLE_S,
-      txState                 => IDLE_S,
       rxFrameCnt              => (others => '0'),
-      txFrameCnt              => (others => '0'),
       axiWriteErrorCnt        => (others => '0'),
       axiWriteTimeoutErrorCnt => (others => '0'),
       axiWriteErrorVal        => (others => '0'),
-      axiReadErrorCnt         => (others => '0'),
-      axiReadErrorVal         => (others => '0'),
-      cntRst                  => '0',
       awcache                 => (others => '0'),
-      arcache                 => (others => '0'),
       writeEnable             => '0',
       writeCount              => (others => '0'),
-      readEnable              => '0',
-      readCount               => (others => '0'),
       nextWriteIdx            => (others => '0'),
-      nextReadIdx             => (others => '0'),
       remoteWriteAddrL        => (others => (others => '0')),
       remoteWriteAddrH        => (others => (others => '0')),
       remoteWriteSize         => (others => (others => '0')),
       remoteWriteEn           => (others => '0'),
+      -- Read/TX Signals
+      txState                 => IDLE_S,
+      txFrameCnt              => (others => '0'),
+      axiReadErrorCnt         => (others => '0'),
+      axiReadErrorVal         => (others => '0'),
+      arcache                 => (others => '0'),
+      readEnable              => '0',
+      readCount               => (others => '0'),
+      nextReadIdx             => (others => '0'),
       remoteReadAddrL         => (others => (others => '0')),
       remoteReadAddrH         => (others => (others => '0')),
       remoteReadSize          => (others => (others => '0')),
       remoteReadEn            => (others => '0'),
+      -- Latency Measurements
       totLatency              => (others => (others => '0')),
       totLatencyEn            => (others => '0'),
       gpuLatency              => (others => (others => '0')),
       gpuLatencyEn            => (others => '0'),
       wrLatency               => (others => (others => '0')),
       wrLatencyEn             => (others => '0'),
-      readSlaves              => (others => AXI_LITE_READ_SLAVE_INIT_C),
-      writeSlaves             => (others => AXI_LITE_WRITE_SLAVE_INIT_C),
+      -- Buffer Measurements
       minWriteBuffer          => (others => '0'),
       minReadBuffer           => (others => '0'),
       wrBuffSizeVec           => (others => (others => '0')),
       rdBuffSizeVec           => (others => (others => '0')),
       wrBuffSize              => (others => '0'),
       rdBuffSize              => (others => '0'),
+      -- DMA Control
       dmaWrDescAck            => AXI_WRITE_DMA_DESC_ACK_INIT_C,
       dmaWrDescRetAck         => '0',
       dmaRdDescReq            => AXI_READ_DMA_DESC_REQ_INIT_C,
       dmaRdDescRetAck         => '0',
+      -- AXI-Lite Control
+      readSlaves              => (others => AXI_LITE_READ_SLAVE_INIT_C),
+      writeSlaves             => (others => AXI_LITE_WRITE_SLAVE_INIT_C),
+      -- DEMUX Control
       axisDeMuxSelect         => DEFAULT_DEMUX_SEL_G,
       dynamicRouteMasks       => (0 => x"00", 1 => x"FF"),
       dynamicRouteDests       => (0 => x"00", 1 => x"FF"));

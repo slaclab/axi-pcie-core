@@ -8,11 +8,99 @@
 # contained in the LICENSE.txt file.
 #-----------------------------------------------------------------------------
 
-import pyrogue              as pr
+import pyrogue as pr
+
+class AxiGpuAsyncBuffer(pr.Device):
+    def __init__(self, index=0, **kwargs):
+        super().__init__(**kwargs)
+
+        #-----------------------------------------------------------------------------
+        # There are lots of RemoteVariables in this device that are "read only"
+        # But if you look at the firmware, you will noticed that they are "read/write"
+        # The reason why they are "read only in this code is because it is the
+        # Linux kernel driver that is intended to write and update this remote variables
+        # and NOT the userspace
+        #-----------------------------------------------------------------------------
+        kernelVarMode = 'RO'
+
+        self.add(pr.RemoteVariable(
+            name         = 'RemoteWriteAddressL',
+            offset       = 0x100 + index*16,
+            bitSize      = 32,
+            mode         = kernelVarMode,
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'RemoteWriteAddressH',
+            offset       = 0x104 + index*16,
+            bitSize      = 32,
+            mode         = kernelVarMode,
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'RemoteWriteSize',
+            offset       = 0x108 + index*16,
+            bitSize      = 32,
+            mode         = kernelVarMode,
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'RemoteReadAddressL',
+            offset       = 0x200 + index*16,
+            bitSize      = 32,
+            mode         = kernelVarMode,
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'RemoteReadAddressH',
+            offset       = 0x204 + index*16,
+            bitSize      = 32,
+            mode         = kernelVarMode,
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'RemoteReadSize',
+            offset       = 0x400 + index*4,
+            bitSize      = 32,
+            mode         = kernelVarMode,
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'TotLatency',
+            offset       = 0x500 + index*16,
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'GpuLatency',
+            offset       = 0x504 + index*16,
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'WrLatency',
+            offset       = 0x508 + index*16,
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
 
 class AxiGpuAsyncCore(pr.Device):
     def __init__(self,
-                 maxBuffers  = 4,
+                 maxBuffers  = 16,
                  description = 'Container for the GPUAsync core registers',
                  **kwargs):
         super().__init__(description=description, **kwargs)
@@ -229,82 +317,10 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         for i in range(maxBuffers):
-
-            self.add(pr.RemoteVariable(
-                name         = f'RemoteWriteAddressL[{i}]',
-                offset       = 0x100 + i*16,
-                bitSize      = 32,
-                mode         = kernelVarMode,
-                pollInterval = 1,
+            self.add(AxiGpuAsyncBuffer(
+                name  = f'Buffer[{i}]',
+                index = i,
             ))
-
-            self.add(pr.RemoteVariable(
-                name         = f'RemoteWriteAddressH[{i}]',
-                offset       = 0x104 + i*16,
-                bitSize      = 32,
-                mode         = kernelVarMode,
-                pollInterval = 1,
-            ))
-
-            self.add(pr.RemoteVariable(
-                name         = f'RemoteWriteSize[{i}]',
-                offset       = 0x108 + i*16,
-                bitSize      = 32,
-                mode         = kernelVarMode,
-                pollInterval = 1,
-            ))
-
-            self.add(pr.RemoteVariable(
-                name         = f'RemoteReadAddressL[{i}]',
-                offset       = 0x200 + i*16,
-                bitSize      = 32,
-                mode         = kernelVarMode,
-                pollInterval = 1,
-            ))
-
-            self.add(pr.RemoteVariable(
-                name         = f'RemoteReadAddressH[{i}]',
-                offset       = 0x204 + i*16,
-                bitSize      = 32,
-                mode         = kernelVarMode,
-                pollInterval = 1,
-            ))
-
-            self.add(pr.RemoteVariable(
-                name         = f'RemoteReadSize[{i}]',
-                offset       = 0x400 + i*4,
-                bitSize      = 32,
-                mode         = kernelVarMode,
-                pollInterval = 1,
-            ))
-
-            self.add(pr.RemoteVariable(
-                name         = f'TotLatency[{i}]',
-                offset       = 0x500 + i*16,
-                bitSize      = 32,
-                disp         = '{}',
-                mode         = 'RO',
-                pollInterval = 1,
-            ))
-
-            self.add(pr.RemoteVariable(
-                name         = f'GpuLatency[{i}]',
-                offset       = 0x504 + i*16,
-                bitSize      = 32,
-                disp         = '{}',
-                mode         = 'RO',
-                pollInterval = 1,
-            ))
-
-            self.add(pr.RemoteVariable(
-                name         = f'WrLatency[{i}]',
-                offset       = 0x508 + i*16,
-                bitSize      = 32,
-                disp         = '{}',
-                mode         = 'RO',
-                pollInterval = 1,
-            ))
-
 
     def countReset(self):
         self.CountReset()

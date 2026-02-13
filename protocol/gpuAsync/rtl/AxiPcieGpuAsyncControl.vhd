@@ -32,8 +32,7 @@ entity AxiPcieGpuAsyncControl is
    generic (
       TPD_G               : time                   := 1 ns;
       DEFAULT_DEMUX_SEL_G : sl                     := '1';  -- 1: GPU path, 0: CPU path
-      -- MAX_BUFFERS_G       : integer range 1 to 256 := 4;
-      MAX_BUFFERS_G       : integer range 1 to 128 := 4;  -- TODO: resolve the timing closure issues when MAX_BUFFERS_G=256
+      MAX_BUFFERS_G       : integer range 1 to 256 := 4;
       DMA_AXI_CONFIG_G    : AxiConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -71,6 +70,10 @@ end AxiPcieGpuAsyncControl;
 
 architecture mapping of AxiPcieGpuAsyncControl is
 
+   constant NUM_AXIL_MASTERS_C : natural := 3;
+
+   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, x"0000_0000", 14, 12);
+
    type StateType is (IDLE_S, MOVE_S);
 
    type RegType is record
@@ -104,12 +107,15 @@ architecture mapping of AxiPcieGpuAsyncControl is
       remoteReadSize          : Slv32Array(MAX_BUFFERS_G-1 downto 0);
       remoteReadEn            : slv(255 downto 0);
       -- Latency Measurements
-      totLatency              : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      totLatencyEn            : slv(MAX_BUFFERS_G-1 downto 0);
-      gpuLatency              : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      gpuLatencyEn            : slv(MAX_BUFFERS_G-1 downto 0);
-      wrLatency               : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      wrLatencyEn             : slv(MAX_BUFFERS_G-1 downto 0);
+      totLatency              : slv(31 downto 0);
+      totLatencyCnt           : slv(31 downto 0);
+      totLatencyEn            : sl;
+      gpuLatency              : slv(31 downto 0);
+      gpuLatencyCnt           : slv(31 downto 0);
+      gpuLatencyEn            : sl;
+      wrLatency               : slv(31 downto 0);
+      wrLatencyCnt            : slv(31 downto 0);
+      wrLatencyEn             : sl;
       -- Buffer Measurements
       minWriteBuffer          : slv(8 downto 0);
       minReadBuffer           : slv(8 downto 0);
@@ -123,8 +129,8 @@ architecture mapping of AxiPcieGpuAsyncControl is
       dmaRdDescReq            : AxiReadDmaDescReqType;
       dmaRdDescRetAck         : sl;
       -- AXI-Lite Control
-      readSlaves              : AxiLiteReadSlaveArray(3 downto 0);
-      writeSlaves             : AxiLiteWriteSlaveArray(3 downto 0);
+      readSlaves              : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0);
+      writeSlaves             : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0);
       -- DEMUX Control
       axisDeMuxSelect         : sl;
       dynamicRouteMasks       : Slv8Array(1 downto 0);
@@ -162,12 +168,15 @@ architecture mapping of AxiPcieGpuAsyncControl is
       remoteReadSize          => (others => (others => '0')),
       remoteReadEn            => (others => '0'),
       -- Latency Measurements
-      totLatency              => (others => (others => '0')),
-      totLatencyEn            => (others => '0'),
-      gpuLatency              => (others => (others => '0')),
-      gpuLatencyEn            => (others => '0'),
-      wrLatency               => (others => (others => '0')),
-      wrLatencyEn             => (others => '0'),
+      totLatency              => (others => '0'),
+      totLatencyCnt           => (others => '0'),
+      totLatencyEn            => '0',
+      gpuLatency              => (others => '0'),
+      gpuLatencyCnt           => (others => '0'),
+      gpuLatencyEn            => '0',
+      wrLatency               => (others => '0'),
+      wrLatencyCnt            => (others => '0'),
+      wrLatencyEn             => '0',
       -- Buffer Measurements
       minWriteBuffer          => (others => '0'),
       minReadBuffer           => (others => '0'),
@@ -191,22 +200,20 @@ architecture mapping of AxiPcieGpuAsyncControl is
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
 
-   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(3 downto 0) := genAxiLiteConfig(4, x"0000_0000", 15, 12);
-
    signal writeMaster : AxiLiteWriteMasterType;
    signal writeSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C;
    signal readMaster  : AxiLiteReadMasterType;
    signal readSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C;
 
-   signal writeMasters : AxiLiteWriteMasterArray(3 downto 0);
-   signal writeSlaves  : AxiLiteWriteSlaveArray(3 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
-   signal readMasters  : AxiLiteReadMasterArray(3 downto 0);
-   signal readSlaves   : AxiLiteReadSlaveArray(3 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+   signal writeMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
+   signal writeSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
+   signal readMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
+   signal readSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
 begin
 
    -------------------------------------------------------
-   -- Mask off the address mask outside of 15 bit range
+   -- Mask off the address mask outside of 14 bit range
    -- so we can use hex values in axiSlaveRegister()
    -------------------------------------------------------
    --      GPU_INDEX_C     => (
@@ -218,7 +225,7 @@ begin
       generic map (
          TPD_G           => TPD_G,
          COMMON_CLK_G    => false,
-         NUM_ADDR_BITS_G => 15)
+         NUM_ADDR_BITS_G => 14)         -- 0x0000:0x3FFF = only need 14-bits
       port map (
          -- Slave Interface
          sAxiClk         => axilClk,
@@ -239,7 +246,7 @@ begin
       generic map (
          TPD_G              => TPD_G,
          NUM_SLAVE_SLOTS_G  => 1,
-         NUM_MASTER_SLOTS_G => 4,
+         NUM_MASTER_SLOTS_G => NUM_AXIL_MASTERS_C,
          MASTERS_CONFIG_G   => XBAR_CONFIG_C)
       port map (
          sAxiWriteMasters(0) => writeMaster,
@@ -283,17 +290,15 @@ begin
       end if;
 
       -- Latency Counters
-      for i in 0 to MAX_BUFFERS_G-1 loop
-         if r.totLatencyEn(i) = '1' then
-            v.totLatency(i) := r.totLatency(i) + 1;
-         end if;
-         if r.gpuLatencyEn(i) = '1' then
-            v.gpuLatency(i) := r.gpuLatency(i) + 1;
-         end if;
-         if r.wrLatencyEn(i) = '1' then
-            v.wrLatency(i) := r.wrLatency(i) + 1;
-         end if;
-      end loop;
+      if (r.totLatencyEn = '1') and (r.totLatencyCnt /= x"FFFF_FFFF") then
+         v.totLatencyCnt := r.totLatencyCnt + 1;
+      end if;
+      if (r.gpuLatencyEn = '1') and (r.gpuLatencyCnt /= x"FFFF_FFFF") then
+         v.gpuLatencyCnt := r.gpuLatencyCnt + 1;
+      end if;
+      if (r.wrLatencyEn = '1') and (r.wrLatencyCnt /= x"FFFF_FFFF") then
+         v.wrLatencyCnt := r.wrLatencyCnt + 1;
+      end if;
 
       --------------------------------------------------------------------------------------------
       -- Axi-Lite Memory Range: 0x0000:0x0FFF
@@ -331,6 +336,10 @@ begin
 
       axiSlaveRegisterR(axilEp(0), x"03C", 0, r.minWriteBuffer);
       axiSlaveRegisterR(axilEp(0), x"040", 0, r.minReadBuffer);
+
+      axiSlaveRegisterR(axilEp(0), x"048", 0, r.totLatency);  -- Only measure for buffer[index=0]
+      axiSlaveRegisterR(axilEp(0), x"050", 0, r.gpuLatency);  -- Only measure for buffer[index=0]
+      axiSlaveRegisterR(axilEp(0), x"058", 0, r.wrLatency);  -- Only measure for buffer[index=0]
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp(0), v.writeSlaves(0), v.readSlaves(0), AXI_RESP_DECERR_C);
@@ -370,22 +379,6 @@ begin
       axiSlaveDefault(axilEp(2), v.writeSlaves(2), v.readSlaves(2), AXI_RESP_DECERR_C);
 
       --------------------------------------------------------------------------------------------
-      -- Axi-Lite Memory Range: 0x3000:0x3FFF
-      --------------------------------------------------------------------------------------------
-
-      -- Determine the transaction
-      axiSlaveWaitTxn(axilEp(3), writeMasters(3), readMasters(3), v.writeSlaves(3), v.readSlaves(3));
-
-      for i in 0 to MAX_BUFFERS_G-1 loop
-         axiSlaveRegisterR(axilEp(3), toSlv(i*16+0, 12), 0, r.totLatency(i));  -- 0x3XX0
-         axiSlaveRegisterR(axilEp(3), toSlv(i*16+4, 12), 0, r.gpuLatency(i));  -- 0x3XX4
-         axiSlaveRegisterR(axilEp(3), toSlv(i*16+8, 12), 0, r.wrLatency(i));  -- 0x3XX8
-      end loop;
-
-      -- Closeout the transaction
-      axiSlaveDefault(axilEp(3), v.writeSlaves(3), v.readSlaves(3), AXI_RESP_DECERR_C);
-
-      --------------------------------------------------------------------------------------------
       -- Update the minimum available buffers diagnostic register
       --------------------------------------------------------------------------------------------
 
@@ -414,9 +407,11 @@ begin
 
          when IDLE_S =>
 
-            if r.remoteWriteEn(conv_integer(r.nextWriteIdx)) = '0' then
-               v.gpuLatencyEn(conv_integer(r.nextWriteIdx)) := '0';
+            if r.remoteWriteEn(0) = '0' then
+               v.gpuLatencyEn := '0';
+               v.gpuLatency   := r.gpuLatencyCnt;
             end if;
+
             if dmaWrDescReq.valid = '1' then
                v.dmaWrDescAck.dropEn     := not r.writeEnable;
                v.dmaWrDescAck.maxSize    := r.remoteWriteSize(conv_integer(r.nextWriteIdx));
@@ -437,14 +432,16 @@ begin
                   if r.writeEnable = '1' then
                      v.remoteWriteEn(conv_integer(r.nextWriteIdx)) := '0';
 
-                     v.totLatencyEn(conv_integer(r.nextWriteIdx)) := '1';
-                     v.totLatency(conv_integer(r.nextWriteIdx))   := (others => '0');
+                     if (r.nextWriteIdx = 0) then
+                        v.totLatencyEn  := '1';
+                        v.totLatencyCnt := (others => '0');
 
-                     v.gpuLatencyEn(conv_integer(r.nextWriteIdx)) := '0';
-                     v.gpuLatency(conv_integer(r.nextWriteIdx))   := (others => '0');
+                        v.gpuLatencyEn  := '0';
+                        v.gpuLatencyCnt := (others => '0');
 
-                     v.wrLatencyEn(conv_integer(r.nextWriteIdx)) := '1';
-                     v.wrLatency(conv_integer(r.nextWriteIdx))   := (others => '0');
+                        v.wrLatencyEn  := '1';
+                        v.wrLatencyCnt := (others => '0');
+                     end if;
 
                      if r.nextWriteIdx >= r.writeCount then
                         v.nextWriteIdx := (others => '0');
@@ -465,8 +462,11 @@ begin
             if dmaWrDescRet.valid = '1' then
                v.dmaWrDescRetAck := '1';
 
-               v.wrLatencyEn(conv_integer(dmaWrDescRet.buffId(7 downto 0)))  := '0';
-               v.gpuLatencyEn(conv_integer(dmaWrDescRet.buffId(7 downto 0))) := '1';
+               if dmaWrDescRet.buffId(7 downto 0) = 0 then
+                  v.wrLatencyEn  := '0';
+                  v.wrLatency    := r.wrLatencyCnt;
+                  v.gpuLatencyEn := '1';
+               end if;
 
                if dmaWrDescRet.result /= "0000" then
                   v.axiWriteErrorCnt := r.axiWriteErrorCnt + 1;
@@ -524,7 +524,10 @@ begin
             if dmaRdDescRet.valid = '1' then
                v.dmaRdDescRetAck := '1';
 
-               v.totLatencyEn(conv_integer(dmaRdDescRet.buffId(7 downto 0))) := '0';
+               if dmaRdDescRet.buffId(7 downto 0) = 0 then
+                  v.totLatencyEn := '0';
+                  v.totLatency   := r.totLatencyCnt;
+               end if;
 
                if dmaRdDescRet.result /= "000" then
                   v.axiReadErrorCnt := r.axiReadErrorCnt + 1;

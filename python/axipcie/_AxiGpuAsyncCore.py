@@ -71,32 +71,6 @@ class AxiGpuAsyncBuffer(pr.Device):
             pollInterval = 1,
         ))
 
-        self.add(pr.RemoteVariable(
-            name         = 'TotLatency',
-            offset       = 0x3000 + index*16,
-            bitSize      = 32,
-            disp         = '{}',
-            mode         = 'RO',
-            pollInterval = 1,
-        ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'GpuLatency',
-            offset       = 0x3004 + index*16,
-            bitSize      = 32,
-            disp         = '{}',
-            mode         = 'RO',
-            pollInterval = 1,
-        ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'WrLatency',
-            offset       = 0x3008 + index*16,
-            bitSize      = 32,
-            disp         = '{}',
-            mode         = 'RO',
-            pollInterval = 1,
-        ))
 
 class AxiGpuAsyncCore(pr.Device):
     def __init__(self,
@@ -310,6 +284,33 @@ class AxiGpuAsyncCore(pr.Device):
             name         = 'minReadBuffer',
             description  = 'Minimum number of read buffers availible since CountReset()',
             offset       = 0x0040,
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'TotLatency',
+            offset       = 0x048
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'GpuLatency',
+            offset       = 0x050,
+            bitSize      = 32,
+            disp         = '{}',
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'WrLatency',
+            offset       = 0x058,
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',

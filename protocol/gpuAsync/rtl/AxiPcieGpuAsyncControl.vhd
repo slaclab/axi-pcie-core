@@ -92,7 +92,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
 
    constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := (
       AXIL_BASE_INDEX_C    => (
-         baseAddr          => x"0002_8000",  -- 0x0002_8000:0x0002_8FFF: Base Control Registers
+         baseAddr          => x"0002_8000",  -- 0x0002_8000:0x0002_80FF: Base Control Registers
          addrBits          => 8,
          connectivity      => x"FFFF"),
       AXIL_RX_MON_INDEX_C  => (
@@ -104,23 +104,23 @@ architecture rtl of AxiPcieGpuAsyncControl is
          addrBits          => 8,
          connectivity      => x"FFFF"),
       AXIL_WR_EN_INDEX_C   => (
-         baseAddr          => x"0002_9000",  -- 0x0002_9000:0x0002_9FFF: 0x100/4B = 1k buffers
+         baseAddr          => x"0002_9000",  -- 0x0002_9000:0x0002_9FFF: 0x1000/4B = 1k buffers
          addrBits          => 12,
          connectivity      => x"FFFF"),
       AXIL_RD_EN_INDEX_C   => (
-         baseAddr          => x"0002_A000",  -- 0x0002_A000:0x0002_AFFF: 0x100/4B = 1k buffers
+         baseAddr          => x"0002_A000",  -- 0x0002_A000:0x0002_AFFF: 0x1000/4B = 1k buffers
          addrBits          => 12,
          connectivity      => x"FFFF"),
       AXIL_RD_SIZE_INDEX_C => (
-         baseAddr          => x"0002_B000",  -- 0x0002_B000:0x0002_BFFF: 0x100/4B = 1k buffers
+         baseAddr          => x"0002_B000",  -- 0x0002_B000:0x0002_BFFF: 0x1000/4B = 1k buffers
          addrBits          => 12,
          connectivity      => x"FFFF"),
       AXIL_WR_ADDR_INDEX_C => (
-         baseAddr          => x"0002_C000",  -- 0x0002_C000:0x0002_DFFF: 0x200/8B = 1k buffers
+         baseAddr          => x"0002_C000",  -- 0x0002_C000:0x0002_DFFF: 0x2000/8B = 1k buffers
          addrBits          => 13,
          connectivity      => x"FFFF"),
       AXIL_RD_ADDR_INDEX_C => (
-         baseAddr          => x"0002_E000",  -- 0x0002_E000:0x0002_FFFF: 0x200/8B = 1k buffers
+         baseAddr          => x"0002_E000",  -- 0x0002_E000:0x0002_FFFF: 0x2000/8B = 1k buffers
          addrBits          => 13,
          connectivity      => x"FFFF"));
 

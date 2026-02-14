@@ -32,6 +32,7 @@ entity AxiPcieGpuAsyncControl is
    generic (
       TPD_G               : time          := 1 ns;
       DEFAULT_DEMUX_SEL_G : sl            := '1';  -- 1: GPU path, 0: CPU path
+      MIN_SIZE_CONFIG_G   : boolean       := false;  -- True for cycle accurate but more resources usage, False for less accurate but resource optmized
       DMA_AXI_CONFIG_G    : AxiConfigType := AXI_PCIE_CONFIG_C);
    port (
       -- AXI-Lite Interfaces (axilClk domain)
@@ -157,24 +158,26 @@ architecture rtl of AxiPcieGpuAsyncControl is
       wrLatencyCnt            : slv(31 downto 0);
       wrLatencyEn             : sl;
       -- Buffer Measurements
-      minWriteBuffer          : slv(BUFF_BIT_WIDTH_C downto 0);
-      minReadBuffer           : slv(BUFF_BIT_WIDTH_C downto 0);
-      -- wrBuffSizeVecA          : Slv11Array(31 downto 0);
-      -- rdBuffSizeVecA          : Slv11Array(31 downto 0);
-      -- wrBuffSizeVecB          : Slv11Array(15 downto 0);
-      -- rdBuffSizeVecB          : Slv11Array(15 downto 0);
-      -- wrBuffSizeVecC          : Slv11Array(7 downto 0);
-      -- rdBuffSizeVecC          : Slv11Array(7 downto 0);
-      -- wrBuffSizeVecD          : Slv11Array(3 downto 0);
-      -- rdBuffSizeVecD          : Slv11Array(3 downto 0);
-      -- wrBuffSizeVecE          : Slv11Array(1 downto 0);
-      -- rdBuffSizeVecE          : Slv11Array(1 downto 0);
       wrMonIdx                : natural range 0 to MAX_BUFFERS_C-1;
       rdMonIdx                : natural range 0 to MAX_BUFFERS_C-1;
       wrMonCnt                : slv(BUFF_BIT_WIDTH_C downto 0);
       rdMonCnt                : slv(BUFF_BIT_WIDTH_C downto 0);
-      wrBuffSize              : slv(BUFF_BIT_WIDTH_C downto 0);
-      rdBuffSize              : slv(BUFF_BIT_WIDTH_C downto 0);
+      wrEnMask                : slv(MAX_BUFFERS_C-1 downto 0);
+      rdEnMask                : slv(MAX_BUFFERS_C-1 downto 0);
+      wrBuffSizeVecA          : Slv6Array(31 downto 0);
+      rdBuffSizeVecA          : Slv6Array(31 downto 0);
+      wrBuffSizeVecB          : Slv7Array(15 downto 0);
+      rdBuffSizeVecB          : Slv7Array(15 downto 0);
+      wrBuffSizeVecC          : Slv8Array(7 downto 0);
+      rdBuffSizeVecC          : Slv8Array(7 downto 0);
+      wrBuffSizeVecD          : Slv9Array(3 downto 0);
+      rdBuffSizeVecD          : Slv9Array(3 downto 0);
+      wrBuffSizeVecE          : Slv10Array(1 downto 0);
+      rdBuffSizeVecE          : Slv10Array(1 downto 0);
+      wrBuffSize              : slv(10 downto 0);
+      rdBuffSize              : slv(10 downto 0);
+      minWriteBuffer          : slv(10 downto 0);
+      minReadBuffer           : slv(10 downto 0);
       -- DMA Control
       dmaWrDescAck            : AxiWriteDmaDescAckType;
       dmaWrDescRetAck         : sl;
@@ -224,24 +227,26 @@ architecture rtl of AxiPcieGpuAsyncControl is
       wrLatencyCnt            => (others => '0'),
       wrLatencyEn             => '0',
       -- Buffer Measurements
-      minWriteBuffer          => (others => '0'),
-      minReadBuffer           => (others => '0'),
-      -- wrBuffSizeVecA          => (others => (others => '0')),
-      -- rdBuffSizeVecA          => (others => (others => '0')),
-      -- wrBuffSizeVecB          => (others => (others => '0')),
-      -- rdBuffSizeVecB          => (others => (others => '0')),
-      -- wrBuffSizeVecC          => (others => (others => '0')),
-      -- rdBuffSizeVecC          => (others => (others => '0')),
-      -- wrBuffSizeVecD          => (others => (others => '0')),
-      -- rdBuffSizeVecD          => (others => (others => '0')),
-      -- wrBuffSizeVecE          => (others => (others => '0')),
-      -- rdBuffSizeVecE          => (others => (others => '0')),
       wrMonIdx                => 0,
       rdMonIdx                => 0,
       wrMonCnt                => (others => '0'),
       rdMonCnt                => (others => '0'),
+      wrEnMask                => (others => '0'),
+      rdEnMask                => (others => '0'),
+      wrBuffSizeVecA          => (others => (others => '0')),
+      rdBuffSizeVecA          => (others => (others => '0')),
+      wrBuffSizeVecB          => (others => (others => '0')),
+      rdBuffSizeVecB          => (others => (others => '0')),
+      wrBuffSizeVecC          => (others => (others => '0')),
+      rdBuffSizeVecC          => (others => (others => '0')),
+      wrBuffSizeVecD          => (others => (others => '0')),
+      rdBuffSizeVecD          => (others => (others => '0')),
+      wrBuffSizeVecE          => (others => (others => '0')),
+      rdBuffSizeVecE          => (others => (others => '0')),
       wrBuffSize              => (others => '0'),
       rdBuffSize              => (others => '0'),
+      minWriteBuffer          => (others => '0'),
+      minReadBuffer           => (others => '0'),
       -- DMA Control
       dmaWrDescAck            => AXI_WRITE_DMA_DESC_ACK_INIT_C,
       dmaWrDescRetAck         => '0',
@@ -493,116 +498,115 @@ begin
       -- Update the minimum available buffers diagnostic register
       --------------------------------------------------------------------------------------------
 
---      v.wrBuffSizeVecA := (others => (others => '0'));
---      v.rdBuffSizeVecA := (others => (others => '0'));
---
---      for i in 0 to 31 loop
---
---         if (32*i <= r.writeCount) then
---            if (32*i + 31 <= r.writeCount) then
---               -- Full 32-bit block valid
---               v.wrBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.remoteWriteEn(32*i+31 downto 32*i))), 11);
---            else
---               -- Partial block (last block)
---               v.wrBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.remoteWriteEn(conv_integer(r.writeCount) downto 32*i))), 11);
---            end if;
---         end if;
---
---         if (32*i <= r.readCount) then
---            if (32*i + 31 <= r.readCount) then
---               -- Full 32-bit block valid
---               v.rdBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.remoteReadEn(32*i+31 downto 32*i))), 11);
---            else
---               -- Partial block
---               v.rdBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.remoteReadEn(conv_integer(r.readCount) downto 32*i))), 11);
---            end if;
---         end if;
---
---      end loop;
---
---      for i in 0 to 15 loop
---         v.wrBuffSizeVecB(i) := r.wrBuffSizeVecA(i*2+0) + r.wrBuffSizeVecA(i*2+1);
---         v.rdBuffSizeVecB(i) := r.rdBuffSizeVecA(i*2+0) + r.rdBuffSizeVecA(i*2+1);
---      end loop;
---
---      for i in 0 to 7 loop
---         v.wrBuffSizeVecC(i) := r.wrBuffSizeVecB(i*2+0) + r.wrBuffSizeVecB(i*2+1);
---         v.rdBuffSizeVecC(i) := r.rdBuffSizeVecB(i*2+0) + r.rdBuffSizeVecB(i*2+1);
---      end loop;
---
---      for i in 0 to 3 loop
---         v.wrBuffSizeVecD(i) := r.wrBuffSizeVecC(i*2+0) + r.wrBuffSizeVecC(i*2+1);
---         v.rdBuffSizeVecD(i) := r.rdBuffSizeVecC(i*2+0) + r.rdBuffSizeVecC(i*2+1);
---      end loop;
---
---      for i in 0 to 1 loop
---         v.wrBuffSizeVecE(i) := r.wrBuffSizeVecD(i*2+0) + r.wrBuffSizeVecD(i*2+1);
---         v.rdBuffSizeVecE(i) := r.rdBuffSizeVecD(i*2+0) + r.rdBuffSizeVecD(i*2+1);
---      end loop;
---
---      v.wrBuffSize := r.wrBuffSizeVecE(0) + r.wrBuffSizeVecE(1);
---      v.rdBuffSize := r.rdBuffSizeVecE(0) + r.rdBuffSizeVecE(1);
------------------------------------------------------------------------------------
--- Note to future self:
---    While the commented out code above is the most acurate way to calculate
---    the number of buffers, I was getting a crash in synthesis:
---    .../2025.2/Vivado/bin/rdiArgs.sh: line 57: 3371451 Killed "$RDI_PROG" "$@"
---    So I recoded it in the code below as a less acurate measurement but probably
---    "good enough" for debugging
------------------------------------------------------------------------------------
+      -- True for cycle accurate but more resources usage
+      if MIN_SIZE_CONFIG_G then
 
-      -- Check for 1st index
-      if (r.wrMonIdx = 0) then
-         -- Reset the counter
-         v.wrMonCnt := (others => '0');
-      end if;
+         -- Create the write enable mask with respect to writeCount
+         v.wrEnMask := r.remoteWriteEn;
+         if (r.writeCount /= MAX_BUFFERS_C-1) then
+            v.wrEnMask(MAX_BUFFERS_C-1 downto conv_integer(r.writeCount+1)) := (others => '0');
+         end if;
 
-      -- Check for a enable bit
-      if (r.remoteWriteEn(r.wrMonIdx) = '1') then
-         -- Increment the counter
-         v.wrMonCnt := v.wrMonCnt + 1;  -- using variable (not register) for accumulation
-      end if;
+         -- Create the read enable mask with respect to readCount
+         v.rdEnMask := r.remoteReadEn;
+         if (r.readCount /= MAX_BUFFERS_C-1) then
+            v.rdEnMask(MAX_BUFFERS_C-1 downto conv_integer(r.readCount+1)) := (others => '0');
+         end if;
 
-      -- Check for last index
-      if (r.wrMonIdx = r.writeCount) then
-         -- Reset the index
-         v.wrMonIdx   := 0;
-         -- Sample the counter's variable (not register) value
-         v.wrBuffSize := v.wrMonCnt;
+         -- Count the number of 1 bits in the write/read enable masks
+         for i in 0 to 31 loop
+            v.wrBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.wrEnMask(32*i+31 downto 32*i))), 6);
+            v.rdBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.rdEnMask(32*i+31 downto 32*i))), 6);
+         end loop;
+
+         -- 1st stage cascaded adder
+         for i in 0 to 15 loop
+            v.wrBuffSizeVecB(i) := resize(r.wrBuffSizeVecA(i*2+0), 7) + resize(r.wrBuffSizeVecA(i*2+1), 7);
+            v.rdBuffSizeVecB(i) := resize(r.rdBuffSizeVecA(i*2+0), 7) + resize(r.rdBuffSizeVecA(i*2+1), 7);
+         end loop;
+
+         -- 2nd stage cascaded adder
+         for i in 0 to 7 loop
+            v.wrBuffSizeVecC(i) := resize(r.wrBuffSizeVecB(i*2+0), 8) + resize(r.wrBuffSizeVecB(i*2+1), 8);
+            v.rdBuffSizeVecC(i) := resize(r.rdBuffSizeVecB(i*2+0), 8) + resize(r.rdBuffSizeVecB(i*2+1), 8);
+         end loop;
+
+         -- 3rd stage cascaded adder
+         for i in 0 to 3 loop
+            v.wrBuffSizeVecD(i) := resize(r.wrBuffSizeVecC(i*2+0), 9) + resize(r.wrBuffSizeVecC(i*2+1), 9);
+            v.rdBuffSizeVecD(i) := resize(r.rdBuffSizeVecC(i*2+0), 9) + resize(r.rdBuffSizeVecC(i*2+1), 9);
+         end loop;
+
+         -- 4th stage cascaded adder
+         for i in 0 to 1 loop
+            v.wrBuffSizeVecE(i) := resize(r.wrBuffSizeVecD(i*2+0), 10) + resize(r.wrBuffSizeVecD(i*2+1), 10);
+            v.rdBuffSizeVecE(i) := resize(r.rdBuffSizeVecD(i*2+0), 10) + resize(r.rdBuffSizeVecD(i*2+1), 10);
+         end loop;
+
+         -- 5th ("final") stage cascaded adder
+         v.wrBuffSize := resize(r.wrBuffSizeVecE(0), 11) + resize(r.wrBuffSizeVecE(1), 11);
+         v.rdBuffSize := resize(r.rdBuffSizeVecE(0), 11) + resize(r.rdBuffSizeVecE(1), 11);
+
+      -- False for less accurate but resource optmized (5kLUTs + 3kFF savings)
       else
-         -- Increment the index
-         v.wrMonIdx := r.wrMonIdx + 1;
+         ----------------------------------------------------------------------
+
+         -- Check for 1st index
+         if (r.wrMonIdx = 0) then
+            -- Reset the counter
+            v.wrMonCnt := (others => '0');
+         end if;
+
+         -- Check for a enable bit
+         if (r.remoteWriteEn(r.wrMonIdx) = '1') then
+            -- Increment the counter
+            v.wrMonCnt := v.wrMonCnt + 1;  -- using variable (not register) for accumulation
+         end if;
+
+         -- Check for last index
+         if (r.wrMonIdx = r.writeCount) then
+            -- Reset the index
+            v.wrMonIdx   := 0;
+            -- Sample the counter's variable (not register) value
+            v.wrBuffSize := v.wrMonCnt;
+         else
+            -- Increment the index
+            v.wrMonIdx := r.wrMonIdx + 1;
+         end if;
+
+         ----------------------------------------------------------------------
+
+         -- Check for 1st index
+         if (r.rdMonIdx = 0) then
+            -- Reset the counter
+            v.rdMonCnt := (others => '0');
+         end if;
+
+         -- Check for a enable bit
+         if (r.remoteReadEn(r.rdMonIdx) = '1') then
+            -- Increment the counter
+            v.rdMonCnt := v.rdMonCnt + 1;  -- using variable (not register) for accumulation
+         end if;
+
+         -- Check for last index
+         if (r.rdMonIdx = r.readCount) then
+            -- Reset the index
+            v.rdMonIdx   := 0;
+            -- Sample the counter's variable (not register) value
+            v.rdBuffSize := v.rdMonCnt;
+         else
+            -- Increment the index
+            v.rdMonIdx := r.rdMonIdx + 1;
+         end if;
+
+         ----------------------------------------------------------------------
+
       end if;
 
       -- Check for reset or new min. value condition
       if (r.cntRst = '1') or (r.wrBuffSize < r.minWriteBuffer) then
          -- Update the value
          v.minWriteBuffer := r.wrBuffSize;
-      end if;
-
-      --------------------------------------------------------------------------------------------
-
-      -- Check for 1st index
-      if (r.rdMonIdx = 0) then
-         -- Reset the counter
-         v.rdMonCnt := (others => '0');
-      end if;
-
-      -- Check for a enable bit
-      if (r.remoteReadEn(r.rdMonIdx) = '1') then
-         -- Increment the counter
-         v.rdMonCnt := v.rdMonCnt + 1;  -- using variable (not register) for accumulation
-      end if;
-
-      -- Check for last index
-      if (r.rdMonIdx = r.readCount) then
-         -- Reset the index
-         v.rdMonIdx   := 0;
-         -- Sample the counter's variable (not register) value
-         v.rdBuffSize := v.rdMonCnt;
-      else
-         -- Increment the index
-         v.rdMonIdx := r.rdMonIdx + 1;
       end if;
 
       -- Check for reset or new min. value condition
@@ -615,7 +619,7 @@ begin
       -- Write/RX State Machine
       --------------------------------------------------------------------------------------------
       case r.rxState is
-
+         ----------------------------------------------------------------------
          when IDLE_S =>
 
             if r.remoteWriteEn(0) = '0' then
@@ -666,8 +670,8 @@ begin
                v.nextWriteIdx := (others => '0');
             end if;
 
+         ----------------------------------------------------------------------
          when MOVE_S =>
-
             if dmaWrDescRet.valid = '1' then
                v.dmaWrDescRetAck := '1';
 
@@ -693,13 +697,14 @@ begin
                v.rxFrameCnt := r.rxFrameCnt + 1;
                v.rxState    := IDLE_S;
             end if;
+      ----------------------------------------------------------------------
       end case;
 
       --------------------------------------------------------------------------------------------
       -- Read/TX State Machine
       --------------------------------------------------------------------------------------------
       case r.txState is
-
+         ----------------------------------------------------------------------
          when IDLE_S =>
 
             if r.readEnable = '1' and r.remoteReadEn(conv_integer(r.nextReadIdx)) = '1' then
@@ -730,6 +735,7 @@ begin
                v.nextReadIdx := (others => '0');
             end if;
 
+         ----------------------------------------------------------------------
          when MOVE_S =>
 
             if dmaRdDescRet.valid = '1' then
@@ -751,7 +757,7 @@ begin
 
                v.txState := IDLE_S;
             end if;
-
+      ----------------------------------------------------------------------
       end case;
 
       --------------------------------------------------------------------------------------------

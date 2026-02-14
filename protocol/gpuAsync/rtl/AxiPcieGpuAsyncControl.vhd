@@ -680,8 +680,8 @@ begin
       case r.rxState is
          ----------------------------------------------------------------------
          when IDLE_S =>
-            -- Check if buffer[0] index
-            if r.remoteWriteEn(0) = '1' then
+            -- Check for enabled buffer[0] and latency measurement enabled
+            if (r.remoteWriteEn(0) = '1') and (r.gpuLatencyEn = '1') then
 
                -- Stop latency measurement
                v.gpuLatencyEn := '0';
@@ -692,15 +692,15 @@ begin
             end if;
 
             -- Check if there is a DMA request
-            if dmaWrDescReq.valid = '1' then
+            if (dmaWrDescReq.valid = '1') then
 
                -- Setup for the DMA transaction
                v.dmaWrDescAck.dropEn     := not r.writeEnable;
                v.dmaWrDescAck.maxSize    := r.remoteWriteMaxSize;
-               v.dmaWrDescAck.contEn     := '0';  -- AXIS frame across multiple DMA not supported
+               v.dmaWrDescAck.contEn     := '0';  -- AXIS frame across multiple DMA not supported on GPU implementation
                v.dmaWrDescAck.metaEnable := '1';  -- Enable meta for GPU "drop bell"
-               v.dmaWrDescAck.metaAddr   := remoteWriteAddr;
-               v.dmaWrDescAck.address    := remoteWriteAddr + DMA_AXI_CONFIG_G.DATA_BYTES_C;
+               v.dmaWrDescAck.metaAddr   := remoteWriteAddr;  -- "Doorbell" offset
+               v.dmaWrDescAck.address    := remoteWriteAddr + DMA_AXI_CONFIG_G.DATA_BYTES_C;  -- Data offset
 
                -- Encode the buffer index
                v.dmaWrDescAck.buffId(BUFF_BIT_WIDTH_C-1 downto 0) := r.nextWriteIdx;
@@ -715,7 +715,7 @@ begin
                   v.rxState := MOVE_S;
 
                   -- Check if write enabled
-                  if r.writeEnable = '1' then
+                  if (r.writeEnable = '1') then
 
                      -- Reset the flag
                      v.remoteWriteEn(conv_integer(r.nextWriteIdx)) := '0';
@@ -738,7 +738,7 @@ begin
                      end if;
 
                      -- Increment the buffer index with respect to writeCount
-                     if r.nextWriteIdx >= r.writeCount then
+                     if (r.nextWriteIdx >= r.writeCount) then  -- Using ">=" operator to catch changing writeCount middle of opeeration
                         v.nextWriteIdx := (others => '0');
                      else
                         v.nextWriteIdx := r.nextWriteIdx + 1;
@@ -751,7 +751,7 @@ begin
             end if;  -- Check if there is a DMA request
 
             -- Check if not enabled
-            if r.writeEnable = '0' then
+            if (r.writeEnable = '0') then
                -- Reset the buffer index
                v.nextWriteIdx := (others => '0');
             end if;
@@ -759,13 +759,13 @@ begin
          ----------------------------------------------------------------------
          when MOVE_S =>
             -- Wait for the DMA to complete
-            if dmaWrDescRet.valid = '1' then
+            if (dmaWrDescRet.valid = '1') then
 
                -- ACK the return message
                v.dmaWrDescRetAck := '1';
 
                -- Check if buffer[0] index
-               if dmaWrDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0 then
+               if (dmaWrDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0) then
 
                   -- Stop latency measurement
                   v.wrLatencyEn := '0';
@@ -779,7 +779,7 @@ begin
                end if;
 
                -- Check for a non-zero response (error respose of any type)
-               if dmaWrDescRet.result /= 0 then
+               if (dmaWrDescRet.result /= 0) then
 
                   -- Sample the result error value for debugging
                   v.axiWriteErrorVal := dmaWrDescRet.result;
@@ -793,7 +793,7 @@ begin
                end if;
 
                -- Check for the timout error bit
-               if dmaWrDescRet.result(3) = '1' then
+               if (dmaWrDescRet.result(3) = '1') then
 
                   -- Check if not max count value
                   if (r.axiWriteTimeoutErrorCnt /= x"FFFF_FFFF") then
@@ -821,13 +821,13 @@ begin
          when IDLE_S =>
 
             -- Check if read enabled and new buffer ready for DMA read transaction
-            if r.readEnable = '1' and r.remoteReadEn(conv_integer(r.nextReadIdx)) = '1' then
+            if (r.readEnable = '1') and (r.remoteReadEn(conv_integer(r.nextReadIdx)) = '1') then
 
                -- Reset the flag
                v.remoteReadEn(conv_integer(r.nextReadIdx)) := '0';
 
                -- Increment the buffer index with respect to readCount
-               if r.nextReadIdx >= r.readCount then
+               if (r.nextReadIdx >= r.readCount) then  -- Using ">=" operator to catch changing readCount middle of opeeration
                   v.nextReadIdx := (others => '0');
                else
                   v.nextReadIdx := r.nextReadIdx + 1;
@@ -841,7 +841,7 @@ begin
                v.dmaRdDescReq.continue  := '0';
                v.dmaRdDescReq.id        := (others => '0');
                v.dmaRdDescReq.dest      := (others => '0');
-               v.dmaRdDescReq.address   := remoteReadAddr;  -- Request memory address offset from remote
+               v.dmaRdDescReq.address   := remoteReadAddr;  -- Request memory address offset from remote ("Data offset")
 
                -- Encode the buffer index
                v.dmaRdDescReq.buffId(BUFF_BIT_WIDTH_C-1 downto 0) := r.nextReadIdx;
@@ -852,7 +852,7 @@ begin
             end if;
 
             -- Check if not enabled
-            if r.readEnable = '0' then
+            if (r.readEnable = '0') then
                -- Reset the buffer index
                v.nextReadIdx := (others => '0');
             end if;
@@ -860,13 +860,13 @@ begin
          ----------------------------------------------------------------------
          when MOVE_S =>
             -- Wait for the DMA to complete
-            if dmaRdDescRet.valid = '1' then
+            if (dmaRdDescRet.valid = '1') then
 
                -- ACK the return message
                v.dmaRdDescRetAck := '1';
 
                -- Check if buffer[0] index
-               if dmaRdDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0 then
+               if (dmaRdDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0) then
 
                   -- Stop latency measurement
                   v.totLatencyEn := '0';
@@ -877,7 +877,7 @@ begin
                end if;
 
                -- Check for a non-zero response (error respose of any type)
-               if dmaRdDescRet.result /= 0 then
+               if (dmaRdDescRet.result /= 0) then
 
                   -- Sample the result error value for debugging
                   v.axiReadErrorVal := dmaRdDescRet.result;

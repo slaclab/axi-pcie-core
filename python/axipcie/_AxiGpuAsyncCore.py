@@ -32,9 +32,16 @@ class AxiGpuAsyncBuffer(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'RemoteWriteAddress',
+            name         = 'RemoteReadAddr',
             offset       = (0x0002_E000-0x0002_8000) + index*8,
             bitSize      = 64,
+            mode         = kernelVarMode,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'RemoteReadSize',
+            offset       = (0x0002_B000-0x0002_8000) + index*4,
+            bitSize      = 32,
             mode         = kernelVarMode,
         ))
 
@@ -268,17 +275,10 @@ class AxiGpuAsyncCore(pr.Device):
             mode         = kernelVarMode,
         ))
 
-        self.add(pr.RemoteVariable(
-            name         = 'RemoteReadSize',
-            offset       = 0x64,
-            bitSize      = 32,
-            mode         = kernelVarMode,
-        ))
-
         # GPU AXI Stream Inbound Monitor
         self.add(axi.AxiStreamMonAxiL(
             name        = 'GpuIbAxisMon',
-            offset      = 0x0002_B000,
+            offset      = (0x0002_8100-0x0002_8000),
             numberLanes = 1,
             expand      = True,
         ))
@@ -286,7 +286,7 @@ class AxiGpuAsyncCore(pr.Device):
         # GPU AXI Stream Outbound Monitor
         self.add(axi.AxiStreamMonAxiL(
             name        = 'GpuObAxisMon',
-            offset      = 0x0002_B100,
+            offset      = (0002_8200-0x0002_8000),
             numberLanes = 1,
             expand      = True,
         ))
@@ -295,6 +295,7 @@ class AxiGpuAsyncCore(pr.Device):
             for i in range(1024):
                 self.add(AxiGpuAsyncBuffer(
                     name   = f'Buffer[{i}]',
+                    offset = 0x0,
                     index  = i,
                 ))
 

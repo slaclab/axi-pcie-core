@@ -80,19 +80,28 @@ architecture rtl of AxiPcieGpuAsyncControl is
    constant BUFF_BIT_WIDTH_C : positive := bitSize(MAX_BUFFERS_C-1);
 
    constant AXIL_BASE_INDEX_C    : natural := 0;
-   constant AXIL_WR_EN_INDEX_C   : natural := 1;
-   constant AXIL_RD_EN_INDEX_C   : natural := 2;
-   constant AXIL_RX_MON_INDEX_C  : natural := 3;
-   constant AXIL_TX_MON_INDEX_C  : natural := 4;
-   constant AXIL_WR_ADDR_INDEX_C : natural := 5;
-   constant AXIL_RD_ADDR_INDEX_C : natural := 6;
+   constant AXIL_RX_MON_INDEX_C  : natural := 1;
+   constant AXIL_TX_MON_INDEX_C  : natural := 2;
+   constant AXIL_WR_EN_INDEX_C   : natural := 3;
+   constant AXIL_RD_EN_INDEX_C   : natural := 4;
+   constant AXIL_RD_SIZE_INDEX_C : natural := 5;
+   constant AXIL_WR_ADDR_INDEX_C : natural := 6;
+   constant AXIL_RD_ADDR_INDEX_C : natural := 7;
 
-   constant NUM_AXIL_MASTERS_C : positive := 7;
+   constant NUM_AXIL_MASTERS_C : positive := 8;
 
    constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := (
       AXIL_BASE_INDEX_C    => (
          baseAddr          => x"0002_8000",  -- 0x0002_8000:0x0002_8FFF: Base Control Registers
-         addrBits          => 12,
+         addrBits          => 8,
+         connectivity      => x"FFFF"),
+      AXIL_RX_MON_INDEX_C  => (
+         baseAddr          => x"0002_8100",  -- 0x0002_8100:0x0002_81FF: GPU AXI Stream Inbound Monitor
+         addrBits          => 8,
+         connectivity      => x"FFFF"),
+      AXIL_TX_MON_INDEX_C  => (
+         baseAddr          => x"0002_8200",  -- 0x0002_8200:0x0002_82FF: GPU AXI Stream Outbound Monitor
+         addrBits          => 8,
          connectivity      => x"FFFF"),
       AXIL_WR_EN_INDEX_C   => (
          baseAddr          => x"0002_9000",  -- 0x0002_9000:0x0002_9FFF: 0x100/4B = 1k buffers
@@ -102,13 +111,9 @@ architecture rtl of AxiPcieGpuAsyncControl is
          baseAddr          => x"0002_A000",  -- 0x0002_A000:0x0002_AFFF: 0x100/4B = 1k buffers
          addrBits          => 12,
          connectivity      => x"FFFF"),
-      AXIL_RX_MON_INDEX_C  => (
-         baseAddr          => x"0002_B000",  -- 0x0002_B000:0x0002_B0FF: GPU AXI Stream Inbound Monitor
-         addrBits          => 8,
-         connectivity      => x"FFFF"),
-      AXIL_TX_MON_INDEX_C  => (
-         baseAddr          => x"0002_B100",  -- 0x0002_B100:0x0002_B1FF: GPU AXI Stream Outbound Monitor
-         addrBits          => 8,
+      AXIL_RD_SIZE_INDEX_C => (
+         baseAddr          => x"0002_B000",  -- 0x0002_B000:0x0002_BFFF: 0x100/4B = 1k buffers
+         addrBits          => 12,
          connectivity      => x"FFFF"),
       AXIL_WR_ADDR_INDEX_C => (
          baseAddr          => x"0002_C000",  -- 0x0002_C000:0x0002_DFFF: 0x200/8B = 1k buffers
@@ -145,7 +150,6 @@ architecture rtl of AxiPcieGpuAsyncControl is
       readEnable              : sl;
       readCount               : slv(BUFF_BIT_WIDTH_C-1 downto 0);
       nextReadIdx             : slv(BUFF_BIT_WIDTH_C-1 downto 0);
-      remoteReadSize          : slv(31 downto 0);
       remoteReadEn            : slv(MAX_BUFFERS_C-1 downto 0);
       -- Latency Measurements
       totLatency              : slv(31 downto 0);
@@ -214,7 +218,6 @@ architecture rtl of AxiPcieGpuAsyncControl is
       readEnable              => '0',
       readCount               => (others => '0'),
       nextReadIdx             => (others => '0'),
-      remoteReadSize          => (others => '0'),
       remoteReadEn            => (others => '0'),
       -- Latency Measurements
       totLatency              => (others => '0'),
@@ -273,6 +276,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
 
    signal remoteWriteAddr : slv(63 downto 0);
    signal remoteReadAddr  : slv(63 downto 0);
+   signal remoteReadSize  : slv(31 downto 0);
 
 begin
 
@@ -297,29 +301,68 @@ begin
          mAxiReadMasters     => axilReadMasters,
          mAxiReadSlaves      => axilReadSlaves);
 
-   GEN_VEC :
-   for i in 2 downto 0 generate
-      U_AxiLiteAsync : entity surf.AxiLiteAsync
-         generic map (
-            TPD_G           => TPD_G,
-            COMMON_CLK_G    => false,
-            NUM_ADDR_BITS_G => 12)
-         port map (
-            -- Slave Interface
-            sAxiClk         => axilClk,
-            sAxiClkRst      => axilRst,
-            sAxiReadMaster  => axilReadMasters(i),
-            sAxiReadSlave   => axilReadSlaves(i),
-            sAxiWriteMaster => axilWriteMasters(i),
-            sAxiWriteSlave  => axilWriteSlaves(i),
-            -- Master Interface
-            mAxiClk         => axiClk,
-            mAxiClkRst      => axiRst,
-            mAxiReadMaster  => readMasters(i),
-            mAxiReadSlave   => readSlaves(i),
-            mAxiWriteMaster => writeMasters(i),
-            mAxiWriteSlave  => writeSlaves(i));
-   end generate GEN_VEC;
+   U_AxiLiteAsync_0 : entity surf.AxiLiteAsync
+      generic map (
+         TPD_G           => TPD_G,
+         COMMON_CLK_G    => false,
+         NUM_ADDR_BITS_G => XBAR_CONFIG_C(AXIL_BASE_INDEX_C).addrBits)
+      port map (
+         -- Slave Interface
+         sAxiClk         => axilClk,
+         sAxiClkRst      => axilRst,
+         sAxiReadMaster  => axilReadMasters(AXIL_BASE_INDEX_C),
+         sAxiReadSlave   => axilReadSlaves(AXIL_BASE_INDEX_C),
+         sAxiWriteMaster => axilWriteMasters(AXIL_BASE_INDEX_C),
+         sAxiWriteSlave  => axilWriteSlaves(AXIL_BASE_INDEX_C),
+         -- Master Interface
+         mAxiClk         => axiClk,
+         mAxiClkRst      => axiRst,
+         mAxiReadMaster  => readMasters(0),
+         mAxiReadSlave   => readSlaves(0),
+         mAxiWriteMaster => writeMasters(0),
+         mAxiWriteSlave  => writeSlaves(0));
+
+   U_AxiLiteAsync_1 : entity surf.AxiLiteAsync
+      generic map (
+         TPD_G           => TPD_G,
+         COMMON_CLK_G    => false,
+         NUM_ADDR_BITS_G => XBAR_CONFIG_C(AXIL_WR_EN_INDEX_C).addrBits)
+      port map (
+         -- Slave Interface
+         sAxiClk         => axilClk,
+         sAxiClkRst      => axilRst,
+         sAxiReadMaster  => axilReadMasters(AXIL_WR_EN_INDEX_C),
+         sAxiReadSlave   => axilReadSlaves(AXIL_WR_EN_INDEX_C),
+         sAxiWriteMaster => axilWriteMasters(AXIL_WR_EN_INDEX_C),
+         sAxiWriteSlave  => axilWriteSlaves(AXIL_WR_EN_INDEX_C),
+         -- Master Interface
+         mAxiClk         => axiClk,
+         mAxiClkRst      => axiRst,
+         mAxiReadMaster  => readMasters(1),
+         mAxiReadSlave   => readSlaves(1),
+         mAxiWriteMaster => writeMasters(1),
+         mAxiWriteSlave  => writeSlaves(1));
+
+   U_AxiLiteAsync_2 : entity surf.AxiLiteAsync
+      generic map (
+         TPD_G           => TPD_G,
+         COMMON_CLK_G    => false,
+         NUM_ADDR_BITS_G => XBAR_CONFIG_C(AXIL_RD_EN_INDEX_C).addrBits)
+      port map (
+         -- Slave Interface
+         sAxiClk         => axilClk,
+         sAxiClkRst      => axilRst,
+         sAxiReadMaster  => axilReadMasters(AXIL_RD_EN_INDEX_C),
+         sAxiReadSlave   => axilReadSlaves(AXIL_RD_EN_INDEX_C),
+         sAxiWriteMaster => axilWriteMasters(AXIL_RD_EN_INDEX_C),
+         sAxiWriteSlave  => axilWriteSlaves(AXIL_RD_EN_INDEX_C),
+         -- Master Interface
+         mAxiClk         => axiClk,
+         mAxiClkRst      => axiRst,
+         mAxiReadMaster  => readMasters(2),
+         mAxiReadSlave   => readSlaves(2),
+         mAxiWriteMaster => writeMasters(2),
+         mAxiWriteSlave  => writeSlaves(2));
 
    --------------------------------------------------------------------------------------------
    -- remoteWriteAddr RAM for address decoding
@@ -372,6 +415,31 @@ begin
          dout           => remoteReadAddr);
 
    --------------------------------------------------------------------------------------------
+   -- remoteReadSize RAM for address decoding
+   --------------------------------------------------------------------------------------------
+   U_remoteReadSize : entity surf.AxiDualPortRam
+      generic map (
+         TPD_G          => TPD_G,
+         COMMON_CLK_G   => false,
+         SYNTH_MODE_G   => "xpm",
+         MEMORY_TYPE_G  => "block",
+         READ_LATENCY_G => 1,
+         DATA_WIDTH_G   => 32,
+         ADDR_WIDTH_G   => BUFF_BIT_WIDTH_C)
+      port map (
+         -- AXI-Lite Port
+         axiClk         => axilClk,
+         axiRst         => axilRst,
+         axiReadMaster  => axilReadMasters(AXIL_RD_SIZE_INDEX_C),
+         axiReadSlave   => axilReadSlaves(AXIL_RD_SIZE_INDEX_C),
+         axiWriteMaster => axilWriteMasters(AXIL_RD_SIZE_INDEX_C),
+         axiWriteSlave  => axilWriteSlaves(AXIL_RD_SIZE_INDEX_C),
+         -- Standard Port
+         clk            => axiClk,
+         addr           => r.nextReadIdx,
+         dout           => remoteReadSize);
+
+   --------------------------------------------------------------------------------------------
    -- GPU AXI Stream Inbound/Outbound Monitor
    --------------------------------------------------------------------------------------------
 
@@ -386,7 +454,8 @@ begin
    --------------------------------------------------------------------------------------------
 
    comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet, r,
-                   readMasters, remoteReadAddr, remoteWriteAddr, writeMasters) is
+                   readMasters, remoteReadAddr, remoteReadSize,
+                   remoteWriteAddr, writeMasters) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndpointArray(2 downto 0);
    begin
@@ -452,7 +521,6 @@ begin
       axiSlaveRegisterR(axilEp(0), x"58", 0, r.wrLatency);  -- Only measure for buffer[index=0]
 
       axiSlaveRegister (axilEp(0), x"60", 0, v.remoteWriteMaxSize);
-      axiSlaveRegister (axilEp(0), x"64", 0, v.remoteReadSize);
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp(0), v.writeSlaves(0), v.readSlaves(0), AXI_RESP_DECERR_C);
@@ -769,7 +837,7 @@ begin
                v.dmaRdDescReq.valid     := '1';
                v.dmaRdDescReq.firstUser := x"02";
                v.dmaRdDescReq.lastUser  := (others => '0');
-               v.dmaRdDescReq.size      := r.remoteReadSize;  -- Requested size from remote
+               v.dmaRdDescReq.size      := remoteReadSize;  -- Requested size from remote
                v.dmaRdDescReq.continue  := '0';
                v.dmaRdDescReq.id        := (others => '0');
                v.dmaRdDescReq.dest      := (others => '0');

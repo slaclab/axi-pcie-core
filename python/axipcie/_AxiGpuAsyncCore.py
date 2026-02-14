@@ -236,7 +236,7 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'TotLatency',
-            offset       = 0x48
+            offset       = 0x48,
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',

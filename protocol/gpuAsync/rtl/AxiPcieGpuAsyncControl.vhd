@@ -400,17 +400,6 @@ begin
       v.dmaWrDescRetAck    := '0';
       v.dmaRdDescRetAck    := '0';
 
-      -- Reset counters
-      if (r.cntRst = '1') then
-         v.rxFrameCnt              := (others => '0');
-         v.txFrameCnt              := (others => '0');
-         v.axiWriteErrorCnt        := (others => '0');
-         v.axiWriteTimeoutErrorCnt := (others => '0');
-         v.axiWriteErrorVal        := (others => '0');
-         v.axiReadErrorCnt         := (others => '0');
-         v.axiReadErrorVal         := (others => '0');
-      end if;
-
       -- Latency Counters
       if (r.totLatencyEn = '1') and (r.totLatencyCnt /= x"FFFF_FFFF") then
          v.totLatencyCnt := r.totLatencyCnt + 1;
@@ -842,6 +831,17 @@ begin
             end if;
       ----------------------------------------------------------------------
       end case;
+
+      -- Reset counters
+      if (r.cntRst = '1') then
+         v.rxFrameCnt              := (others => '0');
+         v.txFrameCnt              := (others => '0');
+         v.axiWriteErrorCnt        := (others => '0');
+         v.axiWriteTimeoutErrorCnt := (others => '0');
+         v.axiWriteErrorVal        := (others => '0');
+         v.axiReadErrorCnt         := (others => '0');
+         v.axiReadErrorVal         := (others => '0');
+      end if;
 
       --------------------------------------------------------------------------------------------
       -- Outputs

@@ -80,22 +80,6 @@ class AxiPcieCore(pr.Device):
                     expand    = False,
                 ))
 
-                # GPU AXI Stream Inbound Monitor
-                self.add(axi.AxiStreamMonAxiL(
-                    name        = 'GpuIbAxisMon',
-                    offset      = 0x0002_C000,
-                    numberLanes = 1,
-                    expand      = False,
-                ))
-
-                # GPU AXI Stream Outbound Monitor
-                self.add(axi.AxiStreamMonAxiL(
-                    name        = 'GpuObAxisMon',
-                    offset      = 0x0002_E000,
-                    numberLanes = 1,
-                    expand      = False,
-                ))
-
             # Check if using BPI PROM (Micron MT28 or Cypress S29GL)
             if (useBpi):
                 self.add(micron.AxiMicronMt28ew(

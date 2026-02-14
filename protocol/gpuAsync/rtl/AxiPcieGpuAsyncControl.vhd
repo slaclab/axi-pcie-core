@@ -30,12 +30,11 @@ use axi_pcie_core.AxiPciePkg.all;
 
 entity AxiPcieGpuAsyncControl is
    generic (
-      TPD_G               : time                   := 1 ns;
-      DEFAULT_DEMUX_SEL_G : sl                     := '1';  -- 1: GPU path, 0: CPU path
-      MAX_BUFFERS_G       : integer range 1 to 256 := 4;
-      DMA_AXI_CONFIG_G    : AxiConfigType);
+      TPD_G               : time          := 1 ns;
+      DEFAULT_DEMUX_SEL_G : sl            := '1';  -- 1: GPU path, 0: CPU path
+      DMA_AXI_CONFIG_G    : AxiConfigType := AXI_PCIE_CONFIG_C);
    port (
-      -- AXI4-Lite Interfaces (axilClk domain)
+      -- AXI-Lite Interfaces (axilClk domain)
       axilClk         : in  sl;
       axilRst         : in  sl;
       axilReadMaster  : in  AxiLiteReadMasterType;
@@ -43,36 +42,81 @@ entity AxiPcieGpuAsyncControl is
       axilWriteMaster : in  AxiLiteWriteMasterType;
       axilWriteSlave  : out AxiLiteWriteSlaveType;
 
-      -- Internal connections (axiClk domain)
-      axiClk : in sl;
-      axiRst : in sl;
+      -- AXI-Lite Interfaces (axilClk domain)
+      monReadMasters  : out AxiLiteReadMasterArray(1 downto 0);
+      monReadSlaves   : in  AxiLiteReadSlaveArray(1 downto 0);
+      monWriteMasters : out AxiLiteWriteMasterArray(1 downto 0);
+      monWriteSlaves  : in  AxiLiteWriteSlaveArray(1 downto 0);
 
-      -- Config
+      -- AxiStreamDeMux  (axisClk domain)
+      axisClk         : in  sl;
+      axisRst         : in  sl;
+      axisDeMuxSelect : out sl;
+
+      -- AXI4 Memory Config (axiClk domain)
+      axiClk  : in  sl;
+      axiRst  : in  sl;
       awCache : out slv(3 downto 0);
       arCache : out slv(3 downto 0);
 
-      --AxiePcieGpu Demux
-      dynamicRouteMasks : out Slv8Array(1 downto 0);
-      dynamicRouteDests : out Slv8Array(1 downto 0);
-      -- DMA Write Engine
-      dmaWrDescReq      : in  AxiWriteDmaDescReqType;
-      dmaWrDescAck      : out AxiWriteDmaDescAckType;
-      dmaWrDescRet      : in  AxiWriteDmaDescRetType;
-      dmaWrDescRetAck   : out sl;
+      -- DMA Write Engine (axiClk domain)
+      dmaWrDescReq    : in  AxiWriteDmaDescReqType;
+      dmaWrDescAck    : out AxiWriteDmaDescAckType;
+      dmaWrDescRet    : in  AxiWriteDmaDescRetType;
+      dmaWrDescRetAck : out sl;
 
-      -- DMA Read Engine
+      -- DMA Read Engine (axiClk domain)
       dmaRdDescReq    : out AxiReadDmaDescReqType;
       dmaRdDescAck    : in  sl;
       dmaRdDescRet    : in  AxiReadDmaDescRetType;
       dmaRdDescRetAck : out sl);
-
 end AxiPcieGpuAsyncControl;
 
-architecture mapping of AxiPcieGpuAsyncControl is
+architecture rtl of AxiPcieGpuAsyncControl is
 
-   constant NUM_AXIL_MASTERS_C : natural := 3;
+   constant MAX_BUFFERS_C : positive := 1024;
 
-   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := genAxiLiteConfig(NUM_AXIL_MASTERS_C, x"0000_0000", 14, 12);
+   constant BUFF_BIT_WIDTH_C : positive := bitSize(MAX_BUFFERS_C-1);
+
+   constant AXIL_BASE_INDEX_C    : natural := 0;
+   constant AXIL_WR_EN_INDEX_C   : natural := 1;
+   constant AXIL_RD_EN_INDEX_C   : natural := 2;
+   constant AXIL_RX_MON_INDEX_C  : natural := 3;
+   constant AXIL_TX_MON_INDEX_C  : natural := 4;
+   constant AXIL_WR_ADDR_INDEX_C : natural := 5;
+   constant AXIL_RD_ADDR_INDEX_C : natural := 6;
+
+   constant NUM_AXIL_MASTERS_C : positive := 7;
+
+   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := (
+      AXIL_BASE_INDEX_C    => (
+         baseAddr          => x"0002_8000",  -- 0x0002_8000:0x0002_8FFF: Base Control Registers
+         addrBits          => 12,
+         connectivity      => x"FFFF"),
+      AXIL_WR_EN_INDEX_C   => (
+         baseAddr          => x"0002_9000",  -- 0x0002_9000:0x0002_9FFF: 0x100/4B = 1k buffers
+         addrBits          => 12,
+         connectivity      => x"FFFF"),
+      AXIL_RD_EN_INDEX_C   => (
+         baseAddr          => x"0002_A000",  -- 0x0002_A000:0x0002_AFFF: 0x100/4B = 1k buffers
+         addrBits          => 12,
+         connectivity      => x"FFFF"),
+      AXIL_RX_MON_INDEX_C  => (
+         baseAddr          => x"0002_B000",  -- 0x0002_B000:0x0002_B0FF: GPU AXI Stream Inbound Monitor
+         addrBits          => 8,
+         connectivity      => x"FFFF"),
+      AXIL_TX_MON_INDEX_C  => (
+         baseAddr          => x"0002_B100",  -- 0x0002_B100:0x0002_B1FF: GPU AXI Stream Outbound Monitor
+         addrBits          => 8,
+         connectivity      => x"FFFF"),
+      AXIL_WR_ADDR_INDEX_C => (
+         baseAddr          => x"0002_C000",  -- 0x0002_C000:0x0002_DFFF: 0x200/8B = 1k buffers
+         addrBits          => 13,
+         connectivity      => x"FFFF"),
+      AXIL_RD_ADDR_INDEX_C => (
+         baseAddr          => x"0002_E000",  -- 0x0002_E000:0x0002_FFFF: 0x200/8B = 1k buffers
+         addrBits          => 13,
+         connectivity      => x"FFFF"));
 
    type StateType is (IDLE_S, MOVE_S);
 
@@ -87,12 +131,10 @@ architecture mapping of AxiPcieGpuAsyncControl is
       axiWriteErrorVal        : slv(3 downto 0);
       awcache                 : slv(3 downto 0);
       writeEnable             : sl;
-      writeCount              : slv(7 downto 0);
-      nextWriteIdx            : slv(7 downto 0);
-      remoteWriteAddrL        : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      remoteWriteAddrH        : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      remoteWriteSize         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      remoteWriteEn           : slv(255 downto 0);
+      writeCount              : slv(BUFF_BIT_WIDTH_C-1 downto 0);
+      nextWriteIdx            : slv(BUFF_BIT_WIDTH_C-1 downto 0);
+      remoteWriteSize         : slv(31 downto 0);
+      remoteWriteEn           : slv(MAX_BUFFERS_C-1 downto 0);
       -- Read/TX Signals
       txState                 : StateType;
       txFrameCnt              : slv(31 downto 0);
@@ -100,12 +142,10 @@ architecture mapping of AxiPcieGpuAsyncControl is
       axiReadErrorVal         : slv(2 downto 0);
       arcache                 : slv(3 downto 0);
       readEnable              : sl;
-      readCount               : slv(7 downto 0);
-      nextReadIdx             : slv(7 downto 0);
-      remoteReadAddrL         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      remoteReadAddrH         : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      remoteReadSize          : Slv32Array(MAX_BUFFERS_G-1 downto 0);
-      remoteReadEn            : slv(255 downto 0);
+      readCount               : slv(BUFF_BIT_WIDTH_C-1 downto 0);
+      nextReadIdx             : slv(BUFF_BIT_WIDTH_C-1 downto 0);
+      remoteReadSize          : slv(31 downto 0);
+      remoteReadEn            : slv(MAX_BUFFERS_C-1 downto 0);
       -- Latency Measurements
       totLatency              : slv(31 downto 0);
       totLatencyCnt           : slv(31 downto 0);
@@ -117,24 +157,34 @@ architecture mapping of AxiPcieGpuAsyncControl is
       wrLatencyCnt            : slv(31 downto 0);
       wrLatencyEn             : sl;
       -- Buffer Measurements
-      minWriteBuffer          : slv(8 downto 0);
-      minReadBuffer           : slv(8 downto 0);
-      wrBuffSizeVec           : Slv9Array(7 downto 0);
-      rdBuffSizeVec           : Slv9Array(7 downto 0);
-      wrBuffSize              : slv(8 downto 0);
-      rdBuffSize              : slv(8 downto 0);
+      minWriteBuffer          : slv(BUFF_BIT_WIDTH_C downto 0);
+      minReadBuffer           : slv(BUFF_BIT_WIDTH_C downto 0);
+      -- wrBuffSizeVecA          : Slv11Array(31 downto 0);
+      -- rdBuffSizeVecA          : Slv11Array(31 downto 0);
+      -- wrBuffSizeVecB          : Slv11Array(15 downto 0);
+      -- rdBuffSizeVecB          : Slv11Array(15 downto 0);
+      -- wrBuffSizeVecC          : Slv11Array(7 downto 0);
+      -- rdBuffSizeVecC          : Slv11Array(7 downto 0);
+      -- wrBuffSizeVecD          : Slv11Array(3 downto 0);
+      -- rdBuffSizeVecD          : Slv11Array(3 downto 0);
+      -- wrBuffSizeVecE          : Slv11Array(1 downto 0);
+      -- rdBuffSizeVecE          : Slv11Array(1 downto 0);
+      wrMonIdx                : natural range 0 to MAX_BUFFERS_C-1;
+      rdMonIdx                : natural range 0 to MAX_BUFFERS_C-1;
+      wrMonCnt                : slv(BUFF_BIT_WIDTH_C downto 0);
+      rdMonCnt                : slv(BUFF_BIT_WIDTH_C downto 0);
+      wrBuffSize              : slv(BUFF_BIT_WIDTH_C downto 0);
+      rdBuffSize              : slv(BUFF_BIT_WIDTH_C downto 0);
       -- DMA Control
       dmaWrDescAck            : AxiWriteDmaDescAckType;
       dmaWrDescRetAck         : sl;
       dmaRdDescReq            : AxiReadDmaDescReqType;
       dmaRdDescRetAck         : sl;
       -- AXI-Lite Control
-      readSlaves              : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0);
-      writeSlaves             : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0);
+      readSlaves              : AxiLiteReadSlaveArray(2 downto 0);
+      writeSlaves             : AxiLiteWriteSlaveArray(2 downto 0);
       -- DEMUX Control
       axisDeMuxSelect         : sl;
-      dynamicRouteMasks       : Slv8Array(1 downto 0);
-      dynamicRouteDests       : Slv8Array(1 downto 0);
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -150,9 +200,7 @@ architecture mapping of AxiPcieGpuAsyncControl is
       writeEnable             => '0',
       writeCount              => (others => '0'),
       nextWriteIdx            => (others => '0'),
-      remoteWriteAddrL        => (others => (others => '0')),
-      remoteWriteAddrH        => (others => (others => '0')),
-      remoteWriteSize         => (others => (others => '0')),
+      remoteWriteSize         => (others => '0'),
       remoteWriteEn           => (others => '0'),
       -- Read/TX Signals
       txState                 => IDLE_S,
@@ -163,9 +211,7 @@ architecture mapping of AxiPcieGpuAsyncControl is
       readEnable              => '0',
       readCount               => (others => '0'),
       nextReadIdx             => (others => '0'),
-      remoteReadAddrL         => (others => (others => '0')),
-      remoteReadAddrH         => (others => (others => '0')),
-      remoteReadSize          => (others => (others => '0')),
+      remoteReadSize          => (others => '0'),
       remoteReadEn            => (others => '0'),
       -- Latency Measurements
       totLatency              => (others => '0'),
@@ -180,8 +226,20 @@ architecture mapping of AxiPcieGpuAsyncControl is
       -- Buffer Measurements
       minWriteBuffer          => (others => '0'),
       minReadBuffer           => (others => '0'),
-      wrBuffSizeVec           => (others => (others => '0')),
-      rdBuffSizeVec           => (others => (others => '0')),
+      -- wrBuffSizeVecA          => (others => (others => '0')),
+      -- rdBuffSizeVecA          => (others => (others => '0')),
+      -- wrBuffSizeVecB          => (others => (others => '0')),
+      -- rdBuffSizeVecB          => (others => (others => '0')),
+      -- wrBuffSizeVecC          => (others => (others => '0')),
+      -- rdBuffSizeVecC          => (others => (others => '0')),
+      -- wrBuffSizeVecD          => (others => (others => '0')),
+      -- rdBuffSizeVecD          => (others => (others => '0')),
+      -- wrBuffSizeVecE          => (others => (others => '0')),
+      -- rdBuffSizeVecE          => (others => (others => '0')),
+      wrMonIdx                => 0,
+      rdMonIdx                => 0,
+      wrMonCnt                => (others => '0'),
+      rdMonCnt                => (others => '0'),
       wrBuffSize              => (others => '0'),
       rdBuffSize              => (others => '0'),
       -- DMA Control
@@ -193,55 +251,29 @@ architecture mapping of AxiPcieGpuAsyncControl is
       readSlaves              => (others => AXI_LITE_READ_SLAVE_INIT_C),
       writeSlaves             => (others => AXI_LITE_WRITE_SLAVE_INIT_C),
       -- DEMUX Control
-      axisDeMuxSelect         => DEFAULT_DEMUX_SEL_G,
-      dynamicRouteMasks       => (0 => x"00", 1 => x"FF"),
-      dynamicRouteDests       => (0 => x"00", 1 => x"FF"));
+      axisDeMuxSelect         => DEFAULT_DEMUX_SEL_G);
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
 
-   signal writeMaster : AxiLiteWriteMasterType;
-   signal writeSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C;
-   signal readMaster  : AxiLiteReadMasterType;
-   signal readSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C;
+   signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
+   signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
+   signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
+   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
-   signal writeMasters : AxiLiteWriteMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
-   signal writeSlaves  : AxiLiteWriteSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
-   signal readMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
-   signal readSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+   signal writeMasters : AxiLiteWriteMasterArray(2 downto 0);
+   signal writeSlaves  : AxiLiteWriteSlaveArray(2 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
+   signal readMasters  : AxiLiteReadMasterArray(2 downto 0);
+   signal readSlaves   : AxiLiteReadSlaveArray(2 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+
+   signal remoteWriteAddr : slv(63 downto 0);
+   signal remoteReadAddr  : slv(63 downto 0);
 
 begin
 
-   -------------------------------------------------------
-   -- Mask off the address mask outside of 14 bit range
-   -- so we can use hex values in axiSlaveRegister()
-   -------------------------------------------------------
-   --      GPU_INDEX_C     => (
-   --      baseAddr     => x"0002_8000",
-   --      addrBits     => 15,
-   --      connectivity => x"FFFF"),
-   -------------------------------------------------------
-   U_AxiLiteAsync : entity surf.AxiLiteAsync
-      generic map (
-         TPD_G           => TPD_G,
-         COMMON_CLK_G    => false,
-         NUM_ADDR_BITS_G => 14)         -- 0x0000:0x3FFF = only need 14-bits
-      port map (
-         -- Slave Interface
-         sAxiClk         => axilClk,
-         sAxiClkRst      => axilRst,
-         sAxiReadMaster  => axilReadMaster,
-         sAxiReadSlave   => axilReadSlave,
-         sAxiWriteMaster => axilWriteMaster,
-         sAxiWriteSlave  => axilWriteSlave,
-         -- Master Interface
-         mAxiClk         => axiClk,
-         mAxiClkRst      => axiRst,
-         mAxiReadMaster  => readMaster,
-         mAxiReadSlave   => readSlave,
-         mAxiWriteMaster => writeMaster,
-         mAxiWriteSlave  => writeSlave);
-
+   --------------------
+   -- AXI-Lite Crossbar
+   --------------------
    U_XBAR : entity surf.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
@@ -249,24 +281,107 @@ begin
          NUM_MASTER_SLOTS_G => NUM_AXIL_MASTERS_C,
          MASTERS_CONFIG_G   => XBAR_CONFIG_C)
       port map (
-         sAxiWriteMasters(0) => writeMaster,
-         sAxiWriteSlaves(0)  => writeSlave,
-         sAxiReadMasters(0)  => readMaster,
-         sAxiReadSlaves(0)   => readSlave,
-         mAxiWriteMasters    => writeMasters,
-         mAxiWriteSlaves     => writeSlaves,
-         mAxiReadMasters     => readMasters,
-         mAxiReadSlaves      => readSlaves,
-         axiClk              => axiClk,
-         axiClkRst           => axiRst);
+         axiClk              => axilClk,
+         axiClkRst           => axilRst,
+         sAxiWriteMasters(0) => axilWriteMaster,
+         sAxiWriteSlaves(0)  => axilWriteSlave,
+         sAxiReadMasters(0)  => axilReadMaster,
+         sAxiReadSlaves(0)   => axilReadSlave,
+         mAxiWriteMasters    => axilWriteMasters,
+         mAxiWriteSlaves     => axilWriteSlaves,
+         mAxiReadMasters     => axilReadMasters,
+         mAxiReadSlaves      => axilReadSlaves);
 
-   ---------------------
-   -- State Machine
-   ---------------------
+   GEN_VEC :
+   for i in 2 downto 0 generate
+      U_AxiLiteAsync : entity surf.AxiLiteAsync
+         generic map (
+            TPD_G           => TPD_G,
+            COMMON_CLK_G    => false,
+            NUM_ADDR_BITS_G => 12)
+         port map (
+            -- Slave Interface
+            sAxiClk         => axilClk,
+            sAxiClkRst      => axilRst,
+            sAxiReadMaster  => axilReadMasters(i),
+            sAxiReadSlave   => axilReadSlaves(i),
+            sAxiWriteMaster => axilWriteMasters(i),
+            sAxiWriteSlave  => axilWriteSlaves(i),
+            -- Master Interface
+            mAxiClk         => axiClk,
+            mAxiClkRst      => axiRst,
+            mAxiReadMaster  => readMasters(i),
+            mAxiReadSlave   => readSlaves(i),
+            mAxiWriteMaster => writeMasters(i),
+            mAxiWriteSlave  => writeSlaves(i));
+   end generate GEN_VEC;
+
+   -------------------------------------------
+   -- remoteWriteAddr RAM for address decoding
+   -------------------------------------------
+   U_remoteWriteAddr : entity surf.AxiDualPortRam
+      generic map (
+         TPD_G          => TPD_G,
+         COMMON_CLK_G   => false,
+         SYNTH_MODE_G   => "xpm",
+         MEMORY_TYPE_G  => "block",
+         READ_LATENCY_G => 1,
+         DATA_WIDTH_G   => 64,
+         ADDR_WIDTH_G   => BUFF_BIT_WIDTH_C)
+      port map (
+         -- AXI-Lite Port
+         axiClk         => axilClk,
+         axiRst         => axilRst,
+         axiReadMaster  => axilReadMasters(AXIL_WR_ADDR_INDEX_C),
+         axiReadSlave   => axilReadSlaves(AXIL_WR_ADDR_INDEX_C),
+         axiWriteMaster => axilWriteMasters(AXIL_WR_ADDR_INDEX_C),
+         axiWriteSlave  => axilWriteSlaves(AXIL_WR_ADDR_INDEX_C),
+         -- Standard Port
+         clk            => axiClk,
+         addr           => r.nextWriteIdx,
+         dout           => remoteWriteAddr);
+
+   -------------------------------------------
+   -- remoteReadAddr RAM for address decoding
+   -------------------------------------------
+   U_remoteReadAddr : entity surf.AxiDualPortRam
+      generic map (
+         TPD_G          => TPD_G,
+         COMMON_CLK_G   => false,
+         SYNTH_MODE_G   => "xpm",
+         MEMORY_TYPE_G  => "block",
+         READ_LATENCY_G => 1,
+         DATA_WIDTH_G   => 64,
+         ADDR_WIDTH_G   => BUFF_BIT_WIDTH_C)
+      port map (
+         -- AXI-Lite Port
+         axiClk         => axilClk,
+         axiRst         => axilRst,
+         axiReadMaster  => axilReadMasters(AXIL_RD_ADDR_INDEX_C),
+         axiReadSlave   => axilReadSlaves(AXIL_RD_ADDR_INDEX_C),
+         axiWriteMaster => axilWriteMasters(AXIL_RD_ADDR_INDEX_C),
+         axiWriteSlave  => axilWriteSlaves(AXIL_RD_ADDR_INDEX_C),
+         -- Standard Port
+         clk            => axiClk,
+         addr           => r.nextReadIdx,
+         dout           => remoteReadAddr);
+
+   ------------------------------------------
+   -- GPU AXI Stream Inbound/Outbound Monitor
+   ------------------------------------------
+
+   monReadMasters(1 downto 0) <= axilReadMasters(AXIL_TX_MON_INDEX_C downto AXIL_RX_MON_INDEX_C);
+
+   axilReadSlaves(AXIL_TX_MON_INDEX_C downto AXIL_RX_MON_INDEX_C) <= monReadSlaves(1 downto 0);
+
+   monWriteMasters(1 downto 0) <= axilWriteMasters(AXIL_TX_MON_INDEX_C downto AXIL_RX_MON_INDEX_C);
+
+   axilWriteSlaves(AXIL_TX_MON_INDEX_C downto AXIL_RX_MON_INDEX_C) <= monWriteSlaves(1 downto 0);
+
    comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet, r,
-                   readMasters, writeMasters) is
+                   readMasters, remoteReadAddr, remoteWriteAddr, writeMasters) is
       variable v      : RegType;
-      variable axilEp : AxiLiteEndpointArray(3 downto 0);
+      variable axilEp : AxiLiteEndpointArray(2 downto 0);
    begin
       -- Latch the current value
       v := r;
@@ -301,78 +416,74 @@ begin
       end if;
 
       --------------------------------------------------------------------------------------------
-      -- Axi-Lite Memory Range: 0x0000:0x0FFF
+      -- Base Control Registers: 0x0002_8000:0x0002_8FFF
       --------------------------------------------------------------------------------------------
 
       -- Determine the transaction
       axiSlaveWaitTxn(axilEp(0), writeMasters(0), readMasters(0), v.writeSlaves(0), v.readSlaves(0));
 
-      axiSlaveRegister (axilEp(0), x"004", 0, v.arcache);
-      axiSlaveRegister (axilEp(0), x"004", 8, v.awcache);
-      axiSlaveRegisterR(axilEp(0), x"004", 16, toSlv(DMA_AXI_CONFIG_G.DATA_BYTES_C, 8));
-      axiSlaveRegisterR(axilEp(0), x"004", 24, toSlv(MAX_BUFFERS_G, 8));
+      axiSlaveRegisterR(axilEp(0), x"00", 0, toSlv(MAX_BUFFERS_C, 16));
 
-      axiSlaveRegister (axilEp(0), x"008", 0, v.writeCount);
-      axiSlaveRegister (axilEp(0), x"008", 8, v.writeEnable);
-      axiSlaveRegister (axilEp(0), x"008", 16, v.readCount);
-      axiSlaveRegister (axilEp(0), x"008", 24, v.readEnable);
+      axiSlaveRegister (axilEp(0), x"04", 0, v.arcache);
+      axiSlaveRegister (axilEp(0), x"04", 8, v.awcache);
+      axiSlaveRegisterR(axilEp(0), x"04", 16, toSlv(DMA_AXI_CONFIG_G.DATA_BYTES_C, 8));
 
-      axiSlaveRegisterR(axilEp(0), x"010", 0, r.rxFrameCnt);
-      axiSlaveRegisterR(axilEp(0), x"014", 0, r.txFrameCnt);
-      axiSlaveRegisterR(axilEp(0), x"018", 0, r.axiWriteErrorCnt);
-      axiSlaveRegisterR(axilEp(0), x"01C", 0, r.axiReadErrorCnt);
+      axiSlaveRegister (axilEp(0), x"08", 0, v.writeCount);
+      axiSlaveRegister (axilEp(0), x"08", 15, v.writeEnable);
+      axiSlaveRegister (axilEp(0), x"08", 16, v.readCount);
+      axiSlaveRegister (axilEp(0), x"08", 31, v.readEnable);
 
-      axiSlaveRegister (axilEp(0), x"020", 0, v.cntRst);
-      axiSlaveRegisterR(axilEp(0), x"024", 0, r.axiWriteErrorVal);
-      axiSlaveRegisterR(axilEp(0), x"028", 0, r.axiReadErrorVal);
+      axiSlaveRegisterR(axilEp(0), x"10", 0, r.rxFrameCnt);
+      axiSlaveRegisterR(axilEp(0), x"14", 0, r.txFrameCnt);
+      axiSlaveRegisterR(axilEp(0), x"18", 0, r.axiWriteErrorCnt);
+      axiSlaveRegisterR(axilEp(0), x"1C", 0, r.axiReadErrorCnt);
 
-      axiSlaveRegisterR(axilEp(0), x"02C", 0, r.dynamicRouteMasks(0));
-      axiSlaveRegisterR(axilEp(0), x"02C", 8, r.dynamicRouteDests(0));
-      axiSlaveRegisterR(axilEp(0), x"02C", 16, r.dynamicRouteMasks(1));
-      axiSlaveRegisterR(axilEp(0), x"02C", 24, r.dynamicRouteDests(1));
-      axiSlaveRegisterR(axilEp(0), x"030", 0, toSlv(4, 8));  -- version number, >= 1 if gpu enabled
-      axiSlaveRegisterR(axilEp(0), x"034", 0, r.axiWriteTimeoutErrorCnt);
-      axiSlaveRegister (axilEp(0), x"038", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
+      axiSlaveRegister (axilEp(0), x"20", 0, v.cntRst);
+      axiSlaveRegisterR(axilEp(0), x"24", 0, r.axiWriteErrorVal);
+      axiSlaveRegisterR(axilEp(0), x"28", 0, r.axiReadErrorVal);
 
-      axiSlaveRegisterR(axilEp(0), x"03C", 0, r.minWriteBuffer);
-      axiSlaveRegisterR(axilEp(0), x"040", 0, r.minReadBuffer);
+      -- Offset 0x2C: Legacy dynamicRouteMasks/dynamicRouteDests
 
-      axiSlaveRegisterR(axilEp(0), x"048", 0, r.totLatency);  -- Only measure for buffer[index=0]
-      axiSlaveRegisterR(axilEp(0), x"050", 0, r.gpuLatency);  -- Only measure for buffer[index=0]
-      axiSlaveRegisterR(axilEp(0), x"058", 0, r.wrLatency);  -- Only measure for buffer[index=0]
+      axiSlaveRegisterR(axilEp(0), x"30", 0, toSlv(4, 8));  -- version number, >= 1 if gpu enabled
+      axiSlaveRegisterR(axilEp(0), x"34", 0, r.axiWriteTimeoutErrorCnt);
+      axiSlaveRegister (axilEp(0), x"38", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
+
+      axiSlaveRegisterR(axilEp(0), x"3C", 0, r.minWriteBuffer);
+      axiSlaveRegisterR(axilEp(0), x"40", 0, r.minReadBuffer);
+
+      axiSlaveRegisterR(axilEp(0), x"48", 0, r.totLatency);  -- Only measure for buffer[index=0]
+      axiSlaveRegisterR(axilEp(0), x"50", 0, r.gpuLatency);  -- Only measure for buffer[index=0]
+      axiSlaveRegisterR(axilEp(0), x"58", 0, r.wrLatency);  -- Only measure for buffer[index=0]
+
+      axiSlaveRegister (axilEp(0), x"60", 0, v.remoteWriteSize);
+      axiSlaveRegister (axilEp(0), x"64", 0, v.remoteReadSize);
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp(0), v.writeSlaves(0), v.readSlaves(0), AXI_RESP_DECERR_C);
 
       --------------------------------------------------------------------------------------------
-      -- Axi-Lite Memory Range: 0x1000:0x1FFF
+      -- remoteWriteEn Write-Only: 0x0002_9000:0x0002_9FFF
       --------------------------------------------------------------------------------------------
 
       -- Determine the transaction
       axiSlaveWaitTxn(axilEp(1), writeMasters(1), readMasters(1), v.writeSlaves(1), v.readSlaves(1));
 
-      for i in 0 to MAX_BUFFERS_G-1 loop
-         axiSlaveRegister (axilEp(1), toSlv(i*16+0, 12), 0, v.remoteWriteAddrL(i));  -- 0x1XX0
-         axiSlaveRegister (axilEp(1), toSlv(i*16+4, 12), 0, v.remoteWriteAddrH(i));  -- 0x1XX4
-         axiSlaveRegister (axilEp(1), toSlv(i*16+8, 12), 0, v.remoteWriteSize(i));  -- 0x1XX8
-         axiWrDetect (axilEp(1), toSlv(i*16+12, 12), v.remoteWriteEn(i));  -- 0x1XXC
+      for i in 0 to MAX_BUFFERS_C-1 loop
+         axiWrDetect(axilEp(1), toSlv(i*4, 12), v.remoteWriteEn(i));
       end loop;
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp(1), v.writeSlaves(1), v.readSlaves(1), AXI_RESP_DECERR_C);
 
       --------------------------------------------------------------------------------------------
-      -- Axi-Lite Memory Range: 0x2000:0x2FFF
+      -- remoteReadEn Write-Only: 0x0002_A000:0x0002_AFFF
       --------------------------------------------------------------------------------------------
 
       -- Determine the transaction
       axiSlaveWaitTxn(axilEp(2), writeMasters(2), readMasters(2), v.writeSlaves(2), v.readSlaves(2));
 
-      for i in 0 to MAX_BUFFERS_G-1 loop
-         axiSlaveRegister (axilEp(2), toSlv(i*16+0, 12), 0, v.remoteReadAddrL(i));  -- 0x2XX0
-         axiSlaveRegister (axilEp(2), toSlv(i*16+4, 12), 0, v.remoteReadAddrH(i));  -- 0x2XX4
-         axiSlaveRegister (axilEp(2), toSlv(i*16+8, 12), 0, v.remoteReadSize(i));  -- 0x2XX8
-         axiWrDetect (axilEp(2), toSlv(i*16+12, 12), v.remoteReadEn(i));  -- 0x2XXC
+      for i in 0 to MAX_BUFFERS_C-1 loop
+         axiWrDetect(axilEp(2), toSlv(i*4, 12), v.remoteReadEn(i));
       end loop;
 
       -- Closeout the transaction
@@ -382,27 +493,127 @@ begin
       -- Update the minimum available buffers diagnostic register
       --------------------------------------------------------------------------------------------
 
-      -- Pipeline the calculation to help with making timing
-      v.wrBuffSize := (others => '0');
-      v.rdBuffSize := (others => '0');
-      for i in 0 to 7 loop
-         v.wrBuffSizeVec(i) := toSlv(conv_integer(onesCount(r.remoteWriteEn(32*i+31 downto 32*i))), 9);
-         v.wrBuffSize       := v.wrBuffSize + r.wrBuffSizeVec(i);
-         v.rdBuffSizeVec(i) := toSlv(conv_integer(onesCount(r.remoteReadEn(32*i+31 downto 32*i))), 9);
-         v.rdBuffSize       := v.rdBuffSize + r.rdBuffSizeVec(i);
-      end loop;
+--      v.wrBuffSizeVecA := (others => (others => '0'));
+--      v.rdBuffSizeVecA := (others => (others => '0'));
+--
+--      for i in 0 to 31 loop
+--
+--         if (32*i <= r.writeCount) then
+--            if (32*i + 31 <= r.writeCount) then
+--               -- Full 32-bit block valid
+--               v.wrBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.remoteWriteEn(32*i+31 downto 32*i))), 11);
+--            else
+--               -- Partial block (last block)
+--               v.wrBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.remoteWriteEn(conv_integer(r.writeCount) downto 32*i))), 11);
+--            end if;
+--         end if;
+--
+--         if (32*i <= r.readCount) then
+--            if (32*i + 31 <= r.readCount) then
+--               -- Full 32-bit block valid
+--               v.rdBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.remoteReadEn(32*i+31 downto 32*i))), 11);
+--            else
+--               -- Partial block
+--               v.rdBuffSizeVecA(i) := toSlv(conv_integer(onesCount(r.remoteReadEn(conv_integer(r.readCount) downto 32*i))), 11);
+--            end if;
+--         end if;
+--
+--      end loop;
+--
+--      for i in 0 to 15 loop
+--         v.wrBuffSizeVecB(i) := r.wrBuffSizeVecA(i*2+0) + r.wrBuffSizeVecA(i*2+1);
+--         v.rdBuffSizeVecB(i) := r.rdBuffSizeVecA(i*2+0) + r.rdBuffSizeVecA(i*2+1);
+--      end loop;
+--
+--      for i in 0 to 7 loop
+--         v.wrBuffSizeVecC(i) := r.wrBuffSizeVecB(i*2+0) + r.wrBuffSizeVecB(i*2+1);
+--         v.rdBuffSizeVecC(i) := r.rdBuffSizeVecB(i*2+0) + r.rdBuffSizeVecB(i*2+1);
+--      end loop;
+--
+--      for i in 0 to 3 loop
+--         v.wrBuffSizeVecD(i) := r.wrBuffSizeVecC(i*2+0) + r.wrBuffSizeVecC(i*2+1);
+--         v.rdBuffSizeVecD(i) := r.rdBuffSizeVecC(i*2+0) + r.rdBuffSizeVecC(i*2+1);
+--      end loop;
+--
+--      for i in 0 to 1 loop
+--         v.wrBuffSizeVecE(i) := r.wrBuffSizeVecD(i*2+0) + r.wrBuffSizeVecD(i*2+1);
+--         v.rdBuffSizeVecE(i) := r.rdBuffSizeVecD(i*2+0) + r.rdBuffSizeVecD(i*2+1);
+--      end loop;
+--
+--      v.wrBuffSize := r.wrBuffSizeVecE(0) + r.wrBuffSizeVecE(1);
+--      v.rdBuffSize := r.rdBuffSizeVecE(0) + r.rdBuffSizeVecE(1);
+-----------------------------------------------------------------------------------
+-- Note to future self:
+--    While the commented out code above is the most acurate way to calculate
+--    the number of buffers, I was getting a crash in synthesis:
+--    .../2025.2/Vivado/bin/rdiArgs.sh: line 57: 3371451 Killed "$RDI_PROG" "$@"
+--    So I recoded it in the code below as a less acurate measurement but probably
+--    "good enough" for debugging
+-----------------------------------------------------------------------------------
 
-      if (r.cntRst = '1') or (r.wrBuffSize < r.minWriteBuffer) then
-         v.minWriteBuffer := r.wrBuffSize;
+      -- Check for 1st index
+      if (r.wrMonIdx = 0) then
+         -- Reset the counter
+         v.wrMonCnt := (others => '0');
       end if;
 
-      if (r.cntRst = '1') or (r.rdBuffSize < r.minReadBuffer) then
-         v.minReadBuffer := r.rdBuffSize;
+      -- Check for a enable bit
+      if (r.remoteWriteEn(r.wrMonIdx) = '1') then
+         -- Increment the counter
+         v.wrMonCnt := v.wrMonCnt + 1;  -- using variable (not register) for accumulation
+      end if;
+
+      -- Check for last index
+      if (r.wrMonIdx = r.writeCount) then
+         -- Reset the index
+         v.wrMonIdx   := 0;
+         -- Sample the counter's variable (not register) value
+         v.wrBuffSize := v.wrMonCnt;
+      else
+         -- Increment the index
+         v.wrMonIdx := r.wrMonIdx + 1;
+      end if;
+
+      -- Check for reset or new min. value condition
+      if (r.cntRst = '1') or (r.wrBuffSize < r.minWriteBuffer) then
+         -- Update the value
+         v.minWriteBuffer := r.wrBuffSize;
       end if;
 
       --------------------------------------------------------------------------------------------
 
-      -- rx State Machine
+      -- Check for 1st index
+      if (r.rdMonIdx = 0) then
+         -- Reset the counter
+         v.rdMonCnt := (others => '0');
+      end if;
+
+      -- Check for a enable bit
+      if (r.remoteReadEn(r.rdMonIdx) = '1') then
+         -- Increment the counter
+         v.rdMonCnt := v.rdMonCnt + 1;  -- using variable (not register) for accumulation
+      end if;
+
+      -- Check for last index
+      if (r.rdMonIdx = r.readCount) then
+         -- Reset the index
+         v.rdMonIdx   := 0;
+         -- Sample the counter's variable (not register) value
+         v.rdBuffSize := v.rdMonCnt;
+      else
+         -- Increment the index
+         v.rdMonIdx := r.rdMonIdx + 1;
+      end if;
+
+      -- Check for reset or new min. value condition
+      if (r.cntRst = '1') or (r.rdBuffSize < r.minReadBuffer) then
+         -- Update the value
+         v.minReadBuffer := r.rdBuffSize;
+      end if;
+
+      --------------------------------------------------------------------------------------------
+      -- Write/RX State Machine
+      --------------------------------------------------------------------------------------------
       case r.rxState is
 
          when IDLE_S =>
@@ -414,16 +625,14 @@ begin
 
             if dmaWrDescReq.valid = '1' then
                v.dmaWrDescAck.dropEn     := not r.writeEnable;
-               v.dmaWrDescAck.maxSize    := r.remoteWriteSize(conv_integer(r.nextWriteIdx));
+               v.dmaWrDescAck.maxSize    := r.remoteWriteSize;
                v.dmaWrDescAck.contEn     := '0';
                v.dmaWrDescAck.metaEnable := '1';
 
-               v.dmaWrDescAck.buffId(7 downto 0) := r.nextWriteIdx;
+               v.dmaWrDescAck.buffId(BUFF_BIT_WIDTH_C-1 downto 0) := r.nextWriteIdx;
 
-               v.dmaWrDescAck.metaAddr(31 downto 0)  := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx));
-               v.dmaWrDescAck.metaAddr(63 downto 32) := r.remoteWriteAddrH(conv_integer(r.nextWriteIdx));
-               v.dmaWrDescAck.address(31 downto 0)   := r.remoteWriteAddrL(conv_integer(r.nextWriteIdx)) + DMA_AXI_CONFIG_G.DATA_BYTES_C;
-               v.dmaWrDescAck.address(63 downto 32)  := r.remoteWriteAddrH(conv_integer(r.nextWriteIdx));
+               v.dmaWrDescAck.metaAddr := remoteWriteAddr;
+               v.dmaWrDescAck.address  := remoteWriteAddr + DMA_AXI_CONFIG_G.DATA_BYTES_C;
 
                if r.remoteWriteEn(conv_integer(r.nextWriteIdx)) = '1' or r.writeEnable = '0' then
                   v.dmaWrDescAck.valid := '1';
@@ -462,19 +671,23 @@ begin
             if dmaWrDescRet.valid = '1' then
                v.dmaWrDescRetAck := '1';
 
-               if dmaWrDescRet.buffId(7 downto 0) = 0 then
+               if dmaWrDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0 then
                   v.wrLatencyEn  := '0';
                   v.wrLatency    := r.wrLatencyCnt;
                   v.gpuLatencyEn := '1';
                end if;
 
                if dmaWrDescRet.result /= "0000" then
-                  v.axiWriteErrorCnt := r.axiWriteErrorCnt + 1;
                   v.axiWriteErrorVal := dmaWrDescRet.result;
+                  if (r.axiWriteErrorCnt /= x"FFFF_FFFF") then
+                     v.axiWriteErrorCnt := r.axiWriteErrorCnt + 1;
+                  end if;
                end if;
 
                if dmaWrDescRet.result(3) = '1' then
-                  v.axiWriteTimeoutErrorCnt := r.axiWriteTimeoutErrorCnt + 1;
+                  if (r.axiWriteTimeoutErrorCnt /= x"FFFF_FFFF") then
+                     v.axiWriteTimeoutErrorCnt := r.axiWriteTimeoutErrorCnt + 1;
+                  end if;
                end if;
 
                v.rxFrameCnt := r.rxFrameCnt + 1;
@@ -483,8 +696,8 @@ begin
       end case;
 
       --------------------------------------------------------------------------------------------
-
-      -- tx State Machine
+      -- Read/TX State Machine
+      --------------------------------------------------------------------------------------------
       case r.txState is
 
          when IDLE_S =>
@@ -499,18 +712,16 @@ begin
                   v.nextReadIdx := r.nextReadIdx + 1;
                end if;
 
-               v.dmaRdDescReq.valid              := '1';
-               v.dmaRdDescReq.buffId(7 downto 0) := r.nextReadIdx;
+               v.dmaRdDescReq.buffId(BUFF_BIT_WIDTH_C-1 downto 0) := r.nextReadIdx;
 
+               v.dmaRdDescReq.valid     := '1';
                v.dmaRdDescReq.firstUser := x"02";
                v.dmaRdDescReq.lastUser  := (others => '0');
-               v.dmaRdDescReq.size      := r.remoteReadSize(conv_integer(r.nextReadIdx));
+               v.dmaRdDescReq.size      := r.remoteReadSize;
                v.dmaRdDescReq.continue  := '0';
                v.dmaRdDescReq.id        := (others => '0');
                v.dmaRdDescReq.dest      := (others => '0');
-
-               v.dmaRdDescReq.address(31 downto 0)  := r.remoteReadAddrL(conv_integer(r.nextReadIdx));
-               v.dmaRdDescReq.address(63 downto 32) := r.remoteReadAddrH(conv_integer(r.nextReadIdx));
+               v.dmaRdDescReq.address   := remoteReadAddr;
 
                v.txState := MOVE_S;
             end if;
@@ -524,14 +735,16 @@ begin
             if dmaRdDescRet.valid = '1' then
                v.dmaRdDescRetAck := '1';
 
-               if dmaRdDescRet.buffId(7 downto 0) = 0 then
+               if dmaRdDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0 then
                   v.totLatencyEn := '0';
                   v.totLatency   := r.totLatencyCnt;
                end if;
 
                if dmaRdDescRet.result /= "000" then
-                  v.axiReadErrorCnt := r.axiReadErrorCnt + 1;
                   v.axiReadErrorVal := dmaRdDescRet.result;
+                  if (r.axiReadErrorCnt /= x"FFFF_FFFF") then
+                     v.axiReadErrorCnt := r.axiReadErrorCnt + 1;
+                  end if;
                end if;
 
                v.txFrameCnt := r.txFrameCnt + 1;
@@ -541,34 +754,17 @@ begin
 
       end case;
 
-      -- Check for GPU path
-      if r.axisDeMuxSelect = '1' then
-         v.dynamicRouteMasks(0) := x"00";
-         v.dynamicRouteMasks(1) := x"FF";
-         v.dynamicRouteDests(0) := x"00";
-         v.dynamicRouteDests(1) := x"FF";
-
-      -- Else using CPU path
-      else
-         v.dynamicRouteMasks(1) := x"00";
-         v.dynamicRouteMasks(0) := x"FF";
-         v.dynamicRouteDests(1) := x"00";
-         v.dynamicRouteDests(0) := x"FF";
-
-      end if;
-
       --------------------------------------------------------------------------------------------
       -- Outputs
-      awCache           <= r.awCache;
-      arCache           <= r.arCache;
-      writeSlaves       <= r.writeSlaves;
-      readSlaves        <= r.readSlaves;
-      dmaWrDescAck      <= r.dmaWrDescAck;
-      dmaWrDescRetAck   <= r.dmaWrDescRetAck;
-      dmaRdDescReq      <= r.dmaRdDescReq;
-      dmaRdDescRetAck   <= r.dmaRdDescRetAck;
-      dynamicRouteMasks <= r.dynamicRouteMasks;
-      dynamicRouteDests <= r.dynamicRouteDests;
+      --------------------------------------------------------------------------------------------
+      awCache         <= r.awCache;
+      arCache         <= r.arCache;
+      writeSlaves     <= r.writeSlaves;
+      readSlaves      <= r.readSlaves;
+      dmaWrDescAck    <= r.dmaWrDescAck;
+      dmaWrDescRetAck <= r.dmaWrDescRetAck;
+      dmaRdDescReq    <= r.dmaRdDescReq;
+      dmaRdDescRetAck <= r.dmaRdDescRetAck;
 
       -- Reset
       if (axiRst = '1') then
@@ -587,5 +783,13 @@ begin
       end if;
    end process seq;
 
-end mapping;
+   U_axisDeMuxSelect : entity surf.Synchronizer
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk     => axisClk,
+         -- Input
+         dataIn  => r.axisDeMuxSelect,
+         dataOut => axisDeMuxSelect);
 
+end rtl;

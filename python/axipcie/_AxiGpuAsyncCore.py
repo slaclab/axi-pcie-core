@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------------
 
 import pyrogue as pr
+import surf.axi as axi
 
 class AxiGpuAsyncBuffer(pr.Device):
     def __init__(self, index=0, **kwargs):
@@ -24,57 +25,21 @@ class AxiGpuAsyncBuffer(pr.Device):
         kernelVarMode = 'RO'
 
         self.add(pr.RemoteVariable(
-            name         = 'RemoteWriteAddressL',
-            offset       = 0x1000 + index*16,
-            bitSize      = 32,
+            name         = 'RemoteWriteAddress',
+            offset       = (0x0002_C000-0x0002_8000) + index*8,
+            bitSize      = 64,
             mode         = kernelVarMode,
-            pollInterval = 1,
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'RemoteWriteAddressH',
-            offset       = 0x1004 + index*16,
-            bitSize      = 32,
+            name         = 'RemoteWriteAddress',
+            offset       = (0x0002_E000-0x0002_8000) + index*8,
+            bitSize      = 64,
             mode         = kernelVarMode,
-            pollInterval = 1,
         ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'RemoteWriteSize',
-            offset       = 0x1008 + index*16,
-            bitSize      = 32,
-            mode         = kernelVarMode,
-            pollInterval = 1,
-        ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'RemoteReadAddressL',
-            offset       = 0x2000 + index*16,
-            bitSize      = 32,
-            mode         = kernelVarMode,
-            pollInterval = 1,
-        ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'RemoteReadAddressH',
-            offset       = 0x2004 + index*16,
-            bitSize      = 32,
-            mode         = kernelVarMode,
-            pollInterval = 1,
-        ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'RemoteReadSize',
-            offset       = 0x2008 + index*4,
-            bitSize      = 32,
-            mode         = kernelVarMode,
-            pollInterval = 1,
-        ))
-
 
 class AxiGpuAsyncCore(pr.Device):
-    def __init__(self,
-                 maxBuffers  = 16,
+    def __init__(self, showBuffers=False,
                  description = 'Container for the GPUAsync core registers',
                  **kwargs):
         super().__init__(description=description, **kwargs)
@@ -89,8 +54,17 @@ class AxiGpuAsyncCore(pr.Device):
         kernelVarMode = 'RO'
 
         self.add(pr.RemoteVariable(
+            name         = 'MaxBuffers',
+            offset       = 0x00,
+            bitSize      = 16,
+            bitOffset    = 0,
+            disp         = '{}',
+            mode         = 'RO',
+        ))
+
+        self.add(pr.RemoteVariable(
             name         = 'AxiReadCache',
-            offset       = 0x0004,
+            offset       = 0x04,
             bitSize      = 4,
             bitOffset    = 0,
             mode         = kernelVarMode,
@@ -98,15 +72,15 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'AxiWriteCache',
-            offset       = 0x0004,
+            offset       = 0x04,
             bitSize      = 4,
             bitOffset    = 8,
             mode         = kernelVarMode,
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'BusWidth',
-            offset       = 0x0004,
+            name         = 'AxiBusWidth',
+            offset       = 0x04,
             bitSize      = 8,
             bitOffset    = 16,
             disp         = '{}',
@@ -114,18 +88,9 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'MaxBuffers',
-            offset       = 0x0004,
-            bitSize      = 5,
-            bitOffset    = 24,
-            disp         = '{}',
-            mode         = 'RO',
-        ))
-
-        self.add(pr.RemoteVariable(
             name         = 'WriteCount',
-            offset       = 0x0008,
-            bitSize      = 8,
+            offset       = 0x08,
+            bitSize      = 10,
             bitOffset    = 0,
             disp         = '{}',
             mode         = kernelVarMode,
@@ -134,17 +99,17 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'WriteEnable',
-            offset       = 0x0008,
+            offset       = 0x08,
             bitSize      = 1,
-            bitOffset    = 8,
+            bitOffset    = 15,
             mode         = kernelVarMode,
             pollInterval = 1,
         ))
 
         self.add(pr.RemoteVariable(
             name         = 'ReadCount',
-            offset       = 0x0008,
-            bitSize      = 8,
+            offset       = 0x08,
+            bitSize      = 10,
             bitOffset    = 16,
             disp         = '{}',
             mode         = kernelVarMode,
@@ -153,16 +118,16 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'ReadEnable',
-            offset       = 0x0008,
+            offset       = 0x08,
             bitSize      = 1,
-            bitOffset    = 24,
+            bitOffset    = 31,
             mode         = kernelVarMode,
             pollInterval = 1,
         ))
 
         self.add(pr.RemoteVariable(
             name         = 'RxFrameCnt',
-            offset       = 0x0010,
+            offset       = 0x10,
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
@@ -171,7 +136,7 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'TxFrameCnt',
-            offset       = 0x0014,
+            offset       = 0x14,
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
@@ -180,7 +145,7 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'WriteAxiErrorCnt',
-            offset       = 0x0018,
+            offset       = 0x18,
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
@@ -189,7 +154,7 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'ReadAxiErrorCnt',
-            offset       = 0x001C,
+            offset       = 0x1C,
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
@@ -199,14 +164,14 @@ class AxiGpuAsyncCore(pr.Device):
         self.add(pr.RemoteCommand(
             name         = 'CountReset',
             description  = 'Status counter reset',
-            offset       = 0x0020,
+            offset       = 0x20,
             bitSize      = 1,
             function     = pr.BaseCommand.touchOne
         ))
 
         self.add(pr.RemoteVariable(
             name         = 'WriteAxiErrorVal',
-            offset       = 0x0024,
+            offset       = 0x24,
             bitSize      = 4,
             disp         = '{}',
             mode         = 'RO',
@@ -215,44 +180,23 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'ReadAxiErrorVal',
-            offset       = 0x0028,
+            offset       = 0x28,
             bitSize      = 3,
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
         ))
 
-        for i in range(2):
-            self.add(pr.RemoteVariable(
-                name         = f'DynamicRouteMasks[{i}]',
-                offset       = 0x002C,
-                bitSize      = 8,
-                bitOffset    = 16*i+0,
-                mode         = 'RO',
-                pollInterval = 1,
-                hidden       = True,
-            ))
-
-            self.add(pr.RemoteVariable(
-                name         = f'DynamicRouteDests[{i}]',
-                offset       = 0x002C,
-                bitSize      = 8,
-                bitOffset    = 16*i+8,
-                mode         = 'RO',
-                pollInterval = 1,
-                hidden       = True,
-            ))
-
         self.add(pr.RemoteVariable(
             name         = 'VersionNumber',
-            offset       = 0x0030,
+            offset       = 0x30,
             bitSize      = 8,
             mode         = 'RO',
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'axiWriteTimeoutErrorCnt',
-            offset       = 0x0034,
+            name         = 'AxiWriteTimeoutErrorCnt',
+            offset       = 0x34,
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
@@ -261,7 +205,7 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name    = 'AxisDeMuxSelect',
-            offset  = 0x0038,
+            offset  = 0x38,
             bitSize = 1,
             mode    = 'RW', # Exposed to userspace as read/write
             enum    = {
@@ -271,20 +215,20 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'minWriteBuffer',
+            name         = 'MinWriteBuffer',
             description  = 'Minimum number of write buffers availible since CountReset()',
-            offset       = 0x003C,
-            bitSize      = 32,
+            offset       = 0x3C,
+            bitSize      = 11,
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'minReadBuffer',
+            name         = 'MinReadBuffer',
             description  = 'Minimum number of read buffers availible since CountReset()',
-            offset       = 0x0040,
-            bitSize      = 32,
+            offset       = 0x40,
+            bitSize      = 11,
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
@@ -292,7 +236,7 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'TotLatency',
-            offset       = 0x048
+            offset       = 0x48
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
@@ -301,7 +245,7 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'GpuLatency',
-            offset       = 0x050,
+            offset       = 0x50,
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
@@ -310,18 +254,49 @@ class AxiGpuAsyncCore(pr.Device):
 
         self.add(pr.RemoteVariable(
             name         = 'WrLatency',
-            offset       = 0x058,
+            offset       = 0x58,
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
         ))
 
-        for i in range(maxBuffers):
-            self.add(AxiGpuAsyncBuffer(
-                name  = f'Buffer[{i}]',
-                index = i,
-            ))
+        self.add(pr.RemoteVariable(
+            name         = 'RemoteWriteSize',
+            offset       = 0x60,
+            bitSize      = 32,
+            mode         = kernelVarMode,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'RemoteReadSize',
+            offset       = 0x64,
+            bitSize      = 32,
+            mode         = kernelVarMode,
+        ))
+
+        # GPU AXI Stream Inbound Monitor
+        self.add(axi.AxiStreamMonAxiL(
+            name        = 'GpuIbAxisMon',
+            offset      = 0x0002_B000,
+            numberLanes = 1,
+            expand      = True,
+        ))
+
+        # GPU AXI Stream Outbound Monitor
+        self.add(axi.AxiStreamMonAxiL(
+            name        = 'GpuObAxisMon',
+            offset      = 0x0002_B100,
+            numberLanes = 1,
+            expand      = True,
+        ))
+
+        if showBuffers:
+            for i in range(1024):
+                self.add(AxiGpuAsyncBuffer(
+                    name   = f'Buffer[{i}]',
+                    index  = i,
+                ))
 
     def countReset(self):
         self.CountReset()

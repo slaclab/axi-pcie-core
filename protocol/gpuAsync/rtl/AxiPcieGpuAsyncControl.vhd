@@ -134,7 +134,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
       writeEnable             : sl;
       writeCount              : slv(BUFF_BIT_WIDTH_C-1 downto 0);
       nextWriteIdx            : slv(BUFF_BIT_WIDTH_C-1 downto 0);
-      remoteWriteSize         : slv(31 downto 0);
+      remoteWriteMaxSize      : slv(31 downto 0);
       remoteWriteEn           : slv(MAX_BUFFERS_C-1 downto 0);
       -- Read/TX Signals
       txState                 : StateType;
@@ -203,7 +203,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
       writeEnable             => '0',
       writeCount              => (others => '0'),
       nextWriteIdx            => (others => '0'),
-      remoteWriteSize         => (others => '0'),
+      remoteWriteMaxSize      => (others => '0'),
       remoteWriteEn           => (others => '0'),
       -- Read/TX Signals
       txState                 => IDLE_S,
@@ -276,9 +276,9 @@ architecture rtl of AxiPcieGpuAsyncControl is
 
 begin
 
-   --------------------
+   --------------------------------------------------------------------------------------------
    -- AXI-Lite Crossbar
-   --------------------
+   --------------------------------------------------------------------------------------------
    U_XBAR : entity surf.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
@@ -321,9 +321,9 @@ begin
             mAxiWriteSlave  => writeSlaves(i));
    end generate GEN_VEC;
 
-   -------------------------------------------
+   --------------------------------------------------------------------------------------------
    -- remoteWriteAddr RAM for address decoding
-   -------------------------------------------
+   --------------------------------------------------------------------------------------------
    U_remoteWriteAddr : entity surf.AxiDualPortRam
       generic map (
          TPD_G          => TPD_G,
@@ -346,9 +346,9 @@ begin
          addr           => r.nextWriteIdx,
          dout           => remoteWriteAddr);
 
-   -------------------------------------------
+   --------------------------------------------------------------------------------------------
    -- remoteReadAddr RAM for address decoding
-   -------------------------------------------
+   --------------------------------------------------------------------------------------------
    U_remoteReadAddr : entity surf.AxiDualPortRam
       generic map (
          TPD_G          => TPD_G,
@@ -371,9 +371,9 @@ begin
          addr           => r.nextReadIdx,
          dout           => remoteReadAddr);
 
-   ------------------------------------------
+   --------------------------------------------------------------------------------------------
    -- GPU AXI Stream Inbound/Outbound Monitor
-   ------------------------------------------
+   --------------------------------------------------------------------------------------------
 
    monReadMasters(1 downto 0) <= axilReadMasters(AXIL_TX_MON_INDEX_C downto AXIL_RX_MON_INDEX_C);
 
@@ -382,6 +382,8 @@ begin
    monWriteMasters(1 downto 0) <= axilWriteMasters(AXIL_TX_MON_INDEX_C downto AXIL_RX_MON_INDEX_C);
 
    axilWriteSlaves(AXIL_TX_MON_INDEX_C downto AXIL_RX_MON_INDEX_C) <= monWriteSlaves(1 downto 0);
+
+   --------------------------------------------------------------------------------------------
 
    comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet, r,
                    readMasters, remoteReadAddr, remoteWriteAddr, writeMasters) is
@@ -460,7 +462,7 @@ begin
       axiSlaveRegisterR(axilEp(0), x"50", 0, r.gpuLatency);  -- Only measure for buffer[index=0]
       axiSlaveRegisterR(axilEp(0), x"58", 0, r.wrLatency);  -- Only measure for buffer[index=0]
 
-      axiSlaveRegister (axilEp(0), x"60", 0, v.remoteWriteSize);
+      axiSlaveRegister (axilEp(0), x"60", 0, v.remoteWriteMaxSize);
       axiSlaveRegister (axilEp(0), x"64", 0, v.remoteReadSize);
 
       -- Closeout the transaction
@@ -621,81 +623,135 @@ begin
       case r.rxState is
          ----------------------------------------------------------------------
          when IDLE_S =>
+            -- Check if buffer[0] index
+            if r.remoteWriteEn(0) = '1' then
 
-            if r.remoteWriteEn(0) = '0' then
+               -- Stop latency measurement
                v.gpuLatencyEn := '0';
-               v.gpuLatency   := r.gpuLatencyCnt;
+
+               -- Latch the latency counter value
+               v.gpuLatency := r.gpuLatencyCnt;
+
             end if;
 
+            -- Check if there is a DMA request
             if dmaWrDescReq.valid = '1' then
-               v.dmaWrDescAck.dropEn     := not r.writeEnable;
-               v.dmaWrDescAck.maxSize    := r.remoteWriteSize;
-               v.dmaWrDescAck.contEn     := '0';
-               v.dmaWrDescAck.metaEnable := '1';
 
+               -- Setup for the DMA transaction
+               v.dmaWrDescAck.dropEn     := not r.writeEnable;
+               v.dmaWrDescAck.maxSize    := r.remoteWriteMaxSize;
+               v.dmaWrDescAck.contEn     := '0';  -- AXIS frame across multiple DMA not supported
+               v.dmaWrDescAck.metaEnable := '1';  -- Enable meta for GPU "drop bell"
+               v.dmaWrDescAck.metaAddr   := remoteWriteAddr;
+               v.dmaWrDescAck.address    := remoteWriteAddr + DMA_AXI_CONFIG_G.DATA_BYTES_C;
+
+               -- Encode the buffer index
                v.dmaWrDescAck.buffId(BUFF_BIT_WIDTH_C-1 downto 0) := r.nextWriteIdx;
 
-               v.dmaWrDescAck.metaAddr := remoteWriteAddr;
-               v.dmaWrDescAck.address  := remoteWriteAddr + DMA_AXI_CONFIG_G.DATA_BYTES_C;
+               -- Check if new buffer ready for DMA write transaction or write is disabled
+               if (r.remoteWriteEn(conv_integer(r.nextWriteIdx)) = '1') or (r.writeEnable = '0') then
 
-               if r.remoteWriteEn(conv_integer(r.nextWriteIdx)) = '1' or r.writeEnable = '0' then
+                  -- Start the DMA transaction
                   v.dmaWrDescAck.valid := '1';
-                  v.rxState            := MOVE_S;
 
+                  -- Next state
+                  v.rxState := MOVE_S;
+
+                  -- Check if write enabled
                   if r.writeEnable = '1' then
+
+                     -- Reset the flag
                      v.remoteWriteEn(conv_integer(r.nextWriteIdx)) := '0';
 
+                     -- Check if buffer[0] index
                      if (r.nextWriteIdx = 0) then
+
+                        -- Start the total latency: "from now until read buffer[0] is received"
                         v.totLatencyEn  := '1';
                         v.totLatencyCnt := (others => '0');
 
+                        -- Hold off on GPU latency: "from DMA Write to complete until new write buffer ACK"
                         v.gpuLatencyEn  := '0';
                         v.gpuLatencyCnt := (others => '0');
 
+                        -- Start the write latency: "from now until DMA Write to complete"
                         v.wrLatencyEn  := '1';
                         v.wrLatencyCnt := (others => '0');
+
                      end if;
 
+                     -- Increment the buffer index with respect to writeCount
                      if r.nextWriteIdx >= r.writeCount then
                         v.nextWriteIdx := (others => '0');
                      else
                         v.nextWriteIdx := r.nextWriteIdx + 1;
                      end if;
-                  end if;
 
-               end if;
-            end if;
+                  end if;  -- Check if write enabled
 
+               end if;  -- Check if new buffer ready for DMA write transaction or write is disabled
+
+            end if;  -- Check if there is a DMA request
+
+            -- Check if not enabled
             if r.writeEnable = '0' then
+               -- Reset the buffer index
                v.nextWriteIdx := (others => '0');
             end if;
 
          ----------------------------------------------------------------------
          when MOVE_S =>
+            -- Wait for the DMA to complete
             if dmaWrDescRet.valid = '1' then
+
+               -- ACK the return message
                v.dmaWrDescRetAck := '1';
 
+               -- Check if buffer[0] index
                if dmaWrDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0 then
-                  v.wrLatencyEn  := '0';
-                  v.wrLatency    := r.wrLatencyCnt;
+
+                  -- Stop latency measurement
+                  v.wrLatencyEn := '0';
+
+                  -- Latch the latency counter value
+                  v.wrLatency := r.wrLatencyCnt;
+
+                  -- Start latency measurement
                   v.gpuLatencyEn := '1';
+
                end if;
 
-               if dmaWrDescRet.result /= "0000" then
+               -- Check for a non-zero response (error respose of any type)
+               if dmaWrDescRet.result /= 0 then
+
+                  -- Sample the result error value for debugging
                   v.axiWriteErrorVal := dmaWrDescRet.result;
+
+                  -- Check if not max count value
                   if (r.axiWriteErrorCnt /= x"FFFF_FFFF") then
+                     -- Increment the counter
                      v.axiWriteErrorCnt := r.axiWriteErrorCnt + 1;
                   end if;
+
                end if;
 
+               -- Check for the timout error bit
                if dmaWrDescRet.result(3) = '1' then
+
+                  -- Check if not max count value
                   if (r.axiWriteTimeoutErrorCnt /= x"FFFF_FFFF") then
+                     -- Increment the counter
                      v.axiWriteTimeoutErrorCnt := r.axiWriteTimeoutErrorCnt + 1;
                   end if;
+
                end if;
 
+               -- Incremen the frame counter
                v.rxFrameCnt := r.rxFrameCnt + 1;
-               v.rxState    := IDLE_S;
+
+               -- Next state
+               v.rxState := IDLE_S;
+
             end if;
       ----------------------------------------------------------------------
       end case;
@@ -707,55 +763,82 @@ begin
          ----------------------------------------------------------------------
          when IDLE_S =>
 
+            -- Check if read enabled and new buffer ready for DMA read transaction
             if r.readEnable = '1' and r.remoteReadEn(conv_integer(r.nextReadIdx)) = '1' then
+
+               -- Reset the flag
                v.remoteReadEn(conv_integer(r.nextReadIdx)) := '0';
 
-
+               -- Increment the buffer index with respect to readCount
                if r.nextReadIdx >= r.readCount then
                   v.nextReadIdx := (others => '0');
                else
                   v.nextReadIdx := r.nextReadIdx + 1;
                end if;
 
-               v.dmaRdDescReq.buffId(BUFF_BIT_WIDTH_C-1 downto 0) := r.nextReadIdx;
-
+               -- Setup for the DMA transaction
                v.dmaRdDescReq.valid     := '1';
                v.dmaRdDescReq.firstUser := x"02";
                v.dmaRdDescReq.lastUser  := (others => '0');
-               v.dmaRdDescReq.size      := r.remoteReadSize;
+               v.dmaRdDescReq.size      := r.remoteReadSize;  -- Requested size from remote
                v.dmaRdDescReq.continue  := '0';
                v.dmaRdDescReq.id        := (others => '0');
                v.dmaRdDescReq.dest      := (others => '0');
-               v.dmaRdDescReq.address   := remoteReadAddr;
+               v.dmaRdDescReq.address   := remoteReadAddr;  -- Request memory address offset from remote
 
+               -- Encode the buffer index
+               v.dmaRdDescReq.buffId(BUFF_BIT_WIDTH_C-1 downto 0) := r.nextReadIdx;
+
+               -- Next state
                v.txState := MOVE_S;
+
             end if;
 
+            -- Check if not enabled
             if r.readEnable = '0' then
+               -- Reset the buffer index
                v.nextReadIdx := (others => '0');
             end if;
 
          ----------------------------------------------------------------------
          when MOVE_S =>
-
+            -- Wait for the DMA to complete
             if dmaRdDescRet.valid = '1' then
+
+               -- ACK the return message
                v.dmaRdDescRetAck := '1';
 
+               -- Check if buffer[0] index
                if dmaRdDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0 then
+
+                  -- Stop latency measurement
                   v.totLatencyEn := '0';
-                  v.totLatency   := r.totLatencyCnt;
+
+                  -- Latch the latency counter value
+                  v.totLatency := r.totLatencyCnt;
+
                end if;
 
-               if dmaRdDescRet.result /= "000" then
+               -- Check for a non-zero response (error respose of any type)
+               if dmaRdDescRet.result /= 0 then
+
+                  -- Sample the result error value for debugging
                   v.axiReadErrorVal := dmaRdDescRet.result;
+
+                  -- Check if not max count value
                   if (r.axiReadErrorCnt /= x"FFFF_FFFF") then
+                     -- Increment the counter
                      v.axiReadErrorCnt := r.axiReadErrorCnt + 1;
                   end if;
+
                end if;
 
+               -- Incremen the frame counter
                v.txFrameCnt := r.txFrameCnt + 1;
 
+               -- Next state
                v.txState := IDLE_S;
+
             end if;
       ----------------------------------------------------------------------
       end case;
@@ -794,7 +877,6 @@ begin
          TPD_G => TPD_G)
       port map (
          clk     => axisClk,
-         -- Input
          dataIn  => r.axisDeMuxSelect,
          dataOut => axisDeMuxSelect);
 

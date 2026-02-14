@@ -262,7 +262,7 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'RemoteWriteSize',
+            name         = 'RemoteWriteMaxSize',
             offset       = 0x60,
             bitSize      = 32,
             mode         = kernelVarMode,

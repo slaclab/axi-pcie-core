@@ -25,6 +25,13 @@ class AxiGpuAsyncBuffer(pr.Device):
         kernelVarMode = 'RO'
 
         self.add(pr.RemoteVariable(
+            name         = 'RemoteReadSize',
+            offset       = (0x0002_B000-0x0002_8000) + index*4,
+            bitSize      = 32,
+            mode         = kernelVarMode,
+        ))
+
+        self.add(pr.RemoteVariable(
             name         = 'RemoteWriteAddress',
             offset       = (0x0002_C000-0x0002_8000) + index*8,
             bitSize      = 64,
@@ -32,16 +39,9 @@ class AxiGpuAsyncBuffer(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'RemoteReadAddr',
+            name         = 'RemoteReadAddress',
             offset       = (0x0002_E000-0x0002_8000) + index*8,
             bitSize      = 64,
-            mode         = kernelVarMode,
-        ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'RemoteReadSize',
-            offset       = (0x0002_B000-0x0002_8000) + index*4,
-            bitSize      = 32,
             mode         = kernelVarMode,
         ))
 

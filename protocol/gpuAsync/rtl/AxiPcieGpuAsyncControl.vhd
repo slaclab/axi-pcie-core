@@ -83,12 +83,11 @@ architecture rtl of AxiPcieGpuAsyncControl is
    constant AXIL_RX_MON_INDEX_C  : natural := 1;
    constant AXIL_TX_MON_INDEX_C  : natural := 2;
    constant AXIL_WR_EN_INDEX_C   : natural := 3;
-   constant AXIL_RD_EN_INDEX_C   : natural := 4;
-   constant AXIL_RD_SIZE_INDEX_C : natural := 5;
-   constant AXIL_WR_ADDR_INDEX_C : natural := 6;
-   constant AXIL_RD_ADDR_INDEX_C : natural := 7;
+   constant AXIL_RD_SIZE_INDEX_C : natural := 4;
+   constant AXIL_WR_ADDR_INDEX_C : natural := 5;
+   constant AXIL_RD_ADDR_INDEX_C : natural := 6;
 
-   constant NUM_AXIL_MASTERS_C : positive := 8;
+   constant NUM_AXIL_MASTERS_C : positive := 7;
 
    constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXIL_MASTERS_C-1 downto 0) := (
       AXIL_BASE_INDEX_C    => (
@@ -104,10 +103,6 @@ architecture rtl of AxiPcieGpuAsyncControl is
          addrBits          => 8,
          connectivity      => x"FFFF"),
       AXIL_WR_EN_INDEX_C   => (
-         baseAddr          => x"0002_9000",  -- 0x0002_9000:0x0002_9FFF: 0x1000/4B = 1k buffers
-         addrBits          => 12,
-         connectivity      => x"FFFF"),
-      AXIL_RD_EN_INDEX_C   => (
          baseAddr          => x"0002_A000",  -- 0x0002_A000:0x0002_AFFF: 0x1000/4B = 1k buffers
          addrBits          => 12,
          connectivity      => x"FFFF"),
@@ -188,8 +183,8 @@ architecture rtl of AxiPcieGpuAsyncControl is
       dmaRdDescReq            : AxiReadDmaDescReqType;
       dmaRdDescRetAck         : sl;
       -- AXI-Lite Control
-      readSlaves              : AxiLiteReadSlaveArray(2 downto 0);
-      writeSlaves             : AxiLiteWriteSlaveArray(2 downto 0);
+      readSlaves              : AxiLiteReadSlaveArray(1 downto 0);
+      writeSlaves             : AxiLiteWriteSlaveArray(1 downto 0);
       -- DEMUX Control
       axisDeMuxSelect         : sl;
    end record;
@@ -269,14 +264,17 @@ architecture rtl of AxiPcieGpuAsyncControl is
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXIL_MASTERS_C-1 downto 0);
    signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXIL_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
-   signal writeMasters : AxiLiteWriteMasterArray(2 downto 0);
-   signal writeSlaves  : AxiLiteWriteSlaveArray(2 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
-   signal readMasters  : AxiLiteReadMasterArray(2 downto 0);
-   signal readSlaves   : AxiLiteReadSlaveArray(2 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
+   signal writeMasters : AxiLiteWriteMasterArray(1 downto 0);
+   signal writeSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_SLVERR_C);
+   signal readMasters  : AxiLiteReadMasterArray(1 downto 0);
+   signal readSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_SLVERR_C);
 
    signal remoteWriteAddr : slv(63 downto 0);
    signal remoteReadAddr  : slv(63 downto 0);
    signal remoteReadSize  : slv(31 downto 0);
+
+   signal remoteReadReq : sl;
+   signal remoteReadIdx : slv(BUFF_BIT_WIDTH_C-1 downto 0);
 
 begin
 
@@ -342,27 +340,6 @@ begin
          mAxiReadSlave   => readSlaves(1),
          mAxiWriteMaster => writeMasters(1),
          mAxiWriteSlave  => writeSlaves(1));
-
-   U_AxiLiteAsync_2 : entity surf.AxiLiteAsync
-      generic map (
-         TPD_G           => TPD_G,
-         COMMON_CLK_G    => false,
-         NUM_ADDR_BITS_G => XBAR_CONFIG_C(AXIL_RD_EN_INDEX_C).addrBits)
-      port map (
-         -- Slave Interface
-         sAxiClk         => axilClk,
-         sAxiClkRst      => axilRst,
-         sAxiReadMaster  => axilReadMasters(AXIL_RD_EN_INDEX_C),
-         sAxiReadSlave   => axilReadSlaves(AXIL_RD_EN_INDEX_C),
-         sAxiWriteMaster => axilWriteMasters(AXIL_RD_EN_INDEX_C),
-         sAxiWriteSlave  => axilWriteSlaves(AXIL_RD_EN_INDEX_C),
-         -- Master Interface
-         mAxiClk         => axiClk,
-         mAxiClkRst      => axiRst,
-         mAxiReadMaster  => readMasters(2),
-         mAxiReadSlave   => readSlaves(2),
-         mAxiWriteMaster => writeMasters(2),
-         mAxiWriteSlave  => writeSlaves(2));
 
    --------------------------------------------------------------------------------------------
    -- remoteWriteAddr RAM for address decoding
@@ -437,7 +414,9 @@ begin
          -- Standard Port
          clk            => axiClk,
          addr           => r.nextReadIdx,
-         dout           => remoteReadSize);
+         dout           => remoteReadSize,
+         axiWrValid     => remoteReadReq,
+         axiWrAddr      => remoteReadIdx);
 
    --------------------------------------------------------------------------------------------
    -- GPU AXI Stream Inbound/Outbound Monitor
@@ -454,8 +433,8 @@ begin
    --------------------------------------------------------------------------------------------
 
    comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet, r,
-                   readMasters, remoteReadAddr, remoteReadSize,
-                   remoteWriteAddr, writeMasters) is
+                   readMasters, remoteReadAddr, remoteReadIdx, remoteReadReq,
+                   remoteReadSize, remoteWriteAddr, writeMasters) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndpointArray(2 downto 0);
    begin
@@ -526,7 +505,7 @@ begin
       axiSlaveDefault(axilEp(0), v.writeSlaves(0), v.readSlaves(0), AXI_RESP_DECERR_C);
 
       --------------------------------------------------------------------------------------------
-      -- remoteWriteEn Write-Only: 0x0002_9000:0x0002_9FFF
+      -- remoteWriteEn Write-Only: 0x0002_A000:0x0002_AFFF
       --------------------------------------------------------------------------------------------
 
       -- Determine the transaction
@@ -540,18 +519,13 @@ begin
       axiSlaveDefault(axilEp(1), v.writeSlaves(1), v.readSlaves(1), AXI_RESP_DECERR_C);
 
       --------------------------------------------------------------------------------------------
-      -- remoteReadEn Write-Only: 0x0002_A000:0x0002_AFFF
+      -- remoteReadEn Write-Only: 0x0002_B000:0x0002_BFFF
       --------------------------------------------------------------------------------------------
 
-      -- Determine the transaction
-      axiSlaveWaitTxn(axilEp(2), writeMasters(2), readMasters(2), v.writeSlaves(2), v.readSlaves(2));
-
-      for i in 0 to MAX_BUFFERS_C-1 loop
-         axiWrDetect(axilEp(2), toSlv(i*4, 12), v.remoteReadEn(i));
-      end loop;
-
-      -- Closeout the transaction
-      axiSlaveDefault(axilEp(2), v.writeSlaves(2), v.readSlaves(2), AXI_RESP_DECERR_C);
+      -- Check for a read request from GPU
+      if (remoteReadReq = '1') then
+         v.remoteReadEn(conv_integer(remoteReadIdx)) := '1';
+      end if;
 
       --------------------------------------------------------------------------------------------
       -- Update the minimum available buffers diagnostic register

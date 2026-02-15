@@ -286,7 +286,7 @@ class AxiGpuAsyncCore(pr.Device):
         # GPU AXI Stream Outbound Monitor
         self.add(axi.AxiStreamMonAxiL(
             name        = 'GpuObAxisMon',
-            offset      = (0002_8200-0x0002_8000),
+            offset      = (0x0002_8200-0x0002_8000),
             numberLanes = 1,
             expand      = True,
         ))

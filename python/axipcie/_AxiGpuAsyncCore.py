@@ -63,7 +63,7 @@ class AxiGpuAsyncCore(pr.Device):
         self.add(pr.RemoteVariable(
             name         = 'MaxBuffers',
             offset       = 0x00,
-            bitSize      = 16,
+            bitSize      = 11,
             bitOffset    = 0,
             disp         = '{}',
             mode         = 'RO',

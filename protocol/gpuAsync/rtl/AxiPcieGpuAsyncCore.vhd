@@ -103,6 +103,12 @@ architecture mapping of AxiPcieGpuAsyncCore is
    signal mAxisMasterInt : AxiStreamMasterType;
    signal mAxisSlaveInt  : AxiStreamSlaveType;
 
+   signal dataWriteMaster : AxiWriteMasterType;
+   signal dataWriteSlave  : AxiWriteSlaveType;
+
+   signal gpuTxAckMaster : AxiWriteMasterType;
+   signal gpuTxAckSlave  : AxiWriteSlaveType;
+
 begin
 
    -- direct connection to Pcie core from Demux
@@ -139,6 +145,9 @@ begin
          axiRst          => axiRst,
          awCache         => awCache,
          arCache         => arCache,
+         -- GPU TX Doorbell ACK (axiClk domain)
+         gpuTxAckMaster  => gpuTxAckMaster,
+         gpuTxAckSlave   => gpuTxAckSlave,
          -- DMA Write Engine (axiClk domain)
          dmaWrDescReq    => dmaWrDescReq,
          dmaWrDescAck    => dmaWrDescAck,
@@ -227,8 +236,28 @@ begin
          axiCache        => awCache,
          axisMaster      => sAxisMasterInt,
          axisSlave       => sAxisSlaveInt,
-         axiWriteMaster  => axiWriteMaster,
-         axiWriteSlave   => axiWriteSlave);
+         axiWriteMaster  => dataWriteMaster,
+         axiWriteSlave   => dataWriteSlave);
+
+   U_DmaWriteMux : entity surf.AxiStreamDmaV2WriteMux
+      generic map (
+         TPD_G          => TPD_G,
+         AXI_CONFIG_G   => AXI_PCIE_CONFIG_C,
+         AXI_READY_EN_G => true)
+      port map (
+         -- Clock and reset
+         axiClk          => axiClk,
+         axiRst          => axiRst,
+         -- DMA Data Write Path
+         dataWriteMaster => dataWriteMaster,
+         dataWriteSlave  => dataWriteSlave,
+         -- DMA Descriptor Write Path
+         descWriteMaster => gpuTxAckMaster,
+         descWriteSlave  => gpuTxAckSlave,
+         -- MUX Write Path
+         mAxiWriteMaster => axiWriteMaster,
+         mAxiWriteSlave  => axiWriteSlave,
+         mAxiWriteCtrl   => AXI_CTRL_UNUSED_C);
 
    ------------------------------------
    -- Stream transmitter from GPU DMA

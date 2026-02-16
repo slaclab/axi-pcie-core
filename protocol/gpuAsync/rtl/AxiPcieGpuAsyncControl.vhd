@@ -60,6 +60,10 @@ entity AxiPcieGpuAsyncControl is
       awCache : out slv(3 downto 0);
       arCache : out slv(3 downto 0);
 
+      -- GPU TX Doorbell ACK (axiClk domain)
+      gpuTxAckMaster : out AxiWriteMasterType;
+      gpuTxAckSlave  : in  AxiWriteSlaveType;
+
       -- DMA Write Engine (axiClk domain)
       dmaWrDescReq    : in  AxiWriteDmaDescReqType;
       dmaWrDescAck    : out AxiWriteDmaDescAckType;
@@ -118,6 +122,12 @@ architecture rtl of AxiPcieGpuAsyncControl is
          baseAddr          => x"0002_E000",  -- 0x0002_E000:0x0002_FFFF: 0x2000/8B = 1k buffers
          addrBits          => 13,
          connectivity      => x"FFFF"));
+
+   constant AXI_DESC_CONFIG_C : AxiConfigType := (
+      ADDR_WIDTH_C => DMA_AXI_CONFIG_G.ADDR_WIDTH_C,
+      DATA_BYTES_C => 16,               -- Force 128b descriptor
+      ID_BITS_C    => DMA_AXI_CONFIG_G.ID_BITS_C,
+      LEN_BITS_C   => DMA_AXI_CONFIG_G.LEN_BITS_C);
 
    type StateType is (IDLE_S, MOVE_S);
 
@@ -182,6 +192,8 @@ architecture rtl of AxiPcieGpuAsyncControl is
       dmaWrDescRetAck         : sl;
       dmaRdDescReq            : AxiReadDmaDescReqType;
       dmaRdDescRetAck         : sl;
+      gpuTxAckMaster          : AxiWriteMasterType;
+      gpuTxAckAddress         : slv(63 downto 0);
       -- AXI-Lite Control
       readSlaves              : AxiLiteReadSlaveArray(1 downto 0);
       writeSlaves             : AxiLiteWriteSlaveArray(1 downto 0);
@@ -250,6 +262,8 @@ architecture rtl of AxiPcieGpuAsyncControl is
       dmaWrDescRetAck         => '0',
       dmaRdDescReq            => AXI_READ_DMA_DESC_REQ_INIT_C,
       dmaRdDescRetAck         => '0',
+      gpuTxAckMaster          => axiWriteMasterInit(AXI_DESC_CONFIG_C, '1', "01", "0000"),
+      gpuTxAckAddress         => (others => '0'),
       -- AXI-Lite Control
       readSlaves              => (others => AXI_LITE_READ_SLAVE_INIT_C),
       writeSlaves             => (others => AXI_LITE_WRITE_SLAVE_INIT_C),
@@ -432,11 +446,13 @@ begin
 
    --------------------------------------------------------------------------------------------
 
-   comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet, r,
-                   readMasters, remoteReadAddr, remoteReadIdx, remoteReadReq,
-                   remoteReadSize, remoteWriteAddr, writeMasters) is
-      variable v      : RegType;
-      variable axilEp : AxiLiteEndpointArray(2 downto 0);
+   comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet,
+                   gpuTxAckSlave, r, readMasters, remoteReadAddr,
+                   remoteReadIdx, remoteReadReq, remoteReadSize,
+                   remoteWriteAddr, writeMasters) is
+      variable v        : RegType;
+      variable axilEp   : AxiLiteEndpointArray(2 downto 0);
+      variable wStrbIdx : natural;
    begin
       -- Latch the current value
       v := r;
@@ -790,6 +806,16 @@ begin
       --------------------------------------------------------------------------------------------
       -- Read/TX State Machine
       --------------------------------------------------------------------------------------------
+
+      -- Setup the gpuTxAckMaster and flow control handshaking
+      v.gpuTxAckMaster.awcache := r.awcache;
+      if (gpuTxAckSlave.awready = '1') then
+         v.gpuTxAckMaster.awvalid := '0';
+      end if;
+      if (gpuTxAckSlave.wready = '1') then
+         v.gpuTxAckMaster.wvalid := '0';
+      end if;
+
       case r.txState is
          ----------------------------------------------------------------------
          when IDLE_S =>
@@ -815,7 +841,8 @@ begin
                v.dmaRdDescReq.continue  := '0';
                v.dmaRdDescReq.id        := (others => '0');
                v.dmaRdDescReq.dest      := (others => '0');
-               v.dmaRdDescReq.address   := remoteReadAddr;  -- Request memory address offset from remote ("Data offset")
+               v.gpuTxAckAddress        := remoteReadAddr;  -- "Doorbell" offset
+               v.dmaRdDescReq.address   := remoteReadAddr + DMA_AXI_CONFIG_G.DATA_BYTES_C;  -- Data offset
 
                -- Encode the buffer index
                v.dmaRdDescReq.buffId(BUFF_BIT_WIDTH_C-1 downto 0) := r.nextReadIdx;
@@ -833,11 +860,19 @@ begin
 
          ----------------------------------------------------------------------
          when MOVE_S =>
-            -- Wait for the DMA to complete
-            if (dmaRdDescRet.valid = '1') then
+            -- Wait for the DMA to complete and ready to send the TX ACK to the GPU
+            if (dmaRdDescRet.valid = '1') and (r.gpuTxAckMaster.awvalid = '0') and (r.gpuTxAckMaster.wvalid = '0') then
 
                -- ACK the return message
                v.dmaRdDescRetAck := '1';
+
+               -- ACK the GPU on its doorbell register
+               v.gpuTxAckMaster.awaddr   := r.gpuTxAckAddress;  -- "Doorbell" offset
+               v.gpuTxAckMaster.awlen    := x"00";  -- Single transaction
+               v.gpuTxAckMaster.wlast    := '1';
+               v.gpuTxAckMaster.wdata(0) := '1';  -- GPU polling and waiting for this bit to be 0x1 at "Doorbell" offset
+               v.gpuTxAckMaster.awvalid  := '1';
+               v.gpuTxAckMaster.wvalid   := '1';
 
                -- Check if buffer[0] index
                if (dmaRdDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0) then
@@ -874,6 +909,29 @@ begin
       ----------------------------------------------------------------------
       end case;
 
+      -- Section A3.4.3 Data read and write structure: Write strobes - Narrow transfers
+      v.gpuTxAckMaster.wstrb            := (others => '0');
+      -- Check for 64-bit or 128-bit case
+      if (DMA_AXI_CONFIG_G.DATA_BYTES_C <= 16) then
+         -- Always 16 byte WSTRB (64-bit case to break apart into two cycle implemented in surf.AxiStreamDmaV2WriteMux)
+         v.gpuTxAckMaster.wstrb(15 downto 0) := x"FFFF";
+
+      -- Else 256-bits (or more) case
+      else
+         -- Find the 128-bit word offset
+         wStrbIdx := conv_integer(v.gpuTxAckMaster.awaddr(log2(DMA_AXI_CONFIG_G.DATA_BYTES_C) - 1 downto 4));
+
+         -- Assign the WSTRB to this offset
+         v.gpuTxAckMaster.wstrb((wStrbIdx*16+15) downto (wStrbIdx*16)) := x"FFFF";
+      end if;
+
+      -- Copy the lowest words to the entire bus (refer to  "section 9.3 Narrow transfers" of the AMBA spec)
+      for i in (AXI_MAX_DATA_WIDTH_C/128)-1 downto 1 loop
+         v.gpuTxAckMaster.wdata((128*i)+127 downto (128*i)) := v.gpuTxAckMaster.wdata(127 downto 0);
+      end loop;
+
+      --------------------------------------------------------------------------------------------
+
       -- Reset counters
       if (r.cntRst = '1') then
          v.rxFrameCnt              := (others => '0');
@@ -896,6 +954,7 @@ begin
       dmaWrDescRetAck <= r.dmaWrDescRetAck;
       dmaRdDescReq    <= r.dmaRdDescReq;
       dmaRdDescRetAck <= r.dmaRdDescRetAck;
+      gpuTxAckMaster  <= r.gpuTxAckMaster;
 
       -- Reset
       if (axiRst = '1') then

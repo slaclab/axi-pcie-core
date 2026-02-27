@@ -170,7 +170,7 @@ if __name__ == "__main__":
     pci_addr = get_pcie_address(args.dev)
     if args.rescan and (pci_addr != '') and (os.geteuid() != 0):
         print("This script must be run as root (sudo).")
-        if (baseDir != '/opt/fpga_pcie_reprogram/bin'):
+        if (baseDir != '/opt/fpga-pcie-reprogram/bin'):
             print("\n\n\ne.g. sudo $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR>\n\n\n")
         exit()
 

@@ -214,7 +214,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
       writeEnable             => '0',
       writeCount              => (others => '0'),
       nextWriteIdx            => (others => '0'),
-      remoteWriteMaxSize      => (others => '0'),
+      remoteWriteMaxSize      => x"0000_0001",  -- default to 0x1
       remoteWriteEn           => (others => '0'),
       -- Read/TX Signals
       txState                 => IDLE_S,
@@ -516,6 +516,11 @@ begin
       axiSlaveRegisterR(axilEp(0), x"58", 0, r.wrLatency);  -- Only measure for buffer[index=0]
 
       axiSlaveRegister (axilEp(0), x"60", 0, v.remoteWriteMaxSize);
+
+      -- Prevent remoteWriteMaxSize=0 case
+      if (v.remoteWriteMaxSize = 0) then
+         v.remoteWriteMaxSize := x"0000_0001";  -- force it 1 byte
+      end if;
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp(0), v.writeSlaves(0), v.readSlaves(0), AXI_RESP_DECERR_C);

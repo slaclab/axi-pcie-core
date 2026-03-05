@@ -540,7 +540,7 @@ begin
       axiSlaveWaitTxn(axilEp(1), writeMasters(1), readMasters(1), v.writeSlaves(1), v.readSlaves(1));
 
       for i in 0 to MAX_BUFFERS_C-1 loop
-         axiSlaveRegister(axilEp(1), toSlv(i*4, 12), 0, v.writeFreeList(i));
+         axiWrDetect(axilEp(1), toSlv(i*4, 12), v.writeFreeList(i));
       end loop;
 
       -- Closeout the transaction

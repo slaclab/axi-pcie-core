@@ -145,7 +145,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
       writeCount              : slv(BUFF_BIT_WIDTH_C-1 downto 0);
       nextWriteIdx            : slv(BUFF_BIT_WIDTH_C-1 downto 0);
       remoteWriteMaxSize      : slv(31 downto 0);
-      remoteWriteEn           : slv(MAX_BUFFERS_C-1 downto 0);
+      writeFreeList           : slv(MAX_BUFFERS_C-1 downto 0);
       -- Read/TX Signals
       txState                 : StateType;
       txFrameCnt              : slv(31 downto 0);
@@ -155,7 +155,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
       readEnable              : sl;
       readCount               : slv(BUFF_BIT_WIDTH_C-1 downto 0);
       nextReadIdx             : slv(BUFF_BIT_WIDTH_C-1 downto 0);
-      remoteReadEn            : slv(MAX_BUFFERS_C-1 downto 0);
+      readReqList             : slv(MAX_BUFFERS_C-1 downto 0);
       -- Latency Measurements
       totLatency              : slv(31 downto 0);
       totLatencyCnt           : slv(31 downto 0);
@@ -215,7 +215,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
       writeCount              => (others => '0'),
       nextWriteIdx            => (others => '0'),
       remoteWriteMaxSize      => x"0000_0001",  -- default to 0x1
-      remoteWriteEn           => (others => '0'),
+      writeFreeList           => (others => '0'),
       -- Read/TX Signals
       txState                 => IDLE_S,
       txFrameCnt              => (others => '0'),
@@ -225,7 +225,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
       readEnable              => '0',
       readCount               => (others => '0'),
       nextReadIdx             => (others => '0'),
-      remoteReadEn            => (others => '0'),
+      readReqList             => (others => '0'),
       -- Latency Measurements
       totLatency              => (others => '0'),
       totLatencyCnt           => (others => '0'),
@@ -289,6 +289,14 @@ architecture rtl of AxiPcieGpuAsyncControl is
 
    signal remoteReadReq : sl;
    signal remoteReadIdx : slv(BUFF_BIT_WIDTH_C-1 downto 0);
+
+   attribute dont_touch                    : string;
+   attribute dont_touch of r               : signal is "TRUE";
+   attribute dont_touch of remoteWriteAddr : signal is "TRUE";
+   attribute dont_touch of remoteReadAddr  : signal is "TRUE";
+   attribute dont_touch of remoteReadSize  : signal is "TRUE";
+   attribute dont_touch of remoteReadReq   : signal is "TRUE";
+   attribute dont_touch of remoteReadIdx   : signal is "TRUE";
 
 begin
 
@@ -526,26 +534,26 @@ begin
       axiSlaveDefault(axilEp(0), v.writeSlaves(0), v.readSlaves(0), AXI_RESP_DECERR_C);
 
       --------------------------------------------------------------------------------------------
-      -- remoteWriteEn Write-Only: 0x0002_A000:0x0002_AFFF
+      -- writeFreeList Write-Only: 0x0002_A000:0x0002_AFFF
       --------------------------------------------------------------------------------------------
 
       -- Determine the transaction
       axiSlaveWaitTxn(axilEp(1), writeMasters(1), readMasters(1), v.writeSlaves(1), v.readSlaves(1));
 
       for i in 0 to MAX_BUFFERS_C-1 loop
-         axiWrDetect(axilEp(1), toSlv(i*4, 12), v.remoteWriteEn(i));
+         axiSlaveRegister(axilEp(1), toSlv(i*4, 12), v.writeFreeList(i));
       end loop;
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp(1), v.writeSlaves(1), v.readSlaves(1), AXI_RESP_DECERR_C);
 
       --------------------------------------------------------------------------------------------
-      -- remoteReadEn Write-Only: 0x0002_B000:0x0002_BFFF
+      -- readReqList Write-Only: 0x0002_B000:0x0002_BFFF
       --------------------------------------------------------------------------------------------
 
       -- Check for a read request from GPU
       if (remoteReadReq = '1') then
-         v.remoteReadEn(conv_integer(remoteReadIdx)) := '1';
+         v.readReqList(conv_integer(remoteReadIdx)) := '1';
       end if;
 
       --------------------------------------------------------------------------------------------
@@ -556,13 +564,13 @@ begin
       if MIN_SIZE_CONFIG_G then
 
          -- Create the write enable mask with respect to writeCount
-         v.wrEnMask := r.remoteWriteEn;
+         v.wrEnMask := r.writeFreeList;
          if (r.writeCount /= MAX_BUFFERS_C-1) then
             v.wrEnMask(MAX_BUFFERS_C-1 downto conv_integer(r.writeCount+1)) := (others => '0');
          end if;
 
          -- Create the read enable mask with respect to readCount
-         v.rdEnMask := r.remoteReadEn;
+         v.rdEnMask := r.readReqList;
          if (r.readCount /= MAX_BUFFERS_C-1) then
             v.rdEnMask(MAX_BUFFERS_C-1 downto conv_integer(r.readCount+1)) := (others => '0');
          end if;
@@ -612,7 +620,7 @@ begin
          end if;
 
          -- Check for a enable bit
-         if (r.remoteWriteEn(r.wrMonIdx) = '1') then
+         if (r.writeFreeList(r.wrMonIdx) = '1') then
             -- Increment the counter
             v.wrMonCnt := v.wrMonCnt + 1;  -- using variable (not register) for accumulation
          end if;
@@ -637,7 +645,7 @@ begin
          end if;
 
          -- Check for a enable bit
-         if (r.remoteReadEn(r.rdMonIdx) = '1') then
+         if (r.readReqList(r.rdMonIdx) = '1') then
             -- Increment the counter
             v.rdMonCnt := v.rdMonCnt + 1;  -- using variable (not register) for accumulation
          end if;
@@ -676,7 +684,7 @@ begin
          ----------------------------------------------------------------------
          when IDLE_S =>
             -- Check for enabled buffer[0] and latency measurement enabled
-            if (r.remoteWriteEn(0) = '1') and (r.gpuLatencyEn = '1') then
+            if (r.writeFreeList(0) = '1') and (r.gpuLatencyEn = '1') then
 
                -- Stop latency measurement
                v.gpuLatencyEn := '0';
@@ -701,7 +709,7 @@ begin
                v.dmaWrDescAck.buffId(BUFF_BIT_WIDTH_C-1 downto 0) := r.nextWriteIdx;
 
                -- Check if new buffer ready for DMA write transaction or write is disabled
-               if (r.remoteWriteEn(conv_integer(r.nextWriteIdx)) = '1') or (r.writeEnable = '0') then
+               if (r.writeFreeList(conv_integer(r.nextWriteIdx)) = '1') or (r.writeEnable = '0') then
 
                   -- Start the DMA transaction
                   v.dmaWrDescAck.valid := '1';
@@ -713,7 +721,7 @@ begin
                   if (r.writeEnable = '1') then
 
                      -- Reset the flag
-                     v.remoteWriteEn(conv_integer(r.nextWriteIdx)) := '0';
+                     v.writeFreeList(conv_integer(r.nextWriteIdx)) := '0';
 
                      -- Check if buffer[0] index
                      if (r.nextWriteIdx = 0) then
@@ -826,10 +834,10 @@ begin
          when IDLE_S =>
 
             -- Check if read enabled and new buffer ready for DMA read transaction
-            if (r.readEnable = '1') and (r.remoteReadEn(conv_integer(r.nextReadIdx)) = '1') then
+            if (r.readEnable = '1') and (r.readReqList(conv_integer(r.nextReadIdx)) = '1') then
 
                -- Reset the flag
-               v.remoteReadEn(conv_integer(r.nextReadIdx)) := '0';
+               v.readReqList(conv_integer(r.nextReadIdx)) := '0';
 
                -- Increment the buffer index with respect to readCount
                if (r.nextReadIdx >= r.readCount) then  -- Using ">=" operator to catch changing readCount middle of opeeration

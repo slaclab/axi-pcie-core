@@ -285,7 +285,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
 
    signal remoteWriteAddr : slv(63 downto 0);
    signal remoteReadAddr  : slv(63 downto 0);
-   signal remoteReadSize  : slv(31 downto 0);
+   signal readReqSize     : slv(31 downto 0);
 
    signal remoteReadReq : sl;
    signal remoteReadIdx : slv(BUFF_BIT_WIDTH_C-1 downto 0);
@@ -294,7 +294,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
    attribute dont_touch of r               : signal is "TRUE";
    attribute dont_touch of remoteWriteAddr : signal is "TRUE";
    attribute dont_touch of remoteReadAddr  : signal is "TRUE";
-   attribute dont_touch of remoteReadSize  : signal is "TRUE";
+   attribute dont_touch of readReqSize     : signal is "TRUE";
    attribute dont_touch of remoteReadReq   : signal is "TRUE";
    attribute dont_touch of remoteReadIdx   : signal is "TRUE";
 
@@ -414,9 +414,9 @@ begin
          dout           => remoteReadAddr);
 
    --------------------------------------------------------------------------------------------
-   -- remoteReadSize RAM for address decoding
+   -- readReqSize RAM for address decoding
    --------------------------------------------------------------------------------------------
-   U_remoteReadSize : entity surf.AxiDualPortRam
+   U_readReqSize : entity surf.AxiDualPortRam
       generic map (
          TPD_G          => TPD_G,
          COMMON_CLK_G   => false,
@@ -436,7 +436,7 @@ begin
          -- Standard Port
          clk            => axiClk,
          addr           => r.nextReadIdx,
-         dout           => remoteReadSize,
+         dout           => readReqSize,
          axiWrValid     => remoteReadReq,
          axiWrAddr      => remoteReadIdx);
 
@@ -455,9 +455,8 @@ begin
    --------------------------------------------------------------------------------------------
 
    comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet,
-                   gpuTxAckSlave, r, readMasters, remoteReadAddr,
-                   remoteReadIdx, remoteReadReq, remoteReadSize,
-                   remoteWriteAddr, writeMasters) is
+                   gpuTxAckSlave, r, readMasters, readReqSize, remoteReadAddr,
+                   remoteReadIdx, remoteReadReq, remoteWriteAddr, writeMasters) is
       variable v        : RegType;
       variable axilEp   : AxiLiteEndpointArray(2 downto 0);
       variable wStrbIdx : natural;
@@ -850,7 +849,7 @@ begin
                v.dmaRdDescReq.valid     := '1';
                v.dmaRdDescReq.firstUser := x"02";
                v.dmaRdDescReq.lastUser  := (others => '0');
-               v.dmaRdDescReq.size      := remoteReadSize;  -- Requested size from remote
+               v.dmaRdDescReq.size      := readReqSize;  -- Requested size from remote
                v.dmaRdDescReq.continue  := '0';
                v.dmaRdDescReq.id        := (others => '0');
                v.dmaRdDescReq.dest      := (others => '0');

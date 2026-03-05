@@ -77,7 +77,7 @@ class AxiPcieCore(pr.Device):
                 self.add(pcie.AxiGpuAsyncCore(
                     name     = 'AxiGpuAsyncCore',
                     offset    = 0x0002_8000,
-                    expand    = False,
+                    expand    = True,
                 ))
 
             # Check if using BPI PROM (Micron MT28 or Cypress S29GL)

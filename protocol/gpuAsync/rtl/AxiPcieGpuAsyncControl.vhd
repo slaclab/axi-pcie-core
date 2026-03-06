@@ -866,8 +866,9 @@ begin
 
             -- Check if not enabled
             if (r.readEnable = '0') then
-               -- Reset the buffer index
+               -- Reset the buffer index and the free list
                v.nextReadIdx := (others => '0');
+               v.readReqList := (others => '0');
             end if;
 
          ----------------------------------------------------------------------

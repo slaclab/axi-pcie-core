@@ -46,7 +46,7 @@ class AxiGpuAsyncBuffer(pr.Device):
         ))
 
 class AxiGpuAsyncCore(pr.Device):
-    def __init__(self, showBuffers=False,
+    def __init__(self, showBuffers=False, showErrorCnt=False,
                  description = 'Container for the GPUAsync core registers',
                  **kwargs):
         super().__init__(description=description, **kwargs)
@@ -75,6 +75,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 4,
             bitOffset    = 0,
             mode         = kernelVarMode,
+            hidden       = True,
         ))
 
         self.add(pr.RemoteVariable(
@@ -83,6 +84,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 4,
             bitOffset    = 8,
             mode         = kernelVarMode,
+            hidden       = True,
         ))
 
         self.add(pr.RemoteVariable(
@@ -92,10 +94,12 @@ class AxiGpuAsyncCore(pr.Device):
             bitOffset    = 16,
             disp         = '{}',
             mode         = 'RO',
+            units        = 'Bytes',
         ))
 
         self.add(pr.RemoteVariable(
             name         = 'WriteCount',
+            description  = 'Nubmer of configured write buffers to use (zero inclusive)',
             offset       = 0x08,
             bitSize      = 10,
             bitOffset    = 0,
@@ -110,11 +114,13 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 1,
             bitOffset    = 15,
             mode         = kernelVarMode,
+            base         = pr.Bool,
             pollInterval = 1 if kernelVarMode != 'RW' else 0,
         ))
 
         self.add(pr.RemoteVariable(
             name         = 'ReadCount',
+            description  = 'Nubmer of configured read buffers to use (zero inclusive)',
             offset       = 0x08,
             bitSize      = 10,
             bitOffset    = 16,
@@ -128,6 +134,7 @@ class AxiGpuAsyncCore(pr.Device):
             offset       = 0x08,
             bitSize      = 1,
             bitOffset    = 31,
+            base         = pr.Bool,
             mode         = kernelVarMode,
             pollInterval = 1 if kernelVarMode != 'RW' else 0,
         ))
@@ -157,6 +164,7 @@ class AxiGpuAsyncCore(pr.Device):
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
+            hidden       = not showErrorCnt,
         ))
 
         self.add(pr.RemoteVariable(
@@ -166,6 +174,7 @@ class AxiGpuAsyncCore(pr.Device):
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
+            hidden       = not showErrorCnt,
         ))
 
         self.add(pr.RemoteCommand(
@@ -183,6 +192,7 @@ class AxiGpuAsyncCore(pr.Device):
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
+            hidden       = not showErrorCnt,
         ))
 
         self.add(pr.RemoteVariable(
@@ -192,6 +202,7 @@ class AxiGpuAsyncCore(pr.Device):
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
+            hidden       = not showErrorCnt,
         ))
 
         self.add(pr.RemoteVariable(
@@ -199,6 +210,7 @@ class AxiGpuAsyncCore(pr.Device):
             offset       = 0x30,
             bitSize      = 8,
             mode         = 'RO',
+            disp         = '{}',
         ))
 
         self.add(pr.RemoteVariable(
@@ -208,14 +220,16 @@ class AxiGpuAsyncCore(pr.Device):
             disp         = '{}',
             mode         = 'RO',
             pollInterval = 1,
+            hidden       = not showErrorCnt,
         ))
 
         self.add(pr.RemoteVariable(
-            name    = 'AxisDeMuxSelect',
-            offset  = 0x38,
-            bitSize = 1,
-            mode    = 'RW', # Exposed to userspace as read/write
-            enum    = {
+            name         = 'AxisDeMuxSelect',
+            description  = 'Selects where the AXIS stream is sent/received from the CPU (debug) or the GPU (normal operation)',
+            offset       = 0x38,
+            bitSize      = 1,
+            mode         = 'RW', # Exposed to userspace as read/write for debugging
+            enum         = {
                 0x0: 'CPU_path',
                 0x1: 'GPU_path',
             },
@@ -247,6 +261,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
+            units        = 'axiClk cycles',
             pollInterval = 1,
         ))
 
@@ -256,6 +271,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
+            units        = 'axiClk cycles',
             pollInterval = 1,
         ))
 
@@ -265,13 +281,16 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 32,
             disp         = '{}',
             mode         = 'RO',
+            units        = 'axiClk cycles',
             pollInterval = 1,
         ))
 
         self.add(pr.RemoteVariable(
             name         = 'RemoteWriteMaxSize',
+            description  = 'Configured maximum write buffer size to use (zero exclusive)',
             offset       = 0x60,
             bitSize      = 32,
+            units        = 'Bytes',
             mode         = kernelVarMode,
             pollInterval = 1 if kernelVarMode != 'RW' else 0,
         ))

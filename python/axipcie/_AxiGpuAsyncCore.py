@@ -232,8 +232,8 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'MinReadBuffer',
-            description  = 'Minimum number of read buffers availible since CountReset()',
+            name         = 'MaxReadBuffer',
+            description  = 'Maximum number of read buffers being worked on since CountReset()',
             offset       = 0x40,
             bitSize      = 11,
             disp         = '{}',

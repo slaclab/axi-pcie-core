@@ -186,7 +186,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
       wrBuffSize              : slv(10 downto 0);
       rdBuffSize              : slv(10 downto 0);
       minWriteBuffer          : slv(10 downto 0);
-      minReadBuffer           : slv(10 downto 0);
+      maxReadBuffer           : slv(10 downto 0);
       -- DMA Control
       dmaWrDescAck            : AxiWriteDmaDescAckType;
       dmaWrDescRetAck         : sl;
@@ -256,7 +256,7 @@ architecture rtl of AxiPcieGpuAsyncControl is
       wrBuffSize              => (others => '0'),
       rdBuffSize              => (others => '0'),
       minWriteBuffer          => (others => '0'),
-      minReadBuffer           => (others => '0'),
+      maxReadBuffer           => (others => '0'),
       -- DMA Control
       dmaWrDescAck            => AXI_WRITE_DMA_DESC_ACK_INIT_C,
       dmaWrDescRetAck         => '0',
@@ -516,7 +516,7 @@ begin
       axiSlaveRegister (axilEp(0), x"38", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
 
       axiSlaveRegisterR(axilEp(0), x"3C", 0, r.minWriteBuffer);
-      axiSlaveRegisterR(axilEp(0), x"40", 0, r.minReadBuffer);
+      axiSlaveRegisterR(axilEp(0), x"40", 0, r.maxReadBuffer);
 
       axiSlaveRegisterR(axilEp(0), x"48", 0, r.totLatency);  -- Only measure for buffer[index=0]
       axiSlaveRegisterR(axilEp(0), x"50", 0, r.gpuLatency);  -- Only measure for buffer[index=0]
@@ -670,10 +670,10 @@ begin
          v.minWriteBuffer := r.wrBuffSize;
       end if;
 
-      -- Check for reset or new min. value condition
-      if (r.cntRst = '1') or (r.rdBuffSize < r.minReadBuffer) then
+      -- Check for reset or new max. value condition
+      if (r.cntRst = '1') or (r.rdBuffSize > r.maxReadBuffer) then
          -- Update the value
-         v.minReadBuffer := r.rdBuffSize;
+         v.maxReadBuffer := r.rdBuffSize;
       end if;
 
       --------------------------------------------------------------------------------------------

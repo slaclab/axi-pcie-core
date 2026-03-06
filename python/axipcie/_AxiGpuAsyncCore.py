@@ -101,7 +101,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitOffset    = 0,
             disp         = '{}',
             mode         = kernelVarMode,
-            pollInterval = 1,
+            pollInterval = 1 if kernelVarMode != 'RW' else 0,
         ))
 
         self.add(pr.RemoteVariable(
@@ -110,7 +110,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 1,
             bitOffset    = 15,
             mode         = kernelVarMode,
-            pollInterval = 1,
+            pollInterval = 1 if kernelVarMode != 'RW' else 0,
         ))
 
         self.add(pr.RemoteVariable(
@@ -120,7 +120,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitOffset    = 16,
             disp         = '{}',
             mode         = kernelVarMode,
-            pollInterval = 1,
+           pollInterval  = 1 if kernelVarMode != 'RW' else 0,
         ))
 
         self.add(pr.RemoteVariable(
@@ -129,7 +129,7 @@ class AxiGpuAsyncCore(pr.Device):
             bitSize      = 1,
             bitOffset    = 31,
             mode         = kernelVarMode,
-            pollInterval = 1,
+            pollInterval = 1 if kernelVarMode != 'RW' else 0,
         ))
 
         self.add(pr.RemoteVariable(
@@ -273,6 +273,7 @@ class AxiGpuAsyncCore(pr.Device):
             offset       = 0x60,
             bitSize      = 32,
             mode         = kernelVarMode,
+            pollInterval = 1 if kernelVarMode != 'RW' else 0,
         ))
 
         # GPU AXI Stream Inbound Monitor

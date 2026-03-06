@@ -221,11 +221,12 @@ begin
 
    U_DmaWrite : entity surf.AxiStreamDmaV2Write
       generic map (
-         TPD_G          => TPD_G,
-         AXI_READY_EN_G => true,
-         BURST_BYTES_G  => BURST_BYTES_G,
-         AXIS_CONFIG_G  => PCIE_AXIS_CONFIG_C,
-         AXI_CONFIG_G   => AXI_PCIE_CONFIG_C)
+         TPD_G             => TPD_G,
+         AXI_READY_EN_G    => true,
+         AXIS_CONFIG_G     => PCIE_AXIS_CONFIG_C,
+         AXI_CONFIG_G      => AXI_PCIE_CONFIG_C,
+         BURST_BYTES_G     => BURST_BYTES_G,
+         ACK_WAIT_BVALID_G => false)
       port map (
          axiClk          => axiClk,
          axiRst          => axiRst,
@@ -241,9 +242,10 @@ begin
 
    U_DmaWriteMux : entity surf.AxiStreamDmaV2WriteMux
       generic map (
-         TPD_G          => TPD_G,
-         AXI_CONFIG_G   => AXI_PCIE_CONFIG_C,
-         AXI_READY_EN_G => true)
+         TPD_G             => TPD_G,
+         AXI_CONFIG_G      => AXI_PCIE_CONFIG_C,
+         AXI_READY_EN_G    => true,
+         ACK_WAIT_BVALID_G => false)
       port map (
          -- Clock and reset
          axiClk          => axiClk,

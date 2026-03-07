@@ -236,7 +236,7 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'MinWriteBuffer',
+            name         = 'MinWriteFreeList',
             description  = 'Minimum number of write buffers availible since CountReset()',
             offset       = 0x3C,
             bitSize      = 11,
@@ -246,7 +246,7 @@ class AxiGpuAsyncCore(pr.Device):
         ))
 
         self.add(pr.RemoteVariable(
-            name         = 'MaxReadBuffer',
+            name         = 'MaxReadQueueList',
             description  = 'Maximum number of read buffers being worked on since CountReset()',
             offset       = 0x40,
             bitSize      = 11,
@@ -321,3 +321,5 @@ class AxiGpuAsyncCore(pr.Device):
 
     def countReset(self):
         self.CountReset()
+        self.GpuIbAxisMon.CntRst()
+        self.GpuObAxisMon.CntRst()

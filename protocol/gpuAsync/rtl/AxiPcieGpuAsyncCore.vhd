@@ -34,6 +34,7 @@ entity AxiPcieGpuAsyncCore is
       TPD_G               : time                    := 1 ns;
       DEFAULT_DEMUX_SEL_G : sl                      := '1';  -- 1: GPU path, 0: CPU path
       BURST_BYTES_G       : integer range 1 to 4096 := 4096;
+      RD_PEND_THRESH_G    : positive                := 2**14;
       DMA_AXIS_CONFIG_G   : AxiStreamConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -268,9 +269,10 @@ begin
       generic map (
          TPD_G           => TPD_G,
          AXIS_READY_EN_G => true,
-         BURST_BYTES_G   => BURST_BYTES_G,
          AXIS_CONFIG_G   => PCIE_AXIS_CONFIG_C,
-         AXI_CONFIG_G    => AXI_PCIE_CONFIG_C)
+         AXI_CONFIG_G    => AXI_PCIE_CONFIG_C,
+         BURST_BYTES_G   => BURST_BYTES_G,
+         PEND_THRESH_G   => RD_PEND_THRESH_G)
       port map (
          axiClk          => axiClk,
          axiRst          => axiRst,

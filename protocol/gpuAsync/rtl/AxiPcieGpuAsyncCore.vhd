@@ -33,8 +33,8 @@ entity AxiPcieGpuAsyncCore is
    generic (
       TPD_G               : time                    := 1 ns;
       DEFAULT_DEMUX_SEL_G : sl                      := '1';  -- 1: GPU path, 0: CPU path
-      MAX_BUFFERS_G       : integer range 1 to 16   := 4;
       BURST_BYTES_G       : integer range 1 to 4096 := 4096;
+      RD_PEND_THRESH_G    : positive                := 2**14;
       DMA_AXIS_CONFIG_G   : AxiStreamConfigType);
    port (
       -- AXI4-Lite Interfaces (axilClk domain)
@@ -75,25 +75,10 @@ architecture mapping of AxiPcieGpuAsyncCore is
       TUSER_BITS_C  => 8,
       TUSER_MODE_C  => TUSER_FIRST_LAST_C);
 
-   constant NUM_AXI_MASTERS_C : natural := 3;
-   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
-      0               => (
-         baseAddr     => x"0002_8000",  -- 0x0002_8000:0x0002_BFFF
-         addrBits     => 14,
-         connectivity => x"FFFF"),
-      1               => (
-         baseAddr     => x"0002_C000",
-         addrBits     => 12,
-         connectivity => x"FFFF"),
-      2               => (
-         baseAddr     => x"0002_E000",
-         addrBits     => 12,
-         connectivity => x"FFFF"));
-
-   signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
-   signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXI_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
-   signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
-   signal axilWriteSlaves  : AxiLiteWriteSlaveArray(NUM_AXI_MASTERS_C-1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+   signal monReadMasters  : AxiLiteReadMasterArray(1 downto 0);
+   signal monReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal monWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
+   signal monWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
    signal dmaWrDescReq    : AxiWriteDmaDescReqType;
    signal dmaWrDescAck    : AxiWriteDmaDescAckType;
@@ -105,6 +90,7 @@ architecture mapping of AxiPcieGpuAsyncCore is
    signal dmaRdDescRet    : AxiReadDmaDescRetType;
    signal dmaRdDescRetAck : sl;
 
+   signal axisDeMuxSelect   : sl;
    signal dynamicRouteMasks : Slv8Array(1 downto 0);
    signal dynamicRouteDests : Slv8Array(1 downto 0);
    signal mAxisDemuxMasters : AxiStreamMasterArray(1 downto 0);
@@ -118,32 +104,17 @@ architecture mapping of AxiPcieGpuAsyncCore is
    signal mAxisMasterInt : AxiStreamMasterType;
    signal mAxisSlaveInt  : AxiStreamSlaveType;
 
+   signal dataWriteMaster : AxiWriteMasterType;
+   signal dataWriteSlave  : AxiWriteSlaveType;
+
+   signal gpuTxAckMaster : AxiWriteMasterType;
+   signal gpuTxAckSlave  : AxiWriteSlaveType;
+
 begin
 
    -- direct connection to Pcie core from Demux
    bypassMaster        <= mAxisDemuxMasters(1);
    mAxisDemuxSlaves(1) <= bypassSlave;
-
-   --------------------
-   -- AXI-Lite Crossbar
-   --------------------
-   U_XBAR : entity surf.AxiLiteCrossbar
-      generic map (
-         TPD_G              => TPD_G,
-         NUM_SLAVE_SLOTS_G  => 1,
-         NUM_MASTER_SLOTS_G => NUM_AXI_MASTERS_C,
-         MASTERS_CONFIG_G   => XBAR_CONFIG_C)
-      port map (
-         axiClk              => axilClk,
-         axiClkRst           => axilRst,
-         sAxiWriteMasters(0) => axilWriteMaster,
-         sAxiWriteSlaves(0)  => axilWriteSlave,
-         sAxiReadMasters(0)  => axilReadMaster,
-         sAxiReadSlaves(0)   => axilReadSlave,
-         mAxiWriteMasters    => axilWriteMasters,
-         mAxiWriteSlaves     => axilWriteSlaves,
-         mAxiReadMasters     => axilReadMasters,
-         mAxiReadSlaves      => axilReadSlaves);
 
    ------------------------------
    -- AXI-Lite Control/Monitoring
@@ -152,33 +123,47 @@ begin
       generic map (
          TPD_G               => TPD_G,
          DEFAULT_DEMUX_SEL_G => DEFAULT_DEMUX_SEL_G,
-         MAX_BUFFERS_G       => MAX_BUFFERS_G,
          DMA_AXI_CONFIG_G    => AXI_PCIE_CONFIG_C)
       port map (
-         axilClk           => axilClk,
-         axilRst           => axilRst,
-         axilReadMaster    => axilReadMasters(0),
-         axilReadSlave     => axilReadSlaves(0),
-         axilWriteMaster   => axilWriteMasters(0),
-         axilWriteSlave    => axilWriteSlaves(0),
-         axiClk            => axiClk,
-         axiRst            => axiRst,
-         dynamicRouteMasks => dynamicRouteMasks,
-         dynamicRouteDests => dynamicRouteDests,
-         awCache           => awCache,
-         dmaWrDescReq      => dmaWrDescReq,
-         dmaWrDescAck      => dmaWrDescAck,
-         dmaWrDescRet      => dmaWrDescRet,
-         dmaWrDescRetAck   => dmaWrDescRetAck,
-         dmaRdDescReq      => dmaRdDescReq,
-         dmaRdDescAck      => dmaRdDescAck,
-         dmaRdDescRet      => dmaRdDescRet,
-         dmaRdDescRetAck   => dmaRdDescRetAck);
+         -- AXI-Lite Interfaces (axilClk domain)
+         axilClk         => axilClk,
+         axilRst         => axilRst,
+         axilReadMaster  => axilReadMaster,
+         axilReadSlave   => axilReadSlave,
+         axilWriteMaster => axilWriteMaster,
+         axilWriteSlave  => axilWriteSlave,
+         -- AXI Stream Monitors (axilClk domain)
+         monWriteMasters => monWriteMasters,
+         monWriteSlaves  => monWriteSlaves,
+         monReadMasters  => monReadMasters,
+         monReadSlaves   => monReadSlaves,
+         -- AxiStreamDeMux  (axisClk domain)
+         axisClk         => axisClk,
+         axisRst         => axisRst,
+         axisDeMuxSelect => axisDeMuxSelect,
+         -- AXI4 Memory Config (axiClk domain)
+         axiClk          => axiClk,
+         axiRst          => axiRst,
+         awCache         => awCache,
+         arCache         => arCache,
+         -- GPU TX Doorbell ACK (axiClk domain)
+         gpuTxAckMaster  => gpuTxAckMaster,
+         gpuTxAckSlave   => gpuTxAckSlave,
+         -- DMA Write Engine (axiClk domain)
+         dmaWrDescReq    => dmaWrDescReq,
+         dmaWrDescAck    => dmaWrDescAck,
+         dmaWrDescRet    => dmaWrDescRet,
+         dmaWrDescRetAck => dmaWrDescRetAck,
+         -- DMA Read Engine (axiClk domain)
+         dmaRdDescReq    => dmaRdDescReq,
+         dmaRdDescAck    => dmaRdDescAck,
+         dmaRdDescRet    => dmaRdDescRet,
+         dmaRdDescRetAck => dmaRdDescRetAck);
 
    ------------------------------
    -- AXI-Stream Demux
    ------------------------------
-   AxiStreamDeMux_inst : entity surf.AxiStreamDeMux
+   U_AxiStreamDeMux : entity surf.AxiStreamDeMux
       generic map (
          TPD_G         => TPD_G,
          NUM_MASTERS_G => 2,
@@ -191,8 +176,25 @@ begin
          sAxisMaster       => sAxisMaster,
          sAxisSlave        => sAxisSlave,
          mAxisMasters      => mAxisDemuxMasters,
-         mAxisSlaves       => mAxisDemuxSlaves
-         );
+         mAxisSlaves       => mAxisDemuxSlaves);
+
+   process(axisDeMuxSelect)
+   begin
+      -- Check for GPU path
+      if axisDeMuxSelect = '1' then
+         dynamicRouteMasks(0) <= x"00";
+         dynamicRouteMasks(1) <= x"FF";
+         dynamicRouteDests(0) <= x"00";
+         dynamicRouteDests(1) <= x"FF";
+
+      -- Else using CPU path
+      else
+         dynamicRouteMasks(1) <= x"00";
+         dynamicRouteMasks(0) <= x"FF";
+         dynamicRouteDests(1) <= x"00";
+         dynamicRouteDests(0) <= x"FF";
+      end if;
+   end process;
 
    ------------------------------------
    -- Stream receiver to GPU DMA
@@ -220,11 +222,12 @@ begin
 
    U_DmaWrite : entity surf.AxiStreamDmaV2Write
       generic map (
-         TPD_G          => TPD_G,
-         AXI_READY_EN_G => true,
-         BURST_BYTES_G  => BURST_BYTES_G,
-         AXIS_CONFIG_G  => PCIE_AXIS_CONFIG_C,
-         AXI_CONFIG_G   => AXI_PCIE_CONFIG_C)
+         TPD_G             => TPD_G,
+         AXI_READY_EN_G    => true,
+         AXIS_CONFIG_G     => PCIE_AXIS_CONFIG_C,
+         AXI_CONFIG_G      => AXI_PCIE_CONFIG_C,
+         BURST_BYTES_G     => BURST_BYTES_G,
+         ACK_WAIT_BVALID_G => false)
       port map (
          axiClk          => axiClk,
          axiRst          => axiRst,
@@ -235,8 +238,29 @@ begin
          axiCache        => awCache,
          axisMaster      => sAxisMasterInt,
          axisSlave       => sAxisSlaveInt,
-         axiWriteMaster  => axiWriteMaster,
-         axiWriteSlave   => axiWriteSlave);
+         axiWriteMaster  => dataWriteMaster,
+         axiWriteSlave   => dataWriteSlave);
+
+   U_DmaWriteMux : entity surf.AxiStreamDmaV2WriteMux
+      generic map (
+         TPD_G             => TPD_G,
+         AXI_CONFIG_G      => AXI_PCIE_CONFIG_C,
+         AXI_READY_EN_G    => true,
+         ACK_WAIT_BVALID_G => false)
+      port map (
+         -- Clock and reset
+         axiClk          => axiClk,
+         axiRst          => axiRst,
+         -- DMA Data Write Path
+         dataWriteMaster => dataWriteMaster,
+         dataWriteSlave  => dataWriteSlave,
+         -- DMA Descriptor Write Path
+         descWriteMaster => gpuTxAckMaster,
+         descWriteSlave  => gpuTxAckSlave,
+         -- MUX Write Path
+         mAxiWriteMaster => axiWriteMaster,
+         mAxiWriteSlave  => axiWriteSlave,
+         mAxiWriteCtrl   => AXI_CTRL_UNUSED_C);
 
    ------------------------------------
    -- Stream transmitter from GPU DMA
@@ -245,9 +269,10 @@ begin
       generic map (
          TPD_G           => TPD_G,
          AXIS_READY_EN_G => true,
-         BURST_BYTES_G   => BURST_BYTES_G,
          AXIS_CONFIG_G   => PCIE_AXIS_CONFIG_C,
-         AXI_CONFIG_G    => AXI_PCIE_CONFIG_C)
+         AXI_CONFIG_G    => AXI_PCIE_CONFIG_C,
+         BURST_BYTES_G   => BURST_BYTES_G,
+         PEND_THRESH_G   => RD_PEND_THRESH_G)
       port map (
          axiClk          => axiClk,
          axiRst          => axiRst,
@@ -301,10 +326,10 @@ begin
          -- AXI lite slave port for register access
          axilClk          => axilClk,
          axilRst          => axilRst,
-         sAxilWriteMaster => axilWriteMasters(1),
-         sAxilWriteSlave  => axilWriteSlaves(1),
-         sAxilReadMaster  => axilReadMasters(1),
-         sAxilReadSlave   => axilReadSlaves(1));
+         sAxilWriteMaster => monWriteMasters(0),
+         sAxilWriteSlave  => monWriteSlaves(0),
+         sAxilReadMaster  => monReadMasters(0),
+         sAxilReadSlave   => monReadSlaves(0));
 
    ---------------------------------
    -- Monitor the GPU Inbound Stream
@@ -325,9 +350,9 @@ begin
          -- AXI lite slave port for register access
          axilClk          => axilClk,
          axilRst          => axilRst,
-         sAxilWriteMaster => axilWriteMasters(2),
-         sAxilWriteSlave  => axilWriteSlaves(2),
-         sAxilReadMaster  => axilReadMasters(2),
-         sAxilReadSlave   => axilReadSlaves(2));
+         sAxilWriteMaster => monWriteMasters(1),
+         sAxilWriteSlave  => monWriteSlaves(1),
+         sAxilReadMaster  => monReadMasters(1),
+         sAxilReadSlave   => monReadSlaves(1));
 
 end mapping;

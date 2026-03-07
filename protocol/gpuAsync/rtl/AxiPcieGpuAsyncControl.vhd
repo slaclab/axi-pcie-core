@@ -454,9 +454,10 @@ begin
 
    --------------------------------------------------------------------------------------------
 
-   comb : process (axiRst, dmaRdDescRet, dmaWrDescReq, dmaWrDescRet,
-                   gpuTxAckSlave, r, readMasters, readReqSize, remoteReadAddr,
-                   remoteReadIdx, remoteReadReq, remoteWriteAddr, writeMasters) is
+   comb : process (axiRst, dmaRdDescAck, dmaRdDescRet, dmaWrDescReq,
+                   dmaWrDescRet, gpuTxAckSlave, r, readMasters, readReqSize,
+                   remoteReadAddr, remoteReadIdx, remoteReadReq,
+                   remoteWriteAddr, writeMasters) is
       variable v        : RegType;
       variable axilEp   : AxiLiteEndpointArray(2 downto 0);
       variable wStrbIdx : natural;
@@ -465,11 +466,7 @@ begin
       v := r;
 
       -- Reset strobes
-      v.cntRst             := '0';
-      v.dmaWrDescAck.valid := '0';
-      v.dmaRdDescReq.valid := '0';
-      v.dmaWrDescRetAck    := '0';
-      v.dmaRdDescRetAck    := '0';
+      v.cntRst := '0';
 
       -- Latency Counters
       if (r.totLatencyEn = '1') and (r.totLatencyCnt /= x"FFFF_FFFF") then
@@ -679,6 +676,11 @@ begin
       --------------------------------------------------------------------------------------------
       -- Write/RX State Machine
       --------------------------------------------------------------------------------------------
+
+      -- Flow control and handshaking
+      v.dmaWrDescAck.valid := '0';
+      v.dmaWrDescRetAck    := '0';
+
       case r.rxState is
          ----------------------------------------------------------------------
          when IDLE_S =>
@@ -751,13 +753,6 @@ begin
                end if;  -- Check if new buffer ready for DMA write transaction or write is disabled
 
             end if;  -- Check if there is a DMA request
-
-            -- Check if not enabled
-            if (r.writeEnable = '0') then
-               -- Reset the buffer index
-               v.nextWriteIdx := (others => '0');
-            end if;
-
          ----------------------------------------------------------------------
          when MOVE_S =>
             -- Wait for the DMA to complete
@@ -815,6 +810,12 @@ begin
       ----------------------------------------------------------------------
       end case;
 
+      -- Check if not enabled
+      if (r.writeEnable = '0') then
+         -- Reset the buffer index
+         v.nextWriteIdx := (others => '0');
+      end if;
+
       --------------------------------------------------------------------------------------------
       -- Read/TX State Machine
       --------------------------------------------------------------------------------------------
@@ -828,12 +829,16 @@ begin
          v.gpuTxAckMaster.wvalid := '0';
       end if;
 
+      v.dmaRdDescRetAck := '0';
+      if (dmaRdDescAck = '1') then
+         v.dmaRdDescReq.valid := '0';
+      end if;
+
       case r.txState is
          ----------------------------------------------------------------------
          when IDLE_S =>
-
             -- Check if read enabled and new buffer ready for DMA read transaction
-            if (r.readEnable = '1') and (r.readReqList(conv_integer(r.nextReadIdx)) = '1') then
+            if (r.readEnable = '1') and (r.readReqList(conv_integer(r.nextReadIdx)) = '1') and (r.dmaRdDescReq.valid = '0') then
 
                -- Reset the flag
                v.readReqList(conv_integer(r.nextReadIdx)) := '0';
@@ -863,14 +868,6 @@ begin
                v.txState := MOVE_S;
 
             end if;
-
-            -- Check if not enabled
-            if (r.readEnable = '0') then
-               -- Reset the buffer index and the free list
-               v.nextReadIdx := (others => '0');
-               v.readReqList := (others => '0');
-            end if;
-
          ----------------------------------------------------------------------
          when MOVE_S =>
             -- Wait for the DMA to complete and ready to send the TX ACK to the GPU
@@ -922,6 +919,13 @@ begin
       ----------------------------------------------------------------------
       end case;
 
+      -- Check if not enabled
+      if (r.readEnable = '0') then
+         -- Reset the buffer index and the free list
+         v.nextReadIdx := (others => '0');
+         v.readReqList := (others => '0');
+      end if;
+
       -- Section A3.4.3 Data read and write structure: Write strobes - Narrow transfers
       v.gpuTxAckMaster.wstrb            := (others => '0');
       -- Check for 64-bit or 128-bit case
@@ -966,7 +970,7 @@ begin
       dmaWrDescAck    <= r.dmaWrDescAck;
       dmaWrDescRetAck <= r.dmaWrDescRetAck;
       dmaRdDescReq    <= r.dmaRdDescReq;
-      dmaRdDescRetAck <= r.dmaRdDescRetAck;
+      dmaRdDescRetAck <= v.dmaRdDescRetAck;  -- comb output
       gpuTxAckMaster  <= r.gpuTxAckMaster;
 
       -- Reset

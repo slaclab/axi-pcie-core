@@ -271,7 +271,7 @@ begin
          AXIS_CONFIG_G   => PCIE_AXIS_CONFIG_C,
          AXI_CONFIG_G    => AXI_PCIE_CONFIG_C,
          BURST_BYTES_G   => BURST_BYTES_G,
-         PEND_THRESH_G   => 512*AXI_PCIE_CONFIG_C.DATA_BYTES_C)  -- 512 deep store/forward in the AxiPcieCrossbar
+         PEND_THRESH_G   => 1024*AXI_PCIE_CONFIG_C.DATA_BYTES_C)  -- 1024 deep buffering (Master 512 deep + Slave 512 deep) in the AxiPcieCrossbar
       port map (
          axiClk          => axiClk,
          axiRst          => axiRst,

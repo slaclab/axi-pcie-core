@@ -177,25 +177,6 @@ if __name__ == "__main__":
     # Get a sorted list of all matching /proc/datadev* entries
     devices = sorted(glob.glob("/dev/datadev*"))
 
-    if args.package is not None:
-        BasePackage = importlib.import_module(args.package)
-        args.path = BasePackage.ImageDir
-
-    if args.path is None:
-        print("\nInvalid images directory, use --path or --package args\n")
-        parser.print_help()
-        exit()
-
-    # Check if path exists
-    if not os.path.exists(args.path):
-        print(f"\n[ERROR]: {args.path} directory does NOT exist\n")
-        sys.exit(1)
-
-    # Check if path is a directory
-    if not os.path.isdir(args.path):
-        print(f"\n[ERROR]: {args.path} is NOT a directory\n")
-        sys.exit(1)
-
     #################################################################
 
     with Root(dev=args.dev) as root:
@@ -234,14 +215,37 @@ if __name__ == "__main__":
             AxiVersion.FpgaReload()
 
         else:
+
+            if args.package is not None:
+                BasePackage = importlib.import_module(args.package)
+                args.path = BasePackage.ImageDir
+
+            if args.path is None:
+                print("\nInvalid images directory, use --path or --package args\n")
+                parser.print_help()
+                exit()
+
+            # Check if path exists
+            if not os.path.exists(args.path):
+                print(f"\n[ERROR]: {args.path} directory does NOT exist\n")
+                sys.exit(1)
+
+            # Check if path is a directory
+            if not os.path.isdir(args.path):
+                print(f"\n[ERROR]: {args.path} is NOT a directory\n")
+                sys.exit(1)
+
             # Get a list of images, using .mcs first
             imgLst = odict()
 
             curImageName = AxiVersion.ImageName.get()
-            prefLst = glob.glob('{}/{}*.mcs*'.format(args.path,curImageName))
-
+            prefLst = glob.glob('{}/{}*.mcs*'.format(args.path, curImageName))
             raw_files = glob.glob(f"{args.path}/*.mcs*")
-            for filename in prefLst + raw_files:
+
+            # Combine and deduplicate while preserving order (preferred files first)
+            all_files = prefLst + [f for f in raw_files if f not in prefLst]
+
+            for filename in all_files:
 
                 # Determine suffix
                 if filename.endswith(".mcs.gz"):
@@ -261,14 +265,11 @@ if __name__ == "__main__":
                 imgLst[base] = suffix
 
             if not imgLst:
+                print(f"\nProgramming (.mcs, .mcs.gz) files NOT detected in the --path arg directory!")
+                print(f"Please double check the path for necessary programming files")
                 if args.rescan:
-                    print("No files detected and running as root (sudo).")
-                    print("This is likely due to lack of permission for root (sudo).")
-                    print("\n\n\ne.g. python scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR> --rescan 0\n\n\n")
-                    print("Note: Using \"--rescan 0\" will disable the rescan feature and require a reboot after programming\n\n\n")
-                else:
-                    print("Programming (.mcs, .mcs.gz) files NOT detected!")
-                    print(f"Please double check {args.path} path for neccesary programming files")
+                    print("\nNote: Running as root (sudo) may cause permission issues.")
+                    print(f"      Verify root has read access: sudo ls -lath {args.path}\n")
                 exit()
 
             # Sort image dict reverse alphabetically

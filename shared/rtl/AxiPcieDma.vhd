@@ -163,7 +163,7 @@ begin
             CHAN_COUNT_G       => DMA_SIZE_G,
             RD_PIPE_STAGES_G   => 1,
             BURST_BYTES_G      => DMA_BURST_BYTES_G,
-            RD_PEND_THRESH_G   => 1)
+            RD_PEND_THRESH_G   => 512*DMA_AXI_CONFIG_C.DATA_BYTES_C)  -- 512 deep store/forward in the AxiPcieCrossbar
          port map (
             -- Clock/Reset
             axiClk          => axiClk,

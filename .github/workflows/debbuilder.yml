@@ -2,7 +2,7 @@ name: Build and Release FPGA PCIe Deb (Ubuntu 20.04)
 on:
   push:
     tags:
-      - 'v*'
+      - '0.0.0-test'
 
 jobs:
   build-pkg:

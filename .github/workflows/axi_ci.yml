@@ -14,7 +14,10 @@
 # secrets.CONDA_UPLOAD_TOKEN_TAG
 
 name: AXI-PCIE Core Integration
-on: [push]
+on:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
 

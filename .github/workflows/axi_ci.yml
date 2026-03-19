@@ -65,3 +65,128 @@ jobs:
       CONDA_UPLOAD_TOKEN_TAG: ${{ secrets.CONDA_UPLOAD_TOKEN_TAG }}
 
 # ----------------------------------------------------------------------------
+
+  build-deb-pkg:
+    needs: [test_and_document]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    outputs:
+      tag_name: ${{ github.ref_name }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: sudo_rogue_axpcie_surf_env_v3
+          channels: conda-forge,tidair-tag
+          python-version: '3.10'
+          cache-environment: true
+          cache-environment-key: ${{ runner.os }}-focal-conda-v1
+
+      - name: Install Dependencies
+        shell: bash -l {0}
+        run: |
+          conda install rogue axi_pcie_core surf conda-pack -y
+
+      - name: Build Package Structure
+        shell: bash -l {0}
+        run: |
+          # --- Configuration Variables ---
+          export PKG_NAME="fpga-pcie-reprogram"
+          export PY_SRC_DIR="scripts"             # The folder in your repo
+          export PY_SRC_FILENAME="updatePcieFpga" # The file name
+
+          export INSTALL_PATH="/opt/$PKG_NAME"
+          export STAGE_DIR="package_root"
+
+          # 1. Create Directories
+          mkdir -p $STAGE_DIR/DEBIAN
+          mkdir -p $STAGE_DIR$INSTALL_PATH/{bin,env}
+          mkdir -p $STAGE_DIR/usr/local/bin
+
+          # 2. Pack and Unpack Environment
+          conda-pack -n sudo_rogue_axpcie_surf_env_v3 -o env.tar.gz
+          tar -xzf env.tar.gz -C $STAGE_DIR$INSTALL_PATH/env/
+          rm env.tar.gz
+
+          # 3. Copy Source File using variables
+          cp "$PY_SRC_DIR/$PY_SRC_FILENAME" "$STAGE_DIR$INSTALL_PATH/bin/"
+
+          # 4. Create the Launcher Script
+          # Points to the specific filename you defined above
+          cat <<EOF > $STAGE_DIR/usr/local/bin/$PKG_NAME
+          #!/bin/bash
+          $INSTALL_PATH/env/bin/python $INSTALL_PATH/bin/$PY_SRC_FILENAME "\$@"
+          EOF
+          chmod +x $STAGE_DIR/usr/local/bin/$PKG_NAME
+
+          # 5. Create Debian Control File
+          VERSION_CLEAN=${{ github.ref_name }}
+          cat <<EOF > $STAGE_DIR/DEBIAN/control
+          Package: $PKG_NAME
+          Version: ${VERSION_CLEAN#v}
+          Architecture: amd64
+          Maintainer: Benjamin Mencer <bmencer@slac.stanford.edu>
+          Description: FPGA PCIe Reprogramming tool (20.04 build, 22.04 compatible)
+          EOF
+
+          # 6. Create Post-Install Script
+          cat <<EOF > $STAGE_DIR/DEBIAN/postinst
+          #!/bin/bash
+          $INSTALL_PATH/env/bin/python -m conda_unpack
+          exit 0
+          EOF
+          chmod 755 $STAGE_DIR/DEBIAN/postinst
+
+          # 7. Create Post-Remove Script (Cleanup)
+          cat <<EOF > $STAGE_DIR/DEBIAN/postrm
+          #!/bin/bash
+          if [ "\$1" = "remove" ] || [ "\$1" = "purge" ]; then
+              rm -rf $INSTALL_PATH
+          fi
+          exit 0
+          EOF
+          chmod 755 $STAGE_DIR/DEBIAN/postrm
+
+      - name: Finalize and Build .deb
+        run: |
+          sudo chown -R root:root package_root
+          dpkg-deb --build package_root "fpga-pcie-reprogram-${{ github.ref_name }}_amd64.deb"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-package
+          path: "*.deb"
+
+# ----------------------------------------------------------------------------
+
+  upload-deb-pkg:
+    needs: [gen_release, build-deb-pkg]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-package
+
+      - name: Generate Checksum
+        run: sha256sum *.deb > checksums.txt
+
+      - name: Upload to Existing Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload ${{ needs.build-deb-pkg.outputs.tag_name }} \
+            ./*.deb \
+            ./checksums.txt
+
+# ----------------------------------------------------------------------------

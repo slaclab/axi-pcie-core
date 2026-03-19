@@ -152,8 +152,7 @@ jobs:
 
       - name: Finalize and Build .deb
         run: |
-          sudo chown -R root:root package_root
-          dpkg-deb --build package_root "fpga-pcie-reprogram-${{ github.ref_name }}_amd64.deb"
+          fakeroot dpkg-deb --build package_root "fpga-pcie-reprogram-${{ github.ref_name }}_amd64.deb"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

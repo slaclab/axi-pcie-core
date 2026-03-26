@@ -293,8 +293,6 @@ architecture mapping of HbmDmaBufferV2 is
    signal apbDone    : sl;
    signal apbRstL    : sl;
 
-   signal wdataParity : Slv32Array(1 downto 0) := (others => (others => '0'));
-
 begin
 
    -- Help with timing
@@ -573,15 +571,6 @@ begin
 
    end generate;
 
-   process(hbmWriteMasters)
-   begin
-      for i in DMA_SIZE_G-1 downto 0 loop
-         for j in 31 downto 0 loop
-            wdataParity(i)(j) <= oddParity(hbmWriteMasters(i).wdata(8*j+7 downto 8*j));
-         end loop;
-      end loop;
-   end process;
-
    U_HBM : HbmDmaBufferV2IpCore
       port map (
          -- Reference Clocks
@@ -607,7 +596,7 @@ begin
          AXI_08_WDATA        => hbmWriteMasters(0).wdata(255 downto 0),
          AXI_08_WLAST        => hbmWriteMasters(0).wlast,
          AXI_08_WSTRB        => hbmWriteMasters(0).wstrb(31 downto 0),
-         AXI_08_WDATA_PARITY => wdataParity(0),
+         AXI_08_WDATA_PARITY => (others => '0'),
          AXI_08_WVALID       => hbmWriteMasters(0).wvalid,
          AXI_08_ARREADY      => hbmReadSlaves(0).arready,
          AXI_08_AWREADY      => hbmWriteSlaves(0).awready,
@@ -641,7 +630,7 @@ begin
          AXI_24_WDATA        => hbmWriteMasters(1).wdata(255 downto 0),
          AXI_24_WLAST        => hbmWriteMasters(1).wlast,
          AXI_24_WSTRB        => hbmWriteMasters(1).wstrb(31 downto 0),
-         AXI_24_WDATA_PARITY => wdataParity(1),
+         AXI_24_WDATA_PARITY => (others => '0'),
          AXI_24_WVALID       => hbmWriteMasters(1).wvalid,
          AXI_24_ARREADY      => hbmReadSlaves(1).arready,
          AXI_24_AWREADY      => hbmWriteSlaves(1).awready,

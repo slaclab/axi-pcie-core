@@ -255,35 +255,6 @@ class AxiGpuAsyncCore(pr.Device):
             pollInterval = 1,
         ))
 
-        self.add(pr.RemoteVariable(
-            name         = 'TotLatency',
-            offset       = 0x48,
-            bitSize      = 32,
-            disp         = '{}',
-            mode         = 'RO',
-            units        = 'axiClk cycles',
-            pollInterval = 1,
-        ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'GpuLatency',
-            offset       = 0x50,
-            bitSize      = 32,
-            disp         = '{}',
-            mode         = 'RO',
-            units        = 'axiClk cycles',
-            pollInterval = 1,
-        ))
-
-        self.add(pr.RemoteVariable(
-            name         = 'WrLatency',
-            offset       = 0x58,
-            bitSize      = 32,
-            disp         = '{}',
-            mode         = 'RO',
-            units        = 'axiClk cycles',
-            pollInterval = 1,
-        ))
 
         self.add(pr.RemoteVariable(
             name         = 'RemoteWriteMaxSize',
@@ -294,6 +265,52 @@ class AxiGpuAsyncCore(pr.Device):
             mode         = kernelVarMode,
             pollInterval = 1 if kernelVarMode != 'RW' else 0,
         ))
+
+
+        # Define latency measurements with their base offsets and descriptions
+        latency_metrics = [
+            ('TotLatency',   0xC0, 'Measures time between start of DMA write to DMA read completed'),
+            ('GpuLatency',   0xD0, 'Measures time between DMA write completion to GPU returning the free list buffer'),
+            ('WrDmaLatency', 0xE0, 'Measures time between start of DMA write to DMA write completed'),
+            ('RdDmaLatency', 0xF0, 'Measures time between start of DMA read to DMA read completed'),
+        ]
+
+        for name, base_offset, description in latency_metrics:
+            # Current value
+            self.add(pr.RemoteVariable(
+                name         = name,
+                description  = description,
+                offset       = base_offset,
+                bitSize      = 32,
+                disp         = '{}',
+                mode         = 'RO',
+                units        = 'axiClk cycles',
+                pollInterval = 1,
+            ))
+
+            # Max value
+            self.add(pr.RemoteVariable(
+                name         = f'{name}Max',
+                description  = f'Maximum {name} measured after counter reset, counter reset clear this register to zero bits',
+                offset       = base_offset + 0x4,
+                bitSize      = 32,
+                disp         = '{}',
+                mode         = 'RO',
+                units        = 'axiClk cycles',
+                pollInterval = 1,
+            ))
+
+            # Min value
+            self.add(pr.RemoteVariable(
+                name         = f'{name}Min',
+                description  = f'Minimum {name} measured after counter reset, counter reset clear this register to zero bits',
+                offset       = base_offset + 0x8,
+                bitSize      = 32,
+                disp         = '{}',
+                mode         = 'RO',
+                units        = 'axiClk cycles',
+                pollInterval = 1,
+            ))
 
         # GPU AXI Stream Inbound Monitor
         self.add(axi.AxiStreamMonAxiL(

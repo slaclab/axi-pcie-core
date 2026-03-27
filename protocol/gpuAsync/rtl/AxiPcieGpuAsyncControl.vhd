@@ -158,14 +158,25 @@ architecture rtl of AxiPcieGpuAsyncControl is
       readReqList             : slv(MAX_BUFFERS_C-1 downto 0);
       -- Latency Measurements
       totLatency              : slv(31 downto 0);
+      totLatencyMax           : slv(31 downto 0);
+      totLatencyMin           : slv(31 downto 0);
       totLatencyCnt           : slv(31 downto 0);
       totLatencyEn            : sl;
       gpuLatency              : slv(31 downto 0);
+      gpuLatencyMax           : slv(31 downto 0);
+      gpuLatencyMin           : slv(31 downto 0);
       gpuLatencyCnt           : slv(31 downto 0);
       gpuLatencyEn            : sl;
-      wrLatency               : slv(31 downto 0);
-      wrLatencyCnt            : slv(31 downto 0);
-      wrLatencyEn             : sl;
+      wrDmaLatency            : slv(31 downto 0);
+      wrDmaLatencyMax         : slv(31 downto 0);
+      wrDmaLatencyMin         : slv(31 downto 0);
+      wrDmaLatencyCnt         : slv(31 downto 0);
+      wrDmaLatencyEn          : sl;
+      rdDmaLatency            : slv(31 downto 0);
+      rdDmaLatencyMax         : slv(31 downto 0);
+      rdDmaLatencyMin         : slv(31 downto 0);
+      rdDmaLatencyCnt         : slv(31 downto 0);
+      rdDmaLatencyEn          : sl;
       -- Buffer Measurements
       wrMonIdx                : natural range 0 to MAX_BUFFERS_C-1;
       rdMonIdx                : natural range 0 to MAX_BUFFERS_C-1;
@@ -228,14 +239,25 @@ architecture rtl of AxiPcieGpuAsyncControl is
       readReqList             => (others => '0'),
       -- Latency Measurements
       totLatency              => (others => '0'),
+      totLatencyMax           => (others => '0'),
+      totLatencyMin           => (others => '1'),
       totLatencyCnt           => (others => '0'),
       totLatencyEn            => '0',
       gpuLatency              => (others => '0'),
+      gpuLatencyMax           => (others => '0'),
+      gpuLatencyMin           => (others => '1'),
       gpuLatencyCnt           => (others => '0'),
       gpuLatencyEn            => '0',
-      wrLatency               => (others => '0'),
-      wrLatencyCnt            => (others => '0'),
-      wrLatencyEn             => '0',
+      wrDmaLatency            => (others => '0'),
+      wrDmaLatencyMax         => (others => '0'),
+      wrDmaLatencyMin         => (others => '1'),
+      wrDmaLatencyCnt         => (others => '0'),
+      wrDmaLatencyEn          => '0',
+      rdDmaLatency            => (others => '0'),
+      rdDmaLatencyMax         => (others => '0'),
+      rdDmaLatencyMin         => (others => '1'),
+      rdDmaLatencyCnt         => (others => '0'),
+      rdDmaLatencyEn          => '0',
       -- Buffer Measurements
       wrMonIdx                => 0,
       rdMonIdx                => 0,
@@ -475,8 +497,11 @@ begin
       if (r.gpuLatencyEn = '1') and (r.gpuLatencyCnt /= x"FFFF_FFFF") then
          v.gpuLatencyCnt := r.gpuLatencyCnt + 1;
       end if;
-      if (r.wrLatencyEn = '1') and (r.wrLatencyCnt /= x"FFFF_FFFF") then
-         v.wrLatencyCnt := r.wrLatencyCnt + 1;
+      if (r.wrDmaLatencyEn = '1') and (r.wrDmaLatencyCnt /= x"FFFF_FFFF") then
+         v.wrDmaLatencyCnt := r.wrDmaLatencyCnt + 1;
+      end if;
+      if (r.rdDmaLatencyEn = '1') and (r.rdDmaLatencyCnt /= x"FFFF_FFFF") then
+         v.rdDmaLatencyCnt := r.rdDmaLatencyCnt + 1;
       end if;
 
       --------------------------------------------------------------------------------------------
@@ -515,16 +540,28 @@ begin
       axiSlaveRegisterR(axilEp(0), x"3C", 0, r.minWriteBuffer);
       axiSlaveRegisterR(axilEp(0), x"40", 0, r.maxReadBuffer);
 
-      axiSlaveRegisterR(axilEp(0), x"48", 0, r.totLatency);  -- Only measure for buffer[index=0]
-      axiSlaveRegisterR(axilEp(0), x"50", 0, r.gpuLatency);  -- Only measure for buffer[index=0]
-      axiSlaveRegisterR(axilEp(0), x"58", 0, r.wrLatency);  -- Only measure for buffer[index=0]
-
       axiSlaveRegister (axilEp(0), x"60", 0, v.remoteWriteMaxSize);
 
       -- Prevent remoteWriteMaxSize=0 case
       if (v.remoteWriteMaxSize = 0) then
          v.remoteWriteMaxSize := x"0000_0001";  -- force it 1 byte
       end if;
+
+      axiSlaveRegisterR(axilEp(0), x"C0", 0, r.totLatency);  -- Only measure for buffer[index=0]
+      axiSlaveRegisterR(axilEp(0), x"C4", 0, r.totLatencyMax);
+      axiSlaveRegisterR(axilEp(0), x"C8", 0, r.totLatencyMin);
+
+      axiSlaveRegisterR(axilEp(0), x"D0", 0, r.gpuLatency);  -- Only measure for buffer[index=0]
+      axiSlaveRegisterR(axilEp(0), x"D4", 0, r.gpuLatencyMax);
+      axiSlaveRegisterR(axilEp(0), x"D8", 0, r.gpuLatencyMin);
+
+      axiSlaveRegisterR(axilEp(0), x"E0", 0, r.wrDmaLatency);  -- Only measure for buffer[index=0]
+      axiSlaveRegisterR(axilEp(0), x"E4", 0, r.wrDmaLatencyMax);
+      axiSlaveRegisterR(axilEp(0), x"E8", 0, r.wrDmaLatencyMin);
+
+      axiSlaveRegisterR(axilEp(0), x"F0", 0, r.rdDmaLatency);  -- Only measure for buffer[index=0]
+      axiSlaveRegisterR(axilEp(0), x"F4", 0, r.rdDmaLatencyMax);
+      axiSlaveRegisterR(axilEp(0), x"F8", 0, r.rdDmaLatencyMin);
 
       -- Closeout the transaction
       axiSlaveDefault(axilEp(0), v.writeSlaves(0), v.readSlaves(0), AXI_RESP_DECERR_C);
@@ -681,20 +718,26 @@ begin
       v.dmaWrDescAck.valid := '0';
       v.dmaWrDescRetAck    := '0';
 
+      -- Check for enabled buffer[0] and latency measurement enabled
+      if (r.writeFreeList(0) = '1') and (r.gpuLatencyEn = '1') then
+
+         -- Stop latency measurement
+         v.gpuLatencyEn := '0';
+
+         -- Latch the latency counter value
+         v.gpuLatency := r.gpuLatencyCnt;
+         if (r.gpuLatencyCnt > r.gpuLatencyMax) then
+            v.gpuLatencyMax := r.gpuLatencyCnt;
+         end if;
+         if (r.gpuLatencyCnt < r.gpuLatencyMin) then
+            v.gpuLatencyMin := r.gpuLatencyCnt;
+         end if;
+
+      end if;
+
       case r.rxState is
          ----------------------------------------------------------------------
          when IDLE_S =>
-            -- Check for enabled buffer[0] and latency measurement enabled
-            if (r.writeFreeList(0) = '1') and (r.gpuLatencyEn = '1') then
-
-               -- Stop latency measurement
-               v.gpuLatencyEn := '0';
-
-               -- Latch the latency counter value
-               v.gpuLatency := r.gpuLatencyCnt;
-
-            end if;
-
             -- Check if there is a DMA request
             if (dmaWrDescReq.valid = '1') then
 
@@ -736,8 +779,8 @@ begin
                         v.gpuLatencyCnt := (others => '0');
 
                         -- Start the write latency: "from now until DMA Write to complete"
-                        v.wrLatencyEn  := '1';
-                        v.wrLatencyCnt := (others => '0');
+                        v.wrDmaLatencyEn  := '1';
+                        v.wrDmaLatencyCnt := (others => '0');
 
                      end if;
 
@@ -761,14 +804,20 @@ begin
                -- ACK the return message
                v.dmaWrDescRetAck := '1';
 
-               -- Check if buffer[0] index
-               if (dmaWrDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0) then
+               -- Check if measuring DMA write latency
+               if (r.wrDmaLatencyEn = '1') then
 
                   -- Stop latency measurement
-                  v.wrLatencyEn := '0';
+                  v.wrDmaLatencyEn := '0';
 
                   -- Latch the latency counter value
-                  v.wrLatency := r.wrLatencyCnt;
+                  v.wrDmaLatency := r.wrDmaLatencyCnt;
+                  if (r.wrDmaLatencyCnt > r.wrDmaLatencyMax) then
+                     v.wrDmaLatencyMax := r.wrDmaLatencyCnt;
+                  end if;
+                  if (r.wrDmaLatencyCnt < r.wrDmaLatencyMin) then
+                     v.wrDmaLatencyMin := r.wrDmaLatencyCnt;
+                  end if;
 
                   -- Start latency measurement
                   v.gpuLatencyEn := '1';
@@ -843,6 +892,15 @@ begin
                -- Reset the flag
                v.readReqList(conv_integer(r.nextReadIdx)) := '0';
 
+               -- Check if buffer[0] index
+               if (r.nextReadIdx = 0) then
+
+                  -- Start the read latency: "from now until DMA read to complete"
+                  v.rdDmaLatencyEn  := '1';
+                  v.rdDmaLatencyCnt := (others => '0');
+
+               end if;
+
                -- Increment the buffer index with respect to readCount
                if (r.nextReadIdx >= r.readCount) then  -- Using ">=" operator to catch changing readCount middle of opeeration
                   v.nextReadIdx := (others => '0');
@@ -876,6 +934,40 @@ begin
                -- ACK the return message
                v.dmaRdDescRetAck := '1';
 
+               -- Check if measuring DMA read latency
+               if (r.rdDmaLatencyEn = '1') then
+
+                  -- Stop latency measurement
+                  v.rdDmaLatencyEn := '0';
+
+                  -- Latch the latency counter value
+                  v.rdDmaLatency := r.rdDmaLatencyCnt;
+                  if (r.rdDmaLatencyCnt > r.rdDmaLatencyMax) then
+                     v.rdDmaLatencyMax := r.rdDmaLatencyCnt;
+                  end if;
+                  if (r.rdDmaLatencyCnt < r.rdDmaLatencyMin) then
+                     v.rdDmaLatencyMin := r.rdDmaLatencyCnt;
+                  end if;
+
+                  -- Check if measuring total latency
+                  if (r.totLatencyEn = '1') then
+
+                     -- Stop latency measurement
+                     v.totLatencyEn := '0';
+
+                     -- Latch the latency counter value
+                     v.totLatency := r.totLatencyCnt;
+                     if (r.totLatencyCnt > r.totLatencyMax) then
+                        v.totLatencyMax := r.totLatencyCnt;
+                     end if;
+                     if (r.totLatencyCnt < r.totLatencyMin) then
+                        v.totLatencyMin := r.totLatencyCnt;
+                     end if;
+
+                  end if;
+
+               end if;
+
                -- ACK the GPU on its doorbell register
                v.gpuTxAckMaster.awaddr   := r.gpuTxAckAddress;  -- "Doorbell" offset
                v.gpuTxAckMaster.awlen    := x"00";  -- Single transaction
@@ -883,17 +975,6 @@ begin
                v.gpuTxAckMaster.wdata(0) := '1';  -- GPU polling and waiting for this bit to be 0x1 at "Doorbell" offset
                v.gpuTxAckMaster.awvalid  := '1';
                v.gpuTxAckMaster.wvalid   := '1';
-
-               -- Check if buffer[0] index
-               if (dmaRdDescRet.buffId(BUFF_BIT_WIDTH_C-1 downto 0) = 0) then
-
-                  -- Stop latency measurement
-                  v.totLatencyEn := '0';
-
-                  -- Latch the latency counter value
-                  v.totLatency := r.totLatencyCnt;
-
-               end if;
 
                -- Check for a non-zero response (error respose of any type)
                if (dmaRdDescRet.result /= 0) then
@@ -958,6 +1039,14 @@ begin
          v.axiWriteErrorVal        := (others => '0');
          v.axiReadErrorCnt         := (others => '0');
          v.axiReadErrorVal         := (others => '0');
+         v.totLatencyMax           := (others => '0');
+         v.totLatencyMin           := (others => '1');
+         v.gpuLatencyMax           := (others => '0');
+         v.gpuLatencyMin           := (others => '1');
+         v.wrDmaLatencyMax         := (others => '0');
+         v.wrDmaLatencyMin         := (others => '1');
+         v.rdDmaLatencyMax         := (others => '0');
+         v.rdDmaLatencyMin         := (others => '1');
       end if;
 
       --------------------------------------------------------------------------------------------

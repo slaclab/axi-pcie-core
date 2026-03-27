@@ -268,6 +268,8 @@ architecture mapping of HbmDmaBufferV2 is
    signal apbDone    : sl;
    signal apbRstL    : sl;
 
+   signal wdataParity : Slv32Array(3 downto 0) := (others => (others => '0'));
+
 begin
 
    -- Help with timing
@@ -292,7 +294,7 @@ begin
          -- MMCM attributes
          CLKIN_PERIOD_G     => 10.0,    -- 100MHz
          CLKFBOUT_MULT_F_G  => 13.5,    -- 1.35GHz = 13.5 x 100MHz
-         CLKOUT0_DIVIDE_F_G => 4.5)     -- 300MHz = 1.35GHz/4.5
+         CLKOUT0_DIVIDE_F_G => 3.75)    -- 360MHz = 1.35GHz/3.75
       port map(
          -- Clock Input
          clkIn     => userClk,
@@ -419,10 +421,8 @@ begin
             -- AXI4 Configurations
             AXI_BASE_ADDR_G    => AXI_BASE_ADDR_C(i),
             AXI_CONFIG_G       => AXI_CONFIG_C,
---          BURST_BYTES_G      => 512,  -- HBM is 32B AXI3, 32B x 2^16 AXI3 burst length = 512B
             BURST_BYTES_G      => 1024,  -- AXI is 64B AXI3, 64B x 2^16 AXI3 burst length = 1024B
---          RD_PEND_THRESH_G   => 8*512)  -- Same as HbmDmaBuffer.vhd
-            RD_PEND_THRESH_G   => 8*1024)  -- Same as HbmDmaBuffer.vhd
+            RD_PEND_THRESH_G   => 8*512)  -- Same as HbmDmaBuffer.vhd
          port map (
             -- AXI4 Interface (axiClk domain)
             axiClk          => hbmClk,
@@ -467,6 +467,15 @@ begin
 
    end generate;
 
+   process(hbmWriteMasters)
+   begin
+      for i in 2*DMA_SIZE_G-1 downto 0 loop
+         for j in 31 downto 0 loop
+            wdataParity(i)(j) <= oddParity(hbmWriteMasters(i).wdata(8*j+7 downto 8*j));
+         end loop;
+      end loop;
+   end process;
+
    U_HBM : HbmDmaBufferV2IpCore
       port map (
          -- Reference Clocks
@@ -492,7 +501,7 @@ begin
          AXI_07_WDATA        => hbmWriteMasters(0).wdata(255 downto 0),
          AXI_07_WLAST        => hbmWriteMasters(0).wlast,
          AXI_07_WSTRB        => hbmWriteMasters(0).wstrb(31 downto 0),
-         AXI_07_WDATA_PARITY => (others => '0'),
+         AXI_07_WDATA_PARITY => wdataParity(0),
          AXI_07_WVALID       => hbmWriteMasters(0).wvalid,
          AXI_07_ARREADY      => hbmReadSlaves(0).arready,
          AXI_07_AWREADY      => hbmWriteSlaves(0).awready,
@@ -526,7 +535,7 @@ begin
          AXI_08_WDATA        => hbmWriteMasters(1).wdata(255 downto 0),
          AXI_08_WLAST        => hbmWriteMasters(1).wlast,
          AXI_08_WSTRB        => hbmWriteMasters(1).wstrb(31 downto 0),
-         AXI_08_WDATA_PARITY => (others => '0'),
+         AXI_08_WDATA_PARITY => wdataParity(1),
          AXI_08_WVALID       => hbmWriteMasters(1).wvalid,
          AXI_08_ARREADY      => hbmReadSlaves(1).arready,
          AXI_08_AWREADY      => hbmWriteSlaves(1).awready,
@@ -560,7 +569,7 @@ begin
          AXI_23_WDATA        => hbmWriteMasters(2).wdata(255 downto 0),
          AXI_23_WLAST        => hbmWriteMasters(2).wlast,
          AXI_23_WSTRB        => hbmWriteMasters(2).wstrb(31 downto 0),
-         AXI_23_WDATA_PARITY => (others => '0'),
+         AXI_23_WDATA_PARITY => wdataParity(2),
          AXI_23_WVALID       => hbmWriteMasters(2).wvalid,
          AXI_23_ARREADY      => hbmReadSlaves(2).arready,
          AXI_23_AWREADY      => hbmWriteSlaves(2).awready,
@@ -594,7 +603,7 @@ begin
          AXI_24_WDATA        => hbmWriteMasters(3).wdata(255 downto 0),
          AXI_24_WLAST        => hbmWriteMasters(3).wlast,
          AXI_24_WSTRB        => hbmWriteMasters(3).wstrb(31 downto 0),
-         AXI_24_WDATA_PARITY => (others => '0'),
+         AXI_24_WDATA_PARITY => wdataParity(3),
          AXI_24_WVALID       => hbmWriteMasters(3).wvalid,
          AXI_24_ARREADY      => hbmReadSlaves(3).arready,
          AXI_24_AWREADY      => hbmWriteSlaves(3).awready,

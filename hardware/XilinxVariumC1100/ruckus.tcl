@@ -32,9 +32,8 @@ loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferFifo.dcp"
 
 # Load the HBM Buffer Version 2
 loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferV2.vhd"
+loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferV2AxiSplit.vhd"
 loadIpCore                    -path "$::DIR_PATH/hbm/HbmDmaBufferV2IpCore.xci"
-# loadIpCore                  -path "$::DIR_PATH/hbm/HbmDmaBufferV2Fifo.xci"
-loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferV2Fifo.dcp"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/pcie-4x8"

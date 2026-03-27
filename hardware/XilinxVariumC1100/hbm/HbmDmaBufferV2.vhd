@@ -294,7 +294,7 @@ begin
          -- MMCM attributes
          CLKIN_PERIOD_G     => 10.0,    -- 100MHz
          CLKFBOUT_MULT_F_G  => 13.5,    -- 1.35GHz = 13.5 x 100MHz
-         CLKOUT0_DIVIDE_F_G => 3.75)    -- 360MHz = 1.35GHz/3.75
+         CLKOUT0_DIVIDE_F_G => 4.5)     -- 300MHz = 1.35GHz/4.5
       port map(
          -- Clock Input
          clkIn     => userClk,

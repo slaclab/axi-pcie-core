@@ -34,6 +34,7 @@ use unisim.vcomponents.all;
 entity XilinxVariumC1100Core is
    generic (
       TPD_G                : time                        := 1 ns;
+      QSFP_CDR_DISABLE_G   : boolean                     := false;
       SI5394_INIT_FILE_G   : string                      := "Si5394A_GT_REFCLK_156MHz.mem";
       ROGUE_SIM_EN_G       : boolean                     := false;
       ROGUE_SIM_PORT_NUM_G : natural range 1024 to 49151 := 8000;
@@ -42,6 +43,7 @@ entity XilinxVariumC1100Core is
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
       DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
+      DATAGPU_EN_G         : boolean                     := false;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (
       ------------------------
@@ -62,6 +64,11 @@ entity XilinxVariumC1100Core is
       pipIbSlave      : in    AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       pipObMaster     : in    AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
       pipObSlave      : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
+      -- User General Purpose AXI4 Interfaces (dmaClk domain)
+      usrReadMaster   : in    AxiReadMasterType     := AXI_READ_MASTER_INIT_C;
+      usrReadSlave    : out   AxiReadSlaveType      := AXI_READ_SLAVE_FORCE_C;
+      usrWriteMaster  : in    AxiWriteMasterType    := AXI_WRITE_MASTER_INIT_C;
+      usrWriteSlave   : out   AxiWriteSlaveType     := AXI_WRITE_SLAVE_FORCE_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk          : in    sl                    := '0';
       appRst          : in    sl                    := '1';
@@ -69,9 +76,20 @@ entity XilinxVariumC1100Core is
       appReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
       appWriteMaster  : out   AxiLiteWriteMasterType;
       appWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
+      -- GPU AXI-Lite Interfaces [0x00028000:0x00028FFF] (appClk domain)
+      gpuReadMaster   : out   AxiLiteReadMasterType;
+      gpuReadSlave    : in    AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      gpuWriteMaster  : out   AxiLiteWriteMasterType;
+      gpuWriteSlave   : in    AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -------------------
       --  Top Level Ports
       -------------------
+      -- Card Management Solution (CMS) Interface
+      cmsHbmCatTrip   : in    sl;
+      cmsHbmTemp      : in    Slv7Array(1 downto 0);
+      cmsUartRxd      : in    sl;
+      cmsUartTxd      : out   sl;
+      cmsGpio         : in    slv(3 downto 0);
       -- System Ports
       userClkP        : in    sl;
       userClkN        : in    sl;
@@ -96,6 +114,16 @@ end XilinxVariumC1100Core;
 
 architecture mapping of XilinxVariumC1100Core is
 
+   constant XBAR_I2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(1 downto 0) := (
+      0               => (
+         baseAddr     => x"0000_0000",
+         addrBits     => 14,            -- Si5394I2c only uses 14b of address
+         connectivity => x"FFFF"),
+      1               => (
+         baseAddr     => x"8000_0000",
+         addrBits     => 18,
+         connectivity => x"FFFF"));
+
    signal dmaReadMaster  : AxiReadMasterType;
    signal dmaReadSlave   : AxiReadSlaveType;
    signal dmaWriteMaster : AxiWriteMasterType;
@@ -116,10 +144,15 @@ architecture mapping of XilinxVariumC1100Core is
    signal phyWriteMaster : AxiLiteWriteMasterType;
    signal phyWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
 
-   signal i2cReadMaster  : AxiLiteReadMasterType;
-   signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
-   signal i2cWriteMaster : AxiLiteWriteMasterType;
-   signal i2cWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
+   signal mI2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
+   signal mI2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal mI2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
+   signal mI2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+
+   signal i2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
+   signal i2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal i2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
+   signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
    signal intPipIbMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipIbSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
@@ -210,6 +243,41 @@ begin
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
 
+      QSFP_CDR_DISABLE : if (QSFP_CDR_DISABLE_G) generate
+         U_CmsQsfpCdrDisable : entity axi_pcie_core.CmsQsfpCdrDisable
+            generic map (
+               TPD_G => TPD_G)
+            port map (
+               -- Monitor External Software
+               extSwWrDet       => mI2cWriteMasters(0).awvalid,
+               extSwRdDet       => mI2cReadMasters(0).arvalid,
+               -- AXI-Lite Register Interface (axilClk domain)
+               axilClk          => sysClock,
+               axilRst          => sysReset,
+               mAxilReadMaster  => mI2cReadMasters(1),
+               mAxilReadSlave   => mI2cReadSlaves(1),
+               mAxilWriteMaster => mI2cWriteMasters(1),
+               mAxilWriteSlave  => mI2cWriteSlaves(1));
+      end generate;
+
+      U_XBAR : entity surf.AxiLiteCrossbar
+         generic map (
+            TPD_G              => TPD_G,
+            NUM_SLAVE_SLOTS_G  => 2,
+            NUM_MASTER_SLOTS_G => 2,
+            MASTERS_CONFIG_G   => XBAR_I2C_CONFIG_C)
+         port map (
+            axiClk           => sysClock,
+            axiClkRst        => sysReset,
+            sAxiWriteMasters => mI2cWriteMasters,
+            sAxiWriteSlaves  => mI2cWriteSlaves,
+            sAxiReadMasters  => mI2cReadMasters,
+            sAxiReadSlaves   => mI2cReadSlaves,
+            mAxiWriteMasters => i2cWriteMasters,
+            mAxiWriteSlaves  => i2cWriteSlaves,
+            mAxiReadMasters  => i2cReadMasters,
+            mAxiReadSlaves   => i2cReadSlaves);
+
       U_SI5394 : entity surf.Si5394I2c
          generic map (
             TPD_G              => TPD_G,
@@ -227,13 +295,31 @@ begin
             losL            => si5394LosL,
             rstL            => si5394RstL,
             -- AXI-Lite Register Interface
-            axilReadMaster  => i2cReadMaster,
-            axilReadSlave   => i2cReadSlave,
-            axilWriteMaster => i2cWriteMaster,
-            axilWriteSlave  => i2cWriteSlave,
+            axilReadMaster  => i2cReadMasters(0),
+            axilReadSlave   => i2cReadSlaves(0),
+            axilWriteMaster => i2cWriteMasters(0),
+            axilWriteSlave  => i2cWriteSlaves(0),
             -- Clocks and Resets
             axilClk         => sysClock,
             axilRst         => sysReset);
+
+      U_CMS : entity axi_pcie_core.CmsBlockDesignWrapper
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            -- Card Management Solution (CMS) Interface
+            cmsHbmCatTrip  => cmsHbmCatTrip,
+            cmsHbmTemp     => cmsHbmTemp,
+            cmsUartRxd     => cmsUartRxd,
+            cmsUartTxd     => cmsUartTxd,
+            cmsGpio        => cmsGpio,
+            -- I2C AXI-Lite Interfaces (axiClk domain)
+            axiClk         => sysClock,
+            axiRst         => sysReset,
+            i2cReadMaster  => i2cReadMasters(1),
+            i2cReadSlave   => i2cReadSlaves(1),
+            i2cWriteMaster => i2cWriteMasters(1),
+            i2cWriteSlave  => i2cWriteSlaves(1));
 
    end generate;
 
@@ -269,6 +355,7 @@ begin
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
          PCIE_HW_TYPE_G       => HW_TYPE_XILINX_C1100_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
+         DATAGPU_EN_G         => DATAGPU_EN_G,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
@@ -291,10 +378,10 @@ begin
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
          -- I2C AXI-Lite Interfaces (axiClk domain)
-         i2cReadMaster       => i2cReadMaster,
-         i2cReadSlave        => i2cReadSlave,
-         i2cWriteMaster      => i2cWriteMaster,
-         i2cWriteSlave       => i2cWriteSlave,
+         i2cReadMaster       => mI2cReadMasters(0),
+         i2cReadSlave        => mI2cReadSlaves(0),
+         i2cWriteMaster      => mI2cWriteMasters(0),
+         i2cWriteSlave       => mI2cWriteSlaves(0),
          -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,
@@ -302,6 +389,11 @@ begin
          appReadSlave        => appReadSlave,
          appWriteMaster      => appWriteMaster,
          appWriteSlave       => appWriteSlave,
+         -- (Optional) GPU AXI-Lite Interfaces
+         gpuReadMaster       => gpuReadMaster,
+         gpuReadSlave        => gpuReadSlave,
+         gpuWriteMaster      => gpuWriteMaster,
+         gpuWriteSlave       => gpuWriteSlave,
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset,
@@ -362,6 +454,11 @@ begin
          axiWriteSlave    => dmaWriteSlave,
          pipObMaster      => intPipObMaster,
          pipObSlave       => intPipObSlave,
+         -- User General Purpose AXI4 Interfaces
+         usrReadMaster    => usrReadMaster,
+         usrReadSlave     => usrReadSlave,
+         usrWriteMaster   => usrWriteMaster,
+         usrWriteSlave    => usrWriteSlave,
          -- AXI4-Lite Interfaces
          axilReadMasters  => dmaCtrlReadMasters,
          axilReadSlaves   => dmaCtrlReadSlaves,

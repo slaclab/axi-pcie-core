@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : TerminateQsfp.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: TerminateQsfp File

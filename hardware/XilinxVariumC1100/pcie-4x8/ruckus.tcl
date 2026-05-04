@@ -1,11 +1,12 @@
 # Load RUCKUS environment and library
-source -quiet $::env(RUCKUS_DIR)/vivado_proc.tcl
+source $::env(RUCKUS_PROC_TCL)
 
 # Load local Source Code and Constraints
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
 loadConstraints               -dir "$::DIR_PATH/xdc"
 
 # loadIpCore -path "$::DIR_PATH/ip/XilinxVariumC1100PciePhyGen4x8.xci"
+
 loadSource -lib axi_pcie_core -path "$::DIR_PATH/ip/XilinxVariumC1100PciePhyGen4x8.dcp"
 
 loadConstraints -path "$::DIR_PATH/ip/XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt.xdc"

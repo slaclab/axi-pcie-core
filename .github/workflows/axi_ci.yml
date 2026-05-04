@@ -18,9 +18,11 @@ on: [push]
 
 jobs:
 
+# ----------------------------------------------------------------------------
+
   test_and_document:
     name: Test And Generate Documentation
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
 
       # This step checks out a copy of your repository.
@@ -30,7 +32,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.11
+          python-version: 3.12
 
       - name: Install dependencies
         run: |
@@ -39,92 +41,151 @@ jobs:
 
       - name: Python Syntax Check
         run: |
-          python -m compileall -f python/
-          flake8 --count python/
+          python -m compileall -f python/ scripts/
+          flake8 --count python/ scripts/
+
+# ----------------------------------------------------------------------------
 
   gen_release:
-    name: Generate Release
-    runs-on: ubuntu-20.04
+    needs: [test_and_document]
+    uses: slaclab/ruckus/.github/workflows/gen_release.yml@main
+    with:
+      version: '1.0.0'
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+# ----------------------------------------------------------------------------
+
+  conda_build_lib:
+    needs: [test_and_document]
+    uses: slaclab/ruckus/.github/workflows/conda_build_lib.yml@main
+    with:
+      version: '1.0.0'
+    secrets:
+      CONDA_UPLOAD_TOKEN_TAG: ${{ secrets.CONDA_UPLOAD_TOKEN_TAG }}
+
+# ----------------------------------------------------------------------------
+
+  build-deb-pkg:
     needs: [test_and_document]
     if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    outputs:
+      tag_name: ${{ github.ref_name }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/checkout@v2
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          fetch-depth: 0
+          activate-environment: sudo_rogue_axpcie_surf_env_v3
+          channels: conda-forge,tidair-tag
+          python-version: '3.10'
+          cache-environment: true
+          cache-environment-key: ${{ runner.os }}-focal-conda-v1
 
-      - uses: actions/setup-python@v2
+      - name: Install Dependencies
+        shell: bash -l {0}
+        run: |
+          conda install rogue axi_pcie_core surf conda-pack -y
+
+      - name: Build Package Structure
+        shell: bash -l {0}
+        run: |
+          # --- Configuration Variables ---
+          export PKG_NAME="fpga-pcie-reprogram"
+          export PY_SRC_DIR="scripts"             # The folder in your repo
+          export PY_SRC_FILENAME="updatePcieFpga" # The file name
+
+          export INSTALL_PATH="/opt/$PKG_NAME"
+          export STAGE_DIR="package_root"
+
+          # 1. Create Directories
+          mkdir -p $STAGE_DIR/DEBIAN
+          mkdir -p $STAGE_DIR$INSTALL_PATH/{bin,env}
+          mkdir -p $STAGE_DIR/usr/local/bin
+
+          # 2. Pack and Unpack Environment
+          conda-pack -n sudo_rogue_axpcie_surf_env_v3 -o env.tar.gz
+          tar -xzf env.tar.gz -C $STAGE_DIR$INSTALL_PATH/env/
+          rm env.tar.gz
+
+          # 3. Copy Source File using variables
+          cp "$PY_SRC_DIR/$PY_SRC_FILENAME" "$STAGE_DIR$INSTALL_PATH/bin/"
+
+          # 4. Create the Launcher Script
+          # Points to the specific filename you defined above
+          cat <<EOF > $STAGE_DIR/usr/local/bin/$PKG_NAME
+          #!/bin/bash
+          $INSTALL_PATH/env/bin/python $INSTALL_PATH/bin/$PY_SRC_FILENAME "\$@"
+          EOF
+          chmod +x $STAGE_DIR/usr/local/bin/$PKG_NAME
+
+          # 5. Create Debian Control File
+          VERSION_CLEAN=${{ github.ref_name }}
+          cat <<EOF > $STAGE_DIR/DEBIAN/control
+          Package: $PKG_NAME
+          Version: ${VERSION_CLEAN#v}
+          Architecture: amd64
+          Maintainer: Benjamin Mencer <bmencer@slac.stanford.edu>
+          Description: FPGA PCIe Reprogramming tool (20.04 build, 22.04 compatible)
+          EOF
+
+          # 6. Create Post-Install Script
+          cat <<EOF > $STAGE_DIR/DEBIAN/postinst
+          #!/bin/bash
+          $INSTALL_PATH/env/bin/python -m conda_unpack
+          exit 0
+          EOF
+          chmod 755 $STAGE_DIR/DEBIAN/postinst
+
+          # 7. Create Post-Remove Script (Cleanup)
+          cat <<EOF > $STAGE_DIR/DEBIAN/postrm
+          #!/bin/bash
+          if [ "\$1" = "remove" ] || [ "\$1" = "purge" ]; then
+              rm -rf $INSTALL_PATH
+          fi
+          exit 0
+          EOF
+          chmod 755 $STAGE_DIR/DEBIAN/postrm
+
+      - name: Finalize and Build .deb
+        run: |
+          fakeroot dpkg-deb --build package_root "fpga-pcie-reprogram-${{ github.ref_name }}_amd64.deb"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          python-version: 3.8
+          name: deb-package
+          path: "*.deb"
 
-      - name: Get Image Information
-        id: get_image_info
-        run: |
-          echo ::set-output name=tag::`git describe --tags`
+# ----------------------------------------------------------------------------
 
-      - name: Get Ruckus
-        run: |
-          git clone https://github.com/slaclab/ruckus.git
-          python -m pip install --upgrade pip
-          pip install -r ruckus/scripts/pip_requirements.txt
-
-      - name: Gen Release
-        env:
-          TRAVIS_REPO_SLUG: ${{ github.repository }}
-          TRAVIS_TAG: ${{ steps.get_image_info.outputs.tag }}
-          GH_REPO_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          python ruckus/scripts/releaseGen.py
-
-  conda_build:
-    name: Anaconda Build
-    needs: [test_and_document]
+  upload-deb-pkg:
+    needs: [gen_release, build-deb-pkg]
     if: startsWith(github.ref, 'refs/tags/')
-    strategy:
-      matrix:
-        os:
-          - ubuntu-20.04
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # This step checks out a copy of your repository.
-      - uses: actions/checkout@v2
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
+          name: deb-package
 
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
+      - name: Generate Checksum
+        run: sha256sum *.deb > checksums.txt
 
-      - name: Setup anaconda
+      - name: Upload to Existing Release
         env:
-          OS_NAME: ${{ matrix.os }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          cd ${HOME}
-          wget -O miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-          bash miniconda.sh -b -p ${HOME}/miniconda
-          export PATH="${HOME}/miniconda/bin:$PATH"
-          source ${HOME}/miniconda/etc/profile.d/conda.sh
-          conda config --set always_yes yes
-          conda config --set channel_priority strict
-          conda install -n base conda-libmamba-solver
-          conda config --set solver libmamba
-          conda install conda-build anaconda-client conda-verify
-          conda update -q conda conda-build
-          conda update --all
+          gh release upload ${{ needs.build-deb-pkg.outputs.tag_name }} \
+            ./*.deb \
+            ./checksums.txt
 
-      - name: Get Image Information
-        id: get_image_info
-        env:
-          CONDA_UPLOAD_TOKEN_TAG: ${{ secrets.CONDA_UPLOAD_TOKEN_TAG }}
-          OS_NAME: ${{ matrix.os }}
-        run: |
-          echo ::set-output name=token::$CONDA_UPLOAD_TOKEN_TAG
-          echo ::set-output name=os::linux-64
-
-      - name: Build And Upload
-        run: |
-          export PATH="${HOME}/miniconda/bin:$PATH"
-          source ${HOME}/miniconda/etc/profile.d/conda.sh
-          conda build --debug conda-recipe --output-folder bld-dir -c tidair-tag -c tidair-packages -c conda-forge
-          anaconda -t ${{ steps.get_image_info.outputs.token }} upload --force bld-dir/noarch/*.tar.bz2
+# ----------------------------------------------------------------------------

@@ -1,9 +1,9 @@
 ##-----------------------------------------------------------------------------
 ##
-## (c) Copyright 2012-2012 Xilinx, Inc. All rights reserved.
+## (c) Copyright 1995, 2007, 2023 Advanced Micro Devices, Inc. All rights reserved.
 ##
 ## This file contains confidential and proprietary information
-## of Xilinx, Inc. and is protected under U.S. and
+## of AMD, Inc. and is protected under U.S. and
 ## international copyright and other intellectual property
 ## laws.
 ##
@@ -11,13 +11,13 @@
 ## This disclaimer is not a license and does not grant any
 ## rights to the materials distributed herewith. Except as
 ## otherwise provided in a valid license issued to you by
-## Xilinx, and to the maximum extent permitted by applicable
+## AMD, and to the maximum extent permitted by applicable
 ## law: (1) THESE MATERIALS ARE MADE AVAILABLE "AS IS" AND
-## WITH ALL FAULTS, AND XILINX HEREBY DISCLAIMS ALL WARRANTIES
+## WITH ALL FAULTS, AND AMD HEREBY DISCLAIMS ALL WARRANTIES
 ## AND CONDITIONS, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING
 ## BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, NON-
 ## INFRINGEMENT, OR FITNESS FOR ANY PARTICULAR PURPOSE; and
-## (2) Xilinx shall not be liable (whether in contract or tort,
+## (2) AMD shall not be liable (whether in contract or tort,
 ## including negligence, or under any other theory of
 ## liability) for any loss or damage of any kind or nature
 ## related to, arising under or in connection with these
@@ -26,11 +26,11 @@
 ## (including loss of data, profits, goodwill, or any type of
 ## loss or damage suffered as a result of any action brought
 ## by a third party) even if such damage or loss was
-## reasonably foreseeable or Xilinx had been advised of the
+## reasonably foreseeable or AMD had been advised of the
 ## possibility of the same.
 ##
 ## CRITICAL APPLICATIONS
-## Xilinx products are not designed or intended to be fail-
+## AMD products are not designed or intended to be fail-
 ## safe, or for use in any application requiring fail-safe
 ## performance, such as life-support or safety devices or
 ## systems, Class III medical devices, nuclear facilities,
@@ -39,7 +39,7 @@
 ## injury, or severe property or environmental damage
 ## (individually and collectively, "Critical
 ## Applications"). Customer assumes the sole risk and
-## liability of any use of Xilinx products in Critical
+## liability of any use of AMD products in Critical
 ## Applications, subject only to applicable laws and
 ## regulations governing limitations on product liability.
 ##
@@ -76,6 +76,8 @@
 # gt_type             - gtye4
 #
 # Enabled - GEN4_EIEOS: (Spec 0.7 -> 0.5+)
+# SILICON : # Beta
+# SILICON : # PRODUCTION
 #
 ###############################################################################
 # User Time Names / User Time Groups / Time Specs
@@ -112,9 +114,6 @@ set_property LOC PCIE4CE4_X1Y1 [get_cells XilinxVariumC1100PciePhyGen4x8_pcie4c_
 # TXOUTCLK Constraint
 ###############################################################################
 #
-# Constraining GT TXOUTCLK to 500 MHz
-#create_clock -period 2.0 [get_pins -filter {REF_PIN_NAME=~TXOUTCLK} -of_objects [get_cells -hierarchical -filter {NAME =~ *gen_channel_container[27].*gen_gtye4_channel_inst[3].GT*E4_CHANNEL_PRIM_INST}]]
-#
 # This is a slow running clock 1MHz drives small logic before perst only for delaying reference clock probation.
 create_clock -period 1000 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]
 #
@@ -137,21 +136,20 @@ set_false_path -from [get_pins -filter {REF_PIN_NAME=~RXUSRCLK2} -of_objects [ge
 set_false_path -from [get_pins -filter {REF_PIN_NAME=~RXUSRCLK2} -of_objects [get_cells -hierarchical -filter { PRIMITIVE_TYPE =~ ADVANCED.GT.* }]] -to [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_rst_i/sync_rxresetdone/sync_vec[*].sync_cell_i/sync_reg[0]/D]
 #
 #
-#
 # Make sure that tool gets the correct DIV value for pipe_clock during synthesis as these DIV pins are dynamic.
-# Set Divide By 1
+#
 set_case_analysis 0 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/DIV[0]]
 set_case_analysis 0 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/DIV[1]]
 set_case_analysis 0 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk/DIV[2]]
-#
 set_case_analysis 0 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_coreclk/DIV[0]]
 set_case_analysis 0 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_coreclk/DIV[1]]
 set_case_analysis 0 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_coreclk/DIV[2]]
 set_case_analysis 1 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk2/DIV[0]]
 set_case_analysis 0 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk2/DIV[1]]
 set_case_analysis 0 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_pclk2/DIV[2]]
-
-#
+set_case_analysis 1 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_mcapclk/DIV[0]]
+set_case_analysis 1 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_mcapclk/DIV[1]]
+set_case_analysis 0 [get_pins XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_mcapclk/DIV[2]]
 ###############################################################################
 # TIMING Exceptions - False Paths
 ###############################################################################
@@ -229,10 +227,47 @@ set_property CLOCK_DELAY_GROUP XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_group_i0
 
 #create_waiver -type METHODOLOGY -id {TIMING-9} -internal -scoped -tags 1024539   -user "pcie4_uscaleplus" -desc "The CDC logic is used for clock domain crossing so it can be ignored"
 
-#create_waiver -type CDC -id {CDC-11} -tags "1019576" -desc "properly_synced" -from [get_pins {pcie4_uscale_plus_0_i/inst/XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/pcie4_uscale_plus_0_gt_i/inst/gen_gtwizard_gtye4_top.pcie4_uscale_plus_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_cpll_cal_gtye4.gen_cpll_cal_inst[0].gen_inst_cpll_cal.gtwizard_ultrascale_v1_7_5_gtye4_cpll_cal_inst/gtwizard_ultrascale_v1_7_12_5_gtye4_cpll_cal_tx_i/U_TXOUTCLK_FREQ_COUNTER/state_reg[0]/C}] -to [get_pins {pcie4_uscale_plus_0_i/inst/XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/pcie4_uscale_plus_0_gt_i/inst/gen_gtwizard_gtye4_top.pcie4_uscale_plus_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_cpll_cal_gtye4.gen_cpll_cal_inst[0].gen_inst_cpll_cal.gtwizard_ultrascale_v1_7_5_gtye4_cpll_cal_inst/gtwizard_ultrascale_v1_7_12_5_gtye4_cpll_cal_tx_i/U_TXOUTCLK_FREQ_COUNTER/reset_synchronizer_testclk_rst_inst/rst_in_meta_reg/PRE}]
+#create_waiver -type CDC -id {CDC-11} -tags "1019576" -desc "properly_synced" -from [get_pins {pcie4_uscale_plus_0_i/inst/XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/pcie4_uscale_plus_0_gt_i/inst/gen_gtwizard_gtye4_top.pcie4_uscale_plus_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_cpll_cal_gtye4.gen_cpll_cal_inst[0].gen_inst_cpll_cal.gtwizard_ultrascale_v1_7_5_gtye4_cpll_cal_inst/gtwizard_ultrascale_v1_7_19_5_gtye4_cpll_cal_tx_i/U_TXOUTCLK_FREQ_COUNTER/state_reg[0]/C}] -to [get_pins {pcie4_uscale_plus_0_i/inst/XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/gt_wizard.gtwizard_top_i/pcie4_uscale_plus_0_gt_i/inst/gen_gtwizard_gtye4_top.pcie4_uscale_plus_0_gt_gtwizard_gtye4_inst/gen_gtwizard_gtye4.gen_cpll_cal_gtye4.gen_cpll_cal_inst[0].gen_inst_cpll_cal.gtwizard_ultrascale_v1_7_5_gtye4_cpll_cal_inst/gtwizard_ultrascale_v1_7_19_5_gtye4_cpll_cal_tx_i/U_TXOUTCLK_FREQ_COUNTER/reset_synchronizer_testclk_rst_inst/rst_in_meta_reg/PRE}]
 # Power Analysis # Power 33-332
 set_switching_activity -toggle_rate 1.000 -static_probability 0.010 [get_nets {user_reset}]
 set_switching_activity -toggle_rate 1.000 -static_probability 0.010 [get_nets {sync_sc_clr}]
 set_switching_activity -toggle_rate 1.000 -static_probability 0.010 [get_nets {XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_pcie_4_0_pipe_inst/src_arst*}]
 set_switching_activity -toggle_rate 1.000 -static_probability 0.010 [get_nets {XilinxVariumC1100PciePhyGen4x8_pcie4c_ip_pcie_4_0_pipe_inst/sys_reset*}]
 #
+
+# -------------- Adding Waiver ----------------------#
+
+
+create_waiver -type DRC -id {REQP-1858} -tags "1166844" -scope -internal -user "pcie4c_uscale_plus" -desc "Suggestion to change mode from WRITE_FIRST to NO_CHANGE, safe to waive off based on usecase" -objects [get_cells -hier -filter {NAME =~ {*_pipe_inst/pcie_4_0_bram_inst/*/ECC_RAM.RAMB36E2[*].ramb36e2_inst}}]
+
+
+## */ CDC Waivers */ ##
+create_waiver -type CDC -id CDC-10 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe user_reset path        - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/sys_reset_in_async_rst_inst/arststages_ff_reg[1]/C}}]  -to [get_pins -hier -filter {NAME =~ {*/inst/sys_or_hot_rst_pclk_inst/arststages_ff_reg[0]/PRE}}]
+create_waiver -type CDC -id CDC-10 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe perst logic            - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/sys_reset_in_async_rst_inst/arststages_ff_reg[1]/C}}]  -to [get_pins -hier -filter {NAME =~ {*/inst/sys_or_hot_rst_uclk_inst/arststages_ff_reg[0]/PRE}}]
+create_waiver -type CDC -id CDC-10 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe perst logic            - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/sys_reset_in_async_rst_inst/arststages_ff_reg[1]/C}}]  -to [get_pins -hier -filter {NAME =~ {*/inst/user_lnk_up_cdc/arststages_ff_reg[0]/CLR}}]
+create_waiver -type CDC -id CDC-7  -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe user_lnk_up logic      - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/sys_reset_in_async_rst_inst/arststages_ff_reg[1]/C}}]  -to [get_pins -hier -filter {NAME =~ {*/inst/user_lnk_up_reg/CLR}}]
+create_waiver -type CDC -id CDC-11 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe Phy Wrapper pipeline   - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/phy_pipeline/as_mac_in_detect_chain/with_ff_chain.ff_chain_gen[0].sync_rst.ff_chain_reg[1][0]/C}}]  -to [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_lane[*].receiver_detect_termination_i/sync_mac_in_detect/sync_vec[0].sync_cell_i/sync_reg[0]/D}}]
+create_waiver -type CDC -id CDC-11 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe Phy Wrapper pipeline   - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/phy_pipeline/phy_rate_chain/with_ff_chain.ff_chain_gen[0].sync_rst.ff_chain_reg[1][1]/C}}]          -to [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_lane[*].cdr_ctrl_on_eidle_i/sync_gen34/sync_vec[0].sync_cell_i/sync_reg[0]/D}}]
+create_waiver -type CDC -id CDC-11 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe Phy Wrapper pipeline   - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/gen4_64b_convert.phy_rate_32b_ff_reg[1]/C}}] -to [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_lane[*].cdr_ctrl_on_eidle_i/sync_gen34/sync_vec[0].sync_cell_i/sync_reg[0]/D}}]
+create_waiver -type CDC -id CDC-11 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe Phy Wrapper pipeline   - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/gen4_64b_convert.phy_rate_32b_ff_reg[1]/C}}] -to [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_lane[*].cdr_ctrl_on_eidle_i/sync_gen34/sync_vec[0].sync_cell_i/sync_reg[0]/D}}]
+create_waiver -type CDC -id CDC-11 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe Phy Wrapper pipeline   - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/phy_rxcdrhold_pclk2_reg/C}}]  -to [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_lane[*].cdr_ctrl_on_eidle_i/sync_rxcdrreset_in/sync_vec[0].sync_cell_i/sync_reg[0]/D}}]
+create_waiver -type CDC -id CDC-10 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe user_reset path        - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/*_pipe_inst/pcie_4_c_e4_inst/CORECLK}}]  -to [get_pins -hier -filter {NAME =~ {*/inst/sys_or_hot_rst_pclk_inst/arststages_ff_reg[0]/PRE}}]
+
+create_waiver -type CDC -id CDC-11 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe Phy Wrapper pipeline   - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/phy_pipeline/phy_rate_chain/with_ff_chain.ff_chain_gen[0].sync_rst.ff_chain_reg[1][1]/C}}]               -to [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_lane[*].phy_rxeq_i/*dfe_lpm_auto_switch_i/sync_rate/sync_vec[0].sync_cell_i/sync_reg[0]/D}}]
+create_waiver -type CDC -id CDC-11 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe Phy Wrapper pipeline   - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_rst_i/prst_n_r_rep_reg/C}}]                                          -to [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_lane[*].phy_rxeq_i/*dfe_lpm_auto_switch_i/sync_reset/sync_vec[0].sync_cell_i/sync_reg[0]/D}}]
+
+create_waiver -type CDC -id CDC-11 -tags "1200498" -scope -internal -user "pcie4c_uscale_plus" -desc "PCIe Phy Wrapper pipeline   - safe to waive" -from [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_lane[*].diablo_gt_eyescanreset_drp_i/rate_change_extend_pclk_reg/C}}] -to [get_pins -hier -filter {NAME =~ {*/inst/*_gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_lane[*].diablo_gt_eyescanreset_drp_i/sync_rate_change/sync_vec[0].sync_cell_i/sync_reg[0]/D}}]
+
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/count_250us_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/data_valid_high_reg/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/PHY_RXDATAK_REG_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/PHY_RXSTATUS_REG_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/PHY_RXELECIDLE_REG_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/PHY_PHYSTATUS_REG_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/workaround[*].PHY_RXDATA_REG_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/workaround[*].rxsync_header_nogate_reg_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/workaround[*].PHY_RXSTART_BLOCK_REG_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/workaround[*].PHY_RXDATA_VALID_REG_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/workaround[*].PHY_RXVALID_REG_reg[*]/R}}]
+create_waiver -type CDC -id CDC-1 -tags "1165969" -scope -internal -user "pcie4c_uscale_plus" -desc "sys reset path - safe to waive" -to [get_pins -hier -filter {NAME =~ {*/inst/*state_reg[*]/R}}]
+

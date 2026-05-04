@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : MigPkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: Package file for MIG Core

@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : AxiPcieCrossbarIpCoreWrapper.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI DMA Crossbar IP Core Wrapper

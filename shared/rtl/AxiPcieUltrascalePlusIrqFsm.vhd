@@ -1,5 +1,4 @@
 -------------------------------------------------------------------------------
--- File       : AxiPcieUltrascalePlusIrqFsm.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Ultrascale+ IRQ FSM
@@ -17,7 +16,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
-
 
 library surf;
 use surf.StdRtlPkg.all;

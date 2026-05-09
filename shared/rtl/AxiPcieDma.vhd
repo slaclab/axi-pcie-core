@@ -157,7 +157,7 @@ begin
             DESC_MEMORY_TYPE_G => DESC_MEMORY_TYPE_G,
             AXIL_BASE_ADDR_G   => x"00000000",
             AXI_READY_EN_G     => true,  -- Using "Packet FIFO" option in AXI Interconnect IP core
-            AXIS_READY_EN_G    => false,
+            AXIS_READY_EN_G    => true,
             AXIS_CONFIG_G      => INT_DMA_AXIS_CONFIG_C,
             AXI_DMA_CONFIG_G   => DMA_AXI_CONFIG_C,
             CHAN_COUNT_G       => DMA_SIZE_G,

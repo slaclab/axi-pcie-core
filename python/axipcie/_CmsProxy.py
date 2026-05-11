@@ -35,6 +35,7 @@ class _Mailbox(pr.Device):
             offset    = 0x28018,
             bitSize   = 1,
             bitOffset = 27,
+            verify    = False,
         ))
 
         self.add(pr.RemoteVariable(
@@ -43,6 +44,7 @@ class _Mailbox(pr.Device):
             offset    = 0x28018,
             bitSize   = 1,
             bitOffset = 26,
+            verify    = False,
         ))
 
         self.add(pr.RemoteVariable(
@@ -117,8 +119,16 @@ class _Mailbox(pr.Device):
                 # 1. The host checks the availability of the mailbox by confirming CONTROL_REG[5] is 0.
                 #######################################################################################
 
+                poll_start = time.time()
+                timed_out = False
                 while self.CONTROL_REG[5].get(read=True) != 0:
+                    if time.time() - poll_start > 5.0:
+                        transaction.error('Timed out waiting for mailbox availability (CONTROL_REG[5] stuck at 1)')
+                        timed_out = True
+                        break
                     time.sleep(self._pollPeriod)
+                if timed_out:
+                    continue
 
                 ######################################################
                 # 2. The host writes a request message to the mailbox.
@@ -186,8 +196,16 @@ class _Mailbox(pr.Device):
                 # 4. The host polls CONTROL_REG[5] until CMS firmware sets to 0, indicating the CMS response message is in the mailbox.
                 #######################################################################################################################
 
+                poll_start = time.time()
+                timed_out = False
                 while self.CONTROL_REG[5].get(read=True) != 0:
+                    if time.time() - poll_start > 5.0:
+                        transaction.error('Timed out waiting for CMS firmware response (CONTROL_REG[5] stuck at 1)')
+                        timed_out = True
+                        break
                     time.sleep(self._pollPeriod)
+                if timed_out:
+                    continue
 
                 ################################################################################
                 # 5. The host reads HOST_MSG_ERROR_REG to confirm no message errors are present.
@@ -1884,22 +1902,30 @@ class CmsSubsystem(pr.Device):
         self.MB_RESETN_REG.set(value=0x0, write=True)
         self.MB_RESETN_REG.set(value=0x1, write=True)
 
-        # Wait for the Mailbox to be ready (with 5-second timeout)
+        # Wait for the Mailbox to be ready (with 10-second timeout)
         start_time = time.time()
         while (self.Status.HOST_STATUS2_REG.get(read=True) & 0x1) != 1:
-            if time.time() - start_time > 5:
+            if time.time() - start_time > 10:
                 raise TimeoutError("Timed out waiting for Mailbox to be ready. Double check if you have the latest firmware loaded.  Requires firmware to be built with submodules/axi-pcie-core@v5.5.0 (or later)")
-            time.sleep(0.001)
+            time.sleep(0.010)
+
+        # Allow MicroBlaze firmware to complete internal initialization
+        time.sleep(0.100)
 
         # Check for the correct Register Map ID
         regMapId = self.Status.REG_MAP_ID_REG.get(read=True)
         if (regMapId != 0x74736574):
             raise ValueError(f"Unexpected REG_MAP_ID_REG value: {hex(regMapId)} (expected 0x74736574)")
 
-        # Check if we need to enable the QSFP GPIO registers
+        # Enable QSFP/DSFP/SFP GPIO registers with retry logic
         if self.moduleType is not None:
-            self.Mailbox.QsfpGpioEnable.get(read=True) # Token read to update the shadow variable caching
-            self.Mailbox.QsfpGpioEnable.set(value=0x1, write=True)
+            for retry in range(10):
+                self.Mailbox.QsfpGpioEnable.set(value=0x1, write=True)
+                time.sleep(0.010)
+                if self.Mailbox.QsfpGpioEnable.get(read=True) == 0x1:
+                    break
+            else:
+                raise RuntimeError("Failed to set QsfpGpioEnable after 10 retries")
 
         # Proceed with the rest of the pyrogue.device._start() routine
         super()._start()

@@ -21,6 +21,29 @@ import axipcie as pcie
 import click
 import time
 
+
+# Default per-slot transceiver class for boards with configurable slots.
+# The list length sets the required transceiverClass length when overridden.
+_DEFAULT_TRANSCEIVERS = {
+    'BittWareXupVv8Vu9p':  [xceiver.Qsfp]*4,
+    'BittWareXupVv8Vu13p': [xceiver.Qsfp]*4,
+    'SlacPgpCardG4':       [xceiver.Qsfp]*2, # third cage is a fixed SFP, not configurable
+    'XilinxKcu1500':       [xceiver.Qsfp]*2,
+    'XilinxAlveoU200':     [xceiver.Qsfp]*2,
+    'XilinxAlveoU250':     [xceiver.Qsfp]*2,
+    'XilinxAlveoU280':     [xceiver.Qsfp]*2,
+    'XilinxAlveoU55c':     [xceiver.Qsfp]*2,
+    'XilinxVariumC1100':   [xceiver.Qsfp]*2,
+}
+
+# String label -> transceiver class.
+_TRANSCEIVER_DISPATCH = {
+    'QSFP':    xceiver.Qsfp,
+    'SFP':     xceiver.Sfp,
+    'QSFP-DD': xceiver.QsfpDd,
+}
+
+
 class AxiPcieCore(pr.Device):
     """This class maps to axi-pcie-core/shared/rtl/AxiPcieReg.vhd"""
     def __init__(self,
@@ -28,12 +51,39 @@ class AxiPcieCore(pr.Device):
                  useBpi      = False,
                  useGpu      = False,
                  useSpi      = False,
-                 useSfp      = [False, False],
+                 transceiverClass = [None],
                  numDmaLanes = 1,
                  boardType   = None,
                  extended    = False,
                  sim         = False,
                  **kwargs):
+
+        # Resolve per-slot transceiver classes BEFORE super().__init__() so a
+        # ValueError on bad input does not leave a partially-constructed
+        # pyrogue Device holding leaked worker threads.
+        # Per-entry None in transceiverClass skips that slot (no device added).
+        slotClasses = None
+        if boardType in _DEFAULT_TRANSCEIVERS:
+            defaults = _DEFAULT_TRANSCEIVERS[boardType]
+            if transceiverClass == [None]:
+                slotClasses = list(defaults)
+            else:
+                if len(transceiverClass) != len(defaults):
+                    raise ValueError(
+                        f'transceiverClass must be a list of {len(defaults)} '
+                        f'entries for {boardType}; got len={len(transceiverClass)}')
+                slotClasses = []
+                for c in transceiverClass:
+                    if c is None:
+                        slotClasses.append(None)
+                        continue
+                    try:
+                        slotClasses.append(_TRANSCEIVER_DISPATCH[str(c).upper()])
+                    except KeyError as exc:
+                        raise ValueError(
+                            f'transceiverClass entry {exc} not in '
+                            f'{{QSFP, SFP, QSFP-DD}}') from exc
+
         super().__init__(description=description, **kwargs)
 
         self.numDmaLanes = numDmaLanes
@@ -124,39 +174,33 @@ class AxiPcieCore(pr.Device):
                         enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                     ))
 
-                    if len(useSfp) != 4:
-                        useSfp = [False for _ in range(4)]
-
-                    for i in range(4):
-                        if not useSfp[i]:
-                            self.add(xceiver.Qsfp(
-                                name    = f'Qsfp[{i}]',
-                                offset  = i*0x1000+0x74000,
-                                memBase = self.AxilBridge.proxy,
-                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                            ))
-                        else:
-                            self.add(xceiver.Sfp(
-                                name    = f'Qsfp[{i}]',
-                                offset  = i*0x1000+0x74000,
-                                memBase = self.AxilBridge.proxy,
-                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                            ))
+                    for i, cls in enumerate(slotClasses):
+                        if cls is None:
+                            continue
+                        self.add(cls(
+                            name    = f'{cls.__name__}[{i}]',
+                            offset  = i*0x1000+0x74000,
+                            memBase = self.AxilBridge.proxy,
+                            enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                        ))
 
                 elif (boardType == 'SlacPgpCardG4'):
 
                     XIL_DEVICE_G = 'ULTRASCALE'
 
-                    for i in range(2):
-                        self.add(xceiver.Qsfp(
-                            name    = f'Qsfp[{i}]',
+                    for i, cls in enumerate(slotClasses):
+                        if cls is None:
+                            continue
+                        self.add(cls(
+                            name    = f'{cls.__name__}[{i}]',
                             offset  = i*0x1000+0x70000,
                             memBase = self.AxilBridge.proxy,
                             enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                         ))
 
+                    # Slot 2 is a fixed SFP cage (physical hardware, not configurable).
                     self.add(xceiver.Sfp(
-                        name        = 'Sfp',
+                        name        = 'Sfp[2]',
                         offset      = 0x72000,
                         memBase     = self.AxilBridge.proxy,
                         enabled     = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
@@ -173,44 +217,31 @@ class AxiPcieCore(pr.Device):
                 elif (boardType == 'XilinxKcu1500'):
 
                     XIL_DEVICE_G = 'ULTRASCALE'
-                    qsfpOffset = [0x74_000,0x71_000]
+                    qsfpOffset = [0x74_000, 0x71_000]
 
-
-                    for i in range(2):
-                        if not useSfp[i]:
-                            self.add(xceiver.Qsfp(
-                                name    = f'Qsfp[{i}]',
-                                offset  = qsfpOffset[i],
-                                memBase = self.AxilBridge.proxy,
-                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                            ))
-                        else:
-                            self.add(xceiver.Sfp(
-                                name    = f'Sfp[{i}]',
-                                offset  = qsfpOffset[i],
-                                memBase = self.AxilBridge.proxy,
-                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                            ))
+                    for i, cls in enumerate(slotClasses):
+                        if cls is None:
+                            continue
+                        self.add(cls(
+                            name    = f'{cls.__name__}[{i}]',
+                            offset  = qsfpOffset[i],
+                            memBase = self.AxilBridge.proxy,
+                            enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                        ))
 
                 elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250') or (boardType == 'XilinxAlveoU280'):
 
                     XIL_DEVICE_G = 'ULTRASCALE_PLUS'
 
-                    for i in range(2):
-                        if not useSfp[i]:
-                            self.add(xceiver.Qsfp(
-                                name    = f'Qsfp[{i}]',
-                                offset  = i*0x1000+0x70000,
-                                memBase = self.AxilBridge.proxy,
-                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                            ))
-                        else:
-                            self.add(xceiver.Sfp(
-                                name    = f'Qsfp[{i}]',
-                                offset  = i*0x1000+0x70000,
-                                memBase = self.AxilBridge.proxy,
-                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                            ))
+                    for i, cls in enumerate(slotClasses):
+                        if cls is None:
+                            continue
+                        self.add(cls(
+                            name    = f'{cls.__name__}[{i}]',
+                            offset  = i*0x1000+0x70000,
+                            memBase = self.AxilBridge.proxy,
+                            enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                        ))
 
                     self.add(silabs.Si570(
                         name = 'Si570',
@@ -238,21 +269,15 @@ class AxiPcieCore(pr.Device):
                         numCages   = 2,
                     ))
 
-                    for i in range(2):
-                        if not useSfp[i]:
-                            self.add(xceiver.Qsfp(
-                                name    = f'Qsfp[{i}]',
-                                offset  = qsfpOffset[i],
-                                memBase = self.CmsBridge.proxy,
-                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                            ))
-                        else:
-                            self.add(xceiver.Sfp(
-                                name    = f'Sfp[{i}]',
-                                offset  = qsfpOffset[i],
-                                memBase = self.CmsBridge.proxy,
-                                enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
-                            ))
+                    for i, cls in enumerate(slotClasses):
+                        if cls is None:
+                            continue
+                        self.add(cls(
+                            name    = f'{cls.__name__}[{i}]',
+                            offset  = qsfpOffset[i],
+                            memBase = self.CmsBridge.proxy,
+                            enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
+                        ))
 
                 elif (boardType == 'XilinxKcu105'):
                     XIL_DEVICE_G = 'ULTRASCALE'

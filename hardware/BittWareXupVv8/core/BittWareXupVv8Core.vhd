@@ -116,7 +116,13 @@ architecture mapping of BittWareXupVv8Core is
 
    constant GPIO_DEVICE_MAP_C : I2cAxiLiteDevArray(0 to 0) := (
       0              => MakeI2cAxiLiteDevType(
-         i2cAddress  => "0100000",      -- PCA9555
+         -- QSFP-GPIO PCA9555 at I2C address 7-bit 0x21 (8-bit write 0x42)
+         -- per XUP-VV8 Hardware Reference Guide rev 19 (2025-05-07) section 4.9.2.
+         -- Prior value "0100000" (7-bit 0x20) targeted the OCU-GPIO PCA9555,
+         -- which left QSFP_RST_L and QSFP_LP undriven from FW. Confirmed via
+         -- software read-back of PCA9555 Input Port (PRSNT_L bits all 1 with
+         -- modules inserted) before this change.
+         i2cAddress  => "0100001",      -- PCA9555 (QSFP-GPIO)
          dataSize    => 8,              -- in units of bits
          addrSize    => 8,              -- in units of bits
          endianness  => '0',            -- Little endian
@@ -147,10 +153,14 @@ architecture mapping of BittWareXupVv8Core is
    signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
 
-   signal mI2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
-   signal mI2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
-   signal mI2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
-   signal mI2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+   -- U_XbarMI2cMux slave ports:
+   --   (0) = CPU (AxiPcieReg)
+   --   (1) = U_QsfpCdrDisable (idle when QSFP_CDR_DISABLE_G=false)
+   --   (2) = U_BittWareXupVv8QsfpInit (one-shot PCA9555 init at startup)
+   signal mI2cReadMasters  : AxiLiteReadMasterArray(2 downto 0)  := (others => AXI_LITE_READ_MASTER_INIT_C);
+   signal mI2cReadSlaves   : AxiLiteReadSlaveArray(2 downto 0)   := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal mI2cWriteMasters : AxiLiteWriteMasterArray(2 downto 0) := (others => AXI_LITE_WRITE_MASTER_INIT_C);
+   signal mI2cWriteSlaves  : AxiLiteWriteSlaveArray(2 downto 0)  := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
    signal i2cReadMaster  : AxiLiteReadMasterType;
    signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
@@ -255,7 +265,6 @@ begin
       intPipIbSlave <= pipIbSlave;
 
       QSFP_CDR_DISABLE : if (QSFP_CDR_DISABLE_G) generate
-
          U_QsfpCdrDisable : entity surf.QsfpCdrDisable
             generic map (
                TPD_G             => TPD_G,
@@ -270,36 +279,38 @@ begin
                mAxilReadSlave   => mI2cReadSlaves(1),
                mAxilWriteMaster => mI2cWriteMasters(1),
                mAxilWriteSlave  => mI2cWriteSlaves(1));
-
-         U_XbarMI2cMux : entity surf.AxiLiteCrossbar
-            generic map (
-               TPD_G              => TPD_G,
-               NUM_SLAVE_SLOTS_G  => 2,
-               NUM_MASTER_SLOTS_G => 1,
-               MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
-            port map (
-               axiClk              => sysClock,
-               axiClkRst           => sysReset,
-               sAxiWriteMasters    => mI2cWriteMasters,
-               sAxiWriteSlaves     => mI2cWriteSlaves,
-               sAxiReadMasters     => mI2cReadMasters,
-               sAxiReadSlaves      => mI2cReadSlaves,
-               mAxiWriteMasters(0) => i2cWriteMaster,
-               mAxiWriteSlaves(0)  => i2cWriteSlave,
-               mAxiReadMasters(0)  => i2cReadMaster,
-               mAxiReadSlaves(0)   => i2cReadSlave);
-
       end generate;
 
-      BYP_QSFP_CDR_DISABLE : if (not QSFP_CDR_DISABLE_G) generate
+      U_BittWareXupVv8QsfpInit : entity axi_pcie_core.BittWareXupVv8QsfpInit
+         generic map (
+            TPD_G           => TPD_G,
+            PCA9555_ADDR_G  => x"0007_3000",
+            AXIL_CLK_FREQ_G => DMA_CLK_FREQ_C)
+         port map (
+            axilClk          => sysClock,
+            axilRst          => sysReset,
+            mAxilReadMaster  => mI2cReadMasters(2),
+            mAxilReadSlave   => mI2cReadSlaves(2),
+            mAxilWriteMaster => mI2cWriteMasters(2),
+            mAxilWriteSlave  => mI2cWriteSlaves(2));
 
-         i2cWriteMaster     <= mI2cWriteMasters(0);
-         mI2cWriteSlaves(0) <= i2cWriteSlave;
-
-         i2cReadMaster     <= mI2cReadMasters(0);
-         mI2cReadSlaves(0) <= i2cReadSlave;
-
-      end generate;
+      U_XbarMI2cMux : entity surf.AxiLiteCrossbar
+         generic map (
+            TPD_G              => TPD_G,
+            NUM_SLAVE_SLOTS_G  => 3,
+            NUM_MASTER_SLOTS_G => 1,
+            MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
+         port map (
+            axiClk              => sysClock,
+            axiClkRst           => sysReset,
+            sAxiWriteMasters    => mI2cWriteMasters,
+            sAxiWriteSlaves     => mI2cWriteSlaves,
+            sAxiReadMasters     => mI2cReadMasters,
+            sAxiReadSlaves      => mI2cReadSlaves,
+            mAxiWriteMasters(0) => i2cWriteMaster,
+            mAxiWriteSlaves(0)  => i2cWriteSlave,
+            mAxiReadMasters(0)  => i2cReadMaster,
+            mAxiReadSlaves(0)   => i2cReadSlave);
 
       U_XbarI2cMux : entity surf.AxiLiteCrossbarI2cMux
          generic map (

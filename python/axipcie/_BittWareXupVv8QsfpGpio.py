@@ -14,79 +14,130 @@ class BittWareXupVv8QsfpGpio(pr.Device):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
 
-        # Map QSFP signals
-        nameList = [
-            'QSFP_PRSNT_L[0]', # IO0_0
-            'QSFP_INT_L[0]',   # IO0_1
-            'QSFP_LP[0]',      # IO0_2
-            'QSFP_RST_L[0]',   # IO0_3
-            'QSFP_PRSNT_L[1]', # IO0_4
-            'QSFP_INT_L[1]',   # IO0_5
-            'QSFP_LP[1]',      # IO0_6
-            'QSFP_RST_L[1]',   # IO0_7
-            'QSFP_PRSNT_L[2]', # IO1_0
-            'QSFP_INT_L[2]',   # IO1_1
-            'QSFP_LP[2]',      # IO1_2
-            'QSFP_RST_L[2]',   # IO1_3
-            'QSFP_PRSNT_L[3]', # IO1_4
-            'QSFP_INT_L[3]',   # IO1_5
-            'QSFP_LP[3]',      # IO1_6
-            'QSFP_RST_L[3]',   # IO1_7
-        ]
+        # PCA9555 Input/Output port byte registers are each mapped to their own
+        # AXI-Lite word (low byte significant). Per the XUP-VV8 schematic, each
+        # nibble carries one QSFP slot:
+        #   Port 0 (IP @ 0x00, OP @ 0x08) bits [3:0]=slot 0, bits [7:4]=slot 1
+        #   Port 1 (IP @ 0x04, OP @ 0x0C) bits [3:0]=slot 2, bits [7:4]=slot 3
+        # Within each nibble: bit0=PRSNT_L, bit1=INT_L, bit2=LP, bit3=RST_L.
+        # Each 4-bit RemoteVariable below composes [slot0, slot1, slot2, slot3].
 
-        # The PCA9555 has two 8-bit ports (Port 0 and Port 1)
-        for i in range(2):  # Port 0 and Port 1
-            for j in range(8):  # Each has 8 bits
-                idx = 8*i + j
+        self.add(pr.RemoteVariable(
+            name        = 'QSFP_PRSNT_L',
+            description = 'Per-slot QSFP module presence (0=present, 1=absent), bit[i]=slot[i]',
+            offset      = [0x00, 0x00, 0x04, 0x04],
+            bitOffset   = [0, 4, 0, 4],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RO',
+        ))
 
-                # Input Port registers (read-only)
-                self.add(pr.RemoteVariable(
-                    name        = f'IP_{nameList[idx]}',
-                    description = 'Input Port registers',
-                    offset      = (0x00 + i) << 2,
-                    bitOffset   = j,
-                    bitSize     = 1,
-                    mode        = 'RO',
-                ))
+        self.add(pr.RemoteVariable(
+            name        = 'QSFP_INT_L',
+            description = 'Per-slot QSFP interrupt (0=active, 1=inactive), bit[i]=slot[i]',
+            offset      = [0x00, 0x00, 0x04, 0x04],
+            bitOffset   = [1, 5, 1, 5],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RO',
+        ))
 
-        # The PCA9555 has two 8-bit ports (Port 0 and Port 1)
-        for i in range(2):  # Port 0 and Port 1
-            for j in range(8):  # Each has 8 bits
-                idx = 8*i + j
-                # Output Port registers (read/write)
-                self.add(pr.RemoteVariable(
-                    name        = f'OP_{nameList[idx]}',
-                    description = 'Output Port registers',
-                    offset      = (0x02 + i) << 2,
-                    bitOffset   = j,
-                    bitSize     = 1,
-                    mode        = 'RW',
-                ))
+        self.add(pr.RemoteVariable(
+            name        = 'QSFP_LP',
+            description = 'Per-slot QSFP low-power mode (1=low-power, 0=normal), bit[i]=slot[i]',
+            offset      = [0x08, 0x08, 0x0C, 0x0C],
+            bitOffset   = [2, 6, 2, 6],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+        ))
 
-        # The PCA9555 has two 8-bit ports (Port 0 and Port 1)
-        for i in range(2):  # Port 0 and Port 1
-            for j in range(8):  # Each has 8 bits
-                idx = 8*i + j
-                # Polarity Inversion registers (read/write)
-                self.add(pr.RemoteVariable(
-                    name        = f'POL_{nameList[idx]}',
-                    description = 'Polarity Inversion registers',
-                    offset      = (0x04 + i) << 2,
-                    bitOffset   = j,
-                    bitSize     = 1,
-                    mode        = 'RW',
-                ))
+        self.add(pr.RemoteVariable(
+            name        = 'QSFP_RST_L',
+            description = 'Per-slot QSFP reset (0=reset asserted, 1=de-asserted), bit[i]=slot[i]',
+            offset      = [0x08, 0x08, 0x0C, 0x0C],
+            bitOffset   = [3, 7, 3, 7],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+        ))
 
-        # The PCA9555 has two 8-bit ports (Port 0 and Port 1)
-        for i in range(2):  # Port 0 and Port 1
-            for j in range(8):  # Each has 8 bits
-                idx = 8*i + j
-                # Configuration registers (read/write)
-                self.add(pr.RemoteVariable(
-                    name        = f'CFG_{nameList[idx]}',
-                    description = 'I/O Configuration registers',
-                    offset      = (0x06 + i) << 2,
-                    bitOffset   = j,
-                    bitSize     = 1,
-                    mode        = 'RW',
-                ))
+        # PCA9555 Polarity Inversion (regs 0x04/0x05 @ AXI 0x10/0x14).
+        # Expected value: 0 for all bits (no inversion).
+        self.add(pr.RemoteVariable(
+            name        = 'POL_QSFP_PRSNT_L',
+            description = 'Polarity inversion for PRSNT_L (expect 0), bit[i]=slot[i]',
+            offset      = [0x10, 0x10, 0x14, 0x14],
+            bitOffset   = [0, 4, 0, 4],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+            hidden      = True,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'POL_QSFP_INT_L',
+            description = 'Polarity inversion for INT_L (expect 0), bit[i]=slot[i]',
+            offset      = [0x10, 0x10, 0x14, 0x14],
+            bitOffset   = [1, 5, 1, 5],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+            hidden      = True,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'POL_QSFP_LP',
+            description = 'Polarity inversion for LP (expect 0), bit[i]=slot[i]',
+            offset      = [0x10, 0x10, 0x14, 0x14],
+            bitOffset   = [2, 6, 2, 6],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+            hidden      = True,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'POL_QSFP_RST_L',
+            description = 'Polarity inversion for RST_L (expect 0), bit[i]=slot[i]',
+            offset      = [0x10, 0x10, 0x14, 0x14],
+            bitOffset   = [3, 7, 3, 7],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+            hidden      = True,
+        ))
+
+        # PCA9555 I/O Configuration (regs 0x06/0x07 @ AXI 0x18/0x1C).
+        # 1=input, 0=output. Expected: PRSNT_L/INT_L=1 (input), LP/RST_L=0 (output).
+        self.add(pr.RemoteVariable(
+            name        = 'CFG_QSFP_PRSNT_L',
+            description = 'Direction config for PRSNT_L (1=input, expect 1), bit[i]=slot[i]',
+            offset      = [0x18, 0x18, 0x1C, 0x1C],
+            bitOffset   = [0, 4, 0, 4],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+            hidden      = True,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CFG_QSFP_INT_L',
+            description = 'Direction config for INT_L (1=input, expect 1), bit[i]=slot[i]',
+            offset      = [0x18, 0x18, 0x1C, 0x1C],
+            bitOffset   = [1, 5, 1, 5],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+            hidden      = True,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CFG_QSFP_LP',
+            description = 'Direction config for LP (0=output, expect 0), bit[i]=slot[i]',
+            offset      = [0x18, 0x18, 0x1C, 0x1C],
+            bitOffset   = [2, 6, 2, 6],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+            hidden      = True,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name        = 'CFG_QSFP_RST_L',
+            description = 'Direction config for RST_L (0=output, expect 0), bit[i]=slot[i]',
+            offset      = [0x18, 0x18, 0x1C, 0x1C],
+            bitOffset   = [3, 7, 3, 7],
+            bitSize     = [1, 1, 1, 1],
+            mode        = 'RW',
+            hidden      = True,
+        ))

@@ -1,0 +1,59 @@
+name: Docs
+
+on:
+  push:
+    branches: [main, doc-rst]
+  workflow_dispatch: {}
+
+# OIDC permissions: id-token:write lets GitHub exchange an OIDC token for
+# Pages deployment auth; pages:write allows uploading to the Pages service.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Sphinx + Furo
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+
+      - name: Build documentation (strict)
+        run: sphinx-build -W --keep-going docs/ docs/_build/html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs/_build/html'
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -35,3 +35,10 @@ hd_visual*
 # Only .bit.gz and .mcs.gz should be committed to git
 *.bit
 *.mcs
+
+# GSD local-only planning artifacts
+.planning/
+CLAUDE.md
+
+# Sphinx build output
+docs/_build/

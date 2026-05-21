@@ -20,8 +20,8 @@ Linux device-node path:
 
     import axipcie as pcie
 
-    # Real hardware: opens rogue.hardware.axi.AxiMemMap to /dev/data_dev0
-    memMap = pcie.createAxiPcieMemMap('/dev/data_dev0')
+    # Real hardware: opens rogue.hardware.axi.AxiMemMap to /dev/datadev_0
+    memMap = pcie.createAxiPcieMemMap('/dev/datadev_0')
 
 The function signature is:
 
@@ -44,7 +44,7 @@ opens DMA stream channels for one or more (lane, destination) pairs:
 
     # Open lane 0, destinations 0 and 1
     dmaStreams = pcie.createAxiPcieDmaStreams(
-        '/dev/data_dev0',
+        '/dev/datadev_0',
         streamMap={0: [0, 1]},
     )
 
@@ -74,7 +74,7 @@ BAR0 internally and instantiates ``AxiPcieCore`` at the top of the device tree:
 
     import axipcie as pcie
 
-    root = pcie.AxiPcieRoot(dev='/dev/data_dev0', name='PCIeDevice')
+    root = pcie.AxiPcieRoot(dev='/dev/datadev_0', name='PCIeDevice')
     root.start()
 
 For production projects that need to wire DMA streams alongside the register
@@ -85,9 +85,9 @@ tree, build a custom ``pr.Root`` subclass using the helpers above:
     import pyrogue as pr
     import axipcie as pcie
 
-    memMap = pcie.createAxiPcieMemMap('/dev/data_dev0')
+    memMap = pcie.createAxiPcieMemMap('/dev/datadev_0')
     dmaStreams = pcie.createAxiPcieDmaStreams(
-        '/dev/data_dev0',
+        '/dev/datadev_0',
         streamMap={0: [0, 1]},
     )
 

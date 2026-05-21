@@ -40,7 +40,13 @@ layout:
 
 Boards without on-board memory omit the ``ddr/`` or ``hbm/`` subtree.  Some
 boards with multiple PCIe lane configurations split the PCIe subtree into
-``pcie-<variant>/`` directories (e.g., ``pcie-3x16/``, ``pcie-4x8/``).
+``pcie-<variant>/`` directories (e.g., ``pcie-3x16/``, ``pcie-4x8/``); see
+``hardware/XilinxAlveoU280/pcie-3x16/`` and ``hardware/XilinxVariumC1100/pcie-4x8/``
+for two worked examples.  When a board uses a PCIe-variant subdirectory, the
+top-level ``<NewBoard>Core.vhd`` lives at
+``hardware/<NewBoard>/pcie-<variant>/rtl/<NewBoard>Core.vhd`` rather than
+``hardware/<NewBoard>/rtl/<NewBoard>Core.vhd``; the ``ruckus.tcl`` chain selects
+the variant subdirectory based on the downstream project's target.
 
 Reference: :repo:`hardware/XilinxKcu1500/` shows the full directory tree for a
 board with PCIe, DDR4, and a PCIe-extended optional variant.

@@ -47,8 +47,8 @@ The build system chains from the downstream project inward through four levels:
 1. The downstream project's top-level ``ruckus.tcl`` sources
    ``hardware/<BoardName>/ruckus.tcl`` via ``loadRuckusTcl``.
 2. The board ``ruckus.tcl`` sources ``shared/ruckus.tcl`` as its first action.
-3. ``shared/ruckus.tcl`` calls ``SubmoduleCheck`` to enforce ruckus v4.24.2 and
-   surf v2.71.0, verifies Vivado version ≥ 2020.1, then loads all of ``shared/rtl/``
+3. ``shared/ruckus.tcl`` calls ``SubmoduleCheck`` to enforce ruckus ≥ v4.24.2 and
+   surf ≥ v2.71.0, verifies Vivado version ≥ 2020.1, then loads all of ``shared/rtl/``
    and ``shared/ip/`` into the ``axi_pcie_core`` VHDL library.
 4. The board ``ruckus.tcl`` loads its own ``rtl/`` sources, the PCIe PHY ``.dcp``,
    the ``.xdc`` constraints, and — conditionally — the ``ddr/`` or ``hbm/`` subtree

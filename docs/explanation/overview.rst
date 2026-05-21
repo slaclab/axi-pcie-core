@@ -40,14 +40,17 @@ It does not cover:
 Relationship to ruckus and surf
 -------------------------------
 
-``ruckus`` is the TCL build framework that drives Vivado project assembly, pinned at
-version v4.24.2 (enforced in ``shared/ruckus.tcl``).  Each supported board ships a
+``ruckus`` is the TCL build framework that drives Vivado project assembly.  The minimum
+version is v4.24.2, enforced in ``shared/ruckus.tcl`` via ``SubmoduleCheck``; downstream
+projects are free to track a newer ruckus revision.  Each supported board ships a
 ``ruckus.tcl`` that a downstream project sources via ``loadRuckusTcl``, pulling in all
 board-specific RTL, IP, and constraints without any manual Vivado project setup.
 
-``surf`` is the SLAC FPGA RTL common library pinned at v2.71.0.  It supplies the
-primitives that every file under ``shared/rtl/`` depends on: ``AxiLitePkg``,
-``AxiStreamPkg``, ``AxiStreamDmaV2``, synchronisation primitives, and peripheral device
-drivers.  Both submodule pins are enforced at build time by the ``SubmoduleCheck`` call
-in ``shared/ruckus.tcl``, so a downstream project built against a mismatched ``surf`` or
-``ruckus`` revision receives a hard error rather than a silent ABI mismatch.
+``surf`` is the SLAC FPGA RTL common library; the minimum version is v2.71.0 (same
+enforcement mechanism as ruckus).  It supplies the primitives that every file under
+``shared/rtl/`` depends on: ``AxiLitePkg``, ``AxiStreamPkg``, ``AxiStreamDmaV2``,
+synchronisation primitives, and peripheral device drivers.  Both submodule version locks
+are enforced at build time, so a downstream project built against a mismatched ``surf`` or
+``ruckus`` revision receives a hard error rather than a silent ABI mismatch.  Set the
+environment variable ``OVERRIDE_SUBMODULE_LOCKS=1`` before invoking ``make`` to bypass
+the check during development.

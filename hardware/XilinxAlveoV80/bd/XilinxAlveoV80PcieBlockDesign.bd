@@ -7,7 +7,7 @@
       "name": "XilinxAlveoV80PcieBlockDesign",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
-      "tool_version": "2025.1",
+      "tool_version": "2025.2",
       "validated": "true"
     },
     "design_tree": {
@@ -1113,7 +1113,7 @@
     "components": {
       "cips": {
         "vlnv": "xilinx.com:ip:versal_cips:3.4",
-        "ip_revision": "6",
+        "ip_revision": "8",
         "xci_name": "XilinxAlveoV80PcieBlockDesign_cips_0",
         "xci_path": "ip/XilinxAlveoV80PcieBlockDesign_cips_0/XilinxAlveoV80PcieBlockDesign_cips_0.xci",
         "inst_hier_path": "cips",
@@ -1141,7 +1141,7 @@
               "CPM_PCIE1_PF0_BAR0_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF0_BAR0_SIZE 16 CPM_PCIE1_PF0_BAR1_BRIDGE_ENABLED 0 CPM_PCIE1_PF0_BAR2_QDMA_64BIT 0 CPM_PCIE1_PF0_BAR2_QDMA_ENABLED 0",
               "CPM_PCIE1_PF0_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR2_QDMA_SCALE Kilobytes CPM_PCIE1_PF0_BAR2_QDMA_SIZE 4 CPM_PCIE1_PF0_BAR2_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF0_BASE_CLASS_VALUE 11",
               "CPM_PCIE1_PF0_CFG_DEV_ID 2030 CPM_PCIE1_PF0_CFG_SUBSYS_ID 2030 CPM_PCIE1_PF0_CFG_SUBSYS_VEND_ID 1A4A CPM_PCIE1_PF0_DEV_CAP_EXT_TAG_EN 1 CPM_PCIE1_PF0_DEV_CAP_FUNCTION_LEVEL_RESET_CAPABLE 0",
-              "CPM_PCIE1_PF0_INTERRUPT_PIN NONE CPM_PCIE1_PF0_MSIX_CAP_TABLE_OFFSET 40 CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE 1 CPM_PCIE1_PF0_MSIX_ENABLED 0 CPM_PCIE1_PF0_MSI_ENABLED 0 CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0",
+              "CPM_PCIE1_PF0_INTERRUPT_PIN NONE CPM_PCIE1_PF0_MSIX_CAP_TABLE_OFFSET 40 CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE 1 CPM_PCIE1_PF0_MSIX_ENABLED 0 CPM_PCIE1_PF0_MSI_ENABLED 1 CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0",
               "0x0000020100000000 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D0 0 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D1 0 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D3HOT 0 CPM_PCIE1_PF0_PM_CAP_SUPP_D1_STATE 0 CPM_PCIE1_PF0_SUB_CLASS_VALUE",
               "80 CPM_PCIE1_PF1_BAR0_QDMA_64BIT 0 CPM_PCIE1_PF1_BAR0_QDMA_ENABLED 0 CPM_PCIE1_PF1_BAR0_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF1_BAR0_QDMA_SCALE Kilobytes CPM_PCIE1_PF1_BAR0_QDMA_SIZE 4",
               "CPM_PCIE1_PF1_BAR0_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF1_BAR2_QDMA_64BIT 0 CPM_PCIE1_PF1_BAR2_QDMA_ENABLED 0 CPM_PCIE1_PF1_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF1_BAR2_QDMA_SCALE Kilobytes",
@@ -1571,7 +1571,7 @@
       },
       "axi_noc_mc_ddr4_0": {
         "vlnv": "xilinx.com:ip:axi_noc:1.1",
-        "ip_revision": "2",
+        "ip_revision": "3",
         "xci_name": "XilinxAlveoV80PcieBlockDesign_axi_noc_mc_ddr4_0_0",
         "xci_path": "ip/XilinxAlveoV80PcieBlockDesign_axi_noc_mc_ddr4_0_0/XilinxAlveoV80PcieBlockDesign_axi_noc_mc_ddr4_0_0.xci",
         "inst_hier_path": "axi_noc_mc_ddr4_0",
@@ -1758,7 +1758,7 @@
       },
       "axi_noc_dma_0": {
         "vlnv": "xilinx.com:ip:axi_noc:1.1",
-        "ip_revision": "2",
+        "ip_revision": "3",
         "xci_name": "XilinxAlveoV80PcieBlockDesign_axi_noc_dma_0_0",
         "xci_path": "ip/XilinxAlveoV80PcieBlockDesign_axi_noc_dma_0_0/XilinxAlveoV80PcieBlockDesign_axi_noc_dma_0_0.xci",
         "inst_hier_path": "axi_noc_dma_0",

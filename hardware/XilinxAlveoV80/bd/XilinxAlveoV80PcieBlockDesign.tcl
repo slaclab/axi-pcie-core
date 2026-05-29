@@ -20,7 +20,7 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version 2025.1
+set scripts_vivado_version 2025.2
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -363,7 +363,7 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PF0_MSIX_CAP_TABLE_OFFSET {40} \
       CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE {1} \
       CPM_PCIE1_PF0_MSIX_ENABLED {0} \
-      CPM_PCIE1_PF0_MSI_ENABLED {0} \
+      CPM_PCIE1_PF0_MSI_ENABLED {1} \
       CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0 {0x0000020100000000} \
       CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D0 {0} \
       CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D1 {0} \
@@ -580,21 +580,21 @@ proc create_root_design { parentCell } {
    CONFIG.CONNECTIONS {MC_0 {read_bw {125} write_bw {125} read_avg_burst {4} write_avg_burst {4}}} \
    CONFIG.NOC_PARAMS {} \
    CONFIG.CATEGORY {ps_pmc} \
- ] [get_bd_intf_pins /axi_noc_mc_ddr4_0/S00_AXI]
+ ] [get_bd_intf_pins $axi_noc_mc_ddr4_0/S00_AXI]
 
   set_property -dict [ list \
    CONFIG.CONNECTIONS {MC_1 {read_bw {125} write_bw {125} read_avg_burst {4} write_avg_burst {4}}} \
    CONFIG.NOC_PARAMS {} \
    CONFIG.CATEGORY {ps_rpu} \
- ] [get_bd_intf_pins /axi_noc_mc_ddr4_0/S01_AXI]
+ ] [get_bd_intf_pins $axi_noc_mc_ddr4_0/S01_AXI]
 
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {S00_AXI} \
- ] [get_bd_pins /axi_noc_mc_ddr4_0/aclk0]
+ ] [get_bd_pins $axi_noc_mc_ddr4_0/aclk0]
 
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {S01_AXI} \
- ] [get_bd_pins /axi_noc_mc_ddr4_0/aclk1]
+ ] [get_bd_pins $axi_noc_mc_ddr4_0/aclk1]
 
   # Create instance: axi_noc_dma_0, and set properties
   set axi_noc_dma_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_noc:1.1 axi_noc_dma_0 ]
@@ -607,7 +607,7 @@ proc create_root_design { parentCell } {
 
   set_property -dict [ list \
    CONFIG.CATEGORY {ps_pcie} \
- ] [get_bd_intf_pins /axi_noc_dma_0/M00_AXI]
+ ] [get_bd_intf_pins $axi_noc_dma_0/M00_AXI]
 
   set_property -dict [ list \
    CONFIG.R_TRAFFIC_CLASS {BEST_EFFORT} \
@@ -616,15 +616,15 @@ proc create_root_design { parentCell } {
    CONFIG.DEST_IDS {M00_AXI:0x80} \
    CONFIG.NOC_PARAMS {} \
    CONFIG.CATEGORY {pl} \
- ] [get_bd_intf_pins /axi_noc_dma_0/S00_AXI]
+ ] [get_bd_intf_pins $axi_noc_dma_0/S00_AXI]
 
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {S00_AXI} \
- ] [get_bd_pins /axi_noc_dma_0/aclk0]
+ ] [get_bd_pins $axi_noc_dma_0/aclk0]
 
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {M00_AXI} \
- ] [get_bd_pins /axi_noc_dma_0/aclk1]
+ ] [get_bd_pins $axi_noc_dma_0/aclk1]
 
   # Create interface connections
   connect_bd_intf_net -intf_net axi_noc_0_M00_AXI [get_bd_intf_pins cips/NOC_CPM_PCIE_0] [get_bd_intf_pins axi_noc_dma_0/M00_AXI]

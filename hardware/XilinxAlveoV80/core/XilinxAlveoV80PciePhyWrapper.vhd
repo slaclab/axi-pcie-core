@@ -220,7 +220,8 @@ begin
 
    U_IRQ_FSM : entity axi_pcie_core.AxiPcieUltrascalePlusIrqFsm
       generic map (
-         TPD_G => TPD_G)
+         TPD_G      => TPD_G,
+         IRQ_TYPE_G => "MSI")
       port map (
          -- Clock and Reset
          clk       => clk,

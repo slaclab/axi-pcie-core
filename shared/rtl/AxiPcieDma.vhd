@@ -111,7 +111,6 @@ architecture mapping of AxiPcieDma is
 
    signal mAxisMasters : AxiStreamMasterArray(DMA_SIZE_G-1 downto 0);
    signal mAxisSlaves  : AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0);
-   signal mAxisCtrl    : AxiStreamCtrlArray(DMA_SIZE_G-1 downto 0);
 
    signal axisReset : slv(DMA_SIZE_G-1 downto 0);
 
@@ -157,13 +156,13 @@ begin
             DESC_MEMORY_TYPE_G => DESC_MEMORY_TYPE_G,
             AXIL_BASE_ADDR_G   => x"00000000",
             AXI_READY_EN_G     => true,  -- Using "Packet FIFO" option in AXI Interconnect IP core
-            AXIS_READY_EN_G    => false,
+            AXIS_READY_EN_G    => true,
             AXIS_CONFIG_G      => INT_DMA_AXIS_CONFIG_C,
             AXI_DMA_CONFIG_G   => DMA_AXI_CONFIG_C,
             CHAN_COUNT_G       => DMA_SIZE_G,
             RD_PIPE_STAGES_G   => 1,
             BURST_BYTES_G      => DMA_BURST_BYTES_G,
-            RD_PEND_THRESH_G   => 1)
+            RD_PEND_THRESH_G   => 512*DMA_AXI_CONFIG_C.DATA_BYTES_C)  -- 512 deep store/forward in the AxiPcieCrossbar
          port map (
             -- Clock/Reset
             axiClk          => axiClk,
@@ -180,7 +179,7 @@ begin
             sAxisSlaves     => sAxisSlaves,
             mAxisMasters    => mAxisMasters,
             mAxisSlaves     => mAxisSlaves,
-            mAxisCtrl       => mAxisCtrl,
+            mAxisCtrl       => (others => AXI_STREAM_CTRL_UNUSED_C),
             -- AXI Interfaces, 0 = Desc, 1-CHAN_COUNT_G = DMA
             axiReadMasters  => dmaReadMasters,
             axiReadSlaves   => dmaReadSlaves,
@@ -266,14 +265,12 @@ begin
                TPD_G               => TPD_G,
                INT_PIPE_STAGES_G   => INT_PIPE_STAGES_G,
                PIPE_STAGES_G       => PIPE_STAGES_G,
-               SLAVE_READY_EN_G    => false,
+               SLAVE_READY_EN_G    => true,
                VALID_THOLD_G       => 1,
                -- FIFO configurations
                MEMORY_TYPE_G       => "block",
                GEN_SYNC_FIFO_G     => true,
                FIFO_ADDR_WIDTH_G   => 9,
-               FIFO_FIXED_THRESH_G => true,
-               FIFO_PAUSE_THRESH_G => 300,  -- 1800 byte buffer before pause and 1696 byte of buffer before FIFO FULL
                -- AXI Stream Port Configurations
                SLAVE_AXI_CONFIG_G  => INT_DMA_AXIS_CONFIG_C,
                MASTER_AXI_CONFIG_G => DMA_AXIS_CONFIG_G)
@@ -283,7 +280,6 @@ begin
                sAxisRst    => axisReset(i),
                sAxisMaster => mAxisMasters(i),
                sAxisSlave  => mAxisSlaves(i),
-               sAxisCtrl   => mAxisCtrl(i),
                -- Master Port
                mAxisClk    => axiClk,
                mAxisRst    => axisReset(i),
@@ -331,7 +327,7 @@ begin
             axisClk          => axiClk,
             axisRst          => axiRst,
             axisMasters      => mAxisMasters,
-            axisSlaves       => (others => AXI_STREAM_SLAVE_FORCE_C),  -- U_ObFifo.SLAVE_READY_EN_G=false
+            axisSlaves       => mAxisSlaves,
             -- AXI lite slave port for register access
             axilClk          => axiClk,
             axilRst          => axiRst,

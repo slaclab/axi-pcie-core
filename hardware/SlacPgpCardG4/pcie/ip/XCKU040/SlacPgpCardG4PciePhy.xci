@@ -245,7 +245,7 @@
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_INTERRUPT_PIN">001</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_MSI_CAP_MULTIMSGCAP">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_REVISION_ID">0x00</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_SUBSYSTEM_ID">0x2030</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_SUBSYSTEM_ID">0x0004</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_SUBSYSTEM_VENDOR_ID">0x1A4A</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PF0_VENDOR_ID">0x1A4A</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.PIPE_SIM">FALSE</spirit:configurableElementValue>
@@ -403,7 +403,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_msix_impl_locn">External</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_revision_id">00</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_sub_class_interface_menu">VGA-compatible_devices</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_subsystem_id">2030</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_subsystem_id">0004</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_subsystem_vendor_id">1A4A</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pipe_sim">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pl_link_cap_max_link_speed">8.0_GT/s</spirit:configurableElementValue>

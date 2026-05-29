@@ -6,6 +6,7 @@ if { [VersionCheck 2024.2] < 0 } {exit -1}
 
 # Load shared source code
 loadRuckusTcl "$::DIR_PATH/../../shared"
+loadRuckusTcl "$::DIR_PATH/bd"
 
 # Set the target language for Verilog (removes warning messages in PCIe IP core)
 set_property target_language Verilog [current_project]
@@ -29,8 +30,3 @@ loadRuckusTcl "$::DIR_PATH/pcie-4x8"
 # Adding the Si5345 configurations
 add_files -norecurse "$::DIR_PATH/pll-config/Si5394A_GT_REFCLK_156MHz.mem"
 add_files -norecurse "$::DIR_PATH/pll-config/Si5394A_GT_REFCLK_161MHz.mem"
-
-# https://docs.amd.com/r/en-US/pg348-cms-subsystem/Network-Plug-in-Module-Management
-loadSource -lib axi_pcie_core -path "$::DIR_PATH/bd/CmsBlockDesignWrapper.vhd"
-loadBlockDesign -path "$::DIR_PATH/bd/CmsBlockDesign.bd"
-# loadBlockDesign -path "$::DIR_PATH/bd/CmsBlockDesign.tcl"

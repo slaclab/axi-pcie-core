@@ -5,6 +5,7 @@ source $::env(RUCKUS_PROC_TCL)
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
 
 # loadIpCore -path "$::DIR_PATH/ip/XilinxVariumC1100ExtendedPciePhy.xci"
+
 loadSource -lib axi_pcie_core -path "$::DIR_PATH/ip/XilinxVariumC1100ExtendedPciePhy.dcp"
 
 loadConstraints -path "$::DIR_PATH/ip/XilinxVariumC1100ExtendedPciePhy_pcie4c_ip_gt.xdc"

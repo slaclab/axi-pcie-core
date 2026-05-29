@@ -18,6 +18,9 @@
 # 1 = BMC  has control of I2C chains shared with the FPGA (default)
 set_property -dict { PACKAGE_PIN AM19 IOSTANDARD LVCMOS18 } [get_ports { fpgaI2cMasterL }]
 
+set_property -dict { PACKAGE_PIN AP19 IOSTANDARD LVCMOS18 } [get_ports { i2cSda }]
+set_property -dict { PACKAGE_PIN AN19 IOSTANDARD LVCMOS18 } [get_ports { i2cScl }]
+
 ######################
 # Board Clocks/Reset #
 ######################

@@ -6,6 +6,7 @@ if { [VersionCheck 2024.2] < 0 } {exit -1}
 
 # Load shared source code
 loadRuckusTcl "$::DIR_PATH/../../shared"
+loadRuckusTcl "$::DIR_PATH/../XilinxAlveoU55c/bd"
 
 # Set the target language for Verilog (removes warning messages in PCIe IP core)
 set_property target_language Verilog [current_project]
@@ -31,9 +32,8 @@ loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferFifo.dcp"
 
 # Load the HBM Buffer Version 2
 loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferV2.vhd"
+loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferV2AxiSplit.vhd"
 loadIpCore                    -path "$::DIR_PATH/hbm/HbmDmaBufferV2IpCore.xci"
-# loadIpCore                  -path "$::DIR_PATH/hbm/HbmDmaBufferV2Fifo.xci"
-loadSource -lib axi_pcie_core -path "$::DIR_PATH/hbm/HbmDmaBufferV2Fifo.dcp"
 
 # Load the PCIe core
 loadRuckusTcl "$::DIR_PATH/pcie-4x8"
@@ -41,11 +41,3 @@ loadRuckusTcl "$::DIR_PATH/pcie-4x8"
 # Adding the Si5345 configurations
 add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/pll-config/Si5394A_GT_REFCLK_156MHz.mem"
 add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/pll-config/Si5394A_GT_REFCLK_161MHz.mem"
-
-# https://docs.amd.com/r/en-US/pg348-cms-subsystem/Network-Plug-in-Module-Management
-loadSource -lib axi_pcie_core -path "$::DIR_PATH/../XilinxAlveoU55c/bd/CmsBlockDesignWrapper.vhd"
-loadBlockDesign -path "$::DIR_PATH/../XilinxAlveoU55c/bd/CmsBlockDesign.bd"
-# loadBlockDesign -path "$::DIR_PATH/../XilinxAlveoU55c/bd/CmsBlockDesign.tcl"
-
-# Do not include the CmsBlockDesign in the simulations
-set_property USED_IN_SIMULATION 0 [get_files CmsBlockDesign.bd]

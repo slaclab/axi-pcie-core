@@ -3,8 +3,13 @@
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Ultrascale+ IRQ FSM
 --
--- Drives the Xilinx XDMA usr_irq_req / usr_irq_ack handshake. Per PG195 the
--- ack semantics differ by interrupt mode:
+-- Drives the usr_irq_req / usr_irq_ack handshake for the Xilinx XDMA / CPM5
+-- AXI Bridge user-interrupt interface. The ack semantics are identical between
+-- PG195 (UltraScale+ XDMA / DMA Bridge Subsystem for PCIe) and PG347 (Versal
+-- CPM DMA and Bridge Mode for PCI Express, AXI Bridge for PCIe Interrupts);
+-- both explicitly state: "Two acks are generated for legacy interrupt. One
+-- ack is generated for MSI/MSI-X interrupts." This FSM therefore drives both
+-- IPs with a single shared implementation:
 --   INTX        : ack on req rising edge (Assert_INTA TLP sent)
 --                 AND ack on req falling edge (Deassert_INTA TLP sent)
 --                 -> 6-state two-ack handshake (default).

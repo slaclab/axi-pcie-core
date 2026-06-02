@@ -3,17 +3,19 @@
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Ultrascale+ IRQ FSM
 --
--- Drives the Xilinx XDMA usr_irq_req / usr_irq_ack handshake. Per PG195 the
--- ack semantics differ by interrupt mode:
+-- Drives the usr_irq_req / usr_irq_ack handshake for the Xilinx XDMA / CPM5
+-- AXI Bridge user-interrupt interface. The ack semantics are identical between
+-- PG195 (UltraScale+ XDMA / DMA Bridge Subsystem for PCIe) and PG347 (Versal
+-- CPM DMA and Bridge Mode for PCI Express, AXI Bridge for PCIe Interrupts);
+-- both explicitly state: "Two acks are generated for legacy interrupt. One
+-- ack is generated for MSI/MSI-X interrupts." This FSM therefore drives both
+-- IPs with a single shared implementation:
 --   INTX        : ack on req rising edge (Assert_INTA TLP sent)
 --                 AND ack on req falling edge (Deassert_INTA TLP sent)
 --                 -> 6-state two-ack handshake (default).
 --   MSI / MSIX  : ack on req rising edge (MSI/MSI-X memory write completed),
 --                 NO ack on falling edge (message-based, no deassert TLP)
 --                 -> 4-state single-ack handshake.
--- Select via IRQ_TYPE_G ("INTX" | "MSI" | "MSIX"). MSI and MSIX behave
--- identically on the firmware side; the difference lives in the PCIe IP
--- XCI configuration and the host-side capability discovery.
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -34,23 +36,20 @@ use surf.StdRtlPkg.all;
 
 entity AxiPcieUltrascalePlusIrqFsm is
    generic (
-      TPD_G      : time   := 1 ns;
-      IRQ_TYPE_G : string := "INTX");  -- "INTX" | "MSI" | "MSIX"
+      TPD_G : time := 1 ns);
    port (
       -- Clock and Reset
-      clk       : in  sl;
-      rstL      : in  sl;
+      clk        : in  sl;
+      rstL       : in  sl;
       -- Interrupt Interface
-      dmaIrq    : in  sl;
-      usrIrqAck : in  sl;
-      usrIrqReq : out sl);
+      dmaIrq     : in  sl;
+      msiEnable  : in  sl := '0';
+      msixEnable : in  sl := '0';
+      usrIrqAck  : in  sl;
+      usrIrqReq  : out sl);
 end AxiPcieUltrascalePlusIrqFsm;
 
 architecture rtl of AxiPcieUltrascalePlusIrqFsm is
-
-   -- Synthesis-time mode select. INTX uses the legacy two-ack handshake;
-   -- MSI / MSIX use the single-ack message-based handshake.
-   constant INTX_C : boolean := (IRQ_TYPE_G = "INTX");
 
    type StateType is (
       IDLE_S,
@@ -75,11 +74,7 @@ architecture rtl of AxiPcieUltrascalePlusIrqFsm is
 
 begin
 
-   assert (IRQ_TYPE_G = "INTX") or (IRQ_TYPE_G = "MSI") or (IRQ_TYPE_G = "MSIX")
-      report "AxiPcieUltrascalePlusIrqFsm: IRQ_TYPE_G must be ""INTX"", ""MSI"", or ""MSIX"" (got: " & IRQ_TYPE_G & ")"
-      severity failure;
-
-   comb : process (dmaIrq, r, rstL, usrIrqAck) is
+   comb : process (dmaIrq, msiEnable, msixEnable, r, rstL, usrIrqAck) is
       variable v : RegType;
    begin
       -- Latch the current value
@@ -109,7 +104,7 @@ begin
             if (dmaIrq = '0') or (r.irqTimer = 250000000) then
                v.irqTimer  := (others => '0');
                v.usrIrqReq := '0';
-               if INTX_C then
+               if (msiEnable = '0') and (msixEnable = '0') then
                   -- Legacy INTx: wait for the Deassert_INTA ack pair.
                   v.state := CLR_S;
                else

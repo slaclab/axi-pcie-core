@@ -2,6 +2,20 @@
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Ultrascale+ IRQ FSM
+--
+-- Drives the usr_irq_req / usr_irq_ack handshake for the Xilinx XDMA / CPM5
+-- AXI Bridge user-interrupt interface. The ack semantics are identical between
+-- PG195 (UltraScale+ XDMA / DMA Bridge Subsystem for PCIe) and PG347 (Versal
+-- CPM DMA and Bridge Mode for PCI Express, AXI Bridge for PCIe Interrupts);
+-- both explicitly state: "Two acks are generated for legacy interrupt. One
+-- ack is generated for MSI/MSI-X interrupts." This FSM therefore drives both
+-- IPs with a single shared implementation:
+--   INTX        : ack on req rising edge (Assert_INTA TLP sent)
+--                 AND ack on req falling edge (Deassert_INTA TLP sent)
+--                 -> 6-state two-ack handshake (default).
+--   MSI / MSIX  : ack on req rising edge (MSI/MSI-X memory write completed),
+--                 NO ack on falling edge (message-based, no deassert TLP)
+--                 -> 4-state single-ack handshake.
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -25,12 +39,14 @@ entity AxiPcieUltrascalePlusIrqFsm is
       TPD_G : time := 1 ns);
    port (
       -- Clock and Reset
-      clk       : in  sl;
-      rstL      : in  sl;
+      clk        : in  sl;
+      rstL       : in  sl;
       -- Interrupt Interface
-      dmaIrq    : in  sl;
-      usrIrqAck : in  sl;
-      usrIrqReq : out sl);
+      dmaIrq     : in  sl;
+      msiEnable  : in  sl := '0';
+      msixEnable : in  sl := '0';
+      usrIrqAck  : in  sl;
+      usrIrqReq  : out sl);
 end AxiPcieUltrascalePlusIrqFsm;
 
 architecture rtl of AxiPcieUltrascalePlusIrqFsm is
@@ -58,7 +74,7 @@ architecture rtl of AxiPcieUltrascalePlusIrqFsm is
 
 begin
 
-   comb : process (dmaIrq, r, rstL, usrIrqAck) is
+   comb : process (dmaIrq, msiEnable, msixEnable, r, rstL, usrIrqAck) is
       variable v : RegType;
    begin
       -- Latch the current value
@@ -88,7 +104,13 @@ begin
             if (dmaIrq = '0') or (r.irqTimer = 250000000) then
                v.irqTimer  := (others => '0');
                v.usrIrqReq := '0';
-               v.state     := CLR_S;
+               if (msiEnable = '0') and (msixEnable = '0') then
+                  -- Legacy INTx: wait for the Deassert_INTA ack pair.
+                  v.state := CLR_S;
+               else
+                  -- MSI / MSIX: no deassert message, no second ack.
+                  v.state := IDLE_S;
+               end if;
             end if;
          ----------------------------------------------------------------------
          when CLR_S =>

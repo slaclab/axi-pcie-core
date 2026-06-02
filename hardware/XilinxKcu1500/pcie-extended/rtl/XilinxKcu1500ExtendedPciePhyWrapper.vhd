@@ -67,6 +67,7 @@ architecture mapping of XilinxKcu1500ExtendedPciePhyWrapper is
          axi_ctl_aclk           : in  std_logic;
          sys_clk_gt             : in  std_logic;
          intx_msi_request       : in  std_logic;
+         msi_vector_num         : in  std_logic_vector(4 downto 0);
          s_axi_awid             : in  std_logic_vector(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0);
          s_axi_awaddr           : in  std_logic_vector(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0);
          s_axi_awregion         : in  std_logic_vector(3 downto 0);
@@ -117,6 +118,8 @@ architecture mapping of XilinxKcu1500ExtendedPciePhyWrapper is
          axi_ctl_aresetn        : out std_logic;
          interrupt_out          : out std_logic;
          intx_msi_grant         : out std_logic;
+         msi_enable             : out std_logic;
+         msi_vector_width       : out std_logic_vector(2 downto 0);
          s_axi_awready          : out std_logic;
          s_axi_wready           : out std_logic;
          s_axi_bid              : out std_logic_vector(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0);
@@ -177,6 +180,7 @@ architecture mapping of XilinxKcu1500ExtendedPciePhyWrapper is
    signal rstL     : sl;
    signal axiClock : sl;
    signal axiReset : sl;
+
 begin
 
    axiClk <= clk;
@@ -223,6 +227,9 @@ begin
          intx_msi_request       => dmaIrq,
          intx_msi_grant         => open,
          interrupt_out          => open,
+         msi_vector_num         => (others => '0'),
+         msi_enable             => open,
+         msi_vector_width       => open,
          -- Slave AXI4 Interface
          s_axi_awid             => dmaWriteMaster.awid(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0),
          s_axi_awaddr           => dmaWriteMaster.awaddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
@@ -275,7 +282,7 @@ begin
          m_axi_wready           => regWriteSlave.wready,
          m_axi_bid              => regWriteSlave.bid(2 downto 0),
          -- m_axi_bresp         => regWriteSlave.bresp(1 downto 0),
-         m_axi_bresp            => AXI_RESP_OK_C, -- Always respond OK
+         m_axi_bresp            => AXI_RESP_OK_C,  -- Always respond OK
          m_axi_bvalid           => regWriteSlave.bvalid,
          m_axi_bready           => regWriteMaster.bready,
          m_axi_araddr           => regReadMaster.araddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
@@ -291,7 +298,7 @@ begin
          m_axi_rdata            => regReadSlave.rdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
          m_axi_ruser            => (others => '0'),
          -- m_axi_rresp         => regReadSlave.rresp(1 downto 0),
-         m_axi_rresp            => AXI_RESP_OK_C, -- Always respond OK
+         m_axi_rresp            => AXI_RESP_OK_C,  -- Always respond OK
          m_axi_rlast            => regReadSlave.rlast,
          m_axi_rvalid           => regReadSlave.rvalid,
          m_axi_rready           => regReadMaster.rready,

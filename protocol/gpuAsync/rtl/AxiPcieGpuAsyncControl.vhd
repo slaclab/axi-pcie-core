@@ -31,7 +31,7 @@ use axi_pcie_core.AxiPciePkg.all;
 entity AxiPcieGpuAsyncControl is
    generic (
       TPD_G               : time          := 1 ns;
-      DEFAULT_DEMUX_SEL_G : sl            := '1';  -- 1: GPU path, 0: CPU path
+      DEFAULT_DEMUX_SEL_G : sl            := '0';  -- 1: GPU path, 0: CPU path
       MIN_SIZE_CONFIG_G   : boolean       := false;  -- True for cycle accurate but more resources usage, False for less accurate but resource optmized
       DMA_AXI_CONFIG_G    : AxiConfigType := AXI_PCIE_CONFIG_C);
    port (

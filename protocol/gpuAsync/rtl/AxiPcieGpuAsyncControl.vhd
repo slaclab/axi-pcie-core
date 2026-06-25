@@ -210,9 +210,9 @@ architecture rtl of AxiPcieGpuAsyncControl is
       writeSlaves             : AxiLiteWriteSlaveArray(1 downto 0);
       -- DEMUX Control
       axisDeMuxSelect         : sl;
-      -- Readbacks for writeEnable/readEnable
-      readRdmaEnable          : sl;
-      writeRdmaEnable         : sl;
+      -- Indicates read or write RDMA active
+      readActive              : sl;
+      writeActive             : sl;
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -294,9 +294,9 @@ architecture rtl of AxiPcieGpuAsyncControl is
       writeSlaves             => (others => AXI_LITE_WRITE_SLAVE_INIT_C),
       -- DEMUX Control
       axisDeMuxSelect         => DEFAULT_DEMUX_SEL_G,
-      -- Readbacks for write/read Enable
-      readRdmaEnable          => '0',
-      writeRdmaEnable         => '0');
+      -- Indicates read/write RDMA active
+      readActive              => '0',
+      writeActive             => '0');
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -547,8 +547,8 @@ begin
       axiSlaveRegisterR(axilEp(0), x"40", 0, r.maxReadBuffer);
 
       -- Readbacks for write/read enable. Software should wait on these before freeing buffers.
-      axiSlaveRegisterR(axilEp(0), x"44", 0, r.writeRdmaEnable);
-      axiSlaveRegisterR(axilEp(0), x"44", 1, r.readRdmaEnable);
+      axiSlaveRegisterR(axilEp(0), x"44", 0, r.writeActive);
+      axiSlaveRegisterR(axilEp(0), x"44", 1, r.readActive);
 
       axiSlaveRegister (axilEp(0), x"60", 0, v.remoteWriteMaxSize);
 
@@ -877,7 +877,7 @@ begin
 
       -- Propagate readback when in idle state
       if (r.rxState = IDLE_S) then
-         v.writeRdmaEnable := r.writeEnable;
+         v.writeActive := r.writeEnable;
       end if;
 
       --------------------------------------------------------------------------------------------
@@ -1024,7 +1024,7 @@ begin
 
       -- Propagate readback when in idle state
       if (r.txState = IDLE_S) then
-         v.readRdmaEnable := r.readEnable;
+         v.readActive := r.readEnable;
       end if;
 
       -- Section A3.4.3 Data read and write structure: Write strobes - Narrow transfers

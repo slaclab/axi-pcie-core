@@ -539,7 +539,7 @@ begin
 
       -- Offset 0x2C: Legacy dynamicRouteMasks/dynamicRouteDests
 
-      axiSlaveRegisterR(axilEp(0), x"30", 0, toSlv(4, 8));  -- version number, >= 1 if gpu enabled
+      axiSlaveRegisterR(axilEp(0), x"30", 0, toSlv(5, 8));  -- version number, >= 1 if gpu enabled
       axiSlaveRegisterR(axilEp(0), x"34", 0, r.axiWriteTimeoutErrorCnt);
       axiSlaveRegister (axilEp(0), x"38", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
 

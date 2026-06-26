@@ -748,6 +748,9 @@ begin
       case r.rxState is
          ----------------------------------------------------------------------
          when IDLE_S =>
+            -- Update the active flag
+            v.writeActive := r.writeEnable;
+
             -- Check if there is a DMA request
             if (dmaWrDescReq.valid = '1') then
 
@@ -875,11 +878,6 @@ begin
          v.nextWriteIdx := (others => '0');
       end if;
 
-      -- Propagate readback when in idle state
-      if (r.rxState = IDLE_S) then
-         v.writeActive := r.writeEnable;
-      end if;
-
       --------------------------------------------------------------------------------------------
       -- Read/TX State Machine
       --------------------------------------------------------------------------------------------
@@ -901,6 +899,9 @@ begin
       case r.txState is
          ----------------------------------------------------------------------
          when IDLE_S =>
+            -- Update the active flag
+            v.readActive := r.readEnable;
+
             -- Check if read enabled and new buffer ready for DMA read transaction
             if (r.readEnable = '1') and (r.readReqList(conv_integer(r.nextReadIdx)) = '1') and (r.dmaRdDescReq.valid = '0') then
 
@@ -1020,11 +1021,6 @@ begin
          -- Reset the buffer index and the free list
          v.nextReadIdx := (others => '0');
          v.readReqList := (others => '0');
-      end if;
-
-      -- Propagate readback when in idle state
-      if (r.txState = IDLE_S) then
-         v.readActive := r.readEnable;
       end if;
 
       -- Section A3.4.3 Data read and write structure: Write strobes - Narrow transfers

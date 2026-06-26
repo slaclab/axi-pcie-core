@@ -47,15 +47,16 @@ _TRANSCEIVER_DISPATCH = {
 class AxiPcieCore(pr.Device):
     """This class maps to axi-pcie-core/shared/rtl/AxiPcieReg.vhd"""
     def __init__(self,
-                 description = 'Base components of the PCIe firmware core',
-                 useBpi      = False,
-                 useGpu      = False,
-                 useSpi      = False,
+                 description  = 'Base components of the PCIe firmware core',
+                 useBpi       = False,
+                 useGpu       = False,
+                 useSpi       = False,
                  transceiverClass = [None],
-                 numDmaLanes = 1,
-                 boardType   = None,
-                 extended    = False,
-                 sim         = False,
+                 numDmaLanes  = 1,
+                 boardType    = None,
+                 extended     = False,
+                 sim          = False,
+                 gpuShowBuffs = False,
                  **kwargs):
 
         # Resolve per-slot transceiver classes BEFORE super().__init__() so a
@@ -125,9 +126,10 @@ class AxiPcieCore(pr.Device):
             # Check if using GpuAsyncCore
             if useGpu:
                 self.add(pcie.AxiGpuAsyncCore(
-                    name     = 'AxiGpuAsyncCore',
-                    offset    = 0x0002_8000,
-                    expand    = True,
+                    name        = 'AxiGpuAsyncCore',
+                    offset      = 0x0002_8000,
+                    expand      = True,
+                    showBuffers = gpuShowBuffs,
                 ))
 
             # Check if using BPI PROM (Micron MT28 or Cypress S29GL)

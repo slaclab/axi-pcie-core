@@ -31,7 +31,7 @@ use axi_pcie_core.AxiPciePkg.all;
 entity AxiPcieGpuAsyncControl is
    generic (
       TPD_G               : time          := 1 ns;
-      DEFAULT_DEMUX_SEL_G : sl            := '1';  -- 1: GPU path, 0: CPU path
+      DEFAULT_DEMUX_SEL_G : sl            := '0';  -- 1: GPU path, 0: CPU path
       MIN_SIZE_CONFIG_G   : boolean       := false;  -- True for cycle accurate but more resources usage, False for less accurate but resource optmized
       DMA_AXI_CONFIG_G    : AxiConfigType := AXI_PCIE_CONFIG_C);
    port (
@@ -210,6 +210,9 @@ architecture rtl of AxiPcieGpuAsyncControl is
       writeSlaves             : AxiLiteWriteSlaveArray(1 downto 0);
       -- DEMUX Control
       axisDeMuxSelect         : sl;
+      -- Indicates read or write RDMA active
+      readActive              : sl;
+      writeActive             : sl;
    end record;
 
    constant REG_INIT_C : RegType := (
@@ -290,7 +293,10 @@ architecture rtl of AxiPcieGpuAsyncControl is
       readSlaves              => (others => AXI_LITE_READ_SLAVE_INIT_C),
       writeSlaves             => (others => AXI_LITE_WRITE_SLAVE_INIT_C),
       -- DEMUX Control
-      axisDeMuxSelect         => DEFAULT_DEMUX_SEL_G);
+      axisDeMuxSelect         => DEFAULT_DEMUX_SEL_G,
+      -- Indicates read/write RDMA active
+      readActive              => '0',
+      writeActive             => '0');
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -533,12 +539,16 @@ begin
 
       -- Offset 0x2C: Legacy dynamicRouteMasks/dynamicRouteDests
 
-      axiSlaveRegisterR(axilEp(0), x"30", 0, toSlv(4, 8));  -- version number, >= 1 if gpu enabled
+      axiSlaveRegisterR(axilEp(0), x"30", 0, toSlv(5, 8));  -- version number, >= 1 if gpu enabled
       axiSlaveRegisterR(axilEp(0), x"34", 0, r.axiWriteTimeoutErrorCnt);
       axiSlaveRegister (axilEp(0), x"38", 0, v.axisDeMuxSelect);  -- 1: GPU path, 0: CPU path
 
       axiSlaveRegisterR(axilEp(0), x"3C", 0, r.minWriteBuffer);
       axiSlaveRegisterR(axilEp(0), x"40", 0, r.maxReadBuffer);
+
+      -- Readbacks for write/read enable. Software should wait on these before freeing buffers.
+      axiSlaveRegisterR(axilEp(0), x"44", 0, r.writeActive);
+      axiSlaveRegisterR(axilEp(0), x"44", 1, r.readActive);
 
       axiSlaveRegister (axilEp(0), x"60", 0, v.remoteWriteMaxSize);
 
@@ -738,6 +748,9 @@ begin
       case r.rxState is
          ----------------------------------------------------------------------
          when IDLE_S =>
+            -- Update the active flag
+            v.writeActive := r.writeEnable;
+
             -- Check if there is a DMA request
             if (dmaWrDescReq.valid = '1') then
 
@@ -886,6 +899,9 @@ begin
       case r.txState is
          ----------------------------------------------------------------------
          when IDLE_S =>
+            -- Update the active flag
+            v.readActive := r.readEnable;
+
             -- Check if read enabled and new buffer ready for DMA read transaction
             if (r.readEnable = '1') and (r.readReqList(conv_integer(r.nextReadIdx)) = '1') and (r.dmaRdDescReq.valid = '0') then
 

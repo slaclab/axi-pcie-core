@@ -119,6 +119,10 @@ architecture mapping of AxiPcieReg is
 
    constant NUM_AXI_MASTERS_C : natural := 15;
 
+   -- This should be incremented if any of the offsets in AXI_CROSSBAR_MASTERS_CONFIG_C are changed.
+   -- aes-stream-drivers will also need to be updated once this is incremented.
+   constant MEMORY_MAP_VER_C  : natural := 1;
+
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       DMA_INDEX_C     => (
          baseAddr     => x"0000_0000",
@@ -305,8 +309,12 @@ begin
       -- Set whether the DATAGPU mode is enabled
       userValues(10)(0) <= ite(DATAGPU_EN_G, '1', '0');
 
+      -- Set memory map version
+      userValues(11)(7 downto 0) <= toSlv(MEMORY_MAP_VER_C, 8);
+      userValues(11)(31 downto 8) <= x"000000"; -- Reserved for future versioning
+
       -- Set unused to zero
-      for i in 63 downto 11 loop
+      for i in 63 downto 12 loop
          userValues(i) <= x"00000000";
       end loop;
 

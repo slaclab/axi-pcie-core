@@ -246,3 +246,19 @@ class PcieAxiVersion(axi.AxiVersion):
             mode         = 'RO',
             base         = pr.Bool,
         ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'GenSysmon',
+            offset       = 0x400+(4*11),
+            bitSize      = 1,
+            bitOffset    = 0,
+            mode         = 'RO',
+            base         = pr.Bool,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'MemMapVersion',
+            offset       = 0x400+(4*63),
+            bitSize      = 32,
+            mode         = 'RO',
+        ))

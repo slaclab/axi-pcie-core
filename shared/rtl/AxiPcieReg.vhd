@@ -305,8 +305,11 @@ begin
       -- Set whether the DATAGPU mode is enabled
       userValues(10)(0) <= ite(DATAGPU_EN_G, '1', '0');
 
+      -- Set whether the GEN_SYSMON_G mode is enabled
+      userValues(11)(0) <= ite(GEN_SYSMON_G, '1', '0');
+
       -- Set unused to zero
-      for i in 63 downto 11 loop
+      for i in 63 downto 12 loop
          userValues(i) <= x"00000000";
       end loop;
 

@@ -309,9 +309,12 @@ begin
       userValues(11)(0) <= ite(GEN_SYSMON_G, '1', '0');
 
       -- Set unused to zero
-      for i in 63 downto 12 loop
+      for i in 62 downto 12 loop
          userValues(i) <= x"00000000";
       end loop;
+
+      -- Set the AXI-Lite crossbar configuration verion number (increment if we change the mapping)
+      userValues(63) <= x"00000001";
 
    end process;
 

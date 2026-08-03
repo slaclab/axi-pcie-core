@@ -255,3 +255,10 @@ class PcieAxiVersion(axi.AxiVersion):
             mode         = 'RO',
             base         = pr.Bool,
         ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'MemMapVersion',
+            offset       = 0x400+(4*63),
+            bitSize      = 32,
+            mode         = 'RO',
+        ))

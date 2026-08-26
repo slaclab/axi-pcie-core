@@ -71,6 +71,38 @@ def get_pcie_address(dev):
 
 #################################################################
 
+def sorted_datadev_devices():
+    # Sort on the trailing index so that datadev_10 follows datadev_9
+    def devIndex(path):
+        match = re.search(r'(\d+)$', path)
+        return int(match.group(1)) if match else -1
+    return sorted(glob.glob("/dev/datadev*"), key=devIndex)
+
+#################################################################
+
+def wait_for_datadev_devices(expected, timeout=30.0, period=0.5):
+    # Hotplug-capable slots (e.g. behind a PCIe switch running pciehp) remove
+    # and re-add the endpoint on their own when FpgaReload() drops the link.
+    # That cycle takes a few seconds, so poll until the device list comes back
+    # instead of sampling it once and assuming the worst.
+    expected = set(expected)
+    deadline = time.time() + timeout
+    while True:
+        current = set(sorted_datadev_devices())
+        if current == expected:
+            return True
+        if time.time() >= deadline:
+            missing = sorted(expected - current)
+            extra   = sorted(current - expected)
+            if missing:
+                print(f"[WARNING] Devices missing after rescan: {missing}")
+            if extra:
+                print(f"[WARNING] Unexpected devices after rescan: {extra}")
+            return False
+        time.sleep(period)
+
+#################################################################
+
 def promptForImageNumber(imgLst):
     for i,l in enumerate(imgLst.items()):
         print('{} : {}'.format(i,l[0]))
@@ -174,8 +206,8 @@ if __name__ == "__main__":
             print("\n\n\ne.g. sudo $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR>\n\n\n")
         exit()
 
-    # Get a sorted list of all matching /proc/datadev* entries
-    devices = sorted(glob.glob("/dev/datadev*"))
+    # Get a sorted list of all matching /dev/datadev* entries
+    devices = sorted_datadev_devices()
 
     #################################################################
 
@@ -388,19 +420,31 @@ if __name__ == "__main__":
                     print('\nPlease reboot the computer')
                     sys.exit(1)
 
-        # Check if there are missing devices after rescan
-        if devices != sorted(glob.glob("/dev/datadev*")):
-            print("[WARNING] Mismatch between list of datadev devices before and after rescan")
+        # Wait for the device list to come back.  On a host with hotplug-capable
+        # slots, pciehp removes and re-adds the endpoint itself when the link
+        # drops, and that takes longer than the settling time above.
+        devices_ok = wait_for_datadev_devices(devices)
+
+        # Print the new firmware string.  Do this even when the device list never
+        # converged: a successful reprogram should not be reported as a failure
+        # just because a sibling device is still re-enumerating.
+        try:
+            with Root(dev=args.dev) as root:
+                print('#########################################')
+                print('New Firmware Loaded on the PCIe card:')
+                print('#########################################')
+                root.AxiPcieCore.AxiVersion.printStatus()
+                print('#########################################')
+        except Exception as e:
+            print(f"\n[ERROR] Unable to read {args.dev} after the FPGA reload: {e}")
             print('\nPlease reboot the computer')
             sys.exit(1)
 
-        # Print the new firmware string
-        with Root(dev=args.dev) as root:
-            print('#########################################')
-            print('New Firmware Loaded on the PCIe card:')
-            print('#########################################')
-            root.AxiPcieCore.AxiVersion.printStatus()
-            print('#########################################')
+        # Only now decide whether the rescan left the machine in a bad state
+        if not devices_ok:
+            print("\n[WARNING] Mismatch between list of datadev devices before and after rescan")
+            print('\nPlease reboot the computer')
+            sys.exit(1)
 
     else:
         # Check if rescan and other driver

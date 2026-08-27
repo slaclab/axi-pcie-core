@@ -94,6 +94,7 @@ def wait_for_datadev_devices(expected, timeout=30.0, period=0.5):
     # instead of sampling it once and assuming the worst.
     expected = set(expected)
     deadline = time.time() + timeout
+    announced = False
     while True:
         current = set(sorted_datadev_devices())
         if current == expected:
@@ -106,6 +107,11 @@ def wait_for_datadev_devices(expected, timeout=30.0, period=0.5):
             if extra:
                 print(f"[WARNING] Unexpected devices after rescan: {extra}")
             return False
+        # Say something before going quiet, so a slow re-enumeration does not
+        # look like a hung script and invite a Ctrl-C mid-cycle
+        if not announced:
+            print(f"Waiting up to {timeout:.0f}s for the datadev devices to return ....")
+            announced = True
         time.sleep(period)
 
 #################################################################
@@ -407,13 +413,25 @@ if __name__ == "__main__":
         # Allow for settling time for the FPGA reload to finish
         time.sleep(1)
 
+        # Wait for the device list to come back before checking whether any
+        # device still needs the manual recovery below.  On a host with
+        # hotplug-capable slots, pciehp removes and re-adds the endpoint itself
+        # when the link drops, and that takes longer than the settling time
+        # above.  Waiting first also keeps the unbind/remove/rescan sequence
+        # from firing into an in-flight pciehp cycle.  On a host without hotplug
+        # nothing removes the device, so the list never changes and this returns
+        # on the first poll.
+        devices_ok = wait_for_datadev_devices(devices)
+
         # Loop through all the devices
+        rescanned = False
         for device in devices:
 
             # Check if we need to rescan device
             if check_if_need_rescan(device):
 
                 # Perform the rescan procedure for given device
+                rescanned = True
                 rescan_top(get_pcie_address(device))
 
                 # Wait for /dev node to return
@@ -427,10 +445,10 @@ if __name__ == "__main__":
                     print('\nPlease reboot the computer')
                     sys.exit(1)
 
-        # Wait for the device list to come back.  On a host with hotplug-capable
-        # slots, pciehp removes and re-adds the endpoint itself when the link
-        # drops, and that takes longer than the settling time above.
-        devices_ok = wait_for_datadev_devices(devices)
+        # The manual recovery takes the device off the bus and brings it back, so
+        # re-check the list whenever it ran
+        if rescanned:
+            devices_ok = wait_for_datadev_devices(devices)
 
         # Print the new firmware string.  Do this even when the device list never
         # converged: a successful reprogram should not be reported as a failure

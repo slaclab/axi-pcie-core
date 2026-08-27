@@ -120,11 +120,23 @@ def promptForImageNumber(imgLst):
     for i,l in enumerate(imgLst.items()):
         print('{} : {}'.format(i,l[0]))
     print('{} : {}'.format(len(imgLst),"Exit"))
-    selection = input('Enter image to program into the PCIe card\'s PROM: ')
-    idx = int(selection) if selection else len(imgLst)
-    if idx < 0 or idx >= len(imgLst):
-        return None
-    return list(imgLst.items())[idx]
+    while True:
+        selection = input('Enter image to program into the PCIe card\'s PROM: ')
+        # An empty line or the Exit entry means no image, anything out of range
+        # is treated the same way
+        if selection == '':
+            return None
+        try:
+            idx = int(selection)
+        except ValueError:
+            # Re-prompt instead of dumping a traceback.  This is easy to hit on
+            # purpose: an operator who knows the "are you sure? (y/n)" question
+            # is coming next answers it early and types y at this prompt.
+            print('[ERROR] "{}" is not a number, enter 0 to {}'.format(selection, len(imgLst)))
+            continue
+        if idx < 0 or idx >= len(imgLst):
+            return None
+        return list(imgLst.items())[idx]
 
 #################################################################
 

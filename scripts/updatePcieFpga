@@ -71,15 +71,72 @@ def get_pcie_address(dev):
 
 #################################################################
 
+def sorted_datadev_devices():
+    # The kernel driver names each node one of two ways (see cfgDevName in
+    # aes-stream-drivers/data_dev/driver/src/data_dev_top.c):
+    #   cfgDevName=0 (default) : datadev_<index>, decimal    e.g. datadev_7
+    #   cfgDevName!=0          : datadev_<bus>, 2-digit hex  e.g. datadev_a1
+    # Reading the suffix as hex orders both schemes correctly, so datadev_10
+    # follows datadev_9 and datadev_a1 follows datadev_53.  Anything that does
+    # not match either form sorts last instead of silently aliasing onto a
+    # valid index.
+    def devIndex(path):
+        match = re.fullmatch(r'datadev_([0-9a-fA-F]+)', os.path.basename(path))
+        return (0, int(match.group(1), 16), '') if match else (1, 0, path)
+    return sorted(glob.glob("/dev/datadev*"), key=devIndex)
+
+#################################################################
+
+def wait_for_datadev_devices(expected, timeout=30.0, period=0.5):
+    # Hotplug-capable slots (e.g. behind a PCIe switch running pciehp) remove
+    # and re-add the endpoint on their own when FpgaReload() drops the link.
+    # That cycle takes a few seconds, so poll until the device list comes back
+    # instead of sampling it once and assuming the worst.
+    expected = set(expected)
+    deadline = time.time() + timeout
+    announced = False
+    while True:
+        current = set(sorted_datadev_devices())
+        if current == expected:
+            return True
+        if time.time() >= deadline:
+            missing = sorted(expected - current)
+            extra   = sorted(current - expected)
+            if missing:
+                print(f"[WARNING] Devices missing after rescan: {missing}")
+            if extra:
+                print(f"[WARNING] Unexpected devices after rescan: {extra}")
+            return False
+        # Say something before going quiet, so a slow re-enumeration does not
+        # look like a hung script and invite a Ctrl-C mid-cycle
+        if not announced:
+            print(f"Waiting up to {timeout:.0f}s for the datadev devices to return ....")
+            announced = True
+        time.sleep(period)
+
+#################################################################
+
 def promptForImageNumber(imgLst):
     for i,l in enumerate(imgLst.items()):
         print('{} : {}'.format(i,l[0]))
     print('{} : {}'.format(len(imgLst),"Exit"))
-    selection = input('Enter image to program into the PCIe card\'s PROM: ')
-    idx = int(selection) if selection else len(imgLst)
-    if idx < 0 or idx >= len(imgLst):
-        return None
-    return list(imgLst.items())[idx]
+    while True:
+        selection = input('Enter image to program into the PCIe card\'s PROM: ')
+        # An empty line or the Exit entry means no image, anything out of range
+        # is treated the same way
+        if selection == '':
+            return None
+        try:
+            idx = int(selection)
+        except ValueError:
+            # Re-prompt instead of dumping a traceback.  This is easy to hit on
+            # purpose: an operator who knows the "are you sure? (y/n)" question
+            # is coming next answers it early and types y at this prompt.
+            print('[ERROR] "{}" is not a number, enter 0 to {}'.format(selection, len(imgLst)))
+            continue
+        if idx < 0 or idx >= len(imgLst):
+            return None
+        return list(imgLst.items())[idx]
 
 #################################################################
 
@@ -174,8 +231,8 @@ if __name__ == "__main__":
             print("\n\n\ne.g. sudo $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR>\n\n\n")
         exit()
 
-    # Get a sorted list of all matching /proc/datadev* entries
-    devices = sorted(glob.glob("/dev/datadev*"))
+    # Get a sorted list of all matching /dev/datadev* entries
+    devices = sorted_datadev_devices()
 
     #################################################################
 
@@ -368,13 +425,25 @@ if __name__ == "__main__":
         # Allow for settling time for the FPGA reload to finish
         time.sleep(1)
 
+        # Wait for the device list to come back before checking whether any
+        # device still needs the manual recovery below.  On a host with
+        # hotplug-capable slots, pciehp removes and re-adds the endpoint itself
+        # when the link drops, and that takes longer than the settling time
+        # above.  Waiting first also keeps the unbind/remove/rescan sequence
+        # from firing into an in-flight pciehp cycle.  On a host without hotplug
+        # nothing removes the device, so the list never changes and this returns
+        # on the first poll.
+        devices_ok = wait_for_datadev_devices(devices)
+
         # Loop through all the devices
+        rescanned = False
         for device in devices:
 
             # Check if we need to rescan device
             if check_if_need_rescan(device):
 
                 # Perform the rescan procedure for given device
+                rescanned = True
                 rescan_top(get_pcie_address(device))
 
                 # Wait for /dev node to return
@@ -388,19 +457,31 @@ if __name__ == "__main__":
                     print('\nPlease reboot the computer')
                     sys.exit(1)
 
-        # Check if there are missing devices after rescan
-        if devices != sorted(glob.glob("/dev/datadev*")):
-            print("[WARNING] Mismatch between list of datadev devices before and after rescan")
+        # The manual recovery takes the device off the bus and brings it back, so
+        # re-check the list whenever it ran
+        if rescanned:
+            devices_ok = wait_for_datadev_devices(devices)
+
+        # Print the new firmware string.  Do this even when the device list never
+        # converged: a successful reprogram should not be reported as a failure
+        # just because a sibling device is still re-enumerating.
+        try:
+            with Root(dev=args.dev) as root:
+                print('#########################################')
+                print('New Firmware Loaded on the PCIe card:')
+                print('#########################################')
+                root.AxiPcieCore.AxiVersion.printStatus()
+                print('#########################################')
+        except Exception as e:
+            print(f"\n[ERROR] Unable to read {args.dev} after the FPGA reload: {e}")
             print('\nPlease reboot the computer')
             sys.exit(1)
 
-        # Print the new firmware string
-        with Root(dev=args.dev) as root:
-            print('#########################################')
-            print('New Firmware Loaded on the PCIe card:')
-            print('#########################################')
-            root.AxiPcieCore.AxiVersion.printStatus()
-            print('#########################################')
+        # Only now decide whether the rescan left the machine in a bad state
+        if not devices_ok:
+            print("\n[WARNING] Mismatch between list of datadev devices before and after rescan")
+            print('\nPlease reboot the computer')
+            sys.exit(1)
 
     else:
         # Check if rescan and other driver

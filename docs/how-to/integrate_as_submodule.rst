@@ -70,8 +70,8 @@ not recommended for production builds.
 See Also
 --------
 
-- :doc:`/tutorial/first_build` — end-to-end build walkthrough on
+- :doc:`/tutorial/first_build`: end-to-end build walkthrough on
   ``XilinxVariumC1100`` using ``pgp-pcie-apps`` as the downstream consumer
-- :doc:`/explanation/board_support` — explanation of the per-board directory
+- :doc:`/explanation/board_support`: explanation of the per-board directory
   layout (``hardware/<Board>/ruckus.tcl`` chain, PCIe variant subdirectories,
   DDR/HBM optional modules) and the ruckus integration pattern

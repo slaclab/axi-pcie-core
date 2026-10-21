@@ -2,7 +2,7 @@ Explanation
 ===========
 
 This section provides narrative material explaining how ``axi-pcie-core`` is structured and
-why it is designed the way it is — distinct from the step-by-step how-to guides and the
+why it is designed the way it is, as distinct from the step-by-step how-to guides and the
 API reference.
 
 .. toctree::

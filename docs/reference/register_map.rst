@@ -38,7 +38,7 @@ See :doc:`/explanation/architecture` for the BAR0 crossbar diagram.
    * - 3 (``SYSMON_INDEX_C``)
      - ``0x24000``
      - Sysmon (XADC)
-     - ``surf.AxiSysMonUltraScale`` — die temperature and voltage ADC.
+     - ``surf.AxiSysMonUltraScale``: die temperature and voltage ADC.
    * - 4 (``GPU_INDEX_C``)
      - ``0x28000``
      - GPU async control
@@ -47,23 +47,23 @@ See :doc:`/explanation/architecture` for the BAR0 crossbar diagram.
    * - 5 (``BPI_INDEX_C``)
      - ``0x30000``
      - BPI flash
-     - ``surf.AxiMicronMt28ewReg`` — Micron MT28EW boot PROM access.
+     - ``surf.AxiMicronMt28ewReg``: Micron MT28EW boot PROM access.
    * - 6 (``SPI0_INDEX_C``)
      - ``0x40000``
      - SPI flash 0
-     - ``surf.AxiMicronN25QCore`` — chip-select 0.
+     - ``surf.AxiMicronN25QCore``: chip-select 0.
    * - 7 (``SPI1_INDEX_C``)
      - ``0x50000``
      - SPI flash 1
-     - ``surf.AxiMicronN25QCore`` — chip-select 1.
+     - ``surf.AxiMicronN25QCore``: chip-select 1.
    * - 8 (``AXIS_MON_IB_C``)
      - ``0x60000``
      - IB stream monitor
-     - ``surf.AxiStreamMonAxiL`` — inbound DMA traffic counters.
+     - ``surf.AxiStreamMonAxiL``: inbound DMA traffic counters.
    * - 9 (``AXIS_MON_OB_C``)
      - ``0x68000``
      - OB stream monitor
-     - ``surf.AxiStreamMonAxiL`` — outbound DMA traffic counters.
+     - ``surf.AxiStreamMonAxiL``: outbound DMA traffic counters.
    * - 10 (``I2C_INDEX_C``)
      - ``0x70000``
      - I2C / I2C mux
@@ -212,6 +212,23 @@ offset ``0x400`` and above.
      - RO
      - ``'1'`` when ``DATAGPU_EN_G`` was set at synthesis (GPU-Direct
        async path enabled).
+   * - ``0x42C``
+     - ``GenSysmon``
+     - 0
+     - RO
+     - ``'1'`` when ``GEN_SYSMON_G`` was set at synthesis (SysMon
+       instantiated at ``0x24000``).
+   * - ``0x430`` to ``0x4F8``
+     - (unused)
+     - 31:0
+     - RO
+     - Reads zero.
+   * - ``0x4FC``
+     - ``MemMapVersion``
+     - 31:0
+     - RO
+     - BAR0 crossbar mapping version, currently ``0x00000001``.
+       Incremented whenever the mapping in ``AxiPcieReg`` changes.
 
 Application Regions
 -------------------
@@ -221,10 +238,10 @@ The four application-region crossbar slaves are defined in
 indexed as ``APP1_INDEX_C`` through ``APP4_INDEX_C`` (the
 ``APP_INDEX_C``-series) in ``shared/rtl/AxiPcieReg.vhd``.  Their BAR0 base addresses are:
 
-- ``APP1_INDEX_C`` — ``0x100000`` (1 MB window, 20-bit address space)
-- ``APP2_INDEX_C`` — ``0x200000`` (2 MB window, 21-bit address space)
-- ``APP3_INDEX_C`` — ``0x400000`` (4 MB window, 22-bit address space)
-- ``APP4_INDEX_C`` — ``0x800000`` (8 MB window, 23-bit address space)
+- ``APP1_INDEX_C``: ``0x100000`` (1 MB window, 20-bit address space)
+- ``APP2_INDEX_C``: ``0x200000`` (2 MB window, 21-bit address space)
+- ``APP3_INDEX_C``: ``0x400000`` (4 MB window, 22-bit address space)
+- ``APP4_INDEX_C``: ``0x800000`` (8 MB window, 23-bit address space)
 
 These four slaves are merged by a second AXI-Lite crossbar inside
 ``AxiPcieReg`` and exposed as a single ``appReadMaster`` / ``appWriteMaster``

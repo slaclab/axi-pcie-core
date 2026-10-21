@@ -183,6 +183,7 @@ architecture mapping of XilinxKcu116PciePhyWrapper is
 
    signal usrIrqReq : sl;
    signal usrIrqAck : sl;
+   signal msiEnable : sl;
 
 begin
 
@@ -205,6 +206,7 @@ begin
          rstL      => rstL,
          -- Interrupt Interface
          dmaIrq    => dmaIrq,
+         msiEnable => msiEnable,
          usrIrqAck => usrIrqAck,
          usrIrqReq => usrIrqReq);
 
@@ -241,6 +243,7 @@ begin
          usr_irq_req(0)  => usrIrqReq,
          usr_irq_ack(0)  => usrIrqAck,
          interrupt_out   => open,
+         msi_enable      => msiEnable,
          -- Slave AXI4 Interface
          s_axib_awid     => dmaWriteMaster.awid(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0),
          s_axib_awaddr   => dmaWriteMaster.awaddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),

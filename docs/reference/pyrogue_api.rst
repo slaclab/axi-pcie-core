@@ -35,6 +35,7 @@ directly; instead it assembles a tree of sub-devices at fixed offsets.
                      boardType        = None,
                      extended         = False,
                      sim              = False,
+                     gpuShowBuffs     = False,
                      **kwargs):
 
 .. list-table:: AxiPcieCore sub-devices
@@ -64,7 +65,8 @@ directly; instead it assembles a tree of sub-devices at fixed offsets.
    * - ``AxiGpuAsyncCore``
      - ``0x28000``
      - ``useGpu=True``
-     - GPU-Direct async data-path registers
+     - GPU-Direct async data-path registers; ``gpuShowBuffs`` is passed
+       through as ``showBuffers``
    * - ``micron.AxiMicronMt28ew``
      - ``0x30000``
      - ``useBpi=True``
@@ -289,6 +291,14 @@ hash, DNA, uptime counter, ``UserRst`` command) are not listed here. See
      - ``0x428``
      - RO
      - GPU-Direct async core present in firmware; Boolean
+   * - ``GenSysmon``
+     - ``0x42C [0]``
+     - RO
+     - SysMon instantiated in firmware (``GEN_SYSMON_G``); Boolean
+   * - ``MemMapVersion``
+     - ``0x4FC``
+     - RO
+     - BAR0 crossbar mapping version; incremented when the mapping changes
 
 **Notes.** ``PCIE_HW_TYPE_G`` is cross-checked by ``AxiPcieCore._start()`` against the
 ``boardType`` constructor argument. Additional packing sub-fields
@@ -336,6 +346,12 @@ wraps the mailbox to relay I2C-over-CMS transactions for QSFP management. Pass
 low-power GPIO (``CmsLowSpeedIo``). ``AxiPcieCore`` adds a ``CmsSubsystem`` instance
 named ``CmsBridge`` when ``boardType`` is ``'XilinxAlveoU55c'`` or
 ``'XilinxVariumC1100'``.
+
+The CMS firmware on these boards serves only I2C address A0h on the QSFP
+cages.  For an SFP+ module in a QSFP-to-SFP+ adapter (``transceiverClass``
+entry ``'SFP'``), A2h reads silently return A0h data, so ``AxiPcieCore``
+hides the SFF-8472 A2h diagnostics variables (byte offsets 256 and up) and
+any ``LinkVariable`` that depends on them.
 
 AxiGpuAsyncCore
 ---------------
@@ -405,6 +421,10 @@ and DMA latency measurements for the GPU-direct bypass pipeline.
      - ``0x20``
      - WO
      - Clear all status counters plus IB/OB stream monitors
+   * - ``VersionNumber``
+     - ``0x30 [7:0]``
+     - RO
+     - ``AxiPcieGpuAsyncCore`` firmware version (currently 5)
    * - ``AxisDeMuxSelect``
      - ``0x38``
      - RW

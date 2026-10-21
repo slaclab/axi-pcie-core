@@ -212,6 +212,23 @@ offset ``0x400`` and above.
      - RO
      - ``'1'`` when ``DATAGPU_EN_G`` was set at synthesis (GPU-Direct
        async path enabled).
+   * - ``0x42C``
+     - ``GenSysmon``
+     - 0
+     - RO
+     - ``'1'`` when ``GEN_SYSMON_G`` was set at synthesis (SysMon
+       instantiated at ``0x24000``).
+   * - ``0x430`` to ``0x4F8``
+     - (unused)
+     - 31:0
+     - RO
+     - Reads zero.
+   * - ``0x4FC``
+     - ``MemMapVersion``
+     - 31:0
+     - RO
+     - BAR0 crossbar mapping version, currently ``0x00000001``.
+       Incremented whenever the mapping in ``AxiPcieReg`` changes.
 
 Application Regions
 -------------------

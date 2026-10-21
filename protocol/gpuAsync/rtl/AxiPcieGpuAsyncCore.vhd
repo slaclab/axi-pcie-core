@@ -32,7 +32,7 @@ use axi_pcie_core.AxiPciePkg.all;
 entity AxiPcieGpuAsyncCore is
    generic (
       TPD_G               : time                    := 1 ns;
-      DEFAULT_DEMUX_SEL_G : sl                      := '1';  -- 1: GPU path, 0: CPU path
+      DEFAULT_DEMUX_SEL_G : sl                      := '0';  -- 1: GPU path, 0: CPU path
       BURST_BYTES_G       : integer range 1 to 4096 := 4096;
       DMA_AXIS_CONFIG_G   : AxiStreamConfigType);
    port (

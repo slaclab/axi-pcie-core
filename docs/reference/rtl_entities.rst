@@ -640,7 +640,7 @@ Generics
      - Propagation delay for simulation.
    * - ``DEFAULT_DEMUX_SEL_G``
      - ``sl``
-     - ``'1'``
+     - ``'0'``
      - Power-on demux routing: ``'1'`` = GPU path, ``'0'`` = CPU path.
    * - ``BURST_BYTES_G``
      - ``integer range 1 to 4096``

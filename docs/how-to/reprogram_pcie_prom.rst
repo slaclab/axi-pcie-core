@@ -200,8 +200,11 @@ return, reboot the host.
 
 .. note::
 
-   The Debian package installs only ``updatePcieFpga``. Use
-   ``rescanPcieFpga.sh`` from a source checkout of ``axi-pcie-core``.
+   The Debian package also installs the script as
+   ``/opt/fpga-pcie-reprogram/bin/rescanPcieFpga.sh``, the path that
+   ``updatePcieFpga`` prints.  Packages from v6.9.1 and earlier ship only
+   ``updatePcieFpga``; with those, use ``rescanPcieFpga.sh`` from a source
+   checkout of ``axi-pcie-core``.
 
 Troubleshooting
 ---------------

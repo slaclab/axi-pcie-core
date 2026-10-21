@@ -35,7 +35,7 @@ It does not cover:
 
 * Board bring-up or hardware validation procedures
 * Vivado or toolchain installation guides
-* Kernel-driver development — that is tracked in the ``aes-stream-drivers`` repository
+* Kernel-driver development, which is tracked in the ``aes-stream-drivers`` repository
 
 Relationship to ruckus and surf
 -------------------------------

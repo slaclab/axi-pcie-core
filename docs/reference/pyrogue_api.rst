@@ -2,13 +2,11 @@ PyRogue API Reference
 =====================
 
 This page is a hand-written manual reference for all entries in the ``python/axipcie/``
-package — nine device classes and the module-level connection helpers. It covers what
+package: nine device classes and the module-level connection helpers. It covers what
 each class exposes to the PyRogue register tree and how to instantiate it.
 Surf-provided base classes (``pr.Device``, ``pr.Root``, ``surf.axi.AxiVersion``) are
 referenced by name only; their APIs are documented in the pyrogue and surf projects
-respectively. This reference is written by hand, not auto-generated — per the project
-decision recorded in ``PROJECT.md`` (section "Key Decisions":
-*Manual RTL/PyRogue reference (no autodoc)*).
+respectively. This reference is written by hand, not auto-generated.
 
 See :doc:`/explanation/architecture` for the BAR0 register-map overview that these
 classes map to.

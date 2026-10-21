@@ -18,7 +18,7 @@ Each lane contains a dedicated IB FIFO (host → FPGA application) and a
 dedicated OB FIFO (FPGA application → host).  The number of lanes is set by
 the ``DMA_SIZE_G`` generic (maximum 8), which is bounded by the
 ``AxiPcieCrossbar`` slave-port budget: the crossbar provides 10 AXI4 slave
-ports — one descriptor port, up to eight DMA lane ports, and one user
+ports: one descriptor port, up to eight DMA lane ports, and one user
 general-purpose port.
 
 Descriptor Rings

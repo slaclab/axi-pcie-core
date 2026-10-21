@@ -25,7 +25,7 @@ Prerequisites
 
 You need the following on your workstation before you begin:
 
-- **git** 2.x with **git-lfs** installed and initialized — ``axi-pcie-core``
+- **git** 2.x with **git-lfs** installed and initialized. ``axi-pcie-core``
   uses LFS for pre-compiled IP checkpoints (``.dcp``), so a clone without
   active LFS leaves placeholder files in place of binary IP and the build
   will fail.
@@ -42,7 +42,7 @@ You need the following on your workstation before you begin:
   ``vivado`` from a shell where ``which vivado`` already resolves.
 
 A JTAG cable and Vivado Hardware Manager are *not* required to build the
-bitstream — only to load it on a physical board afterwards.
+bitstream, only to load it on a physical board afterwards.
 
 Verify git-lfs is active before cloning:
 
@@ -68,7 +68,7 @@ as the downstream consumer.
 Initialise Submodules
 ---------------------
 
-``pgp-pcie-apps`` uses recursive git submodules — including ``axi-pcie-core``,
+``pgp-pcie-apps`` uses recursive git submodules, including ``axi-pcie-core``,
 ``surf``, and ``ruckus``.  Initialise them all in one step:
 
 .. code-block:: bash
@@ -124,7 +124,7 @@ manual block-design configuration is needed.  See
 that ``axi-pcie-core`` contributes to this build.
 
 A successful full build typically takes several hours on a modern
-workstation.  Use ``make`` again later — incremental dependencies in
+workstation.  Use ``make`` again later; incremental dependencies in
 ruckus.tcl will skip steps that have not changed.
 
 Where the Build Runs
@@ -142,7 +142,7 @@ faster local scratch path via ``$TOP_DIR/build`` symlink convention; out of
 the box it resolves to ``firmware/build/<TargetName>/``.
 
 The final shipping artefacts are copied to a separate directory under the
-target itself — see `Build Artefacts`_ below.
+target itself (see `Build Artefacts`_ below).
 
 Expected Critical Warnings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -162,7 +162,7 @@ that are expected and safe to ignore:
   reading constraint file [.../pcie-4x8/xdc/XilinxVariumC1100Timing.xdc]
   and the design contains unresolved black boxes.``
 
-  Same root cause as above — the PHY is a black box at this point of
+  Same root cause as above: the PHY is a black box at this point of
   elaboration; Vivado re-reads and applies these timing constraints
   post-synthesis.
 

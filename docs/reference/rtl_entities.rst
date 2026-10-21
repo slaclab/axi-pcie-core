@@ -19,12 +19,12 @@ Purpose
 ~~~~~~~
 
 ``AxiPcieCore`` is the abstract name for the per-board top-level integration
-entity — the single instantiation point for a given PCIe carrier board.
+entity: the single instantiation point for a given PCIe carrier board.
 Concrete realisations are ``XilinxKcu1500Core``
 (:repo:`hardware/XilinxKcu1500/rtl/XilinxKcu1500Core.vhd`) and
 ``XilinxAlveoU200Core``
 (``hardware/XilinxAlveoU200/core/XilinxAlveoU200Core.vhd``), among others.
-All ``<Board>Core`` entities share the same logical port surface — DMA
+All ``<Board>Core`` entities share the same logical port surface: DMA
 AXI-Stream arrays, PIP AXI4 write masters, application AXI-Lite master pair,
 and board-specific I/O; only the board I/O section differs between boards.
 See :doc:`/explanation/architecture` for the structural overview and
@@ -33,7 +33,7 @@ See :doc:`/explanation/architecture` for the structural overview and
 Generics
 ~~~~~~~~
 
-.. list-table:: AxiPcieCore generics (representative — XilinxKcu1500Core)
+.. list-table:: AxiPcieCore generics (representative: XilinxKcu1500Core)
    :header-rows: 1
    :widths: 30 20 20 30
 
@@ -71,7 +71,7 @@ Generics
    * - ``DMA_SIZE_G``
      - ``positive range 1 to 8``
      - ``1``
-     - Number of DMA lanes.  Range 1–8 is bounded by the 10-port AXI
+     - Number of DMA lanes.  Range 1 to 8 is bounded by the 10-port AXI
        crossbar in ``AxiPcieCrossbar`` (1 descriptor port + up to 8 DMA
        lanes + 1 user GP port = 10).
    * - ``DMA_BURST_BYTES_G``
@@ -95,8 +95,8 @@ pre-built Vivado AXI Interconnect DCP from
 slave ports (1 descriptor + up to 8 DMA lanes + 1 user GP), leaving no
 room for additional lanes beyond 8.
 
-The per-board ``AXI_PCIE_CONFIG_C`` constant — defined in
-``hardware/<Board>/rtl/AxiPciePkg.vhd`` — configures the shared RTL's AXI
+The per-board ``AXI_PCIE_CONFIG_C`` constant (defined in
+``hardware/<Board>/rtl/AxiPciePkg.vhd``) configures the shared RTL's AXI
 bus width (typically 256-bit data, 64-bit address, 4-bit ID, 8-bit length).
 The roadmap term "transceiverClass" maps to this constant paired with the
 per-board PCIe IP variant (Gen3x8 / Gen3x16 / Gen4x8).
@@ -104,7 +104,7 @@ per-board PCIe IP variant (Gen3x8 / Gen3x16 / Gen4x8).
 Ports
 ~~~~~
 
-.. list-table:: AxiPcieCore ports (representative — XilinxKcu1500Core)
+.. list-table:: AxiPcieCore ports (representative: XilinxKcu1500Core)
    :header-rows: 1
    :widths: 30 10 25 35
 
@@ -128,7 +128,7 @@ Ports
      - out
      - ``slv(7 downto 0)``
      - Per-group buffer-full pause signals from the DMA engine.
-   * - **DMA Streams (Outbound — FPGA to Host)**
+   * - **DMA Streams (Outbound, FPGA to Host)**
      -
      -
      -
@@ -140,7 +140,7 @@ Ports
      - in
      - ``AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0)``
      - Outbound DMA stream flow-control slaves.
-   * - **DMA Streams (Inbound — Host to FPGA)**
+   * - **DMA Streams (Inbound, Host to FPGA)**
      -
      -
      -
@@ -159,7 +159,7 @@ Ports
    * - ``pipIbMaster``
      - out
      - ``AxiWriteMasterType``
-     - PIP inbound write master — peer FPGA write arriving over PCIe.
+     - PIP inbound write master: peer FPGA write arriving over PCIe.
    * - ``pipIbSlave``
      - in
      - ``AxiWriteSlaveType``
@@ -167,7 +167,7 @@ Ports
    * - ``pipObMaster``
      - in
      - ``AxiWriteMasterType``
-     - PIP outbound write master — local FPGA initiates write to peer.
+     - PIP outbound write master: local FPGA initiates write to peer.
    * - ``pipObSlave``
      - out
      - ``AxiWriteSlaveType``
@@ -179,7 +179,7 @@ Ports
    * - ``usrReadMaster``
      - in
      - ``AxiReadMasterType``
-     - User GP AXI4 read master — optional application PCIe read path.
+     - User GP AXI4 read master: optional application PCIe read path.
    * - ``usrReadSlave``
      - out
      - ``AxiReadSlaveType``
@@ -209,7 +209,7 @@ Ports
      - out
      - ``AxiLiteReadMasterType``
      - Application-region AXI-Lite read master
-       (BAR0 offset ``0x00100000``–``0x00FFFFFF``).
+       (BAR0 offset ``0x00100000`` to ``0x00FFFFFF``).
    * - ``appReadSlave``
      - in
      - ``AxiLiteReadSlaveType``
@@ -595,7 +595,7 @@ Ports
    * - ``sAxiWriteMaster``
      - in
      - ``AxiWriteMasterType``
-     - Inbound AXI4 write master — peer FPGA write arriving from PCIe.
+     - Inbound AXI4 write master: peer FPGA write arriving from PCIe.
    * - ``sAxiWriteSlave``
      - out
      - ``AxiWriteSlaveType``
@@ -603,7 +603,7 @@ Ports
    * - ``mAxiWriteMaster``
      - out
      - ``AxiWriteMasterType``
-     - Outbound AXI4 write master — local FPGA write to peer over PCIe.
+     - Outbound AXI4 write master: local FPGA write to peer over PCIe.
    * - ``mAxiWriteSlave``
      - in
      - ``AxiWriteSlaveType``
@@ -724,7 +724,7 @@ Ports
    * - ``bypassMaster``
      - out
      - ``AxiStreamMasterType``
-     - CPU bypass stream — frames routed to CPU DMA path when demux
+     - CPU bypass stream: frames routed to CPU DMA path when demux
        selects ``'0'``.
    * - ``bypassSlave``
      - in

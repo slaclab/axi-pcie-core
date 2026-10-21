@@ -10,9 +10,9 @@ subsystems:
 
 * a PCIe PHY wrapper (board-specific IP delivered as a pre-built ``.dcp``
   checkpoint),
-* ``AxiPcieReg`` — the BAR0 AXI-to-AXI-Lite bridge and 15-slave register
+* ``AxiPcieReg``: the BAR0 AXI-to-AXI-Lite bridge and 15-slave register
   crossbar, and
-* ``AxiPcieDma`` — the AXI-Stream data-plane DMA engine.
+* ``AxiPcieDma``: the AXI-Stream data-plane DMA engine.
 
 All DMA and register logic runs synchronously on a single 250 MHz system clock
 (``DMA_CLK_FREQ_C``) sourced from the PCIe PHY's recovered reference clock.
@@ -55,7 +55,7 @@ are sourced from the ``AXI_CROSSBAR_MASTERS_CONFIG_C`` constant in
       +--[0x0040_0000]  App region 3        (appClk domain, 4 MB)
       +--[0x0080_0000]  App region 4        (appClk domain, 8 MB)
 
-The four application region slaves (indices 11–14) are merged by a second
+The four application region slaves (indices 11 to 14) are merged by a second
 AXI-Lite crossbar inside ``AxiPcieReg`` and exposed as a single
 ``appReadMaster`` / ``appWriteMaster`` pair that crosses to the application
 clock domain via ``surf.AxiLiteAsync``.  Unimplemented or unused crossbar
@@ -89,9 +89,9 @@ Board Abstraction: AxiPciePkg and AxiPcieSharedPkg
 ``AxiPciePkg.vhd`` (one per board, under ``hardware/<board>/rtl/``) defines
 two compile-time constants that the entire shared RTL parameterizes off:
 
-* ``DMA_CLK_FREQ_C`` — the system clock frequency in Hz (250.0E+6 = 250 MHz
+* ``DMA_CLK_FREQ_C``: the system clock frequency in Hz (250.0E+6 = 250 MHz
   on all current boards).
-* ``AXI_PCIE_CONFIG_C`` — an ``AxiConfigType`` record with four fields:
+* ``AXI_PCIE_CONFIG_C``: an ``AxiConfigType`` record with four fields:
   ``DATA_BYTES_C`` (bus width, e.g. 32 bytes = 256-bit for KCU1500),
   ``ADDR_WIDTH_C`` (64 bits on all boards), ``ID_BITS_C`` (4, meaning up to
   16 outstanding AXI IDs / DMA descriptors), and ``LEN_BITS_C`` (8, the AXI
@@ -103,7 +103,7 @@ per-board conditional compilation: the ``AxiPciePkg`` constants drive all
 width-dependent parameters at VHDL elaboration time.
 
 ``AxiPcieSharedPkg.vhd`` (shared, under ``shared/rtl/``) defines a 32-bit
-``HW_TYPE_*`` constant for every supported board — for example
+``HW_TYPE_*`` constant for every supported board, for example
 ``HW_TYPE_XILINX_KCU1500_C`` (0x0D), ``HW_TYPE_XILINX_U200_C`` (0x07),
 ``HW_TYPE_BITTWARE_XUP_VV8_VU13P_C`` (0x02).  ``AxiPcieReg`` writes the
 active board's ``HW_TYPE_*`` value into ``userValues(9)`` of the

@@ -435,6 +435,16 @@ and DMA latency measurements for the GPU-direct bypass pipeline.
      - ``0x40``
      - RO
      - Maximum read queue depth since last ``CountReset``
+   * - ``WriteActive``
+     - ``0x44 [0]``
+     - RO
+     - Follows ``WriteEnable`` once the write FSM is idle; wait for it to
+       clear before freeing write buffers
+   * - ``ReadActive``
+     - ``0x44 [1]``
+     - RO
+     - Follows ``ReadEnable`` once the read FSM is idle; wait for it to
+       clear before freeing read buffers
    * - ``RemoteWriteMaxSize``
      - ``0x60``
      - RO

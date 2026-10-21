@@ -255,6 +255,28 @@ class AxiGpuAsyncCore(pr.Device):
             pollInterval = 1,
         ))
 
+        self.add(pr.RemoteVariable(
+            name         = 'WriteActive',
+            description  = 'Follows WriteEnable once the write FSM is idle, so it clears only after an in-flight transfer completes. Wait for False before freeing buffers',
+            offset       = 0x44,
+            bitSize      = 1,
+            bitOffset    = 0,
+            base         = pr.Bool,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'ReadActive',
+            description  = 'Follows ReadEnable once the read FSM is idle, so it clears only after an in-flight transfer completes. Wait for False before freeing buffers',
+            offset       = 0x44,
+            bitSize      = 1,
+            bitOffset    = 1,
+            base         = pr.Bool,
+            mode         = 'RO',
+            pollInterval = 1,
+        ))
+
 
         self.add(pr.RemoteVariable(
             name         = 'RemoteWriteMaxSize',

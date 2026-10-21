@@ -2,8 +2,8 @@ Supported Boards
 ================
 
 This page is the lookup table for all 14 supported boards under ``hardware/``. The
-table has one row per **variant** — boards with multiple FPGA variants (BittWare
-XUP-VV8 with VU9P/VU13P, Abaco PC821 with KU085/KU115) each get two rows — so the
+table has one row per **variant**. Boards with multiple FPGA variants (BittWare
+XUP-VV8 with VU9P/VU13P, Abaco PC821 with KU085/KU115) each get two rows, so the
 total row count is 16 for 14 boards. See :doc:`/explanation/board_support` for an
 explanation of the per-board directory layout and the ``ruckus.tcl`` chain used by
 downstream firmware projects.

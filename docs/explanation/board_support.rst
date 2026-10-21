@@ -51,7 +51,7 @@ The build system chains from the downstream project inward through four levels:
    surf ≥ v2.71.0, verifies Vivado version ≥ 2020.1, then loads all of ``shared/rtl/``
    and ``shared/ip/`` into the ``axi_pcie_core`` VHDL library.
 4. The board ``ruckus.tcl`` loads its own ``rtl/`` sources, the PCIe PHY ``.dcp``,
-   the ``.xdc`` constraints, and — conditionally — the ``ddr/`` or ``hbm/`` subtree
+   the ``.xdc`` constraints, and (conditionally) the ``ddr/`` or ``hbm/`` subtree
    depending on the board's optional memory configuration.
 
 Some boards impose additional constraints.  ``XilinxAlveoU55c``, for example, requires

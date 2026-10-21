@@ -4,7 +4,9 @@ RTL Entity Reference
 This page documents the four top-level RTL entities in ``axi-pcie-core``:
 ``AxiPcieCore`` (the abstract board-core role), ``AxiPcieDma`` (the DMA
 engine), ``AxiPipCore`` (PCIe Intercommunication Protocol), and
-``AxiGpuAsyncCore`` (GPU-Direct async data path).  Per-board concrete
+``AxiGpuAsyncCore`` (GPU-Direct async data path).  It also documents
+``AxiPcieUltrascalePlusIrqFsm``, the shared interrupt handshake that every
+UltraScale+ PHY wrapper instantiates.  Per-board concrete
 realisations of ``AxiPcieCore`` (e.g., ``XilinxKcu1500Core``,
 ``XilinxAlveoU200Core``) are listed in the supported-boards reference;
 internal surf primitives referenced below are documented in the surf library
@@ -17,12 +19,12 @@ Purpose
 ~~~~~~~
 
 ``AxiPcieCore`` is the abstract name for the per-board top-level integration
-entity — the single instantiation point for a given PCIe carrier board.
+entity: the single instantiation point for a given PCIe carrier board.
 Concrete realisations are ``XilinxKcu1500Core``
 (:repo:`hardware/XilinxKcu1500/rtl/XilinxKcu1500Core.vhd`) and
 ``XilinxAlveoU200Core``
 (``hardware/XilinxAlveoU200/core/XilinxAlveoU200Core.vhd``), among others.
-All ``<Board>Core`` entities share the same logical port surface — DMA
+All ``<Board>Core`` entities share the same logical port surface: DMA
 AXI-Stream arrays, PIP AXI4 write masters, application AXI-Lite master pair,
 and board-specific I/O; only the board I/O section differs between boards.
 See :doc:`/explanation/architecture` for the structural overview and
@@ -31,7 +33,7 @@ See :doc:`/explanation/architecture` for the structural overview and
 Generics
 ~~~~~~~~
 
-.. list-table:: AxiPcieCore generics (representative — XilinxKcu1500Core)
+.. list-table:: AxiPcieCore generics (representative: XilinxKcu1500Core)
    :header-rows: 1
    :widths: 30 20 20 30
 
@@ -69,7 +71,7 @@ Generics
    * - ``DMA_SIZE_G``
      - ``positive range 1 to 8``
      - ``1``
-     - Number of DMA lanes.  Range 1–8 is bounded by the 10-port AXI
+     - Number of DMA lanes.  Range 1 to 8 is bounded by the 10-port AXI
        crossbar in ``AxiPcieCrossbar`` (1 descriptor port + up to 8 DMA
        lanes + 1 user GP port = 10).
    * - ``DMA_BURST_BYTES_G``
@@ -93,16 +95,14 @@ pre-built Vivado AXI Interconnect DCP from
 slave ports (1 descriptor + up to 8 DMA lanes + 1 user GP), leaving no
 room for additional lanes beyond 8.
 
-The per-board ``AXI_PCIE_CONFIG_C`` constant — defined in
-``hardware/<Board>/rtl/AxiPciePkg.vhd`` — configures the shared RTL's AXI
+The per-board ``AXI_PCIE_CONFIG_C`` constant (defined in
+``hardware/<Board>/rtl/AxiPciePkg.vhd``) configures the shared RTL's AXI
 bus width (typically 256-bit data, 64-bit address, 4-bit ID, 8-bit length).
-The roadmap term "transceiverClass" maps to this constant paired with the
-per-board PCIe IP variant (Gen3x8 / Gen3x16 / Gen4x8).
 
 Ports
 ~~~~~
 
-.. list-table:: AxiPcieCore ports (representative — XilinxKcu1500Core)
+.. list-table:: AxiPcieCore ports (representative: XilinxKcu1500Core)
    :header-rows: 1
    :widths: 30 10 25 35
 
@@ -126,7 +126,7 @@ Ports
      - out
      - ``slv(7 downto 0)``
      - Per-group buffer-full pause signals from the DMA engine.
-   * - **DMA Streams (Outbound — FPGA to Host)**
+   * - **DMA Streams (Outbound, FPGA to Host)**
      -
      -
      -
@@ -138,7 +138,7 @@ Ports
      - in
      - ``AxiStreamSlaveArray(DMA_SIZE_G-1 downto 0)``
      - Outbound DMA stream flow-control slaves.
-   * - **DMA Streams (Inbound — Host to FPGA)**
+   * - **DMA Streams (Inbound, Host to FPGA)**
      -
      -
      -
@@ -157,7 +157,7 @@ Ports
    * - ``pipIbMaster``
      - out
      - ``AxiWriteMasterType``
-     - PIP inbound write master — peer FPGA write arriving over PCIe.
+     - PIP inbound write master: peer FPGA write arriving over PCIe.
    * - ``pipIbSlave``
      - in
      - ``AxiWriteSlaveType``
@@ -165,7 +165,7 @@ Ports
    * - ``pipObMaster``
      - in
      - ``AxiWriteMasterType``
-     - PIP outbound write master — local FPGA initiates write to peer.
+     - PIP outbound write master: local FPGA initiates write to peer.
    * - ``pipObSlave``
      - out
      - ``AxiWriteSlaveType``
@@ -177,7 +177,7 @@ Ports
    * - ``usrReadMaster``
      - in
      - ``AxiReadMasterType``
-     - User GP AXI4 read master — optional application PCIe read path.
+     - User GP AXI4 read master: optional application PCIe read path.
    * - ``usrReadSlave``
      - out
      - ``AxiReadSlaveType``
@@ -207,7 +207,7 @@ Ports
      - out
      - ``AxiLiteReadMasterType``
      - Application-region AXI-Lite read master
-       (BAR0 offset ``0x00100000``–``0x00FFFFFF``).
+       (BAR0 offset ``0x00100000`` to ``0x00FFFFFF``).
    * - ``appReadSlave``
      - in
      - ``AxiLiteReadSlaveType``
@@ -436,8 +436,9 @@ Ports
    * - ``dmaIrq``
      - out
      - ``sl``
-     - Level-triggered DMA interrupt; the PCIe PHY asserts MSI on the
-       rising edge.
+     - Level-sensitive DMA interrupt.  The board PHY wrapper turns it into
+       an INTx, MSI, or MSI-X request (see
+       `AxiPcieUltrascalePlusIrqFsm`_).
    * - ``dmaBuffGrpPause``
      - out
      - ``slv(7 downto 0)``
@@ -592,7 +593,7 @@ Ports
    * - ``sAxiWriteMaster``
      - in
      - ``AxiWriteMasterType``
-     - Inbound AXI4 write master — peer FPGA write arriving from PCIe.
+     - Inbound AXI4 write master: peer FPGA write arriving from PCIe.
    * - ``sAxiWriteSlave``
      - out
      - ``AxiWriteSlaveType``
@@ -600,7 +601,7 @@ Ports
    * - ``mAxiWriteMaster``
      - out
      - ``AxiWriteMasterType``
-     - Outbound AXI4 write master — local FPGA write to peer over PCIe.
+     - Outbound AXI4 write master: local FPGA write to peer over PCIe.
    * - ``mAxiWriteSlave``
      - in
      - ``AxiWriteSlaveType``
@@ -721,7 +722,7 @@ Ports
    * - ``bypassMaster``
      - out
      - ``AxiStreamMasterType``
-     - CPU bypass stream — frames routed to CPU DMA path when demux
+     - CPU bypass stream: frames routed to CPU DMA path when demux
        selects ``'0'``.
    * - ``bypassSlave``
      - in
@@ -755,3 +756,92 @@ Ports
      - in
      - ``AxiReadSlaveType``
      - AXI4 read slave.
+
+AxiPcieUltrascalePlusIrqFsm
+---------------------------
+
+Purpose
+~~~~~~~
+
+VHDL entity in :repo:`shared/rtl/AxiPcieUltrascalePlusIrqFsm.vhd`.  It
+converts the level-sensitive ``dmaIrq`` from ``AxiPcieDma`` into the
+``usr_irq_req`` / ``usr_irq_ack`` handshake of the Xilinx UltraScale+ XDMA
+(PG195) and Versal CPM AXI Bridge (PG347) user-interrupt interface.  Every
+UltraScale+ board PHY wrapper instantiates it; UltraScale boards drive
+``dmaIrq`` into the PHY's ``intx_msi_request`` input instead.
+
+The handshake depends on the interrupt mode the host enabled:
+
+- **INTx** (``msiEnable = '0'`` and ``msixEnable = '0'``): the PHY acks
+  both the request rising edge (``Assert_INTA``) and its falling edge
+  (``Deassert_INTA``), so the FSM runs a six-state, two-ack sequence.
+- **MSI / MSI-X** (either input ``'1'``): the PHY acks only the rising edge,
+  so the FSM returns to idle as soon as it drops the request.
+
+After the first ack, the request stays asserted until ``dmaIrq`` clears or
+250 000 000 ``clk`` cycles elapse, whichever comes first.
+
+.. note::
+
+   ``msiEnable`` and ``msixEnable`` default to ``'0'``.  A wrapper that leaves
+   them unconnected always runs the INTx handshake, so its PCIe IP must be
+   configured INTx-only.  If MSI is enabled in the IP, connect the PHY's
+   ``msi_enable`` (and MSI-X enable, if used) status output to these inputs,
+   as the ``XilinxAlveoU55c``, ``XilinxVariumC1100``, and ``BittWareXupVv8``
+   wrappers do.
+
+Generics
+~~~~~~~~
+
+.. list-table:: AxiPcieUltrascalePlusIrqFsm generics
+   :header-rows: 1
+   :widths: 30 25 20 25
+
+   * - Name
+     - Type
+     - Default
+     - Description
+   * - ``TPD_G``
+     - ``time``
+     - ``1 ns``
+     - Propagation delay for simulation.
+
+Ports
+~~~~~
+
+.. list-table:: AxiPcieUltrascalePlusIrqFsm ports
+   :header-rows: 1
+   :widths: 30 10 30 30
+
+   * - Name
+     - Dir
+     - Type
+     - Description
+   * - ``clk``
+     - in
+     - ``sl``
+     - PHY user clock.
+   * - ``rstL``
+     - in
+     - ``sl``
+     - Active-low reset.
+   * - ``dmaIrq``
+     - in
+     - ``sl``
+     - Level-sensitive interrupt from ``AxiPcieDma``.
+   * - ``msiEnable``
+     - in
+     - ``sl``
+     - Host enabled MSI; selects the single-ack handshake.  Default ``'0'``.
+   * - ``msixEnable``
+     - in
+     - ``sl``
+     - Host enabled MSI-X; selects the single-ack handshake.  Default ``'0'``.
+   * - ``usrIrqAck``
+     - in
+     - ``sl``
+     - Interrupt acknowledge from the PHY (``usr_irq_ack``).
+   * - ``usrIrqReq``
+     - out
+     - ``sl``
+     - Interrupt request to the PHY (``usr_irq_req``).

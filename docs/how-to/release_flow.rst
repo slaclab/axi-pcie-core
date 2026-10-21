@@ -55,12 +55,12 @@ What Gets Published
 
 A ``vX.Y.Z`` tag push triggers two jobs:
 
-1. **GitHub release** — the ``gen_release`` job calls
+1. **GitHub release**: the ``gen_release`` job calls
    ``slaclab/ruckus/.github/workflows/gen_release.yml@main`` via the GitHub
    Actions reusable-workflow mechanism. It runs ``ruckus/scripts/releaseGen.py``
    to create a GitHub release with auto-generated release notes.
 
-2. **Debian package** — the ``build-deb-pkg`` job builds a self-contained
+2. **Debian package**: the ``build-deb-pkg`` job builds a self-contained
    ``fpga-pcie-reprogram-vX.Y.Z_amd64.deb`` using ``conda-pack`` and the
    ``upload-deb-pkg`` job attaches it to the GitHub release (along with a
    ``checksums.txt`` SHA-256 manifest). The package wraps
@@ -123,10 +123,10 @@ via:
 
 must switch to one of the following alternatives:
 
-- **Git submodule** — pin a specific ``vX.Y.Z`` tag in your project.
+- **Git submodule**: pin a specific ``vX.Y.Z`` tag in your project.
   Downstream consumers should switch to the submodule integration path
   documented in :doc:`/how-to/integrate_as_submodule`.
-- **Debian package** — install ``fpga-pcie-reprogram-vX.Y.Z_amd64.deb`` from
+- **Debian package**: install ``fpga-pcie-reprogram-vX.Y.Z_amd64.deb`` from
   the GitHub release assets (covers the firmware-update script use case).
 
 The ``pip install`` path via ``setup.py`` is unaffected and remains supported.

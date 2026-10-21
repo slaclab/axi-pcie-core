@@ -167,10 +167,10 @@ defaults (``'localhost'``, ``8000``) match the firmware defaults.
 See Also
 --------
 
-* :doc:`/reference/pyrogue_api` — per-class details for ``AxiPcieCore``,
+* :doc:`/reference/pyrogue_api`: per-class details for ``AxiPcieCore``,
   ``AxiPcieRoot``, ``PcieAxiVersion``, and the module-level helper functions.
-* :doc:`/explanation/architecture` — register-tree concept and BAR0 crossbar
+* :doc:`/explanation/architecture`: register-tree concept and BAR0 crossbar
   layout that the device tree maps to.
-* :doc:`/reference/register_map` — BAR0 offsets for all ``PcieAxiVersion``
+* :doc:`/reference/register_map`: BAR0 offsets for all ``PcieAxiVersion``
   fields, including the ``UpTimeCnt`` and ``BuildStamp`` registers inherited
   from ``surf.axi.AxiVersion``.

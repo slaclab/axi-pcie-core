@@ -281,6 +281,18 @@ class AxiPcieCore(pr.Device):
                             enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                         ))
 
+                        # SFP+ module in a QSFP cage (QSFP-to-SFP+ adapter): the CMS firmware only serves I2C address A0h.
+                        # PG348 defines Extended I2C Addressing (MAILBOX word 3, BIT16) to select A2h, but notes it is
+                        # "unused in QSFP mode" and "only supported in SFP+ modules". The U55C/C1100 cages are QSFP cages,
+                        # and on hardware setting BIT16 still returns A0h data with no HOST_MSG_ERR_REG error.
+                        # So hide the A2h (SFF-8472 diagnostics) variables mapped at byte offsets >= 256 since they are not accessible
+                        if cls is xceiver.Sfp:
+                            sfp = self.node(f'{cls.__name__}[{i}]')
+                            a2h = [v for v in sfp.variables.values() if isinstance(v, pr.RemoteVariable) and (v.offset >= (256 << 2))]
+                            for v in sfp.variables.values():
+                                if (v in a2h) or any(d in a2h for d in v.dependencies):
+                                    v.hidden = True
+
                 elif (boardType == 'XilinxKcu105'):
                     XIL_DEVICE_G = 'ULTRASCALE'
 

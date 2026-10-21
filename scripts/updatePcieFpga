@@ -228,7 +228,7 @@ if __name__ == "__main__":
     if args.rescan and (pci_addr != '') and (os.geteuid() != 0):
         print("This script must be run as root (sudo).")
         if (baseDir != '/opt/fpga-pcie-reprogram/bin'):
-            print("\n\n\ne.g. sudo $(which python) scripts/updatePcieFpga.py --path <PATH-TO-IMAGE-DIR>\n\n\n")
+            print("\n\n\ne.g. sudo $(which python) scripts/updatePcieFpga --path <PATH-TO-IMAGE-DIR>\n\n\n")
         exit()
 
     # Get a sorted list of all matching /dev/datadev* entries

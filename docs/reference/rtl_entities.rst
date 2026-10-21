@@ -98,8 +98,6 @@ room for additional lanes beyond 8.
 The per-board ``AXI_PCIE_CONFIG_C`` constant (defined in
 ``hardware/<Board>/rtl/AxiPciePkg.vhd``) configures the shared RTL's AXI
 bus width (typically 256-bit data, 64-bit address, 4-bit ID, 8-bit length).
-The roadmap term "transceiverClass" maps to this constant paired with the
-per-board PCIe IP variant (Gen3x8 / Gen3x16 / Gen4x8).
 
 Ports
 ~~~~~

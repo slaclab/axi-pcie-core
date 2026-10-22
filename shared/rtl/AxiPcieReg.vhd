@@ -62,11 +62,16 @@ entity AxiPcieReg is
       phyReadSlave        : in  AxiLiteReadSlaveType;
       phyWriteMaster      : out AxiLiteWriteMasterType;
       phyWriteSlave       : in  AxiLiteWriteSlaveType;
-      -- I2C AXI-Lite Interfaces (axiClk domain)
+      -- I2C AXI-Lite Interfaces With Proxy (axiClk domain)
       i2cReadMaster       : out AxiLiteReadMasterType;
       i2cReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
       i2cWriteMaster      : out AxiLiteWriteMasterType;
       i2cWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
+      -- I2C AXI-Lite Interfaces Without Proxy (axiClk domain)
+      i2cFastReadMaster   : out AxiLiteReadMasterType;
+      i2cFastReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
+      i2cFastWriteMaster  : out AxiLiteWriteMasterType;
+      i2cFastWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk              : in  sl;
       appRst              : in  sl;
@@ -100,90 +105,95 @@ end AxiPcieReg;
 
 architecture mapping of AxiPcieReg is
 
-   constant DMA_INDEX_C     : natural := 0;
-   constant PHY_INDEX_C     : natural := 1;
-   constant VERSION_INDEX_C : natural := 2;
-   constant SYSMON_INDEX_C  : natural := 3;
-   constant GPU_INDEX_C     : natural := 4;
-   constant BPI_INDEX_C     : natural := 5;
-   constant SPI0_INDEX_C    : natural := 6;
-   constant SPI1_INDEX_C    : natural := 7;
-   constant AXIS_MON_IB_C   : natural := 8;
-   constant AXIS_MON_OB_C   : natural := 9;
-   constant I2C_INDEX_C     : natural := 10;
+   constant DMA_INDEX_C      : natural := 0;
+   constant PHY_INDEX_C      : natural := 1;
+   constant VERSION_INDEX_C  : natural := 2;
+   constant SYSMON_INDEX_C   : natural := 3;
+   constant GPU_INDEX_C      : natural := 4;
+   constant BPI_INDEX_C      : natural := 5;
+   constant SPI0_INDEX_C     : natural := 6;
+   constant SPI1_INDEX_C     : natural := 7;
+   constant AXIS_MON_IB_C    : natural := 8;
+   constant AXIS_MON_OB_C    : natural := 9;
+   constant I2C_INDEX_C      : natural := 10;
+   constant I2C_FAST_INDEX_C : natural := 11;
    -- constant APP0_INDEX_C    : natural := XXX; -- Now used for PIP interface
-   constant APP1_INDEX_C    : natural := 11;
-   constant APP2_INDEX_C    : natural := 12;
-   constant APP3_INDEX_C    : natural := 13;
-   constant APP4_INDEX_C    : natural := 14;
+   constant APP1_INDEX_C     : natural := 12;
+   constant APP2_INDEX_C     : natural := 13;
+   constant APP3_INDEX_C     : natural := 14;
+   constant APP4_INDEX_C     : natural := 15;
 
-   constant NUM_AXI_MASTERS_C : natural := 15;
+   constant NUM_AXI_MASTERS_C : natural := 16;
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
-      DMA_INDEX_C     => (
-         baseAddr     => x"0000_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      PHY_INDEX_C     => (
-         baseAddr     => x"0001_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      VERSION_INDEX_C => (
-         baseAddr     => x"0002_0000",
-         addrBits     => 14,
-         connectivity => x"FFFF"),
-      SYSMON_INDEX_C  => (
-         baseAddr     => x"0002_4000",
-         addrBits     => 14,
-         connectivity => x"FFFF"),
-      GPU_INDEX_C     => (
-         baseAddr     => x"0002_8000",
-         addrBits     => 15,
-         connectivity => x"FFFF"),
-      BPI_INDEX_C     => (
-         baseAddr     => x"0003_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      SPI0_INDEX_C    => (
-         baseAddr     => x"0004_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      SPI1_INDEX_C    => (
-         baseAddr     => x"0005_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      AXIS_MON_IB_C   => (
-         baseAddr     => x"0006_0000",
-         addrBits     => 15,
-         connectivity => x"FFFF"),
-      AXIS_MON_OB_C   => (
-         baseAddr     => x"0006_8000",
-         addrBits     => 15,
-         connectivity => x"FFFF"),
-      I2C_INDEX_C     => (
-         baseAddr     => x"0007_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
+      DMA_INDEX_C      => (
+         baseAddr      => x"0000_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      PHY_INDEX_C      => (
+         baseAddr      => x"0001_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      VERSION_INDEX_C  => (
+         baseAddr      => x"0002_0000",
+         addrBits      => 14,
+         connectivity  => x"FFFF"),
+      SYSMON_INDEX_C   => (
+         baseAddr      => x"0002_4000",
+         addrBits      => 14,
+         connectivity  => x"FFFF"),
+      GPU_INDEX_C      => (
+         baseAddr      => x"0002_8000",
+         addrBits      => 15,
+         connectivity  => x"FFFF"),
+      BPI_INDEX_C      => (
+         baseAddr      => x"0003_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      SPI0_INDEX_C     => (
+         baseAddr      => x"0004_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      SPI1_INDEX_C     => (
+         baseAddr      => x"0005_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      AXIS_MON_IB_C    => (
+         baseAddr      => x"0006_0000",
+         addrBits      => 15,
+         connectivity  => x"FFFF"),
+      AXIS_MON_OB_C    => (
+         baseAddr      => x"0006_8000",
+         addrBits      => 15,
+         connectivity  => x"FFFF"),
+      I2C_INDEX_C      => (
+         baseAddr      => x"0007_0000",
+         addrBits      => 15,
+         connectivity  => x"FFFF"),
+      I2C_FAST_INDEX_C => (
+         baseAddr      => x"0007_8000",
+         addrBits      => 15,
+         connectivity  => x"FFFF"),
 --      APP0_INDEX_C    => (
 --         baseAddr     => x"0008_0000",
 --         addrBits     => 19,
 --         connectivity => x"FFFF"),
-      APP1_INDEX_C    => (
-         baseAddr     => x"0010_0000",
-         addrBits     => 20,
-         connectivity => x"FFFF"),
-      APP2_INDEX_C    => (
-         baseAddr     => x"0020_0000",
-         addrBits     => 21,
-         connectivity => x"FFFF"),
-      APP3_INDEX_C    => (
-         baseAddr     => x"0040_0000",
-         addrBits     => 22,
-         connectivity => x"FFFF"),
-      APP4_INDEX_C    => (
-         baseAddr     => x"0080_0000",
-         addrBits     => 23,
-         connectivity => x"FFFF"));
+      APP1_INDEX_C     => (
+         baseAddr      => x"0010_0000",
+         addrBits      => 20,
+         connectivity  => x"FFFF"),
+      APP2_INDEX_C     => (
+         baseAddr      => x"0020_0000",
+         addrBits      => 21,
+         connectivity  => x"FFFF"),
+      APP3_INDEX_C     => (
+         baseAddr      => x"0040_0000",
+         addrBits      => 22,
+         connectivity  => x"FFFF"),
+      APP4_INDEX_C     => (
+         baseAddr      => x"0080_0000",
+         addrBits      => 23,
+         connectivity  => x"FFFF"));
 
    constant APP_CROSSBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
       0               => (
@@ -622,6 +632,25 @@ begin
          mAxiReadSlave   => i2cReadSlave,
          mAxiWriteMaster => i2cWriteMaster,
          mAxiWriteSlave  => i2cWriteSlave);
+
+   ------------------------------------------------
+   -- Map the AXI-Lite to I2C without proxy (fast)
+   ------------------------------------------------
+   process(axilReadMasters, axilWriteMasters)
+      variable rdMaster : AxiLiteReadMasterType;
+      variable wrMaster : AxiLiteWriteMasterType;
+   begin
+      rdMaster            := axilReadMasters(I2C_FAST_INDEX_C);
+      wrMaster            := axilWriteMasters(I2C_FAST_INDEX_C);
+      -- Force BIT15 to zero so the I2C devices see the same address as I2C_INDEX_C
+      rdMaster.araddr(15) := '0';
+      wrMaster.awaddr(15) := '0';
+      i2cFastReadMaster   <= rdMaster;
+      i2cFastWriteMaster  <= wrMaster;
+   end process;
+
+   axilReadSlaves(I2C_FAST_INDEX_C)  <= i2cFastReadSlave;
+   axilWriteSlaves(I2C_FAST_INDEX_C) <= i2cFastWriteSlave;
 
    --------------------------------------
    -- Combine APP AXI-Lite buses together

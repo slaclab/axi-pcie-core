@@ -10,7 +10,7 @@ subsystems:
 
 * a PCIe PHY wrapper (board-specific IP delivered as a pre-built ``.dcp``
   checkpoint),
-* ``AxiPcieReg``: the BAR0 AXI-to-AXI-Lite bridge and 15-slave register
+* ``AxiPcieReg``: the BAR0 AXI-to-AXI-Lite bridge and 16-slave register
   crossbar, and
 * ``AxiPcieDma``: the AXI-Stream data-plane DMA engine.
 
@@ -23,7 +23,7 @@ AXI-Lite Register Tree
 ----------------------
 
 ``AxiPcieReg`` bridges the AXI4 BAR0 register bus from the PCIe PHY down to a
-15-slave AXI-Lite crossbar.  The bridge uses ``surf.AxiToAxiLite``; write
+16-slave AXI-Lite crossbar.  The bridge uses ``surf.AxiToAxiLite``; write
 transactions are pre-filtered by ``AxiPcieRegWriteMux``, which separates PCIe
 Intercommunication Protocol (PIP) writes from normal register writes before
 the bridge.
@@ -37,7 +37,7 @@ are sourced from the ``AXI_CROSSBAR_MASTERS_CONFIG_C`` constant in
     Host
       |  BAR0 (AXI4, 256-bit, 64-bit addr)
       v
-    AxiPcieReg  (AXI4 -> AXI-Lite bridge, 15-slave crossbar)
+    AxiPcieReg  (AXI4 -> AXI-Lite bridge, 16-slave crossbar)
       |
       +--[0x0000_0000]  DMA control         (AxiStreamDmaV2 descriptor engine)
       +--[0x0001_0000]  PCIe PHY CSR        (per-board PHY status / config)
@@ -50,12 +50,13 @@ are sourced from the ``AXI_CROSSBAR_MASTERS_CONFIG_C`` constant in
       +--[0x0006_0000]  IB stream monitor   (AXIS traffic monitor, inbound)
       +--[0x0006_8000]  OB stream monitor   (AXIS traffic monitor, outbound)
       +--[0x0007_0000]  I2C / I2C mux       (AxiLiteMasterProxy -> board I2C)
+      +--[0x0007_8000]  I2C (no proxy) but still with mux (BIT15 cleared -> board I2C)
       +--[0x0010_0000]  App region 1        (appClk domain, 1 MB)
       +--[0x0020_0000]  App region 2        (appClk domain, 2 MB)
       +--[0x0040_0000]  App region 3        (appClk domain, 4 MB)
       +--[0x0080_0000]  App region 4        (appClk domain, 8 MB)
 
-The four application region slaves (indices 11 to 14) are merged by a second
+The four application region slaves (indices 12 to 15) are merged by a second
 AXI-Lite crossbar inside ``AxiPcieReg`` and exposed as a single
 ``appReadMaster`` / ``appWriteMaster`` pair that crosses to the application
 clock domain via ``surf.AxiLiteAsync``.  Unimplemented or unused crossbar

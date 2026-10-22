@@ -231,6 +231,13 @@ class AxiPcieCore(pr.Device):
                             enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                         ))
 
+                    # No proxy for Si570 access
+                    self.add(silabs.Si570(
+                        name = 'Si570',
+                        factory_freq = 156.25,
+                        offset = 0x78000 + 0x2_000,
+                        enabled = False))
+
                 elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250') or (boardType == 'XilinxAlveoU280'):
 
                     XIL_DEVICE_G = 'ULTRASCALE_PLUS'

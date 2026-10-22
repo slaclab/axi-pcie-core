@@ -598,24 +598,27 @@ begin
    --------------------------
    -- Map the AXI-Lite to I2C
    --------------------------
-   U_AxiLiteMasterProxy : entity surf.AxiLiteMasterProxy
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- Clocks and Resets
-         axiClk          => axiClk,
-         axiRst          => axiRst,
-         -- AXI-Lite Register Interface
-         sAxiReadMaster  => axilReadMasters(I2C_INDEX_C),
-         sAxiReadSlave   => axilReadSlaves(I2C_INDEX_C),
-         sAxiWriteMaster => axilWriteMasters(I2C_INDEX_C),
-         sAxiWriteSlave  => axilWriteSlaves(I2C_INDEX_C),
-         -- AXI-Lite Register Interface
-         mAxiReadMaster  => i2cReadMaster,
-         mAxiReadSlave   => i2cReadSlave,
-         mAxiWriteMaster => i2cWriteMaster,
-         mAxiWriteSlave  => i2cWriteSlave);
-
+   -- U_AxiLiteMasterProxy : entity surf.AxiLiteMasterProxy
+   --    generic map (
+   --       TPD_G => TPD_G)
+   --    port map (
+   --       -- Clocks and Resets
+   --       axiClk          => axiClk,
+   --       axiRst          => axiRst,
+   --       -- AXI-Lite Register Interface
+   --       sAxiReadMaster  => axilReadMasters(I2C_INDEX_C),
+   --       sAxiReadSlave   => axilReadSlaves(I2C_INDEX_C),
+   --       sAxiWriteMaster => axilWriteMasters(I2C_INDEX_C),
+   --       sAxiWriteSlave  => axilWriteSlaves(I2C_INDEX_C),
+   --       -- AXI-Lite Register Interface
+   --       mAxiReadMaster  => i2cReadMaster,
+   --       mAxiReadSlave   => i2cReadSlave,
+   --       mAxiWriteMaster => i2cWriteMaster,
+   --       mAxiWriteSlave  => i2cWriteSlave);
+   axilReadSlaves (I2C_INDEX_C) <= i2cReadSlave;
+   axilWriteSlaves(I2C_INDEX_C) <= i2cWriteSlave;
+   i2cReadMaster  <= axilReadMasters (I2C_INDEX_C);
+   i2cWriteMaster <= axilWriteMasters(I2C_INDEX_C);
    --------------------------------------
    -- Combine APP AXI-Lite buses together
    --------------------------------------

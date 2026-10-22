@@ -174,20 +174,20 @@ architecture mapping of XilinxKcu1500Core is
    signal i2cWriteMaster : AxiLiteWriteMasterType;
    signal i2cWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
 
-   signal i2cReadMasters  : AxiLiteReadMasterArray(5 downto 0);
-   signal i2cReadSlaves   : AxiLiteReadSlaveArray(5 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
-   signal i2cWriteMasters : AxiLiteWriteMasterArray(5 downto 0);
-   signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(5 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+   -- signal i2cReadMasters  : AxiLiteReadMasterArray(5 downto 0);
+   -- signal i2cReadSlaves   : AxiLiteReadSlaveArray(5 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   -- signal i2cWriteMasters : AxiLiteWriteMasterArray(5 downto 0);
+   -- signal i2cWriteSlaves  : AxiLiteWriteSlaveArray(5 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal i2ci : i2c_in_type;
-   signal i2coVec : i2c_out_array(6 downto 0) := (
-      others    => (
-         scl    => '1',
-         scloen => '1',
-         sda    => '1',
-         sdaoen => '1',
-         enable => '0'));
-   signal i2co : i2c_out_type;
+   -- signal i2ci : i2c_in_type;
+   -- signal i2coVec : i2c_out_array(6 downto 0) := (
+   --    others    => (
+   --       scl    => '1',
+   --       scloen => '1',
+   --       sda    => '1',
+   --       sdaoen => '1',
+   --       enable => '0'));
+   -- signal i2co : i2c_out_type;
 
    signal sysClock    : sl;
    signal sysReset    : sl;
@@ -208,6 +208,19 @@ architecture mapping of XilinxKcu1500Core is
    signal userCclk : sl;
    signal userClk  : sl;
 
+   constant DEVICE_MAP_C : I2cAxiLiteDevArray(3 downto 0) := (
+    -----------------------
+    -- PC821 I2C DEVICES --
+    -----------------------
+    -- PCA9548A I2C Mux
+    0 => MakeI2cAxiLiteDevType( "1110100", 8, 0, '0' ),
+    -- QSFP1, QSFP0, EEPROM;  I2C Mux = 1, 4, 5
+    1 => MakeI2cAxiLiteDevType( "1010000", 8, 8, '0' ),
+    -- SI570                  I2C Mux = 2
+    2 => MakeI2cAxiLiteDevType( "1011101", 8, 8, '0' ),
+    -- Fan                    I2C Mux = 3
+    3 => MakeI2cAxiLiteDevType( "1001100", 8, 8, '0' ) );  
+
 begin
 
    dmaClk <= sysClock;
@@ -222,16 +235,27 @@ begin
 
    systemReset <= sysReset or cardReset;
 
-   U_IBUFDS : IBUFDS
+   -- U_IBUFDS : IBUFDS
+   --    port map(
+   --       I  => userClkP,
+   --       IB => userClkN,
+   --       O  => userClk);
+
+   -- userClkP/N can be configurable from si570 for timing link clock (LCLS1 and LCLS2)
+   -- To set axilclk to be fixed at a certain clock (e.g. 125MHz)
+   U_userClk125 : BUFGCE_DIV
+   generic map (
+      BUFGCE_DIVIDE => 2)
       port map(
-         I  => userClkP,
-         IB => userClkN,
+      I   => sysClock, -- 250MHz
+      CE  => '1',
+      CLR => '0',
          O  => userClk);
 
    U_BUFG : BUFG
       port map(
          I => userClk,
-         O => userClk156);
+         O => userClk156); -- 125MHz
 
    qsfp0RstL    <= not(systemReset);
    qsfp1RstL    <= not(systemReset);
@@ -281,156 +305,169 @@ begin
       pipIbMaster   <= intPipIbMaster;
       intPipIbSlave <= pipIbSlave;
 
-      U_QsfpCdrDisable : entity surf.QsfpCdrDisable
-         generic map (
-            TPD_G             => TPD_G,
-            PERIODIC_UPDATE_G => 10,    -- Units of seconds
-            QSFP_BASE_ADDR_G  => QSFP_BASE_ADDR_C,
-            AXIL_CLK_FREQ_G   => DMA_CLK_FREQ_C)
-         port map (
-            -- AXI-Lite Register Interface (axilClk domain)
-            axilClk          => sysClock,
-            axilRst          => sysReset,
-            mAxilReadMaster  => mI2cReadMasters(1),
-            mAxilReadSlave   => mI2cReadSlaves(1),
-            mAxilWriteMaster => mI2cWriteMasters(1),
-            mAxilWriteSlave  => mI2cWriteSlaves(1));
-
-      U_XbarMI2cMux : entity surf.AxiLiteCrossbar
-         generic map (
-            TPD_G              => TPD_G,
-            NUM_SLAVE_SLOTS_G  => 2,
-            NUM_MASTER_SLOTS_G => 1,
-            MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
-         port map (
-            axiClk              => sysClock,
-            axiClkRst           => sysReset,
-            sAxiWriteMasters    => mI2cWriteMasters,
-            sAxiWriteSlaves     => mI2cWriteSlaves,
-            sAxiReadMasters     => mI2cReadMasters,
-            sAxiReadSlaves      => mI2cReadSlaves,
-            mAxiWriteMasters(0) => i2cWriteMaster,
-            mAxiWriteSlaves(0)  => i2cWriteSlave,
-            mAxiReadMasters(0)  => i2cReadMaster,
-            mAxiReadSlaves(0)   => i2cReadSlave);
-
-      U_XbarI2cMux : entity surf.AxiLiteCrossbarI2cMux
-         generic map (
-            TPD_G              => TPD_G,
-            -- I2C MUX Generics
-            MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_TCA9548_C,
-            I2C_MUX_ADDR_G     => b"1110_100",
-            I2C_SCL_FREQ_G     => I2C_SCL_FREQ_C,
-            I2C_MIN_PULSE_G    => I2C_MIN_PULSE_C,
-            AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C,
-            -- AXI-Lite Crossbar Generics
-            NUM_MASTER_SLOTS_G => 6,
-            MASTERS_CONFIG_G   => XBAR_I2C_CONFIG_C)
-         port map (
-            -- Clocks and Resets
-            axilClk           => sysClock,
-            axilRst           => sysReset,
-            -- Slave AXI-Lite Interface
-            sAxilWriteMaster  => i2cWriteMaster,
-            sAxilWriteSlave   => i2cWriteSlave,
-            sAxilReadMaster   => i2cReadMaster,
-            sAxilReadSlave    => i2cReadSlave,
-            -- Master AXI-Lite Interfaces
-            mAxilWriteMasters => i2cWriteMasters,
-            mAxilWriteSlaves  => i2cWriteSlaves,
-            mAxilReadMasters  => i2cReadMasters,
-            mAxilReadSlaves   => i2cReadSlaves,
-            -- I2C MUX Ports
-            i2cRstL           => i2cRstL,
-            i2ci              => i2ci,
-            i2co              => i2coVec(6));
-
-      U_QSFP1 : entity surf.Sff8472Core
-         generic map (
-            TPD_G           => TPD_G,
-            I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
-            I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
+      U_I2C : entity surf.AxiI2cRegMaster
+        generic map ( DEVICE_MAP_G   => DEVICE_MAP_C,
             AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
-         port map (
-            -- I2C Ports
-            i2ci           => i2ci,
-            i2co           => i2coVec(1),
-            -- AXI-Lite Register Interface
-            axiReadMaster  => i2cReadMasters(1),
-            axiReadSlave   => i2cReadSlaves(1),
-            axiWriteMaster => i2cWriteMasters(1),
-            axiWriteSlave  => i2cWriteSlaves(1),
-            -- Clocks and Resets
+        port map ( scl            => i2cScl,
+                   sda            => i2cSda,
+                   axiReadMaster  => i2cReadMaster,
+                   axiReadSlave   => i2cReadSlave,
+                   axiWriteMaster => i2cWriteMaster,
+                   axiWriteSlave  => i2cWriteSlave,
             axiClk         => sysClock,
             axiRst         => sysReset);
 
-      U_QSFP0 : entity surf.Sff8472Core
-         generic map (
-            TPD_G           => TPD_G,
-            I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
-            I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
-            AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
-         port map (
-            -- I2C Ports
-            i2ci           => i2ci,
-            i2co           => i2coVec(4),
-            -- AXI-Lite Register Interface
-            axiReadMaster  => i2cReadMasters(4),
-            axiReadSlave   => i2cReadSlaves(4),
-            axiWriteMaster => i2cWriteMasters(4),
-            axiWriteSlave  => i2cWriteSlaves(4),
-            -- Clocks and Resets
-            axiClk         => sysClock,
-            axiRst         => sysReset);
+      -- This module was not used (I don't know the reason)                   
+      -- U_QsfpCdrDisable : entity surf.QsfpCdrDisable
+      --    generic map (
+      --       TPD_G             => TPD_G,
+      --       PERIODIC_UPDATE_G => 10,    -- Units of seconds
+      --       QSFP_BASE_ADDR_G  => QSFP_BASE_ADDR_C,
+      --       AXIL_CLK_FREQ_G   => DMA_CLK_FREQ_C)
+      --    port map (
+      --       -- AXI-Lite Register Interface (axilClk domain)
+      --       axilClk          => sysClock,
+      --       axilRst          => sysReset,
+      --       mAxilReadMaster  => mI2cReadMasters(1),
+      --       mAxilReadSlave   => mI2cReadSlaves(1),
+      --       mAxilWriteMaster => mI2cWriteMasters(1),
+      --       mAxilWriteSlave  => mI2cWriteSlaves(1));
 
-      U_SI570 : entity surf.AxiI2cRegMasterCore
-         generic map (
-            TPD_G           => TPD_G,
-            I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
-            I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
-            DEVICE_MAP_G    => SI570_I2C_CONFIG_C,
-            AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
-         port map (
-            -- I2C Ports
-            i2ci           => i2ci,
-            i2co           => i2coVec(2),
-            -- AXI-Lite Register Interface
-            axiReadMaster  => i2cReadMasters(2),
-            axiReadSlave   => i2cReadSlaves(2),
-            axiWriteMaster => i2cWriteMasters(2),
-            axiWriteSlave  => i2cWriteSlaves(2),
-            -- Clocks and Resets
-            axiClk         => sysClock,
-            axiRst         => sysReset);
+      -- U_XbarMI2cMux : entity surf.AxiLiteCrossbar
+      --    generic map (
+      --       TPD_G              => TPD_G,
+      --       NUM_SLAVE_SLOTS_G  => 2,
+      --       NUM_MASTER_SLOTS_G => 1,
+      --       MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
+      --    port map (
+      --       axiClk              => sysClock,
+      --       axiClkRst           => sysReset,
+      --       sAxiWriteMasters    => mI2cWriteMasters,
+      --       sAxiWriteSlaves     => mI2cWriteSlaves,
+      --       sAxiReadMasters     => mI2cReadMasters,
+      --       sAxiReadSlaves      => mI2cReadSlaves,
+      --       mAxiWriteMasters(0) => i2cWriteMaster,
+      --       mAxiWriteSlaves(0)  => i2cWriteSlave,
+      --       mAxiReadMasters(0)  => i2cReadMaster,
+      --       mAxiReadSlaves(0)   => i2cReadSlave);
 
-      process(i2cReadMasters, i2cWriteMasters, i2coVec)
-         variable tmp : i2c_out_type;
-      begin
-         -- Init
-         tmp := i2coVec(6);
-         -- Check for TXN after XBAR/I2C_MUX
-         for i in 0 to 5 loop
-            if (i2cWriteMasters(i).awvalid = '1') or (i2cReadMasters(i).arvalid = '1') then
-               tmp := i2coVec(i);
-            end if;
-         end loop;
-         -- Return result
-         i2co <= tmp;
-      end process;
+      -- U_XbarI2cMux : entity surf.AxiLiteCrossbarI2cMux
+      --    generic map (
+      --       TPD_G              => TPD_G,
+      --       -- I2C MUX Generics
+      --       MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_TCA9548_C,
+      --       I2C_MUX_ADDR_G     => b"1110_100",
+      --       I2C_SCL_FREQ_G     => I2C_SCL_FREQ_C,
+      --       I2C_MIN_PULSE_G    => I2C_MIN_PULSE_C,
+      --       AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C,
+      --       -- AXI-Lite Crossbar Generics
+      --       NUM_MASTER_SLOTS_G => 6,
+      --       MASTERS_CONFIG_G   => XBAR_I2C_CONFIG_C)
+      --    port map (
+      --       -- Clocks and Resets
+      --       axilClk           => sysClock,
+      --       axilRst           => sysReset,
+      --       -- Slave AXI-Lite Interface
+      --       sAxilWriteMaster  => i2cWriteMaster,
+      --       sAxilWriteSlave   => i2cWriteSlave,
+      --       sAxilReadMaster   => i2cReadMaster,
+      --       sAxilReadSlave    => i2cReadSlave,
+      --       -- Master AXI-Lite Interfaces
+      --       mAxilWriteMasters => i2cWriteMasters,
+      --       mAxilWriteSlaves  => i2cWriteSlaves,
+      --       mAxilReadMasters  => i2cReadMasters,
+      --       mAxilReadSlaves   => i2cReadSlaves,
+      --       -- I2C MUX Ports
+      --       i2cRstL           => i2cRstL,
+      --       i2ci              => i2ci,
+      --       i2co              => i2coVec(6));
 
-      IOBUF_SCL : IOBUF
-         port map (
-            O  => i2ci.scl,
-            IO => i2cScl,
-            I  => i2co.scl,
-            T  => i2co.scloen);
+      -- U_QSFP1 : entity surf.Sff8472Core
+      --    generic map (
+      --       TPD_G           => TPD_G,
+      --       I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+      --       I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
+      --       AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
+      --    port map (
+      --       -- I2C Ports
+      --       i2ci           => i2ci,
+      --       i2co           => i2coVec(1),
+      --       -- AXI-Lite Register Interface
+      --       axiReadMaster  => i2cReadMasters(1),
+      --       axiReadSlave   => i2cReadSlaves(1),
+      --       axiWriteMaster => i2cWriteMasters(1),
+      --       axiWriteSlave  => i2cWriteSlaves(1),
+      --       -- Clocks and Resets
+      --       axiClk         => sysClock,
+      --       axiRst         => sysReset);
 
-      IOBUF_SDA : IOBUF
-         port map (
-            O  => i2ci.sda,
-            IO => i2cSda,
-            I  => i2co.sda,
-            T  => i2co.sdaoen);
+      -- U_QSFP0 : entity surf.Sff8472Core
+      --    generic map (
+      --       TPD_G           => TPD_G,
+      --       I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+      --       I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
+      --       AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
+      --    port map (
+      --       -- I2C Ports
+      --       i2ci           => i2ci,
+      --       i2co           => i2coVec(4),
+      --       -- AXI-Lite Register Interface
+      --       axiReadMaster  => i2cReadMasters(4),
+      --       axiReadSlave   => i2cReadSlaves(4),
+      --       axiWriteMaster => i2cWriteMasters(4),
+      --       axiWriteSlave  => i2cWriteSlaves(4),
+      --       -- Clocks and Resets
+      --       axiClk         => sysClock,
+      --       axiRst         => sysReset);
+
+      -- U_SI570 : entity surf.AxiI2cRegMasterCore
+      --    generic map (
+      --       TPD_G           => TPD_G,
+      --       I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+      --       I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
+      --       DEVICE_MAP_G    => SI570_I2C_CONFIG_C,
+      --       AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
+      --    port map (
+      --       -- I2C Ports
+      --       i2ci           => i2ci,
+      --       i2co           => i2coVec(2),
+      --       -- AXI-Lite Register Interface
+      --       axiReadMaster  => i2cReadMasters(2),
+      --       axiReadSlave   => i2cReadSlaves(2),
+      --       axiWriteMaster => i2cWriteMasters(2),
+      --       axiWriteSlave  => i2cWriteSlaves(2),
+      --       -- Clocks and Resets
+      --       axiClk         => sysClock,
+      --       axiRst         => sysReset);
+
+      -- process(i2cReadMasters, i2cWriteMasters, i2coVec)
+      --    variable tmp : i2c_out_type;
+      -- begin
+      --    -- Init
+      --    tmp := i2coVec(6);
+      --    -- Check for TXN after XBAR/I2C_MUX
+      --    for i in 0 to 5 loop
+      --       if (i2cWriteMasters(i).awvalid = '1') or (i2cReadMasters(i).arvalid = '1') then
+      --          tmp := i2coVec(i);
+      --       end if;
+      --    end loop;
+      --    -- Return result
+      --    i2co <= tmp;
+      -- end process;
+
+      -- IOBUF_SCL : IOBUF
+      --    port map (
+      --       O  => i2ci.scl,
+      --       IO => i2cScl,
+      --       I  => i2co.scl,
+      --       T  => i2co.scloen);
+
+      -- IOBUF_SDA : IOBUF
+      --    port map (
+      --       O  => i2ci.sda,
+      --       IO => i2cSda,
+      --       I  => i2co.sda,
+      --       T  => i2co.sdaoen);
 
    end generate;
 
@@ -489,10 +526,10 @@ begin
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
          -- I2C AXI-Lite Interfaces (axiClk domain)
-         i2cReadMaster       => mI2cReadMasters(0),
-         i2cReadSlave        => mI2cReadSlaves(0),
-         i2cWriteMaster      => mI2cWriteMasters(0),
-         i2cWriteSlave       => mI2cWriteSlaves(0),
+         i2cReadMaster       => i2cReadMaster, --mI2cReadMasters(0),
+         i2cReadSlave        => i2cReadSlave, --mI2cReadSlaves(0),
+         i2cWriteMaster      => i2cWriteMaster, --mI2cWriteMasters(0),
+         i2cWriteSlave       => i2cWriteSlave, --mI2cWriteSlaves(0),
          -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,

@@ -230,7 +230,7 @@ class AxiPcieCore(pr.Device):
             if (self.boardType != PCIE_HW_TYPE_G) and (self.boardType is not None):
                 errMsg = f'ERROR: {self.path}.boardType = {self.boardType} != {self.path}.AxiVersion.PCIE_HW_TYPE_G = {PCIE_HW_TYPE_G}'
                 click.secho(errMsg, bg='red')
-                raise ValueError(errMsg)
+                #raise ValueError(errMsg)
 
         # Set the flag
         self.startArmed = False

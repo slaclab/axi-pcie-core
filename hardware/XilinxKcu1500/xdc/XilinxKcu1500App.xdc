@@ -30,10 +30,10 @@ set_property -dict { PACKAGE_PIN BF25  IOSTANDARD LVCMOS18 } [get_ports { swDip[
 # QSFP[0] #
 ###########
 
-set_property PACKAGE_PIN AV38 [get_ports { qsfp0RefClkP[0] }] ;# 156.25 MHz
+set_property PACKAGE_PIN AV38 [get_ports { qsfp0RefClkP[0] }] ;# MGT_SI570_CLOCK0 156.25 MHz
 set_property PACKAGE_PIN AV39 [get_ports { qsfp0RefClkN[0] }] ;# 156.25 MHz
-set_property PACKAGE_PIN AU36 [get_ports { qsfp0RefClkP[1] }] ;# 125 MHz
-set_property PACKAGE_PIN AU37 [get_ports { qsfp0RefClkN[1] }] ;# 125 MHz
+set_property PACKAGE_PIN AU36 [get_ports { qsfp0RefClkP[1] }] ;# QSFP0_CLOCK (fixed)
+set_property PACKAGE_PIN AU37 [get_ports { qsfp0RefClkN[1] }] ;# 156.25 MHz
 set_property PACKAGE_PIN AP38 [get_ports { qsfp0TxP[3] }]
 set_property PACKAGE_PIN AP43 [get_ports { qsfp0RxP[3] }]
 set_property PACKAGE_PIN AP44 [get_ports { qsfp0RxN[3] }]
@@ -55,10 +55,10 @@ set_property PACKAGE_PIN AU41 [get_ports { qsfp0TxN[0] }]
 # QSFP[1] #
 ###########
 
-set_property PACKAGE_PIN AR36 [get_ports { qsfp1RefClkP[0] }] ;# 156.25 MHz
-set_property PACKAGE_PIN AR37 [get_ports { qsfp1RefClkN[0] }] ;# 156.25 MHz
-set_property PACKAGE_PIN AN36 [get_ports { qsfp1RefClkP[1] }] ;# 125 MHz
-set_property PACKAGE_PIN AN37 [get_ports { qsfp1RefClkN[1] }] ;# 125 MHz
+set_property PACKAGE_PIN AR36 [get_ports { qsfp1RefClkP[0] }] ;# MGT_SI570_CLOCK1
+set_property PACKAGE_PIN AR37 [get_ports { qsfp1RefClkN[0] }] ;# 185.71 MHz
+set_property PACKAGE_PIN AN36 [get_ports { qsfp1RefClkP[1] }] ;# QSFP1_CLOCK (fixed)
+set_property PACKAGE_PIN AN37 [get_ports { qsfp1RefClkN[1] }] ;# 156.25 MHz
 set_property PACKAGE_PIN AK38 [get_ports { qsfp1TxP[3] }]
 set_property PACKAGE_PIN AK43 [get_ports { qsfp1RxP[3] }]
 set_property PACKAGE_PIN AK44 [get_ports { qsfp1RxN[3] }]
@@ -84,7 +84,8 @@ create_clock -period 6.400 -name qsfp0RefClkP0 [get_ports {qsfp0RefClkP[0]}]
 create_clock -period 6.400 -name qsfp0RefClkP1 [get_ports {qsfp0RefClkP[1]}]; # I am measuring 156.25 MHz even but Xilinx documentation says it should be 125 MHz
 # create_clock -period 8.000 -name qsfp0RefClkP1 [get_ports {qsfp0RefClkP[1]}]
 
-create_clock -period 6.400 -name qsfp1RefClkP0 [get_ports {qsfp1RefClkP[0]}]
+create_clock -period 5.380 -name qsfp1RefClkP0 [get_ports {qsfp1RefClkP[0]}]
+#create_clock -period 6.400 -name qsfp1RefClkP0 [get_ports {qsfp1RefClkP[0]}]
 create_clock -period 6.400 -name qsfp1RefClkP1 [get_ports {qsfp1RefClkP[1]}]; # I am measuring 156.25 MHz even but Xilinx documentation says it should be 125 MHz
 # create_clock -period 8.000 -name qsfp1RefClkP1 [get_ports {qsfp1RefClkP[1]}]
 

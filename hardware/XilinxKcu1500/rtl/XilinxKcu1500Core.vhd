@@ -118,8 +118,9 @@ end XilinxKcu1500Core;
 
 architecture mapping of XilinxKcu1500Core is
 
-   constant I2C_SCL_FREQ_C  : real := 100.0E+3;  -- units of Hz
-   constant I2C_MIN_PULSE_C : real := 100.0E-9;  -- units of seconds
+   constant I2C_SCL_FREQ_C      : real := 100.0E+3;  -- units of Hz (QSFP)
+   constant I2C_FAST_SCL_FREQ_C : real := 400.0E+3;  -- units of Hz (TCA9548 I2C MUX and Si570)
+   constant I2C_MIN_PULSE_C     : real := 100.0E-9;  -- units of seconds
 
    constant XBAR_MI2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
       0               => (
@@ -320,7 +321,7 @@ begin
             -- I2C MUX Generics
             MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_TCA9548_C,
             I2C_MUX_ADDR_G     => b"1110_100",
-            I2C_SCL_FREQ_G     => I2C_SCL_FREQ_C,
+            I2C_SCL_FREQ_G     => I2C_FAST_SCL_FREQ_C,
             I2C_MIN_PULSE_G    => I2C_MIN_PULSE_C,
             AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C,
             -- AXI-Lite Crossbar Generics
@@ -386,7 +387,7 @@ begin
       U_SI570 : entity surf.AxiI2cRegMasterCore
          generic map (
             TPD_G           => TPD_G,
-            I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+            I2C_SCL_FREQ_G  => I2C_FAST_SCL_FREQ_C,
             I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
             DEVICE_MAP_G    => SI570_I2C_CONFIG_C,
             AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)

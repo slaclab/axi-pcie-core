@@ -412,6 +412,37 @@ if __name__ == "__main__":
             print("Rescanning PCI bus\n")
             write_sysfs(path, "1")
 
+        def upstream_bridge(pcieAddr):
+            # Root port or switch downstream port above the endpoint, e.g.
+            # /sys/devices/pci0000:00/0000:00:01.1/0000:01:00.0 -> 0000:00:01.1
+            parent = os.path.basename(os.path.dirname(os.path.realpath(f"/sys/bus/pci/devices/{pcieAddr}")))
+            return parent if re.fullmatch(r'[0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}\.[0-7]', parent) else None
+
+        def hold_bridge_awake(bridge):
+            # Once the endpoint is removed the bridge has no children, so runtime
+            # PM suspends it to D3 (after ~100 ms) and its link stays down. A bus
+            # rescan does not wake it, so the endpoint is never found again and
+            # only a reboot recovers. Keep the bridge in D0 until the endpoint is
+            # back, and return the original power/control setting
+            path = f"/sys/bus/pci/devices/{bridge}/power/control"
+            try:
+                with open(path, 'r') as f:
+                    orig = f.read().strip()
+                with open(path, 'w') as f:
+                    f.write('on')
+                return orig
+            except OSError as e:
+                print(f"[WARNING] Unable to keep {bridge} awake via {path}: {e}")
+                return None
+
+        def release_bridge(bridge, orig):
+            if bridge is not None and orig is not None:
+                try:
+                    with open(f"/sys/bus/pci/devices/{bridge}/power/control", 'w') as f:
+                        f.write(orig)
+                except OSError as e:
+                    print(f"[WARNING] Unable to restore {bridge} power/control to '{orig}': {e}")
+
         def rescan_top(pcieAddr):
             unbind_device(pcieAddr)
             time.sleep(1)
@@ -421,6 +452,22 @@ if __name__ == "__main__":
 
             rescan_pci(pcieAddr)
             time.sleep(1)
+
+        def wait_for_node(device, timeout=30.0, retry=5.0):
+            # Link training and driver probe can take a few seconds after the
+            # rescan; rescan again periodically in case the first one ran before
+            # the endpoint was ready
+            deadline = time.time() + timeout
+            next_rescan = time.time() + retry
+            while not os.path.exists(device):
+                if time.time() >= deadline:
+                    return False
+                if time.time() >= next_rescan:
+                    rescan_pci(None)
+                    next_rescan = time.time() + retry
+                time.sleep(0.5)
+            time.sleep(1)  # Give driver time to initialize
+            return True
 
         # Allow for settling time for the FPGA reload to finish
         time.sleep(1)
@@ -442,19 +489,23 @@ if __name__ == "__main__":
             # Check if we need to rescan device
             if check_if_need_rescan(device):
 
-                # Perform the rescan procedure for given device
+                # Perform the rescan procedure for given device, holding its
+                # upstream bridge out of D3 while the endpoint is off the bus
                 rescanned = True
-                rescan_top(get_pcie_address(device))
+                devAddr = get_pcie_address(device)
+                bridge = upstream_bridge(devAddr)
+                orig = hold_bridge_awake(bridge) if bridge is not None else None
+                rescan_top(devAddr)
 
                 # Wait for /dev node to return
-                for i in range(10):
-                    if os.path.exists(device):
-                        time.sleep(1)  # Give driver time to initialize
-                        break
-                    time.sleep(0.5)
+                if wait_for_node(device):
+                    release_bridge(bridge, orig)
                 else:
+                    # Leave the bridge awake so a manual rescan can still find it
                     print(f"[WARNING] Device node {device} not found after rescan.")
-                    print('\nPlease reboot the computer')
+                    print("\nTry a manual rescan before rebooting:")
+                    print("    sudo sh -c 'echo 1 > /sys/bus/pci/rescan'")
+                    print('\nIf the device is still missing, please reboot the computer')
                     sys.exit(1)
 
         # The manual recovery takes the device off the bus and brings it back, so

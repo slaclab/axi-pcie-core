@@ -52,6 +52,18 @@ if [ -z "$PCI_ADDR" ]; then
   exit 1
 fi
 
+# Once the endpoint is removed its upstream bridge has no children, so runtime
+# PM suspends the bridge to D3 and its link stays down; a bus rescan does not
+# wake it. Keep the bridge in D0 until the endpoint is back.
+BRIDGE=$(basename "$(dirname "$(readlink -f "/sys/bus/pci/devices/$PCI_ADDR")")")
+BRIDGE_PM="/sys/bus/pci/devices/$BRIDGE/power/control"
+BRIDGE_PM_ORIG=""
+if [ -w "$BRIDGE_PM" ]; then
+  BRIDGE_PM_ORIG=$(cat "$BRIDGE_PM")
+  echo on > "$BRIDGE_PM"
+  echo "[INFO] Holding upstream bridge $BRIDGE awake (power/control was '$BRIDGE_PM_ORIG')"
+fi
+
 echo "[INFO] Unbinding $PCI_ADDR..."
 echo "$PCI_ADDR" > "/sys/bus/pci/devices/$PCI_ADDR/driver/unbind" 2>/dev/null
 
@@ -64,5 +76,24 @@ sleep 1
 
 echo "[INFO] Rescanning PCI bus..."
 echo 1 > /sys/bus/pci/rescan 2>/dev/null
+
+# Wait up to 30 s for the device node, rescanning again every 5 s
+for i in $(seq 1 60); do
+  [ -e "$1" ] && break
+  if [ $((i % 10)) -eq 0 ]; then
+    echo 1 > /sys/bus/pci/rescan 2>/dev/null
+  fi
+  sleep 0.5
+done
+
+if [ ! -e "$1" ]; then
+  # Leave the bridge awake so a later manual rescan can still find the endpoint
+  echo "[WARNING] $1 did not return after rescan. Try again with: sudo sh -c 'echo 1 > /sys/bus/pci/rescan'"
+  exit 1
+fi
+
+if [ -n "$BRIDGE_PM_ORIG" ]; then
+  echo "$BRIDGE_PM_ORIG" > "$BRIDGE_PM"
+fi
 
 echo "[INFO] PCIe reset sequence completed."

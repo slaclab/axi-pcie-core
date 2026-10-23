@@ -468,6 +468,7 @@ begin
          PCIE_HW_TYPE_G       => HW_TYPE_XILINX_KCU1500_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DATAGPU_EN_G         => DATAGPU_EN_G,
+         I2C_FAST_EN_G        => true,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces

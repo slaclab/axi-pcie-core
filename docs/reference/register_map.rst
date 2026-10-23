@@ -10,7 +10,8 @@ BAR0 AXI-Lite Crossbar
 -----------------------
 
 ``AxiPcieReg`` (:repo:`shared/rtl/AxiPcieReg.vhd`) bridges the AXI4 BAR0 bus
-from the PCIe PHY down to a 16-slave AXI-Lite crossbar.  The base addresses
+from the PCIe PHY down to a 15-slave AXI-Lite crossbar (16 with
+``I2C_FAST_EN_G``, see below).  The base addresses
 are sourced from ``AXI_CROSSBAR_MASTERS_CONFIG_C`` in ``AxiPcieReg.vhd``.
 See :doc:`/explanation/architecture` for the BAR0 crossbar diagram.
 
@@ -68,31 +69,33 @@ See :doc:`/explanation/architecture` for the BAR0 crossbar diagram.
      - ``0x70000``
      - I2C / I2C mux
      - ``surf.AxiLiteMasterProxy`` bridging to the board I2C bus.
-   * - 11 (``I2C_FAST_INDEX_C``)
-     - ``0x78000``
-     - I2C / I2C mux (no proxy)
-     - Direct AXI-Lite path to the board I2C bus for low-latency access.
-       Address bit 15 is cleared, so ``0x78000 + X`` reaches the same I2C
-       device as proxy address ``0x70000 + X``.  The BAR0 transaction stalls
-       until the I2C transfer completes.  Wired on XilinxKcu1500 (Si570) only;
-       DECERR on other boards.
-   * - 12 (``APP1_INDEX_C``)
+       64 KB window, or 32 KB when ``I2C_FAST_EN_G`` is set.
+   * - 11 (``APP1_INDEX_C``)
      - ``0x100000``
      - App region 1
      - Application AXI-Lite slave, appClk domain, 1 MB window.
        See :ref:`application-regions` below.
-   * - 13 (``APP2_INDEX_C``)
+   * - 12 (``APP2_INDEX_C``)
      - ``0x200000``
      - App region 2
      - Application AXI-Lite slave, appClk domain, 2 MB window.
-   * - 14 (``APP3_INDEX_C``)
+   * - 13 (``APP3_INDEX_C``)
      - ``0x400000``
      - App region 3
      - Application AXI-Lite slave, appClk domain, 4 MB window.
-   * - 15 (``APP4_INDEX_C``)
+   * - 14 (``APP4_INDEX_C``)
      - ``0x800000``
      - App region 4
      - Application AXI-Lite slave, appClk domain, 8 MB window.
+   * - 15 (``I2C_FAST_INDEX_C``)
+     - ``0x78000``
+     - I2C / I2C mux (no proxy)
+     - Only with ``I2C_FAST_EN_G`` (set by XilinxKcu1500 for the Si570).
+       Direct AXI-Lite path to the board I2C bus for low-latency access.
+       Address bit 15 is cleared, so ``0x78000 + X`` reaches the same I2C
+       device as proxy address ``0x70000 + X``.  The BAR0 transaction stalls
+       until the I2C transfer completes, so ``AxiPcieRegReadOrder`` holds
+       later reads until earlier writes finish.
 
 .. _application-regions:
 

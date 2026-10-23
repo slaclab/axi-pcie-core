@@ -253,11 +253,12 @@ class AxiPcieCore(pr.Device):
                             enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                         ))
 
+                    # No proxy for Si570 access
                     self.add(silabs.Si570(
                         name = 'Si570',
                         factory_freq = 156.25,
-                        offset = 0x70000 + 0x2000,
-                        memBase = self.AxilBridge.proxy,
+                        max_freq = 810.0, # Alveo U200/U250/U280 Si570 (570BAB000544DG) is a 10 to 810 MHz (grade B) part
+                        offset = 0x78000 + 0x2_000,
                         enabled = False))
 
                 elif (boardType == 'XilinxAlveoU55c') or (boardType == 'XilinxVariumC1100'):

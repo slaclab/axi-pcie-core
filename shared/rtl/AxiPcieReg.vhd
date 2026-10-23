@@ -214,6 +214,11 @@ architecture mapping of AxiPcieReg is
    signal axilWriteMaster : AxiLiteWriteMasterType;
    signal axilWriteSlave  : AxiLiteWriteSlaveType;
 
+   signal xbarReadMaster  : AxiLiteReadMasterType;
+   signal xbarReadSlave   : AxiLiteReadSlaveType;
+   signal xbarWriteMaster : AxiLiteWriteMasterType;
+   signal xbarWriteSlave  : AxiLiteWriteSlaveType;
+
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
    signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXI_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
    signal axilWriteMasters : AxiLiteWriteMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
@@ -401,6 +406,24 @@ begin
             axilWriteSlave  => axilWriteSlave);
    end generate;
 
+   -------------------------------------------
+   -- Keep reads from passing earlier writes
+   -------------------------------------------
+   U_ReadOrder : entity axi_pcie_core.AxiPcieRegReadOrder
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         axilClk          => axiClk,
+         axilRst          => axiRst,
+         sAxilReadMaster  => axilReadMaster,
+         sAxilReadSlave   => axilReadSlave,
+         sAxilWriteMaster => axilWriteMaster,
+         sAxilWriteSlave  => axilWriteSlave,
+         mAxilReadMaster  => xbarReadMaster,
+         mAxilReadSlave   => xbarReadSlave,
+         mAxilWriteMaster => xbarWriteMaster,
+         mAxilWriteSlave  => xbarWriteSlave);
+
    --------------------
    -- AXI-Lite Crossbar
    --------------------
@@ -414,10 +437,10 @@ begin
       port map (
          axiClk              => axiClk,
          axiClkRst           => axiRst,
-         sAxiWriteMasters(0) => axilWriteMaster,
-         sAxiWriteSlaves(0)  => axilWriteSlave,
-         sAxiReadMasters(0)  => axilReadMaster,
-         sAxiReadSlaves(0)   => axilReadSlave,
+         sAxiWriteMasters(0) => xbarWriteMaster,
+         sAxiWriteSlaves(0)  => xbarWriteSlave,
+         sAxiReadMasters(0)  => xbarReadMaster,
+         sAxiReadSlaves(0)   => xbarReadSlave,
          mAxiWriteMasters    => axilWriteMasters,
          mAxiWriteSlaves     => axilWriteSlaves,
          mAxiReadMasters     => axilReadMasters,

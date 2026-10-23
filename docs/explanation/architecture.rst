@@ -26,7 +26,10 @@ AXI-Lite Register Tree
 16-slave AXI-Lite crossbar.  The bridge uses ``surf.AxiToAxiLite``; write
 transactions are pre-filtered by ``AxiPcieRegWriteMux``, which separates PCIe
 Intercommunication Protocol (PIP) writes from normal register writes before
-the bridge.
+the bridge.  Between the bridge and the crossbar, ``AxiPcieRegReadOrder``
+holds each new read until earlier writes have completed, so a read cannot
+pass a posted write that is stalled behind a slow slave such as the
+non-proxy I2C path.
 
 The diagram below shows the BAR0 AXI-Lite crossbar fan-out.  Base addresses
 are sourced from the ``AXI_CROSSBAR_MASTERS_CONFIG_C`` constant in

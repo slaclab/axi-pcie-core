@@ -304,7 +304,10 @@ class AxiPcieCore(pr.Device):
                 elif (boardType == 'XilinxKcu105'):
                     XIL_DEVICE_G = 'ULTRASCALE'
 
-                # U280 I2C (Si570, QSFP) is reachable only through the satellite controller
+                # UltraScale+ boards with no I2C devices behind the BAR0 I2C slot (SysMon only):
+                #   XilinxKcu116:    XilinxKcu116Core leaves the AxiPcieReg I2C ports unconnected
+                #   XilinxVcu128:    XilinxVcu128Core leaves the AxiPcieReg I2C ports unconnected
+                #   XilinxAlveoU280: Si570 and QSFP I2C are reachable only through the satellite controller
                 elif (boardType == 'XilinxKcu116') or (boardType == 'XilinxVcu128') or (boardType == 'XilinxAlveoU280'):
                     XIL_DEVICE_G = 'ULTRASCALE_PLUS'
 

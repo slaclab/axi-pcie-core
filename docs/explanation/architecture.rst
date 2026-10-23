@@ -23,16 +23,17 @@ AXI-Lite Register Tree
 ----------------------
 
 ``AxiPcieReg`` bridges the AXI4 BAR0 register bus from the PCIe PHY down to a
-15-slave AXI-Lite crossbar (16 with ``I2C_FAST_EN_G``).  The bridge uses
+15-slave AXI-Lite crossbar.  The bridge uses
 ``surf.AxiToAxiLite``; write transactions are pre-filtered by
 ``AxiPcieRegWriteMux``, which separates PCIe Intercommunication Protocol (PIP)
-writes from normal register writes before the bridge.  With ``I2C_FAST_EN_G``,
-``AxiPcieRegReadOrder`` sits between the bridge and the crossbar and holds each
-new read until earlier writes have completed, so a read cannot pass a posted
-write that is stalled behind the slow non-proxy I2C path.
+writes from normal register writes before the bridge.  The I2C slot is
+handled by ``AxiPcieRegI2c``.  With ``I2C_FAST_EN_G``, it splits the slot into
+proxy and non-proxy windows behind ``AxiPcieRegReadOrder``, which holds each
+new read into the I2C slot until earlier I2C writes have completed, so a read
+cannot pass a posted write that is stalled behind the slow non-proxy I2C path.
 
 The diagram below shows the BAR0 AXI-Lite crossbar fan-out.  Base addresses
-are sourced from the ``AXI_CROSSBAR_MASTERS_CONFIG_C`` constant in
+are sourced from the ``XBAR_CONFIG_C`` constant in
 ``AxiPcieReg.vhd``:
 
 .. code-block:: text
@@ -40,7 +41,7 @@ are sourced from the ``AXI_CROSSBAR_MASTERS_CONFIG_C`` constant in
     Host
       |  BAR0 (AXI4, 256-bit, 64-bit addr)
       v
-    AxiPcieReg  (AXI4 -> AXI-Lite bridge, 15/16-slave crossbar)
+    AxiPcieReg  (AXI4 -> AXI-Lite bridge, 15-slave crossbar)
       |
       +--[0x0000_0000]  DMA control         (AxiStreamDmaV2 descriptor engine)
       +--[0x0001_0000]  PCIe PHY CSR        (per-board PHY status / config)
@@ -52,8 +53,8 @@ are sourced from the ``AXI_CROSSBAR_MASTERS_CONFIG_C`` constant in
       +--[0x0005_0000]  SPI flash 1         (AxiMicronN25QCore, chip-select 1)
       +--[0x0006_0000]  IB stream monitor   (AXIS traffic monitor, inbound)
       +--[0x0006_8000]  OB stream monitor   (AXIS traffic monitor, outbound)
-      +--[0x0007_0000]  I2C / I2C mux       (AxiLiteMasterProxy -> board I2C)
-      +--[0x0007_8000]  I2C (no proxy) but still with mux (BIT15 cleared -> board I2C, I2C_FAST_EN_G only)
+      +--[0x0007_0000]  I2C / I2C mux       (AxiPcieRegI2c: AxiLiteMasterProxy -> board I2C)
+      |     +--[0x0007_8000]  I2C (no proxy) but still with mux (BIT15 cleared -> board I2C, I2C_FAST_EN_G only)
       +--[0x0010_0000]  App region 1        (appClk domain, 1 MB)
       +--[0x0020_0000]  App region 2        (appClk domain, 2 MB)
       +--[0x0040_0000]  App region 3        (appClk domain, 4 MB)

@@ -27,10 +27,11 @@ AXI-Lite Register Tree
 ``surf.AxiToAxiLite``; write transactions are pre-filtered by
 ``AxiPcieRegWriteMux``, which separates PCIe Intercommunication Protocol (PIP)
 writes from normal register writes before the bridge.  The I2C slot is
-handled by ``AxiPcieRegI2c``.  With ``I2C_FAST_EN_G``, it splits the slot into
-proxy and non-proxy windows behind ``AxiPcieRegReadOrder``, which holds each
-new read into the I2C slot until earlier I2C writes have completed, so a read
-cannot pass a posted write that is stalled behind the slow non-proxy I2C path.
+handled by ``AxiPcieRegI2c``, which splits it into proxy and non-proxy windows
+with ``I2C_FAST_EN_G``.  In that case ``AxiPcieRegReadOrder`` sits between the
+bridge and the crossbar and holds each new read until earlier writes have
+completed, so a read to any slot cannot pass a posted write that is stalled
+behind the slow non-proxy I2C path.
 
 The diagram below shows the BAR0 AXI-Lite crossbar fan-out.  Base addresses
 are sourced from the ``XBAR_CONFIG_C`` constant in

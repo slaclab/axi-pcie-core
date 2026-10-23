@@ -10,8 +10,9 @@
 --    [0x00070000:0x00077FFF] through the AXI-Lite master proxy
 --    [0x00078000:0x0007FFFF] direct to the I2C devices (no proxy, BIT15
 --                            cleared so the devices see the same address)
--- AxiPcieRegReadOrder keeps reads from passing writes stalled behind the
--- slow non-proxy path.
+-- A posted write to the non-proxy window stalls BAR0 for the whole I2C
+-- transfer, so AxiPcieReg puts AxiPcieRegReadOrder ahead of its crossbar to
+-- keep reads to any slot from passing it.
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -28,8 +29,6 @@ use ieee.std_logic_1164.all;
 library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
-
-library axi_pcie_core;
 
 entity AxiPcieRegI2c is
    generic (
@@ -73,36 +72,12 @@ begin
 
    GEN_I2C_FAST : if (I2C_FAST_EN_G) generate
 
-      signal xbarReadMaster  : AxiLiteReadMasterType;
-      signal xbarReadSlave   : AxiLiteReadSlaveType;
-      signal xbarWriteMaster : AxiLiteWriteMasterType;
-      signal xbarWriteSlave  : AxiLiteWriteSlaveType;
-
       signal axilReadMasters  : AxiLiteReadMasterArray(1 downto 0);
       signal axilReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
       signal axilWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
       signal axilWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
    begin
-
-      ----------------------------------------------------------------
-      -- Keep reads from passing writes stalled behind the slow non-proxy
-      -- I2C path
-      ----------------------------------------------------------------
-      U_ReadOrder : entity axi_pcie_core.AxiPcieRegReadOrder
-         generic map (
-            TPD_G => TPD_G)
-         port map (
-            axilClk          => axiClk,
-            axilRst          => axiRst,
-            sAxilReadMaster  => sAxilReadMaster,
-            sAxilReadSlave   => sAxilReadSlave,
-            sAxilWriteMaster => sAxilWriteMaster,
-            sAxilWriteSlave  => sAxilWriteSlave,
-            mAxilReadMaster  => xbarReadMaster,
-            mAxilReadSlave   => xbarReadSlave,
-            mAxilWriteMaster => xbarWriteMaster,
-            mAxilWriteSlave  => xbarWriteSlave);
 
       --------------------------------------------
       -- Split the proxy and non-proxy I2C windows
@@ -116,10 +91,10 @@ begin
          port map (
             axiClk              => axiClk,
             axiClkRst           => axiRst,
-            sAxiWriteMasters(0) => xbarWriteMaster,
-            sAxiWriteSlaves(0)  => xbarWriteSlave,
-            sAxiReadMasters(0)  => xbarReadMaster,
-            sAxiReadSlaves(0)   => xbarReadSlave,
+            sAxiWriteMasters(0) => sAxilWriteMaster,
+            sAxiWriteSlaves(0)  => sAxilWriteSlave,
+            sAxiReadMasters(0)  => sAxilReadMaster,
+            sAxiReadSlaves(0)   => sAxilReadSlave,
             mAxiWriteMasters    => axilWriteMasters,
             mAxiWriteSlaves     => axilWriteSlaves,
             mAxiReadMasters     => axilReadMasters,

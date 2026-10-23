@@ -76,8 +76,8 @@ See :doc:`/explanation/architecture` for the BAR0 crossbar diagram.
        AXI-Lite path to the board I2C bus for low-latency access; address bit
        15 is cleared, so ``0x78000 + X`` reaches the same I2C device as proxy
        address ``0x70000 + X``.  The BAR0 transaction stalls until the I2C
-       transfer completes, so ``AxiPcieRegReadOrder`` holds later reads into
-       the I2C window until earlier writes finish.
+       transfer completes, so ``AxiPcieRegReadOrder`` (ahead of the BAR0
+       crossbar) holds later reads to any slot until earlier writes finish.
    * - 11 (``APP1_INDEX_C``)
      - ``0x100000``
      - App region 1

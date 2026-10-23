@@ -158,12 +158,6 @@ class AxiPcieCore(pr.Device):
                     offset = 0x70000,
                 ))
 
-                # BAR0 reports non-proxy I2C errors as OK; this counts them
-                self.add(pcie.AxiPcieRegRespMon(
-                    name   = 'I2cFastErrMon',
-                    offset = 0x74000,
-                ))
-
                 # Check for the SLAC GEN4 PGP Card
                 if (boardType == 'AbacoPc821'):
                     XIL_DEVICE_G = 'ULTRASCALE'
@@ -243,6 +237,12 @@ class AxiPcieCore(pr.Device):
                         factory_freq = 156.25,
                         offset = 0x78000 + 0x2_000,
                         enabled = False))
+
+                    # BAR0 reports non-proxy I2C errors as OK; this counts them
+                    self.add(pcie.AxiPcieRegRespMon(
+                        name   = 'I2cFastErrMon',
+                        offset = 0x74000,
+                    ))
 
                 elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250') or (boardType == 'XilinxAlveoU280'):
 

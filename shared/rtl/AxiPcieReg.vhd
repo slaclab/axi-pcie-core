@@ -116,14 +116,15 @@ architecture mapping of AxiPcieReg is
    constant AXIS_MON_IB_C    : natural := 8;
    constant AXIS_MON_OB_C    : natural := 9;
    constant I2C_INDEX_C      : natural := 10;
-   constant I2C_FAST_INDEX_C : natural := 11;
+   constant I2C_MON_INDEX_C  : natural := 11;
+   constant I2C_FAST_INDEX_C : natural := 12;
    -- constant APP0_INDEX_C    : natural := XXX; -- Now used for PIP interface
-   constant APP1_INDEX_C     : natural := 12;
-   constant APP2_INDEX_C     : natural := 13;
-   constant APP3_INDEX_C     : natural := 14;
-   constant APP4_INDEX_C     : natural := 15;
+   constant APP1_INDEX_C     : natural := 13;
+   constant APP2_INDEX_C     : natural := 14;
+   constant APP3_INDEX_C     : natural := 15;
+   constant APP4_INDEX_C     : natural := 16;
 
-   constant NUM_AXI_MASTERS_C : natural := 16;
+   constant NUM_AXI_MASTERS_C : natural := 17;
 
    constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
       DMA_INDEX_C      => (
@@ -168,7 +169,11 @@ architecture mapping of AxiPcieReg is
          connectivity  => x"FFFF"),
       I2C_INDEX_C      => (
          baseAddr      => x"0007_0000",
-         addrBits      => 15,
+         addrBits      => 14,
+         connectivity  => x"FFFF"),
+      I2C_MON_INDEX_C  => (
+         baseAddr      => x"0007_4000",
+         addrBits      => 14,
          connectivity  => x"FFFF"),
       I2C_FAST_INDEX_C => (
          baseAddr      => x"0007_8000",
@@ -674,6 +679,24 @@ begin
 
    axilReadSlaves(I2C_FAST_INDEX_C)  <= i2cFastReadSlave;
    axilWriteSlaves(I2C_FAST_INDEX_C) <= i2cFastWriteSlave;
+
+   -------------------------------------------------------------
+   -- Report non-proxy I2C error responses that BAR0 masks to OK
+   -------------------------------------------------------------
+   U_I2cFastErrMon : entity axi_pcie_core.AxiPcieRegRespMon
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         axilClk         => axiClk,
+         axilRst         => axiRst,
+         monReadMaster   => axilReadMasters(I2C_FAST_INDEX_C),
+         monReadSlave    => axilReadSlaves(I2C_FAST_INDEX_C),
+         monWriteMaster  => axilWriteMasters(I2C_FAST_INDEX_C),
+         monWriteSlave   => axilWriteSlaves(I2C_FAST_INDEX_C),
+         axilReadMaster  => axilReadMasters(I2C_MON_INDEX_C),
+         axilReadSlave   => axilReadSlaves(I2C_MON_INDEX_C),
+         axilWriteMaster => axilWriteMasters(I2C_MON_INDEX_C),
+         axilWriteSlave  => axilWriteSlaves(I2C_MON_INDEX_C));
 
    --------------------------------------
    -- Combine APP AXI-Lite buses together

@@ -81,6 +81,10 @@ directly; instead it assembles a tree of sub-devices at fixed offsets.
      - ``0x70000``
      - ``not extended``
      - I2C bridge proxy (prevents BAR0 stall on slow I2C transactions)
+   * - ``pcie.AxiPcieRegRespMon`` (I2cFastErrMon)
+     - ``0x74000``
+     - ``not extended``
+     - Error responses on the non-proxy I2C path, which BAR0 reports as OK
    * - ``xil.AxiSysMonUltraScale``
      - ``0x24000``
      - board-specific

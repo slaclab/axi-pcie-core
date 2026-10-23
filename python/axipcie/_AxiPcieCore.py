@@ -31,7 +31,6 @@ _DEFAULT_TRANSCEIVERS = {
     'XilinxKcu1500':       [xceiver.Qsfp]*2,
     'XilinxAlveoU200':     [xceiver.Qsfp]*2,
     'XilinxAlveoU250':     [xceiver.Qsfp]*2,
-    'XilinxAlveoU280':     [xceiver.Qsfp]*2,
     'XilinxAlveoU55c':     [xceiver.Qsfp]*2,
     'XilinxVariumC1100':   [xceiver.Qsfp]*2,
 }
@@ -239,7 +238,7 @@ class AxiPcieCore(pr.Device):
                         offset = 0x78000 + 0x2_000,
                         enabled = False))
 
-                elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250') or (boardType == 'XilinxAlveoU280'):
+                elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250'):
 
                     XIL_DEVICE_G = 'ULTRASCALE_PLUS'
 
@@ -257,7 +256,7 @@ class AxiPcieCore(pr.Device):
                     self.add(silabs.Si570(
                         name = 'Si570',
                         factory_freq = 156.25,
-                        max_freq = 810.0, # Alveo U200/U250/U280 Si570 (570BAB000544DG) is a 10 to 810 MHz (grade B) part
+                        max_freq = 810.0, # Alveo U200/U250 Si570 (570BAB000544DG) is a 10 to 810 MHz (grade B) part
                         offset = 0x78000 + 0x2_000,
                         enabled = False))
 
@@ -305,7 +304,11 @@ class AxiPcieCore(pr.Device):
                 elif (boardType == 'XilinxKcu105'):
                     XIL_DEVICE_G = 'ULTRASCALE'
 
-                elif (boardType == 'XilinxKcu116') or (boardType == 'XilinxVcu128'):
+                # UltraScale+ boards with no I2C devices behind the BAR0 I2C slot (SysMon only):
+                #   XilinxKcu116:    XilinxKcu116Core leaves the AxiPcieReg I2C ports unconnected
+                #   XilinxVcu128:    XilinxVcu128Core leaves the AxiPcieReg I2C ports unconnected
+                #   XilinxAlveoU280: Si570 and QSFP I2C are reachable only through the satellite controller
+                elif (boardType == 'XilinxKcu116') or (boardType == 'XilinxVcu128') or (boardType == 'XilinxAlveoU280'):
                     XIL_DEVICE_G = 'ULTRASCALE_PLUS'
 
                 # SysMon Module

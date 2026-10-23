@@ -41,6 +41,7 @@ entity AxiPcieReg is
       APP_CLK_IS_AXI_CLK_G : boolean                     := false;
       DATAGPU_EN_G         : boolean                     := false;
       GEN_SYSMON_G         : boolean                     := true;
+      I2C_FAST_EN_G        : boolean                     := false;  -- Non-proxy I2C path at 0x0007_8000
       DMA_SIZE_G           : positive range 1 to 16      := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)
@@ -116,16 +117,17 @@ architecture mapping of AxiPcieReg is
    constant AXIS_MON_IB_C    : natural := 8;
    constant AXIS_MON_OB_C    : natural := 9;
    constant I2C_INDEX_C      : natural := 10;
-   constant I2C_FAST_INDEX_C : natural := 11;
    -- constant APP0_INDEX_C    : natural := XXX; -- Now used for PIP interface
-   constant APP1_INDEX_C     : natural := 12;
-   constant APP2_INDEX_C     : natural := 13;
-   constant APP3_INDEX_C     : natural := 14;
-   constant APP4_INDEX_C     : natural := 15;
+   constant APP1_INDEX_C     : natural := 11;
+   constant APP2_INDEX_C     : natural := 12;
+   constant APP3_INDEX_C     : natural := 13;
+   constant APP4_INDEX_C     : natural := 14;
+   -- Optional slots go last so the other indices do not depend on them
+   constant I2C_FAST_INDEX_C : natural := 15;
 
-   constant NUM_AXI_MASTERS_C : natural := 16;
+   constant NUM_AXI_MASTERS_C : natural := ite(I2C_FAST_EN_G, 16, 15);
 
-   constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
+   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(15 downto 0) := (
       DMA_INDEX_C      => (
          baseAddr      => x"0000_0000",
          addrBits      => 16,
@@ -168,11 +170,7 @@ architecture mapping of AxiPcieReg is
          connectivity  => x"FFFF"),
       I2C_INDEX_C      => (
          baseAddr      => x"0007_0000",
-         addrBits      => 15,
-         connectivity  => x"FFFF"),
-      I2C_FAST_INDEX_C => (
-         baseAddr      => x"0007_8000",
-         addrBits      => 15,
+         addrBits      => ite(I2C_FAST_EN_G, 15, 16),
          connectivity  => x"FFFF"),
 --      APP0_INDEX_C    => (
 --         baseAddr     => x"0008_0000",
@@ -193,7 +191,14 @@ architecture mapping of AxiPcieReg is
       APP4_INDEX_C     => (
          baseAddr      => x"0080_0000",
          addrBits      => 23,
+         connectivity  => x"FFFF"),
+      I2C_FAST_INDEX_C => (
+         baseAddr      => x"0007_8000",
+         addrBits      => 15,
          connectivity  => x"FFFF"));
+
+   constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) :=
+      XBAR_CONFIG_C(NUM_AXI_MASTERS_C-1 downto 0);
 
    constant APP_CROSSBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
       0               => (
@@ -213,6 +218,11 @@ architecture mapping of AxiPcieReg is
    signal axilReadSlave   : AxiLiteReadSlaveType;
    signal axilWriteMaster : AxiLiteWriteMasterType;
    signal axilWriteSlave  : AxiLiteWriteSlaveType;
+
+   signal xbarReadMaster  : AxiLiteReadMasterType;
+   signal xbarReadSlave   : AxiLiteReadSlaveType;
+   signal xbarWriteMaster : AxiLiteWriteMasterType;
+   signal xbarWriteSlave  : AxiLiteWriteSlaveType;
 
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
    signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXI_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
@@ -401,6 +411,34 @@ begin
             axilWriteSlave  => axilWriteSlave);
    end generate;
 
+   ----------------------------------------------------------------
+   -- Keep reads from passing writes stalled behind the slow non-proxy
+   -- I2C path (only needed when it exists)
+   ----------------------------------------------------------------
+   GEN_READ_ORDER : if (I2C_FAST_EN_G) generate
+      U_ReadOrder : entity axi_pcie_core.AxiPcieRegReadOrder
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            axilClk          => axiClk,
+            axilRst          => axiRst,
+            sAxilReadMaster  => axilReadMaster,
+            sAxilReadSlave   => axilReadSlave,
+            sAxilWriteMaster => axilWriteMaster,
+            sAxilWriteSlave  => axilWriteSlave,
+            mAxilReadMaster  => xbarReadMaster,
+            mAxilReadSlave   => xbarReadSlave,
+            mAxilWriteMaster => xbarWriteMaster,
+            mAxilWriteSlave  => xbarWriteSlave);
+   end generate;
+
+   NO_READ_ORDER : if (not I2C_FAST_EN_G) generate
+      xbarReadMaster  <= axilReadMaster;
+      axilReadSlave   <= xbarReadSlave;
+      xbarWriteMaster <= axilWriteMaster;
+      axilWriteSlave  <= xbarWriteSlave;
+   end generate;
+
    --------------------
    -- AXI-Lite Crossbar
    --------------------
@@ -414,10 +452,10 @@ begin
       port map (
          axiClk              => axiClk,
          axiClkRst           => axiRst,
-         sAxiWriteMasters(0) => axilWriteMaster,
-         sAxiWriteSlaves(0)  => axilWriteSlave,
-         sAxiReadMasters(0)  => axilReadMaster,
-         sAxiReadSlaves(0)   => axilReadSlave,
+         sAxiWriteMasters(0) => xbarWriteMaster,
+         sAxiWriteSlaves(0)  => xbarWriteSlave,
+         sAxiReadMasters(0)  => xbarReadMaster,
+         sAxiReadSlaves(0)   => xbarReadSlave,
          mAxiWriteMasters    => axilWriteMasters,
          mAxiWriteSlaves     => axilWriteSlaves,
          mAxiReadMasters     => axilReadMasters,
@@ -636,21 +674,30 @@ begin
    ------------------------------------------------
    -- Map the AXI-Lite to I2C without proxy (fast)
    ------------------------------------------------
-   process(axilReadMasters, axilWriteMasters)
-      variable rdMaster : AxiLiteReadMasterType;
-      variable wrMaster : AxiLiteWriteMasterType;
-   begin
-      rdMaster            := axilReadMasters(I2C_FAST_INDEX_C);
-      wrMaster            := axilWriteMasters(I2C_FAST_INDEX_C);
-      -- Force BIT15 to zero so the I2C devices see the same address as I2C_INDEX_C
-      rdMaster.araddr(15) := '0';
-      wrMaster.awaddr(15) := '0';
-      i2cFastReadMaster   <= rdMaster;
-      i2cFastWriteMaster  <= wrMaster;
-   end process;
+   GEN_I2C_FAST : if (I2C_FAST_EN_G) generate
 
-   axilReadSlaves(I2C_FAST_INDEX_C)  <= i2cFastReadSlave;
-   axilWriteSlaves(I2C_FAST_INDEX_C) <= i2cFastWriteSlave;
+      process(axilReadMasters, axilWriteMasters)
+         variable rdMaster : AxiLiteReadMasterType;
+         variable wrMaster : AxiLiteWriteMasterType;
+      begin
+         rdMaster            := axilReadMasters(I2C_FAST_INDEX_C);
+         wrMaster            := axilWriteMasters(I2C_FAST_INDEX_C);
+         -- Force BIT15 to zero so the I2C devices see the same address as I2C_INDEX_C
+         rdMaster.araddr(15) := '0';
+         wrMaster.awaddr(15) := '0';
+         i2cFastReadMaster   <= rdMaster;
+         i2cFastWriteMaster  <= wrMaster;
+      end process;
+
+      axilReadSlaves(I2C_FAST_INDEX_C)  <= i2cFastReadSlave;
+      axilWriteSlaves(I2C_FAST_INDEX_C) <= i2cFastWriteSlave;
+
+   end generate;
+
+   NO_I2C_FAST : if (not I2C_FAST_EN_G) generate
+      i2cFastReadMaster  <= AXI_LITE_READ_MASTER_INIT_C;
+      i2cFastWriteMaster <= AXI_LITE_WRITE_MASTER_INIT_C;
+   end generate;
 
    --------------------------------------
    -- Combine APP AXI-Lite buses together

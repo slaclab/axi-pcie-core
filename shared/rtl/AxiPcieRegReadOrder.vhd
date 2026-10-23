@@ -7,9 +7,11 @@
 -- fast slave while an earlier (PCIe posted) write is still stalled behind a
 -- slow slave, such as an I2C device on the non-proxy path, and return stale
 -- data. PCIe ordering does not allow a read to pass a posted write. This
--- module holds a new read until no write is pending or outstanding. Once a
--- read is presented to the crossbar it stays presented until accepted.
--- Writes always pass through unchanged.
+-- module holds a new read until no write is pending or outstanding, and for
+-- RD_HOLDOFF_G more cycles after the last write response so a posted write
+-- that the bridge presents a few cycles later is not overtaken. Once a read is
+-- presented to the crossbar it stays presented until accepted. Writes always
+-- pass through unchanged.
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -31,7 +33,8 @@ use surf.AxiLitePkg.all;
 
 entity AxiPcieRegReadOrder is
    generic (
-      TPD_G : time := 1 ns);
+      TPD_G        : time    := 1 ns;
+      RD_HOLDOFF_G : natural := 16);  -- cycles a new read waits after a write response
    port (
       -- Clock and Reset
       axilClk          : in  sl;
@@ -51,13 +54,15 @@ end AxiPcieRegReadOrder;
 architecture rtl of AxiPcieRegReadOrder is
 
    type RegType is record
-      wrCnt  : slv(3 downto 0);
-      rdOpen : sl;
+      wrCnt   : slv(3 downto 0);
+      holdCnt : natural range 0 to RD_HOLDOFF_G;
+      rdOpen  : sl;
    end record;
 
    constant REG_INIT_C : RegType := (
-      wrCnt  => (others => '0'),
-      rdOpen => '0');
+      wrCnt   => (others => '0'),
+      holdCnt => 0,
+      rdOpen  => '0');
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -79,11 +84,15 @@ begin
          v.wrCnt := v.wrCnt + 1;
       end if;
       if (mAxilWriteSlave.bvalid = '1') and (sAxilWriteMaster.bready = '1') then
-         v.wrCnt := v.wrCnt - 1;
+         v.wrCnt   := v.wrCnt - 1;
+         v.holdCnt := RD_HOLDOFF_G;
+      elsif (r.holdCnt /= 0) then
+         v.holdCnt := r.holdCnt - 1;
       end if;
 
-      -- Start a new read only when no write is pending or outstanding
-      if (r.rdOpen = '1') or ((r.wrCnt = 0) and (sAxilWriteMaster.awvalid = '0') and (sAxilWriteMaster.wvalid = '0')) then
+      -- Start a new read only when no write is pending, outstanding or just completed
+      if (r.rdOpen = '1') or ((r.wrCnt = 0) and (r.holdCnt = 0) and
+                              (sAxilWriteMaster.awvalid = '0') and (sAxilWriteMaster.wvalid = '0')) then
          rdAllow := '1';
       else
          rdAllow := '0';

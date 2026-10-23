@@ -5,9 +5,10 @@
 -------------------------------------------------------------------------------
 -- Write W1 targets a slow slave and stalls the write channel. Write W2 (new
 -- data for a fast register) is presented only after W1 is accepted, like a
--- posted write queued in the PCIe bridge. A read of the fast register issued
--- while W1 is stalled must return W2's data, not the stale value. A monitor
--- checks that a read presented to the crossbar is never withdrawn.
+-- posted write queued in the PCIe bridge, either right away or a few cycles
+-- after W1 completes. A read of the fast register issued while W1 is stalled
+-- must return W2's data, not the stale value. A monitor checks that a read
+-- presented to the crossbar is never withdrawn.
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -201,11 +202,79 @@ begin
          sRdMaster.rready <= '0' after TPD_G;
       end procedure;
 
-      variable data   : slv(31 downto 0);
-      variable lat    : natural;
-      variable w1Done : boolean;
-      variable w2Done : boolean;
-      variable rDone  : boolean;
+      -- W1 (slow) then W2 (fast, w2Data). W2 appears gap cycles after W1's
+      -- response, or right after W1 is accepted for gap = 0. The read is
+      -- issued while W1 stalls and must return w2Data
+      procedure orderTest(gap : natural; w2Data : slv(31 downto 0)) is
+         variable data   : slv(31 downto 0);
+         variable w1Done : boolean := false;
+         variable w2Up   : boolean := false;
+         variable w2Done : boolean := false;
+         variable rDone  : boolean := false;
+         variable wait2  : integer := -1;
+      begin
+         sWrMaster.awaddr  <= SLOW_ADDR_C after TPD_G;
+         sWrMaster.wdata   <= x"DEAD_BEEF" after TPD_G;
+         sWrMaster.wstrb   <= x"F" after TPD_G;
+         sWrMaster.awvalid <= '1' after TPD_G;
+         sWrMaster.wvalid  <= '1' after TPD_G;
+         sWrMaster.bready  <= '1' after TPD_G;
+         cycles(10);
+         sRdMaster.araddr  <= FAST_ADDR_C after TPD_G;
+         sRdMaster.arvalid <= '1' after TPD_G;
+         sRdMaster.rready  <= '1' after TPD_G;
+         while not (w2Done and rDone) loop
+            wait until rising_edge(clk);
+            -- Write address channel
+            if (sWrMaster.awvalid = '1') and (sWrSlave.awready = '1') then
+               if not w1Done then
+                  w1Done := true;
+                  if gap = 0 then
+                     w2Up              := true;
+                     sWrMaster.awaddr  <= FAST_ADDR_C after TPD_G;
+                     sWrMaster.wdata   <= w2Data after TPD_G;
+                  else
+                     sWrMaster.awvalid <= '0' after TPD_G;
+                     sWrMaster.wvalid  <= '0' after TPD_G;
+                  end if;
+               else
+                  w2Done            := true;
+                  sWrMaster.awvalid <= '0' after TPD_G;
+                  sWrMaster.wvalid  <= '0' after TPD_G;
+               end if;
+            end if;
+            -- Bridge bubble: present W2 gap cycles after W1's response
+            if w1Done and not w2Up then
+               if (wait2 < 0) and (sWrSlave.bvalid = '1') then
+                  wait2 := gap;
+               elsif wait2 > 1 then
+                  wait2 := wait2 - 1;
+               elsif wait2 = 1 then
+                  w2Up              := true;
+                  sWrMaster.awaddr  <= FAST_ADDR_C after TPD_G;
+                  sWrMaster.wdata   <= w2Data after TPD_G;
+                  sWrMaster.awvalid <= '1' after TPD_G;
+                  sWrMaster.wvalid  <= '1' after TPD_G;
+               end if;
+            end if;
+            -- Read channel
+            if (sRdMaster.arvalid = '1') and (sRdSlave.arready = '1') then
+               sRdMaster.arvalid <= '0' after TPD_G;
+            end if;
+            if (sRdSlave.rvalid = '1') and not rDone then
+               rDone            := true;
+               data             := sRdSlave.rdata;
+               sRdMaster.rready <= '0' after TPD_G;
+            end if;
+         end loop;
+         assert (data = w2Data)
+            report "AxiPcieRegReadOrderTb: read passed an earlier write (gap " & integer'image(gap) &
+            " cycles), got 0x" & hstr(data) severity failure;
+         cycles(10);
+      end procedure;
+
+      variable data : slv(31 downto 0);
+      variable lat  : natural;
 
    begin
       cycles(10);
@@ -219,47 +288,9 @@ begin
          report "AxiPcieRegReadOrderTb: sanity read mismatch" severity failure;
       cycles(5);
 
-      -- Ordering: W1 (slow) then W2 (fast, new data), read issued while W1 stalls
-      sWrMaster.awaddr  <= SLOW_ADDR_C after TPD_G;
-      sWrMaster.wdata   <= x"DEAD_BEEF" after TPD_G;
-      sWrMaster.wstrb   <= x"F" after TPD_G;
-      sWrMaster.awvalid <= '1' after TPD_G;
-      sWrMaster.wvalid  <= '1' after TPD_G;
-      sWrMaster.bready  <= '1' after TPD_G;
-      cycles(10);
-      sRdMaster.araddr  <= FAST_ADDR_C after TPD_G;
-      sRdMaster.arvalid <= '1' after TPD_G;
-      sRdMaster.rready  <= '1' after TPD_G;
-      w1Done := false;
-      w2Done := false;
-      rDone  := false;
-      while not (w2Done and rDone) loop
-         wait until rising_edge(clk);
-         -- Write address channel: W2 follows W1 once W1 is accepted
-         if (sWrMaster.awvalid = '1') and (sWrSlave.awready = '1') then
-            if not w1Done then
-               w1Done            := true;
-               sWrMaster.awaddr  <= FAST_ADDR_C after TPD_G;
-               sWrMaster.wdata   <= x"2222_2222" after TPD_G;
-            else
-               w2Done            := true;
-               sWrMaster.awvalid <= '0' after TPD_G;
-               sWrMaster.wvalid  <= '0' after TPD_G;
-            end if;
-         end if;
-         -- Read channel
-         if (sRdMaster.arvalid = '1') and (sRdSlave.arready = '1') then
-            sRdMaster.arvalid <= '0' after TPD_G;
-         end if;
-         if (sRdSlave.rvalid = '1') and not rDone then
-            rDone            := true;
-            data             := sRdSlave.rdata;
-            sRdMaster.rready <= '0' after TPD_G;
-         end if;
-      end loop;
-      assert (data = x"2222_2222")
-         report "AxiPcieRegReadOrderTb: read passed an earlier write, got 0x" & hstr(data) severity failure;
-      cycles(10);
+      -- Ordering: W2 presented right after W1 is accepted, and 4 cycles after W1 completes
+      orderTest(0, x"2222_2222");
+      orderTest(4, x"3333_3333");
 
       -- A read already presented is not held back by a later slow write
       sRdMaster.araddr  <= FAST_ADDR_C after TPD_G;
@@ -280,7 +311,7 @@ begin
          exit when sRdSlave.rvalid = '1';
       end loop;
       sRdMaster.rready <= '0' after TPD_G;
-      assert (sRdSlave.rdata = x"2222_2222") and (lat < SLOW_CYCLE_C/2)
+      assert (sRdSlave.rdata = x"3333_3333") and (lat < SLOW_CYCLE_C/2)
          report "AxiPcieRegReadOrderTb: presented read was delayed by a later write" severity failure;
       wait until rising_edge(clk) and sWrSlave.awready = '1';
       sWrMaster.awvalid <= '0' after TPD_G;

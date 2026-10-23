@@ -118,8 +118,9 @@ end XilinxKcu1500Core;
 
 architecture mapping of XilinxKcu1500Core is
 
-   constant I2C_SCL_FREQ_C  : real := 100.0E+3;  -- units of Hz
-   constant I2C_MIN_PULSE_C : real := 100.0E-9;  -- units of seconds
+   constant I2C_SCL_FREQ_C      : real := 100.0E+3;  -- units of Hz (QSFP)
+   constant I2C_FAST_SCL_FREQ_C : real := 400.0E+3;  -- units of Hz (TCA9548 I2C MUX and Si570)
+   constant I2C_MIN_PULSE_C     : real := 100.0E-9;  -- units of seconds
 
    constant XBAR_MI2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
       0               => (
@@ -133,7 +134,7 @@ architecture mapping of XilinxKcu1500Core is
 
    constant SI570_I2C_CONFIG_C : I2cAxiLiteDevArray(0 downto 0) := (
       0              => MakeI2cAxiLiteDevType(
-         i2cAddress  => "1011101",      -- 2 wire address 1010000X (A0h)
+         i2cAddress  => "1011101",      -- 2 wire address 1011101X (BAh)
          dataSize    => 8,              -- in units of bits
          addrSize    => 8,              -- in units of bits
          endianness  => '0',            -- Little endian
@@ -164,10 +165,10 @@ architecture mapping of XilinxKcu1500Core is
    signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
 
-   signal mI2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
-   signal mI2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
-   signal mI2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
-   signal mI2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+   signal mI2cReadMasters  : AxiLiteReadMasterArray(2 downto 0);
+   signal mI2cReadSlaves   : AxiLiteReadSlaveArray(2 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal mI2cWriteMasters : AxiLiteWriteMasterArray(2 downto 0);
+   signal mI2cWriteSlaves  : AxiLiteWriteSlaveArray(2 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
    signal i2cReadMaster  : AxiLiteReadMasterType;
    signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
@@ -299,7 +300,7 @@ begin
       U_XbarMI2cMux : entity surf.AxiLiteCrossbar
          generic map (
             TPD_G              => TPD_G,
-            NUM_SLAVE_SLOTS_G  => 2,
+            NUM_SLAVE_SLOTS_G  => 3,
             NUM_MASTER_SLOTS_G => 1,
             MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
          port map (
@@ -320,7 +321,7 @@ begin
             -- I2C MUX Generics
             MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_TCA9548_C,
             I2C_MUX_ADDR_G     => b"1110_100",
-            I2C_SCL_FREQ_G     => I2C_SCL_FREQ_C,
+            I2C_SCL_FREQ_G     => I2C_FAST_SCL_FREQ_C,
             I2C_MIN_PULSE_G    => I2C_MIN_PULSE_C,
             AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C,
             -- AXI-Lite Crossbar Generics
@@ -386,7 +387,7 @@ begin
       U_SI570 : entity surf.AxiI2cRegMasterCore
          generic map (
             TPD_G           => TPD_G,
-            I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+            I2C_SCL_FREQ_G  => I2C_FAST_SCL_FREQ_C,
             I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
             DEVICE_MAP_G    => SI570_I2C_CONFIG_C,
             AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
@@ -467,6 +468,7 @@ begin
          PCIE_HW_TYPE_G       => HW_TYPE_XILINX_KCU1500_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DATAGPU_EN_G         => DATAGPU_EN_G,
+         I2C_FAST_EN_G        => true,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
@@ -488,11 +490,16 @@ begin
          phyReadSlave        => phyReadSlave,
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
-         -- I2C AXI-Lite Interfaces (axiClk domain)
+         -- I2C AXI-Lite Interfaces With Proxy (axiClk domain)
          i2cReadMaster       => mI2cReadMasters(0),
          i2cReadSlave        => mI2cReadSlaves(0),
          i2cWriteMaster      => mI2cWriteMasters(0),
          i2cWriteSlave       => mI2cWriteSlaves(0),
+         -- I2C AXI-Lite Interfaces Without Proxy (axiClk domain)
+         i2cFastReadMaster   => mI2cReadMasters(2),
+         i2cFastReadSlave    => mI2cReadSlaves(2),
+         i2cFastWriteMaster  => mI2cWriteMasters(2),
+         i2cFastWriteSlave   => mI2cWriteSlaves(2),
          -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,

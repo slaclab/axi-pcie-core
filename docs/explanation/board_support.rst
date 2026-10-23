@@ -26,7 +26,7 @@ Shared vs. Board-Specific Layering
 -----------------------------------
 
 ``shared/rtl/`` holds board-agnostic logic compiled into the ``axi_pcie_core`` VHDL library.
-This includes ``AxiPcieDma``, ``AxiPcieReg``, ``AxiPcieCrossbar``, ``AxiPcieRegWriteDeMux``,
+This includes ``AxiPcieDma``, ``AxiPcieReg``, ``AxiPcieCrossbar``, ``AxiPcieRegWriteMux``,
 and ``AxiPcieSharedPkg`` (which defines the ``HW_TYPE_*`` board identifiers).  Every
 ``<Board>Core`` entity instantiates these same shared modules, so a bug fix or enhancement
 in shared logic benefits all fourteen supported boards simultaneously.

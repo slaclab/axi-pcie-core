@@ -9,7 +9,8 @@ source $::env(RUCKUS_PROC_TCL)
 if { [VersionCheck 2024.2] < 0 } {exit -1}
 
 # Load the block design
-if  { $::env(VIVADO_VERSION) >= 2024.2 } {
+# Compare dotted versions numerically, not as floats or strings
+if { [package vcompare $::env(VIVADO_VERSION) 2024.2] >= 0 } {
    set bdVer "2024.2"
 } else {
    set bdVer "2024.2"

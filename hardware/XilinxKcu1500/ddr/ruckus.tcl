@@ -6,9 +6,10 @@ loadSource -lib axi_pcie_core           -dir "$::DIR_PATH/rtl"
 loadSource -lib axi_pcie_core -sim_only -dir "$::DIR_PATH/tb"
 loadConstraints                         -dir "$::DIR_PATH/xdc"
 
-if { $::env(VIVADO_VERSION) <= 2018.3 } {
+# Compare dotted versions numerically, not as floats or strings
+if { [package vcompare $::env(VIVADO_VERSION) 2018.3] <= 0 } {
    loadIpCore -dir "$::DIR_PATH/ip/2018.3"
-} elseif  { $::env(VIVADO_VERSION) <= 2022.1 } {
+} elseif { [package vcompare $::env(VIVADO_VERSION) 2022.1] <= 0 } {
    loadIpCore -dir "$::DIR_PATH/ip/2019.1"
 } else {
    loadIpCore -dir "$::DIR_PATH/ip/2022.2"

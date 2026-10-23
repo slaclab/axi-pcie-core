@@ -235,6 +235,7 @@ class AxiPcieCore(pr.Device):
                     self.add(silabs.Si570(
                         name = 'Si570',
                         factory_freq = 156.25,
+                        max_freq = 810.0, # KCU1500 Si570 is a 10 to 810 MHz (grade B) part
                         offset = 0x78000 + 0x2_000,
                         enabled = False))
 

@@ -18,6 +18,7 @@ if { [VersionCheck 2020.1] < 0 } {exit -1}
 # Load Source Code
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/rtl"
 loadSource -lib axi_pcie_core -dir "$::DIR_PATH/ip"
+loadSource -lib axi_pcie_core -sim_only -dir "$::DIR_PATH/tb"
 loadRuckusTcl "$::DIR_PATH/../protocol/pip"
 loadRuckusTcl "$::DIR_PATH/../protocol/gpuAsync"
 

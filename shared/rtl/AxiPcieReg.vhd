@@ -41,6 +41,7 @@ entity AxiPcieReg is
       APP_CLK_IS_AXI_CLK_G : boolean                     := false;
       DATAGPU_EN_G         : boolean                     := false;
       GEN_SYSMON_G         : boolean                     := true;
+      I2C_FAST_EN_G        : boolean                     := false;  -- Non-proxy I2C path at 0x0007_8000
       DMA_SIZE_G           : positive range 1 to 16      := 1);
    port (
       -- AXI4 Interfaces (axiClk domain)
@@ -62,11 +63,16 @@ entity AxiPcieReg is
       phyReadSlave        : in  AxiLiteReadSlaveType;
       phyWriteMaster      : out AxiLiteWriteMasterType;
       phyWriteSlave       : in  AxiLiteWriteSlaveType;
-      -- I2C AXI-Lite Interfaces (axiClk domain)
+      -- I2C AXI-Lite Interfaces With Proxy (axiClk domain)
       i2cReadMaster       : out AxiLiteReadMasterType;
       i2cReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
       i2cWriteMaster      : out AxiLiteWriteMasterType;
       i2cWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
+      -- I2C AXI-Lite Interfaces Without Proxy (axiClk domain)
+      i2cFastReadMaster   : out AxiLiteReadMasterType;
+      i2cFastReadSlave    : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
+      i2cFastWriteMaster  : out AxiLiteWriteMasterType;
+      i2cFastWriteSlave   : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
       -- Application AXI-Lite Interfaces [0x00100000:0x00FFFFFF] (appClk domain)
       appClk              : in  sl;
       appRst              : in  sl;
@@ -100,90 +106,90 @@ end AxiPcieReg;
 
 architecture mapping of AxiPcieReg is
 
-   constant DMA_INDEX_C     : natural := 0;
-   constant PHY_INDEX_C     : natural := 1;
-   constant VERSION_INDEX_C : natural := 2;
-   constant SYSMON_INDEX_C  : natural := 3;
-   constant GPU_INDEX_C     : natural := 4;
-   constant BPI_INDEX_C     : natural := 5;
-   constant SPI0_INDEX_C    : natural := 6;
-   constant SPI1_INDEX_C    : natural := 7;
-   constant AXIS_MON_IB_C   : natural := 8;
-   constant AXIS_MON_OB_C   : natural := 9;
-   constant I2C_INDEX_C     : natural := 10;
+   constant DMA_INDEX_C      : natural := 0;
+   constant PHY_INDEX_C      : natural := 1;
+   constant VERSION_INDEX_C  : natural := 2;
+   constant SYSMON_INDEX_C   : natural := 3;
+   constant GPU_INDEX_C      : natural := 4;
+   constant BPI_INDEX_C      : natural := 5;
+   constant SPI0_INDEX_C     : natural := 6;
+   constant SPI1_INDEX_C     : natural := 7;
+   constant AXIS_MON_IB_C    : natural := 8;
+   constant AXIS_MON_OB_C    : natural := 9;
+   constant I2C_INDEX_C      : natural := 10;
    -- constant APP0_INDEX_C    : natural := XXX; -- Now used for PIP interface
-   constant APP1_INDEX_C    : natural := 11;
-   constant APP2_INDEX_C    : natural := 12;
-   constant APP3_INDEX_C    : natural := 13;
-   constant APP4_INDEX_C    : natural := 14;
+   constant APP1_INDEX_C     : natural := 11;
+   constant APP2_INDEX_C     : natural := 12;
+   constant APP3_INDEX_C     : natural := 13;
+   constant APP4_INDEX_C     : natural := 14;
 
    constant NUM_AXI_MASTERS_C : natural := 15;
 
-   constant AXI_CROSSBAR_MASTERS_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
-      DMA_INDEX_C     => (
-         baseAddr     => x"0000_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      PHY_INDEX_C     => (
-         baseAddr     => x"0001_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      VERSION_INDEX_C => (
-         baseAddr     => x"0002_0000",
-         addrBits     => 14,
-         connectivity => x"FFFF"),
-      SYSMON_INDEX_C  => (
-         baseAddr     => x"0002_4000",
-         addrBits     => 14,
-         connectivity => x"FFFF"),
-      GPU_INDEX_C     => (
-         baseAddr     => x"0002_8000",
-         addrBits     => 15,
-         connectivity => x"FFFF"),
-      BPI_INDEX_C     => (
-         baseAddr     => x"0003_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      SPI0_INDEX_C    => (
-         baseAddr     => x"0004_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      SPI1_INDEX_C    => (
-         baseAddr     => x"0005_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
-      AXIS_MON_IB_C   => (
-         baseAddr     => x"0006_0000",
-         addrBits     => 15,
-         connectivity => x"FFFF"),
-      AXIS_MON_OB_C   => (
-         baseAddr     => x"0006_8000",
-         addrBits     => 15,
-         connectivity => x"FFFF"),
-      I2C_INDEX_C     => (
-         baseAddr     => x"0007_0000",
-         addrBits     => 16,
-         connectivity => x"FFFF"),
+   constant XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(NUM_AXI_MASTERS_C-1 downto 0) := (
+      DMA_INDEX_C      => (
+         baseAddr      => x"0000_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      PHY_INDEX_C      => (
+         baseAddr      => x"0001_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      VERSION_INDEX_C  => (
+         baseAddr      => x"0002_0000",
+         addrBits      => 14,
+         connectivity  => x"FFFF"),
+      SYSMON_INDEX_C   => (
+         baseAddr      => x"0002_4000",
+         addrBits      => 14,
+         connectivity  => x"FFFF"),
+      GPU_INDEX_C      => (
+         baseAddr      => x"0002_8000",
+         addrBits      => 15,
+         connectivity  => x"FFFF"),
+      BPI_INDEX_C      => (
+         baseAddr      => x"0003_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      SPI0_INDEX_C     => (
+         baseAddr      => x"0004_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      SPI1_INDEX_C     => (
+         baseAddr      => x"0005_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
+      AXIS_MON_IB_C    => (
+         baseAddr      => x"0006_0000",
+         addrBits      => 15,
+         connectivity  => x"FFFF"),
+      AXIS_MON_OB_C    => (
+         baseAddr      => x"0006_8000",
+         addrBits      => 15,
+         connectivity  => x"FFFF"),
+      I2C_INDEX_C      => (
+         baseAddr      => x"0007_0000",
+         addrBits      => 16,
+         connectivity  => x"FFFF"),
 --      APP0_INDEX_C    => (
 --         baseAddr     => x"0008_0000",
 --         addrBits     => 19,
 --         connectivity => x"FFFF"),
-      APP1_INDEX_C    => (
-         baseAddr     => x"0010_0000",
-         addrBits     => 20,
-         connectivity => x"FFFF"),
-      APP2_INDEX_C    => (
-         baseAddr     => x"0020_0000",
-         addrBits     => 21,
-         connectivity => x"FFFF"),
-      APP3_INDEX_C    => (
-         baseAddr     => x"0040_0000",
-         addrBits     => 22,
-         connectivity => x"FFFF"),
-      APP4_INDEX_C    => (
-         baseAddr     => x"0080_0000",
-         addrBits     => 23,
-         connectivity => x"FFFF"));
+      APP1_INDEX_C     => (
+         baseAddr      => x"0010_0000",
+         addrBits      => 20,
+         connectivity  => x"FFFF"),
+      APP2_INDEX_C     => (
+         baseAddr      => x"0020_0000",
+         addrBits      => 21,
+         connectivity  => x"FFFF"),
+      APP3_INDEX_C     => (
+         baseAddr      => x"0040_0000",
+         addrBits      => 22,
+         connectivity  => x"FFFF"),
+      APP4_INDEX_C     => (
+         baseAddr      => x"0080_0000",
+         addrBits      => 23,
+         connectivity  => x"FFFF"));
 
    constant APP_CROSSBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
       0               => (
@@ -203,6 +209,11 @@ architecture mapping of AxiPcieReg is
    signal axilReadSlave   : AxiLiteReadSlaveType;
    signal axilWriteMaster : AxiLiteWriteMasterType;
    signal axilWriteSlave  : AxiLiteWriteSlaveType;
+
+   signal xbarReadMaster  : AxiLiteReadMasterType;
+   signal xbarReadSlave   : AxiLiteReadSlaveType;
+   signal xbarWriteMaster : AxiLiteWriteMasterType;
+   signal xbarWriteSlave  : AxiLiteWriteSlaveType;
 
    signal axilReadMasters  : AxiLiteReadMasterArray(NUM_AXI_MASTERS_C-1 downto 0);
    signal axilReadSlaves   : AxiLiteReadSlaveArray(NUM_AXI_MASTERS_C-1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
@@ -313,10 +324,16 @@ begin
       -- Set whether the DATAGPU mode is enabled
       userValues(10)(0) <= ite(DATAGPU_EN_G, '1', '0');
 
+      -- Set whether the GEN_SYSMON_G mode is enabled
+      userValues(11)(0) <= ite(GEN_SYSMON_G, '1', '0');
+
       -- Set unused to zero
-      for i in 63 downto 11 loop
+      for i in 62 downto 12 loop
          userValues(i) <= x"00000000";
       end loop;
+
+      -- Set the AXI-Lite crossbar configuration verion number (increment if we change the mapping)
+      userValues(63) <= x"00000001";
 
    end process;
 
@@ -393,6 +410,34 @@ begin
             axilWriteSlave  => axilWriteSlave);
    end generate;
 
+   ----------------------------------------------------------------
+   -- Keep reads from passing writes stalled behind the slow non-proxy
+   -- I2C path (only needed when it exists)
+   ----------------------------------------------------------------
+   GEN_READ_ORDER : if (I2C_FAST_EN_G) generate
+      U_ReadOrder : entity axi_pcie_core.AxiPcieRegReadOrder
+         generic map (
+            TPD_G => TPD_G)
+         port map (
+            axilClk          => axiClk,
+            axilRst          => axiRst,
+            sAxilReadMaster  => axilReadMaster,
+            sAxilReadSlave   => axilReadSlave,
+            sAxilWriteMaster => axilWriteMaster,
+            sAxilWriteSlave  => axilWriteSlave,
+            mAxilReadMaster  => xbarReadMaster,
+            mAxilReadSlave   => xbarReadSlave,
+            mAxilWriteMaster => xbarWriteMaster,
+            mAxilWriteSlave  => xbarWriteSlave);
+   end generate;
+
+   NO_READ_ORDER : if (not I2C_FAST_EN_G) generate
+      xbarReadMaster  <= axilReadMaster;
+      axilReadSlave   <= xbarReadSlave;
+      xbarWriteMaster <= axilWriteMaster;
+      axilWriteSlave  <= xbarWriteSlave;
+   end generate;
+
    --------------------
    -- AXI-Lite Crossbar
    --------------------
@@ -402,14 +447,14 @@ begin
          DEC_ERROR_RESP_G   => ite(ROGUE_SIM_EN_G, AXI_RESP_DECERR_C, AXI_RESP_OK_C),
          NUM_SLAVE_SLOTS_G  => 1,
          NUM_MASTER_SLOTS_G => NUM_AXI_MASTERS_C,
-         MASTERS_CONFIG_G   => AXI_CROSSBAR_MASTERS_CONFIG_C)
+         MASTERS_CONFIG_G   => XBAR_CONFIG_C)
       port map (
          axiClk              => axiClk,
          axiClkRst           => axiRst,
-         sAxiWriteMasters(0) => axilWriteMaster,
-         sAxiWriteSlaves(0)  => axilWriteSlave,
-         sAxiReadMasters(0)  => axilReadMaster,
-         sAxiReadSlaves(0)   => axilReadSlave,
+         sAxiWriteMasters(0) => xbarWriteMaster,
+         sAxiWriteSlaves(0)  => xbarWriteSlave,
+         sAxiReadMasters(0)  => xbarReadMaster,
+         sAxiReadSlaves(0)   => xbarReadSlave,
          mAxiWriteMasters    => axilWriteMasters,
          mAxiWriteSlaves     => axilWriteSlaves,
          mAxiReadMasters     => axilReadMasters,
@@ -607,23 +652,30 @@ begin
    --------------------------
    -- Map the AXI-Lite to I2C
    --------------------------
-   U_AxiLiteMasterProxy : entity surf.AxiLiteMasterProxy
+   U_I2c : entity axi_pcie_core.AxiPcieRegI2c
       generic map (
-         TPD_G => TPD_G)
+         TPD_G            => TPD_G,
+         I2C_FAST_EN_G    => I2C_FAST_EN_G,
+         AXIL_BASE_ADDR_G => XBAR_CONFIG_C(I2C_INDEX_C).baseAddr)
       port map (
-         -- Clocks and Resets
-         axiClk          => axiClk,
-         axiRst          => axiRst,
-         -- AXI-Lite Register Interface
-         sAxiReadMaster  => axilReadMasters(I2C_INDEX_C),
-         sAxiReadSlave   => axilReadSlaves(I2C_INDEX_C),
-         sAxiWriteMaster => axilWriteMasters(I2C_INDEX_C),
-         sAxiWriteSlave  => axilWriteSlaves(I2C_INDEX_C),
-         -- AXI-Lite Register Interface
-         mAxiReadMaster  => i2cReadMaster,
-         mAxiReadSlave   => i2cReadSlave,
-         mAxiWriteMaster => i2cWriteMaster,
-         mAxiWriteSlave  => i2cWriteSlave);
+         -- Clock and Reset
+         axiClk             => axiClk,
+         axiRst             => axiRst,
+         -- Slave AXI-Lite Interface
+         sAxilReadMaster    => axilReadMasters(I2C_INDEX_C),
+         sAxilReadSlave     => axilReadSlaves(I2C_INDEX_C),
+         sAxilWriteMaster   => axilWriteMasters(I2C_INDEX_C),
+         sAxilWriteSlave    => axilWriteSlaves(I2C_INDEX_C),
+         -- I2C AXI-Lite Interfaces With Proxy
+         i2cReadMaster      => i2cReadMaster,
+         i2cReadSlave       => i2cReadSlave,
+         i2cWriteMaster     => i2cWriteMaster,
+         i2cWriteSlave      => i2cWriteSlave,
+         -- I2C AXI-Lite Interfaces Without Proxy
+         i2cFastReadMaster  => i2cFastReadMaster,
+         i2cFastReadSlave   => i2cFastReadSlave,
+         i2cFastWriteMaster => i2cFastWriteMaster,
+         i2cFastWriteSlave  => i2cFastWriteSlave);
 
    --------------------------------------
    -- Combine APP AXI-Lite buses together

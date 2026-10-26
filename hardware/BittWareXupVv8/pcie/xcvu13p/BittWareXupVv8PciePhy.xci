@@ -738,7 +738,7 @@
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MSIX_ENABLED">FALSE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MSIX_IMPL_EXT">FALSE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MSIX_RX_DECODE_EN">FALSE</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MSI_ENABLED">FALSE</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MSI_ENABLED">TRUE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MULTQ_EN">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.MULT_PF_DES">FALSE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.NUM_VFS_PF0">0</spirit:configurableElementValue>
@@ -1004,7 +1004,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_ENABLEMENT.pf0_class_code_sub_mqdma">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_ENABLEMENT.pf0_device_id">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_ENABLEMENT.pf0_interrupt_pin">true</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_ENABLEMENT.pf0_msi_cap_multimsgcap">false</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_ENABLEMENT.pf0_msi_cap_multimsgcap">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_ENABLEMENT.pf0_msi_enabled">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_ENABLEMENT.pf0_revision_id">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_ENABLEMENT.pf0_sub_class_interface_menu">true</spirit:configurableElementValue>
@@ -1439,7 +1439,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_interrupt_pin">INTA</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_link_status_slot_clock_config">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_msi_cap_multimsgcap">1_vector</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_msi_enabled">false</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_msi_enabled">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_msix_cap_pba_bir">BAR_1:0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_msix_cap_pba_offset">00000000</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.pf0_msix_cap_table_bir">BAR_1:0</spirit:configurableElementValue>

@@ -31,7 +31,6 @@ _DEFAULT_TRANSCEIVERS = {
     'XilinxKcu1500':       [xceiver.Qsfp]*2,
     'XilinxAlveoU200':     [xceiver.Qsfp]*2,
     'XilinxAlveoU250':     [xceiver.Qsfp]*2,
-    'XilinxAlveoU280':     [xceiver.Qsfp]*2,
     'XilinxAlveoU55c':     [xceiver.Qsfp]*2,
     'XilinxVariumC1100':   [xceiver.Qsfp]*2,
 }
@@ -47,15 +46,16 @@ _TRANSCEIVER_DISPATCH = {
 class AxiPcieCore(pr.Device):
     """This class maps to axi-pcie-core/shared/rtl/AxiPcieReg.vhd"""
     def __init__(self,
-                 description = 'Base components of the PCIe firmware core',
-                 useBpi      = False,
-                 useGpu      = False,
-                 useSpi      = False,
+                 description  = 'Base components of the PCIe firmware core',
+                 useBpi       = False,
+                 useGpu       = False,
+                 useSpi       = False,
                  transceiverClass = [None],
-                 numDmaLanes = 1,
-                 boardType   = None,
-                 extended    = False,
-                 sim         = False,
+                 numDmaLanes  = 1,
+                 boardType    = None,
+                 extended     = False,
+                 sim          = False,
+                 gpuShowBuffs = False,
                  **kwargs):
 
         # Resolve per-slot transceiver classes BEFORE super().__init__() so a
@@ -125,9 +125,10 @@ class AxiPcieCore(pr.Device):
             # Check if using GpuAsyncCore
             if useGpu:
                 self.add(pcie.AxiGpuAsyncCore(
-                    name     = 'AxiGpuAsyncCore',
-                    offset    = 0x0002_8000,
-                    expand    = True,
+                    name        = 'AxiGpuAsyncCore',
+                    offset      = 0x0002_8000,
+                    expand      = True,
+                    showBuffers = gpuShowBuffs,
                 ))
 
             # Check if using BPI PROM (Micron MT28 or Cypress S29GL)
@@ -229,7 +230,15 @@ class AxiPcieCore(pr.Device):
                             enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                         ))
 
-                elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250') or (boardType == 'XilinxAlveoU280'):
+                    # No proxy for Si570 access
+                    self.add(silabs.Si570(
+                        name = 'Si570',
+                        factory_freq = 156.25,
+                        max_freq = 810.0, # KCU1500 Si570 is a 10 to 810 MHz (grade B) part
+                        offset = 0x78000 + 0x2_000,
+                        enabled = False))
+
+                elif (boardType == 'XilinxAlveoU200') or (boardType == 'XilinxAlveoU250'):
 
                     XIL_DEVICE_G = 'ULTRASCALE_PLUS'
 
@@ -243,11 +252,12 @@ class AxiPcieCore(pr.Device):
                             enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                         ))
 
+                    # No proxy for Si570 access
                     self.add(silabs.Si570(
                         name = 'Si570',
                         factory_freq = 156.25,
-                        offset = 0x70000 + 0x2000,
-                        memBase = self.AxilBridge.proxy,
+                        max_freq = 810.0, # Alveo U200/U250 Si570 (570BAB000544DG) is a 10 to 810 MHz (grade B) part
+                        offset = 0x78000 + 0x2_000,
                         enabled = False))
 
                 elif (boardType == 'XilinxAlveoU55c') or (boardType == 'XilinxVariumC1100'):
@@ -279,10 +289,26 @@ class AxiPcieCore(pr.Device):
                             enabled = False, # enabled=False because I2C are slow transactions and might "log jam" register transaction pipeline
                         ))
 
+                        # SFP+ module in a QSFP cage (QSFP-to-SFP+ adapter): the CMS firmware only serves I2C address A0h.
+                        # PG348 defines Extended I2C Addressing (MAILBOX word 3, BIT16) to select A2h, but notes it is
+                        # "unused in QSFP mode" and "only supported in SFP+ modules". The U55C/C1100 cages are QSFP cages,
+                        # and on hardware setting BIT16 still returns A0h data with no HOST_MSG_ERR_REG error.
+                        # So hide the A2h (SFF-8472 diagnostics) variables mapped at byte offsets >= 256 since they are not accessible
+                        if cls is xceiver.Sfp:
+                            sfp = self.node(f'{cls.__name__}[{i}]')
+                            a2h = [v for v in sfp.variables.values() if isinstance(v, pr.RemoteVariable) and (v.offset >= (256 << 2))]
+                            for v in sfp.variables.values():
+                                if (v in a2h) or any(d in a2h for d in v.dependencies):
+                                    v.hidden = True
+
                 elif (boardType == 'XilinxKcu105'):
                     XIL_DEVICE_G = 'ULTRASCALE'
 
-                elif (boardType == 'XilinxKcu116') or (boardType == 'XilinxVcu128'):
+                # UltraScale+ boards with no I2C devices behind the BAR0 I2C slot (SysMon only):
+                #   XilinxKcu116:    XilinxKcu116Core leaves the AxiPcieReg I2C ports unconnected
+                #   XilinxVcu128:    XilinxVcu128Core leaves the AxiPcieReg I2C ports unconnected
+                #   XilinxAlveoU280: Si570 and QSFP I2C are reachable only through the satellite controller
+                elif (boardType == 'XilinxKcu116') or (boardType == 'XilinxVcu128') or (boardType == 'XilinxAlveoU280'):
                     XIL_DEVICE_G = 'ULTRASCALE_PLUS'
 
                 # SysMon Module

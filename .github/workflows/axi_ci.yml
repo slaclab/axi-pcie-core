@@ -25,11 +25,11 @@ jobs:
     steps:
 
       # This step checks out a copy of your repository.
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: 3.12
 
@@ -63,21 +63,26 @@ jobs:
       tag_name: ${{ github.ref_name }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0  # setup.py runs 'git describe --tags'
 
       - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5 # v4.0.1
         with:
           activate-environment: sudo_rogue_axpcie_surf_env_v3
           channels: conda-forge,tidair-tag
           python-version: '3.10'
           cache-environment: true
-          cache-environment-key: ${{ runner.os }}-focal-conda-v1
+          cache-environment-key: ${{ runner.os }}-focal-conda-v2
 
       - name: Install Dependencies
         shell: bash -l {0}
         run: |
-          conda install rogue axi_pcie_core surf conda-pack -y
+          conda install rogue surf conda-pack gitpython -y
+          # Install axipcie from this tag rather than the tidair-tag conda
+          # package, which is no longer published and stops at v6.6.1
+          pip install --no-deps --no-build-isolation .
 
       - name: Build Package Structure
         shell: bash -l {0}
@@ -102,6 +107,8 @@ jobs:
 
           # 3. Copy Source File using variables
           cp "$PY_SRC_DIR/$PY_SRC_FILENAME" "$STAGE_DIR$INSTALL_PATH/bin/"
+          # updatePcieFpga points to this script when the PCIe link is lost
+          cp "$PY_SRC_DIR/rescanPcieFpga.sh" "$STAGE_DIR$INSTALL_PATH/bin/"
 
           # 4. Create the Launcher Script
           # Points to the specific filename you defined above
@@ -144,7 +151,7 @@ jobs:
           fakeroot dpkg-deb --build package_root "fpga-pcie-reprogram-${{ github.ref_name }}_amd64.deb"
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: deb-package
           path: "*.deb"
@@ -159,10 +166,10 @@ jobs:
       contents: write
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Download Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: deb-package
 

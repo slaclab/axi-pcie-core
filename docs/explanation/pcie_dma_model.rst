@@ -18,7 +18,7 @@ Each lane contains a dedicated IB FIFO (host → FPGA application) and a
 dedicated OB FIFO (FPGA application → host).  The number of lanes is set by
 the ``DMA_SIZE_G`` generic (maximum 8), which is bounded by the
 ``AxiPcieCrossbar`` slave-port budget: the crossbar provides 10 AXI4 slave
-ports — one descriptor port, up to eight DMA lane ports, and one user
+ports: one descriptor port, up to eight DMA lane ports, and one user
 general-purpose port.
 
 Descriptor Rings
@@ -59,17 +59,31 @@ DMA IRQ Flow
 ------------
 
 When ``AxiStreamDmaV2`` completes one or more transfers it asserts the
-``dmaIrq`` output of ``AxiPcieDma``.  ``AxiPcieUltrascalePlusIrqFsm``
-receives this level-sensitive signal and converts it to a rising-edge MSI
-request for the PCIe PHY IP (``usrIrqReq``).  The FSM waits for the PHY's
-``usrIrqAck`` handshake before de-asserting the request and returning to
-idle.  This ensures that a new interrupt cannot collide with one that is still
-being serviced.
+level-sensitive ``dmaIrq`` output of ``AxiPcieDma``.  How that level reaches
+the host depends on the PCIe PHY family:
 
-The PCIe PHY delivers the MSI to the host.  The host driver (PyRogue /
-``rogue.hardware.axi.AxiStreamDma``) handles the interrupt, reads the
-completion status words from the descriptor ring, recycles completed
-descriptors, and schedules new transfers.
+- **UltraScale+ boards** (U50, U55C, U200, U250, U280, C1100, VCU128,
+  KCU116, XUP-VV8): the PHY wrapper instantiates
+  ``AxiPcieUltrascalePlusIrqFsm``, which drives the PHY's ``usr_irq_req`` /
+  ``usr_irq_ack`` handshake.  The FSM raises ``usrIrqReq`` when ``dmaIrq``
+  asserts, waits for the first ``usrIrqAck``, then holds the request until
+  ``dmaIrq`` clears (or a 250 000 000 cycle timeout, about 1 s at 250 MHz)
+  and drops it.  For legacy INTx, the PHY returns a second ack when it sends
+  ``Deassert_INTA``, so the FSM waits for that ack before returning to idle.
+  For MSI or MSI-X there is no deassert message and no second ack, so the FSM
+  returns to idle directly.  The FSM selects the handshake at run time from
+  its ``msiEnable`` / ``msixEnable`` inputs, which the U55C, C1100, and
+  XUP-VV8 wrappers drive from the PHY's ``msi_enable`` status output.
+  Wrappers that leave these inputs unconnected always use the INTx handshake.
+- **UltraScale boards** (KCU1500, KCU105, PC821, AlphaData KU3,
+  PgpCard G4): ``dmaIrq`` drives the PHY's ``intx_msi_request`` input
+  directly, and the PCIe IP sends INTx or MSI according to what the host
+  enabled.
+
+The host-side ``datadev`` kernel driver (``aes-stream-drivers``) services the
+interrupt: it reads the completion status words from the descriptor ring,
+recycles completed descriptors, and wakes the userspace readers (for example
+``rogue.hardware.axi.AxiStreamDma``) waiting on the device node.
 
 End-to-End Data-Flow Diagram
 ----------------------------
@@ -111,7 +125,8 @@ OB path (FPGA application → host), including the descriptor and IRQ paths:
                +--- descriptor read/write <-> host descriptor ring (<=40-bit addr)
                |
                |  IRQ path
-               +--- dmaIrq -> AxiPcieUltrascalePlusIrqFsm -> usrIrqReq (MSI)
+               +--- dmaIrq -> AxiPcieUltrascalePlusIrqFsm -> usrIrqReq (UltraScale+)
+               |    dmaIrq -> intx_msi_request              (UltraScale)
                                                                   |
                                                                   v
-                                                            PCIe PHY -> host MSI
+                                                     PCIe PHY -> host INTx / MSI / MSI-X

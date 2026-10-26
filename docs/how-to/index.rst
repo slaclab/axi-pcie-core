@@ -11,4 +11,5 @@ hardware, driving the PyRogue device tree, and cutting a release.
    integrate_as_submodule
    add_new_board
    use_pyrogue
+   reprogram_pcie_prom
    release_flow

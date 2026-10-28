@@ -262,7 +262,7 @@ proc create_root_design { parentCell } {
   set plRefClk [ create_bd_port -dir O -type clk plRefClk ]
   set dmaIrq [ create_bd_port -dir I -type intr dmaIrq ]
   set_property -dict [ list \
-   CONFIG.SENSITIVITY {LEVEL_HIGH} \
+   CONFIG.SENSITIVITY {EDGE_RISING} \
  ] $dmaIrq
   set dmaRstN [ create_bd_port -dir I -type rst dmaRstN ]
   set dmaAck [ create_bd_port -dir O -from 0 -to 0 -type rst dmaAck ]

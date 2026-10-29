@@ -178,6 +178,10 @@ architecture mapping of XilinxKcu1500ExtendedPciePhyWrapper is
    signal refClkBufg : sl;
    signal cfgRstL    : sl;
    signal sysRstL    : sl;
+
+   -- Keep the net so the set_false_path -through in the core XDC can find it
+   attribute keep            : string;
+   attribute keep of sysRstL : signal is "TRUE";
    signal clk      : sl;
    signal rst      : sl;
    signal rstL     : sl;

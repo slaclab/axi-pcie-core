@@ -1800,7 +1800,7 @@
                 "value": "M00_AXI:0x80"
               },
               "REMAPS": {
-                "value": "M00_AXI {{0x0000_0000 0x80_0000_0000 256G}}"
+                "value": "M00_AXI {{0x0000_0000 0xA0_0000_0000 128G}}"
               },
               "R_TRAFFIC_CLASS": {
                 "value": "BEST_EFFORT"
@@ -1810,11 +1810,11 @@
               }
             },
             "bridges": [
-              "M00_AXI {{0x0 0x80_0000_0000 256G}}"
+              "M00_AXI {{0x0 0xA0_0000_0000 128G}}"
             ],
             "bd_attributes": {
               "BRIDGES": {
-                "value": "M00_AXI {{0x0 0x80_0000_0000 256G}}",
+                "value": "M00_AXI {{0x0 0xA0_0000_0000 128G}}",
                 "value_src": "auto"
               },
               "TYPE": {
@@ -1983,7 +1983,7 @@
               "SEG_cips_pspmc_0_psv_noc_pcie_2": {
                 "address_block": "/cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_2",
                 "offset": "0x0000000000000000",
-                "range": "256G"
+                "range": "128G"
               }
             }
           }

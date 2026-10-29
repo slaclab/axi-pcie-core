@@ -617,7 +617,7 @@ proc create_root_design { parentCell } {
    CONFIG.DEST_IDS {M00_AXI:0x80} \
    CONFIG.NOC_PARAMS {} \
    CONFIG.CATEGORY {pl} \
-   CONFIG.REMAPS {M00_AXI {{0x0000_0000 0x80_0000_0000 256G}}} \
+   CONFIG.REMAPS {M00_AXI {{0x0000_0000 0xA0_0000_0000 128G}}} \
  ] [get_bd_intf_pins $axi_noc_dma_0/S00_AXI]
 
   set_property -dict [ list \
@@ -673,7 +673,7 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x000600000000 -range 0x000200000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_1] -force
   exclude_bd_addr_seg [get_bd_addr_segs sAxi/SEG_cips_pspmc_0_psv_noc_pcie_0]
   exclude_bd_addr_seg [get_bd_addr_segs sAxi/SEG_cips_pspmc_0_psv_noc_pcie_1]
-  assign_bd_address -offset 0x0 -range 0x004000000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_2] -force
+  assign_bd_address -offset 0x0 -range 0x002000000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_2] -force
 
   # Restore current instance
   current_bd_instance $oldCurInst

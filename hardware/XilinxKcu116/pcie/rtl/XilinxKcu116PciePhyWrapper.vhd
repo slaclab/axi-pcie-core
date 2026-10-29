@@ -173,12 +173,6 @@ architecture mapping of XilinxKcu116PciePhyWrapper is
 
    signal refClk   : sl;
    signal refClkGt : sl;
-   signal cfgRstL    : sl;
-   signal sysRstL    : sl;
-
-   -- Keep the net so the set_false_path -through in the core XDC can find it
-   attribute keep            : string;
-   attribute keep of sysRstL : signal is "TRUE";
    signal clk      : sl;
    signal rst      : sl;
    signal rstL     : sl;
@@ -191,6 +185,14 @@ architecture mapping of XilinxKcu116PciePhyWrapper is
    signal usrIrqReq : sl;
    signal usrIrqAck : sl;
    signal msiEnable : sl;
+
+   -- Post-configuration PCIe hard block reset (see U_CfgRst below)
+   signal cfgRstL : sl;
+   signal sysRstL : sl;
+
+   -- Keep the net so the set_false_path -through in the core XDC can find it
+   attribute keep            : string;
+   attribute keep of sysRstL : signal is "TRUE";
 
 begin
 

@@ -171,7 +171,7 @@ begin
             dmaIrq         => dmaIrq,
             -- PCIe Ports
             pciRstL        => pciRstL,
-         cfgClk         => cfgClk,
+            cfgClk         => cfgClk,
             pciRefClkP     => pciRefClkP,
             pciRefClkN     => pciRefClkN,
             pciRxP         => pciRxP,

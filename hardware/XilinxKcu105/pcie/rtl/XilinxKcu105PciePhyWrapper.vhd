@@ -172,6 +172,13 @@ architecture mapping of XilinxKcu105PciePhyWrapper is
 
    signal refClk   : sl;
    signal refClkGt : sl;
+   signal clk      : sl;
+   signal rst      : sl;
+   signal rstL     : sl;
+   signal axiClock : sl;
+   signal axiReset : sl;
+
+   -- Post-configuration PCIe hard block reset (see U_CfgRst below)
    signal refClkBufg : sl;
    signal cfgRstL    : sl;
    signal sysRstL    : sl;
@@ -179,11 +186,6 @@ architecture mapping of XilinxKcu105PciePhyWrapper is
    -- Keep the net so the set_false_path -through in the core XDC can find it
    attribute keep            : string;
    attribute keep of sysRstL : signal is "TRUE";
-   signal clk      : sl;
-   signal rst      : sl;
-   signal rstL     : sl;
-   signal axiClock : sl;
-   signal axiReset : sl;
 begin
 
    axiClk <= clk;

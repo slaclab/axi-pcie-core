@@ -608,7 +608,7 @@
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TIMEOUT1_SEL">0xF</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_TIMEOUT_MULT">0x3</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.C_VSEC_CAP_ADDR">0x128</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.DEDICATE_PERST">true</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.DEDICATE_PERST">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.DEV_PORT_TYPE">0</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.DISABLE_BRAM_PIPELINE">FALSE</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="MODELPARAM_VALUE.DISABLE_EQ_SYNCHRONIZER">FALSE</spirit:configurableElementValue>
@@ -958,7 +958,7 @@
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.copy_sriov_pf0">true</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.coreclk_freq">500</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.ctrl_skip_mask">true</spirit:configurableElementValue>
-        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.dedicate_perst">true</spirit:configurableElementValue>
+        <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.dedicate_perst">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.device_port_type">PCI_Express_Endpoint_device</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.disable_bram_pipeline">false</spirit:configurableElementValue>
         <spirit:configurableElementValue spirit:referenceId="PARAM_VALUE.disable_eq_synchronizer">false</spirit:configurableElementValue>
@@ -1764,6 +1764,8 @@
             <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_RQ.TDATA_NUM_BYTES" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_RQ.TDEST_WIDTH" xilinx:valueSource="constant"/>
             <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.S_AXIS_RQ.TID_WIDTH" xilinx:valueSource="constant"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.BASEADDR" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.HIGHADDR" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.PF0_DEVICE_ID_mqdma" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.PF2_DEVICE_ID_mqdma" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.PF3_DEVICE_ID_mqdma" xilinx:valueSource="user"/>
@@ -1773,6 +1775,7 @@
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.bar_indicator" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.c_s_axi_supports_narrow_burst" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.coreclk_freq" xilinx:valueSource="user"/>
+            <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.dedicate_perst" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.functional_mode" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.mode_selection" xilinx:valueSource="user"/>
             <xilinx:configElementInfo xilinx:referenceId="PARAM_VALUE.pf0_bar0_64bit" xilinx:valueSource="user"/>

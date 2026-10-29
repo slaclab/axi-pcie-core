@@ -609,6 +609,7 @@ proc create_root_design { parentCell } {
    CONFIG.CATEGORY {ps_pcie} \
  ] [get_bd_intf_pins $axi_noc_dma_0/M00_AXI]
 
+  # CONFIG.REMAPS moves IOs to where PCIe host space is mapped
   set_property -dict [ list \
    CONFIG.R_TRAFFIC_CLASS {BEST_EFFORT} \
    CONFIG.W_TRAFFIC_CLASS {BEST_EFFORT} \
@@ -616,6 +617,7 @@ proc create_root_design { parentCell } {
    CONFIG.DEST_IDS {M00_AXI:0x80} \
    CONFIG.NOC_PARAMS {} \
    CONFIG.CATEGORY {pl} \
+   CONFIG.REMAPS {M00_AXI {{0x0000_0000 0x80_0000_0000 256G}}} \
  ] [get_bd_intf_pins $axi_noc_dma_0/S00_AXI]
 
   set_property -dict [ list \
@@ -665,10 +667,13 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x00000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/LPD_AXI_NOC_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S01_AXI/C1_DDR_LOW0] -force
   assign_bd_address -offset 0x050000000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/PMC_NOC_AXI_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S00_AXI/C0_DDR_CH1] -force
   assign_bd_address -offset 0x00000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/PMC_NOC_AXI_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S00_AXI/C0_DDR_LOW0] -force
+
+  # Disable bridge configuration in PCIe (PSV_noc_pcie_0, PSV_noc_pcie_1), map range from 0 to PCIe host mem space
   assign_bd_address -offset 0xE0000000 -range 0x10000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_0] -force
   assign_bd_address -offset 0x000600000000 -range 0x000200000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_1] -force
-  assign_bd_address -offset 0x008000000000 -range 0x004000000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_2] -force
-
+  exclude_bd_addr_seg [get_bd_addr_segs sAxi/SEG_cips_pspmc_0_psv_noc_pcie_0]
+  exclude_bd_addr_seg [get_bd_addr_segs sAxi/SEG_cips_pspmc_0_psv_noc_pcie_1]
+  assign_bd_address -offset 0x0 -range 0x004000000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_2] -force
 
   # Restore current instance
   current_bd_instance $oldCurInst

@@ -175,6 +175,9 @@ architecture mapping of XilinxKcu1500PciePhyWrapper is
 
    signal refClk   : sl;
    signal refClkGt : sl;
+   signal refClkBufg : sl;
+   signal cfgRstL    : sl;
+   signal sysRstL    : sl;
    signal clk      : sl;
    signal rst      : sl;
    signal rstL     : sl;
@@ -208,6 +211,36 @@ begin
          ODIV2 => refClk,
          O     => refClkGt);
 
+   -- Hold the PCIe hard block in reset for 10 ms after every FPGA
+   -- configuration.  When the FPGA is reloaded with PERST# deasserted (IPROG
+   -- from the PROM, or a JTAG program while the host stays up), the hard block
+   -- otherwise starts link training straight out of configuration and some
+   -- root ports (AMD Raphael/Granite Ridge GPP bridges) never recover the link
+   -- until the host is rebooted.  This pulse only follows configuration; it is
+   -- not retriggered by PERST#, so the PERST#-to-Detect timing at a warm
+   -- reset is unchanged.  Requires dedicate_perst=false in the PCIe IP so that
+   -- sys_rst_n can be driven from the fabric.
+   U_BUFG_GT : BUFG_GT
+      port map (
+         I       => refClk,
+         CE      => '1',
+         CEMASK  => '1',
+         CLR     => '0',
+         CLRMASK => '1',
+         DIV     => "000",
+         O       => refClkBufg);
+
+   U_CfgRst : entity surf.PwrUpRst
+      generic map (
+         TPD_G          => TPD_G,
+         OUT_POLARITY_G => '0',
+         DURATION_G     => 1000000)     -- 10 ms @ 100 MHz
+      port map (
+         clk    => refClkBufg,
+         rstOut => cfgRstL);
+
+   sysRstL <= pciRstL and cfgRstL;
+
    -------------------
    -- AXI PCIe IP Core
    -------------------
@@ -216,7 +249,7 @@ begin
          -- Clocks and Resets
          sys_clk_gt             => refClkGt,
          refclk                 => refClk,
-         sys_rst_n              => pciRstL,
+         sys_rst_n              => sysRstL,
          axi_aclk               => clk,
          axi_aresetn            => rstL,
          axi_ctl_aclk           => clk,

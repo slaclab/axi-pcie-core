@@ -273,7 +273,7 @@ proc create_root_design { parentCell } {
     CONFIG.CLOCK_MODE {Custom} \
     CONFIG.CPM_CONFIG { \
       CPM_AXI_SLV_BRIDGE0_BASE_ADDRR_H {0x00000000} \
-      CPM_AXI_SLV_BRIDGE1_BASE_ADDRR_H {0x000000A0} \
+      CPM_AXI_SLV_BRIDGE1_BASE_ADDRR_H {0x00000000} \
       CPM_PCIE0_ACS_CAP_ON {0} \
       CPM_PCIE0_ARI_CAP_ENABLED {0} \
       CPM_PCIE0_BRIDGE_AXI_SLAVE_IF {1} \
@@ -306,6 +306,7 @@ proc create_root_design { parentCell } {
       CPM_PCIE0_PF0_PM_CAP_SUPP_D1_STATE {0} \
       CPM_PCIE1_ACS_CAP_ON {0} \
       CPM_PCIE1_ARI_CAP_ENABLED {0} \
+      CPM_PCIE1_AXIBAR2PCIE_BASEADDR_2_H {0x000000A0} \
       CPM_PCIE1_BRIDGE_AXI_SLAVE_IF {1} \
       CPM_PCIE1_CFG_EXT_IF {0} \
       CPM_PCIE1_CFG_VEND_ID {1A4A} \
@@ -318,6 +319,7 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_MSI_X_OPTIONS {None} \
       CPM_PCIE1_NUM_USR_IRQ {1} \
       CPM_PCIE1_PCIE_REGION_0_EN {0} \
+      CPM_PCIE1_PCIE_REGION_1_EN {0} \
       CPM_PCIE1_PCIE_REGION_2_EN {1} \
       CPM_PCIE1_PCIE_REGION_2_SCALE {Gigabytes} \
       CPM_PCIE1_PCIE_REGION_2_SIZE {128} \

@@ -256,7 +256,7 @@ proc create_root_design { parentCell } {
   set dmaClk [ create_bd_port -dir I -type clk -freq_hz 250000000 dmaClk ]
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {sAxi:mAxi} \
-   CONFIG.ASSOCIATED_RESET {dmaRstN:dmaAck} \
+   CONFIG.ASSOCIATED_RESET {dmaRstN} \
  ] $dmaClk
   set plRstN [ create_bd_port -dir O -type rst plRstN ]
   set plRefClk [ create_bd_port -dir O -type clk plRefClk ]
@@ -265,7 +265,7 @@ proc create_root_design { parentCell } {
    CONFIG.SENSITIVITY {EDGE_RISING} \
  ] $dmaIrq
   set dmaRstN [ create_bd_port -dir I -type rst dmaRstN ]
-  set dmaAck [ create_bd_port -dir O -from 0 -to 0 -type rst dmaAck ]
+  set dmaAck [ create_bd_port -dir O -from 0 -to 0 dmaAck ]
 
   # Create instance: cips, and set properties
   set cips [ create_bd_cell -type ip -vlnv xilinx.com:ip:versal_cips:3.4 cips ]
@@ -274,36 +274,8 @@ proc create_root_design { parentCell } {
     CONFIG.CPM_CONFIG { \
       CPM_AXI_SLV_BRIDGE0_BASE_ADDRR_H {0x00000000} \
       CPM_AXI_SLV_BRIDGE1_BASE_ADDRR_H {0x00000000} \
-      CPM_PCIE0_ACS_CAP_ON {0} \
-      CPM_PCIE0_ARI_CAP_ENABLED {0} \
-      CPM_PCIE0_BRIDGE_AXI_SLAVE_IF {1} \
-      CPM_PCIE0_CFG_EXT_IF {0} \
-      CPM_PCIE0_CFG_VEND_ID {1A4A} \
       CPM_PCIE0_FUNCTIONAL_MODE {None} \
-      CPM_PCIE0_MAX_LINK_SPEED {32.0_GT/s} \
       CPM_PCIE0_MODES {None} \
-      CPM_PCIE0_MODE_SELECTION {Advanced} \
-      CPM_PCIE0_MSI_X_OPTIONS {MSI-X_External} \
-      CPM_PCIE0_NUM_USR_IRQ {1} \
-      CPM_PCIE0_PCIE_REGION_0_EN {0} \
-      CPM_PCIE0_PCIE_REGION_2_EN {1} \
-      CPM_PCIE0_PCIE_REGION_2_SCALE {Gigabytes} \
-      CPM_PCIE0_PCIE_REGION_2_SIZE {128} \
-      CPM_PCIE0_PF0_BAR0_BRIDGE_SCALE {Kilobytes} \
-      CPM_PCIE0_PF0_BAR0_BRIDGE_SIZE {4} \
-      CPM_PCIE0_PF0_BAR0_BRIDGE_STEERING {CPM_PCIE_NOC_0} \
-      CPM_PCIE0_PF0_BAR0_SCALE {Megabytes} \
-      CPM_PCIE0_PF0_BAR0_SIZE {16} \
-      CPM_PCIE0_PF0_BASE_CLASS_VALUE {11} \
-      CPM_PCIE0_PF0_CFG_DEV_ID {2030} \
-      CPM_PCIE0_PF0_CFG_SUBSYS_ID {2030} \
-      CPM_PCIE0_PF0_CFG_SUBSYS_VEND_ID {1A4A} \
-      CPM_PCIE0_PF0_INTERRUPT_PIN {NONE} \
-      CPM_PCIE0_PF0_MSI_ENABLED {0} \
-      CPM_PCIE0_PF0_PM_CAP_PMESUPPORT_D0 {0} \
-      CPM_PCIE0_PF0_PM_CAP_PMESUPPORT_D1 {0} \
-      CPM_PCIE0_PF0_PM_CAP_PMESUPPORT_D3HOT {0} \
-      CPM_PCIE0_PF0_PM_CAP_SUPP_D1_STATE {0} \
       CPM_PCIE1_ACS_CAP_ON {0} \
       CPM_PCIE1_ARI_CAP_ENABLED {0} \
       CPM_PCIE1_AXIBAR2PCIE_BASEADDR_2_H {0x000000A0} \

@@ -35,6 +35,15 @@ _DEFAULT_TRANSCEIVERS = {
     'XilinxVariumC1100':   [xceiver.Qsfp]*2,
 }
 
+# GT channel driver (surf.xilinx) of the serial transceivers of each boardType,
+# for applications that expose the GT DRP of their lanes (eye scan, link tuning)
+GT_CHANNEL_CLASS = {
+    'SlacPgpCardG4':     xil.Gthe3Channel,
+    'XilinxKcu1500':     xil.Gthe3Channel,
+    'XilinxAlveoU200':   xil.Gtye4Channel,
+    'XilinxVariumC1100': xil.Gtye4Channel,
+}
+
 # String label -> transceiver class.
 _TRANSCEIVER_DISPATCH = {
     'QSFP':    xceiver.Qsfp,

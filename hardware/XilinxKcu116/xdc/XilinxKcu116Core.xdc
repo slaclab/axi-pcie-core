@@ -74,6 +74,7 @@ set_property -dict { PACKAGE_PIN T19 IOSTANDARD LVCMOS18 } [get_ports {pciRstL}]
 ##########
 
 create_clock -period 10.000 -name pciRefClkP [get_ports {pciRefClkP}]
+create_clock -period 20.000 -name cfgMClk    [get_pins  {U_Core/U_STARTUPE3/CFGMCLK}]
 create_clock -period 16.000 -name dnaClk     [get_pins  {U_Core/U_REG/U_Version/GEN_DEVICE_DNA.DeviceDna_1/GEN_ULTRA_SCALE.DeviceDnaUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 create_clock -period 16.000 -name iprogClk   [get_pins  {U_Core/U_REG/U_Version/GEN_ICAP.Iprog_1/GEN_ULTRA_SCALE.IprogUltraScale_Inst/BUFGCE_DIV_Inst/O}]
 
@@ -83,6 +84,7 @@ set_clock_groups -asynchronous -group [get_clocks {dnaClk}]   -group [get_clocks
 set_clock_groups -asynchronous -group [get_clocks {iprogClk}] -group [get_clocks -of_objects [get_pins U_Core/REAL_PCIE.U_AxiPciePhy/U_AxiPcie/inst/pcie4_ip_i/inst/gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O]]
 set_clock_groups -asynchronous -group [get_clocks pciRefClkP] -group [get_clocks U_Core/REAL_PCIE.U_AxiPciePhy/U_AxiPcie/inst/pcie4_ip_i/inst/gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_intclk/O]
 set_false_path -from [get_ports {pciRstL}]
+set_false_path -through [get_nets {U_Core/REAL_PCIE.U_AxiPciePhy/sysRstL}]
 
 set_property HIGH_PRIORITY true [get_nets {U_Core/REAL_PCIE.U_AxiPciePhy/U_AxiPcie/inst/pcie4_ip_i/inst/gt_top_i/diablo_gt.diablo_gt_phy_wrapper/phy_clk_i/bufg_gt_userclk/O}]
 

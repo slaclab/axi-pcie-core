@@ -127,6 +127,8 @@ architecture mapping of XilinxKcu116Core is
 
    signal eos      : sl;
    signal userCclk : sl;
+   signal cfgMClk  : sl;
+   signal cfgClk   : sl;
 
 begin
 
@@ -169,6 +171,7 @@ begin
             dmaIrq         => dmaIrq,
             -- PCIe Ports
             pciRstL        => pciRstL,
+            cfgClk         => cfgClk,
             pciRefClkP     => pciRefClkP,
             pciRefClkN     => pciRefClkN,
             pciRxP         => pciRxP,
@@ -254,7 +257,7 @@ begin
          SIM_CCLK_FREQ => 0.0)  -- Set the Configuration Clock Frequency(ns) for simulation
       port map (
          CFGCLK    => open,  -- 1-bit output: Configuration main clock output
-         CFGMCLK   => open,  -- 1-bit output: Configuration internal oscillator clock output
+         CFGMCLK   => cfgMClk,  -- 1-bit output: Configuration internal oscillator clock output
          DI        => di,  -- 4-bit output: Allow receiving on the D[3:0] input pins
          EOS       => eos,  -- 1-bit output: Active high output signal indicating the End Of Startup.
          PREQ      => open,  -- 1-bit output: PROGRAM request to fabric output
@@ -274,6 +277,11 @@ begin
    do          <= "111" & bootMosi(0);
    bootMiso(0) <= di(1);
    sck         <= uOr(bootSck);
+
+   U_BUFG_CFGMCLK : BUFG
+      port map (
+         I => cfgMClk,
+         O => cfgClk);
 
    userCclk <= emcClk when(eos = '0') else sck;
 

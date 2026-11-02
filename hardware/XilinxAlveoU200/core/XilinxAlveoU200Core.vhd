@@ -104,8 +104,9 @@ end XilinxAlveoU200Core;
 
 architecture mapping of XilinxAlveoU200Core is
 
-   constant I2C_SCL_FREQ_C  : real := 100.0E+3;  -- units of Hz
-   constant I2C_MIN_PULSE_C : real := 100.0E-9;  -- units of seconds
+   constant I2C_SCL_FREQ_C      : real := 100.0E+3;  -- units of Hz (QSFP)
+   constant I2C_FAST_SCL_FREQ_C : real := 400.0E+3;  -- units of Hz (PCA9546A I2C MUX and Si570)
+   constant I2C_MIN_PULSE_C     : real := 100.0E-9;  -- units of seconds
 
    constant XBAR_MI2C_CONFIG_C : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
       0               => (
@@ -150,10 +151,10 @@ architecture mapping of XilinxAlveoU200Core is
    signal intPipObMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
    signal intPipObSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_FORCE_C;
 
-   signal mI2cReadMasters  : AxiLiteReadMasterArray(1 downto 0);
-   signal mI2cReadSlaves   : AxiLiteReadSlaveArray(1 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
-   signal mI2cWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
-   signal mI2cWriteSlaves  : AxiLiteWriteSlaveArray(1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+   signal mI2cReadMasters  : AxiLiteReadMasterArray(2 downto 0);
+   signal mI2cReadSlaves   : AxiLiteReadSlaveArray(2 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+   signal mI2cWriteMasters : AxiLiteWriteMasterArray(2 downto 0);
+   signal mI2cWriteSlaves  : AxiLiteWriteSlaveArray(2 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
    signal i2cReadMaster  : AxiLiteReadMasterType;
    signal i2cReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
@@ -276,35 +277,32 @@ begin
                mAxilWriteMaster => mI2cWriteMasters(1),
                mAxilWriteSlave  => mI2cWriteSlaves(1));
 
-         U_XbarMI2cMux : entity surf.AxiLiteCrossbar
-            generic map (
-               TPD_G              => TPD_G,
-               NUM_SLAVE_SLOTS_G  => 2,
-               NUM_MASTER_SLOTS_G => 1,
-               MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
-            port map (
-               axiClk              => sysClock,
-               axiClkRst           => sysReset,
-               sAxiWriteMasters    => mI2cWriteMasters,
-               sAxiWriteSlaves     => mI2cWriteSlaves,
-               sAxiReadMasters     => mI2cReadMasters,
-               sAxiReadSlaves      => mI2cReadSlaves,
-               mAxiWriteMasters(0) => i2cWriteMaster,
-               mAxiWriteSlaves(0)  => i2cWriteSlave,
-               mAxiReadMasters(0)  => i2cReadMaster,
-               mAxiReadSlaves(0)   => i2cReadSlave);
-
       end generate;
 
       BYP_QSFP_CDR_DISABLE : if (not QSFP_CDR_DISABLE_G) generate
 
-         i2cWriteMaster     <= mI2cWriteMasters(0);
-         mI2cWriteSlaves(0) <= i2cWriteSlave;
-
-         i2cReadMaster     <= mI2cReadMasters(0);
-         mI2cReadSlaves(0) <= i2cReadSlave;
+         mI2cReadMasters(1)  <= AXI_LITE_READ_MASTER_INIT_C;
+         mI2cWriteMasters(1) <= AXI_LITE_WRITE_MASTER_INIT_C;
 
       end generate;
+
+      U_XbarMI2cMux : entity surf.AxiLiteCrossbar
+         generic map (
+            TPD_G              => TPD_G,
+            NUM_SLAVE_SLOTS_G  => 3,
+            NUM_MASTER_SLOTS_G => 1,
+            MASTERS_CONFIG_G   => XBAR_MI2C_CONFIG_C)
+         port map (
+            axiClk              => sysClock,
+            axiClkRst           => sysReset,
+            sAxiWriteMasters    => mI2cWriteMasters,
+            sAxiWriteSlaves     => mI2cWriteSlaves,
+            sAxiReadMasters     => mI2cReadMasters,
+            sAxiReadSlaves      => mI2cReadSlaves,
+            mAxiWriteMasters(0) => i2cWriteMaster,
+            mAxiWriteSlaves(0)  => i2cWriteSlave,
+            mAxiReadMasters(0)  => i2cReadMaster,
+            mAxiReadSlaves(0)   => i2cReadSlave);
 
       U_XbarI2cMux : entity surf.AxiLiteCrossbarI2cMux
          generic map (
@@ -312,7 +310,7 @@ begin
             -- I2C MUX Generics
             MUX_DECODE_MAP_G   => I2C_MUX_DECODE_MAP_PCA9546A_C,
             I2C_MUX_ADDR_G     => b"1110_100",
-            I2C_SCL_FREQ_G     => I2C_SCL_FREQ_C,
+            I2C_SCL_FREQ_G     => I2C_FAST_SCL_FREQ_C,
             I2C_MIN_PULSE_G    => I2C_MIN_PULSE_C,
             AXIL_CLK_FREQ_G    => DMA_CLK_FREQ_C,
             -- AXI-Lite Crossbar Generics
@@ -362,7 +360,7 @@ begin
       U_SI570 : entity surf.AxiI2cRegMasterCore
          generic map (
             TPD_G           => TPD_G,
-            I2C_SCL_FREQ_G  => I2C_SCL_FREQ_C,
+            I2C_SCL_FREQ_G  => I2C_FAST_SCL_FREQ_C,
             I2C_MIN_PULSE_G => I2C_MIN_PULSE_C,
             DEVICE_MAP_G    => SI570_I2C_CONFIG_C,
             AXI_CLK_FREQ_G  => DMA_CLK_FREQ_C)
@@ -443,6 +441,7 @@ begin
          PCIE_HW_TYPE_G       => HW_TYPE_XILINX_U200_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
          DATAGPU_EN_G         => DATAGPU_EN_G,
+         I2C_FAST_EN_G        => true,
          DMA_SIZE_G           => DMA_SIZE_G)
       port map (
          -- AXI4 Interfaces
@@ -464,11 +463,16 @@ begin
          phyReadSlave        => phyReadSlave,
          phyWriteMaster      => phyWriteMaster,
          phyWriteSlave       => phyWriteSlave,
-         -- I2C AXI-Lite Interfaces
+         -- I2C AXI-Lite Interfaces With Proxy (axiClk domain)
          i2cReadMaster       => mI2cReadMasters(0),
          i2cReadSlave        => mI2cReadSlaves(0),
          i2cWriteMaster      => mI2cWriteMasters(0),
          i2cWriteSlave       => mI2cWriteSlaves(0),
+         -- I2C AXI-Lite Interfaces Without Proxy (axiClk domain)
+         i2cFastReadMaster   => mI2cReadMasters(2),
+         i2cFastReadSlave    => mI2cReadSlaves(2),
+         i2cFastWriteMaster  => mI2cWriteMasters(2),
+         i2cFastWriteSlave   => mI2cWriteSlaves(2),
          -- (Optional) Application AXI-Lite Interfaces
          appClk              => appClk,
          appRst              => appRst,

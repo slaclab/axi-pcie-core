@@ -41,3 +41,5 @@ loadRuckusTcl "$::DIR_PATH/pcie-4x8"
 # Adding the Si5345 configurations
 add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/pll-config/Si5394A_GT_REFCLK_156MHz.mem"
 add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/pll-config/Si5394A_GT_REFCLK_161MHz.mem"
+add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/pll-config/Si5394A_GT_REFCLK_156MHz_LCLS-I.mem"
+add_files -norecurse "$::DIR_PATH/../XilinxAlveoU55c/pll-config/Si5394A_GT_REFCLK_156MHz_LCLS-II.mem"

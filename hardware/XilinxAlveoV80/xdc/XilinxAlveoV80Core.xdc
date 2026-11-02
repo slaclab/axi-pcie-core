@@ -130,10 +130,3 @@ set_property -dict { PACKAGE_PIN BP11    IOSTANDARD SSTL12                      
 set_property -dict { PACKAGE_PIN BW7     IOSTANDARD LVCMOS12                          } [get_ports "psDdrResetN[0]"]    ;# Bank 701 VCCO  - VR_1V2_VCCO_DDR4 -Net CH0_DDR4_0_0_RESET_B - IO_L25P_N8P2_M0P104_701
 
 set_property -dict { PACKAGE_PIN BY9     IOSTANDARD LVDS15                            } [get_ports "psDdrClkP"]         ;# Bank 701 VCCO - VR_1V2_VCCO_DDR4                       - IO_L24P_GC_XCC_N8P0_M0P102_701
-
-##########################################
-# SMBUS Interfaces
-##########################################
-
-set_property -dict { PACKAGE_PIN CG6     IOSTANDARD LVCMOS12    SLEW SLOW   DRIVE 8   } [get_ports "smbusScl"]          ;# Bank 702 VCCO - VR_1V2_VCCO_DDR4
-set_property -dict { PACKAGE_PIN CH7     IOSTANDARD LVCMOS12    SLEW SLOW   DRIVE 8   } [get_ports "smbusSda"]          ;# Bank 702 VCCO - VR_1V2_VCCO_DDR4

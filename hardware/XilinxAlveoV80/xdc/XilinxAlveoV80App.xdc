@@ -249,5 +249,5 @@ set_property -dict { PACKAGE_PIN CB15    IOSTANDARD LVDS15                      
 
 set_property -dict { PACKAGE_PIN N18                                                  } [get_ports "hbmRefClkP[0]"]   ;# Bank 800 " C4CCIO_PAD1_0_800
 set_property -dict { PACKAGE_PIN N19                                                  } [get_ports "hbmRefClkN[0]"]   ;# Bank 800 " C4CCIO_PAD1_0_800
-set_property -dict { PACKAGE_PIN N38                                                  } [get_ports "hbmRefClkP[0]"]   ;# Bank 801 " C4CCIO_PAD1_1_801
-set_property -dict { PACKAGE_PIN N37                                                  } [get_ports "hbmRefClkN[0]"]   ;# Bank 801 " C4CCIO_PAD1_1_801
+set_property -dict { PACKAGE_PIN N38                                                  } [get_ports "hbmRefClkP[1]"]   ;# Bank 801 " C4CCIO_PAD1_1_801
+set_property -dict { PACKAGE_PIN N37                                                  } [get_ports "hbmRefClkN[1]"]   ;# Bank 801 " C4CCIO_PAD1_1_801

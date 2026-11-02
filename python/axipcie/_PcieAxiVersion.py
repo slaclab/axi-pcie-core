@@ -53,6 +53,7 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x1: '7SERIES',
                 0x2: 'ULTRASCALE_PLUS',
                 0x3: 'VERSAL',
+                0xFF_FF_FF_FF: 'ERROR',
             },
         ))
 

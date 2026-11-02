@@ -200,9 +200,6 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal rstL   : sl;
    signal plRstN : sl;
 
-   signal sAxilAwaddr : slv(31 downto 0);
-   signal sAxilAraddr : slv(31 downto 0);
-
    signal usrIrqReq : sl;
    signal usrIrqAck : sl;
 
@@ -249,7 +246,7 @@ begin
       port map (
          -- Clocks and Resets
          dmaClk             => clk,
-         dmaRstN            => rstL,
+         dmaRstN            => plRstN,
          plRefClk           => clk,
          plRstN             => plRstN,
          -- Interrupt Interface

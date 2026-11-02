@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: AXI PCIe Core for Xilinx Alveo U55c board (PCIe GEN3 x 16 lanes)
--- https://www.xilinx.com/products/boards-and-kits/alveo/u55c.html
+-- Description: AXI PCIe Core for Xilinx Alveo V80 board (PCIe GEN5 x 8 lanes)
+-- https://www.amd.com/en/products/accelerators/alveo/v80.html
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the

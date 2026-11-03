@@ -117,6 +117,12 @@ Board Reference Table
      - Gen3x8
      - ``SlacPgpCardG4Core``
      - ``hardware/SlacPgpCardG4/rtl/SlacPgpCardG4Core.vhd``
+   * - Xilinx Alveo V80
+     - PCIe 5, x8
+     - none
+     - Gen5x8
+     - ``XilinxAlveoV80``
+     - ``hardware/XilinxAlveoV80/core/XilinxAlveoV80Core.vhd``
 
 Notes
 -----

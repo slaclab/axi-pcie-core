@@ -252,7 +252,7 @@ proc create_root_design { parentCell } {
    ] $mAxi
 
   # PL AXI4 slave driving the CIPS S_AXI_LPD port. Used by the PL MSI-IRQ FSM
-  # (XilinxAlveoV80MsiIrq) to write the CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) and
+  # (XilinxAlveoV80CpmManager) to write the CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) and
   # generate the PCIe TX MSI directly, bypassing the broken bridge1_usr_irq
   # handshake. PG347 v3.4 Table 215: the CPM5 bridge registers are reachable
   # from PL only through the LPD AXI slave interface.

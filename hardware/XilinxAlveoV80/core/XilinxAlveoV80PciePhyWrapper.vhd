@@ -256,11 +256,12 @@ begin
          rstOut => axiRst);
 
    -------------------------------------------------------------------------
-   -- PL MSI generator: writes CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) via S_AXI_LPD
-   -- to raise the PCIe TX MSI directly, replacing the defective CPM5 bridge1
-   -- usr_irq_req / usr_irq_ack hardware handshake.
+   -- PL CPM5 manager: after reset it programs the CPM5_DMA1 BDF
+   -- address-translation table, then services DMA interrupts by writing
+   -- TX_IRQ_CSR (0xFCEA0E7C) via S_AXI_LPD to raise the PCIe TX MSI directly,
+   -- replacing the defective CPM5 bridge1 usr_irq_req / usr_irq_ack handshake.
    -------------------------------------------------------------------------
-   U_MsiIrq : entity axi_pcie_core.XilinxAlveoV80MsiIrq
+   U_CpmManager : entity axi_pcie_core.XilinxAlveoV80CpmManager
       generic map (
          TPD_G => TPD_G)
       port map (
@@ -269,6 +270,8 @@ begin
          rstL            => rstL,
          -- Interrupt Interface
          dmaIrq          => dmaIrq,
+         -- Status
+         bdfDone         => open,
          -- AXI-Lite Master (drives the CIPS S_AXI_LPD slave)
          axilWriteMaster => msiWriteMaster,
          axilWriteSlave  => msiWriteSlave,

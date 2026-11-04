@@ -1,25 +1,26 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: PL-driven MSI generator for the Xilinx Alveo V80 (CPM5).
+-- Description: Versal CPM5 management block for the Xilinx Alveo V80.
 --
--- Workaround for the CPM5 bridge1 usr_irq handshake defect: the
--- bridge1_usr_irq_req / bridge1_usr_irq_ack path never completes and no MSI TLP
--- is emitted (confirmed on hardware via ILA; SLAC RTL asserts and holds
--- usr_irq_req per PG347, but the CPM never acks). Instead of relying on that
--- hardware handshake, this block generates the PCIe TX MSI in software-trigger
--- mode by writing the CPM5_DMA1 TX_IRQ_CSR register directly from PL fabric.
+-- Drives the CIPS S_AXI_LPD slave to manage the CPM5_DMA1 controller from PL
+-- fabric. It does two jobs over one AXI-Lite master:
 --
--- On each dmaIrq assertion it issues a single AXI-Lite write of INT_SET_VAL_G
--- (int_set = bit 24) to TX_IRQ_CSR_ADDR_G (0xFCEA0E7C). PG347 v3.4 Table 215:
--- the CPM5 bridge register block is reachable from PL only through the LPD AXI
--- slave interface, so this master is expected to drive the CIPS S_AXI_LPD port.
+--  1) After reset it programs the CPM5 BDF (address-translation) table, writing
+--     each entry's six 32-bit words in order (see XilinxAlveoV80CpmManagerPkg).
+--     The default single-entry table is an identity mapping, function 0,
+--     read+write enabled, 128 GiB aperture -- reproducing the reference
+--     sequence (0xFCEA2420..0xFCEA2434, word +0x10 = 0xC2000000).
 --
--- Per the TX_IRQ_CSR definition, writing int_set=1 sends the PCIe TX MSI/MSI-X
--- interrupt; the message is edge-like (one MSI per write), so a single write
--- per dmaIrq assertion is sufficient and the request is not held. A watchdog
--- re-arms the FSM if dmaIrq stays asserted, matching the 1 s cadence of the
--- retired AxiPcieUltrascalePlusIrqFsm.
+--  2) It then services DMA interrupts: on each dmaIrq assertion it writes
+--     int_set (bit 24) to the CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C), generating the
+--     PCIe TX MSI directly. This replaces the defective CPM5 bridge1
+--     usr_irq_req / usr_irq_ack hardware handshake (confirmed broken on
+--     hardware: the CPM never acks and no MSI TLP is emitted).
+--
+-- PG347 v3.4 Table 215: the CPM5 register block is reachable from PL only
+-- through the LPD AXI slave interface, so this master drives cips/S_AXI_LPD
+-- (whose address space maps the CPM aperture at 0xFC00_0000, 16 MB).
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -39,13 +40,20 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiLitePkg.all;
 
-entity XilinxAlveoV80MsiIrq is
+library axi_pcie_core;
+use axi_pcie_core.XilinxAlveoV80CpmManagerPkg.all;
+
+entity XilinxAlveoV80CpmManager is
    generic (
       TPD_G             : time     := 1 ns;
       -- Global address of the CPM5_DMA1 TX_IRQ_CSR register (PG347 Table 215)
       TX_IRQ_CSR_ADDR_G : slv(31 downto 0) := x"FCEA0E7C";
       -- int_set = bit 24; int_vector = 0, int_function = 0 (PF0, MSI vector 0)
       INT_SET_VAL_G     : slv(31 downto 0) := x"01000000";
+      -- Global base address of the CPM5_DMA1 BDF address-translation table
+      BDF_TABLE_ADDR_G  : slv(31 downto 0) := x"FCEA2420";
+      -- BDF address-translation table to program after reset
+      BDF_TABLE_G       : CpmBdfEntryArray := (0 => CPM_BDF_ENTRY_INIT_C);
       -- Re-arm watchdog (clock cycles) if dmaIrq remains asserted; 250e6 ~ 1 s
       -- at the 250 MHz PL clock.
       WATCHDOG_G        : positive := 250000000);
@@ -55,16 +63,25 @@ entity XilinxAlveoV80MsiIrq is
       rstL            : in  sl;         -- active LOW reset
       -- Interrupt Interface
       dmaIrq          : in  sl;
+      -- Status
+      bdfDone         : out sl;         -- BDF table programming complete
       -- AXI-Lite Master (drives the CIPS S_AXI_LPD slave)
       axilWriteMaster : out AxiLiteWriteMasterType;
       axilWriteSlave  : in  AxiLiteWriteSlaveType;
       axilReadMaster  : out AxiLiteReadMasterType;
       axilReadSlave   : in  AxiLiteReadSlaveType);
-end XilinxAlveoV80MsiIrq;
+end XilinxAlveoV80CpmManager;
 
-architecture rtl of XilinxAlveoV80MsiIrq is
+architecture rtl of XilinxAlveoV80CpmManager is
+
+   -- Flattened BDF table: the ordered register addresses and data words.
+   constant BDF_ADDR_C : Slv32Array := genBdfAddr(BDF_TABLE_ADDR_G, BDF_TABLE_G);
+   constant BDF_DATA_C : Slv32Array := genBdfData(BDF_TABLE_G);
+   constant BDF_LEN_C  : natural    := BDF_DATA_C'length;
 
    type StateType is (
+      BDF_REQ_S,
+      BDF_DONE_S,
       IDLE_S,
       REQ_S,
       WAIT_DONE_S,
@@ -72,14 +89,18 @@ architecture rtl of XilinxAlveoV80MsiIrq is
 
    type RegType is record
       req      : AxiLiteReqType;
+      bdfDone  : sl;
+      bdfIndex : natural range 0 to BDF_LEN_C;
       irqTimer : slv(31 downto 0);
       state    : StateType;
    end record RegType;
 
    constant REG_INIT_C : RegType := (
       req      => AXI_LITE_REQ_INIT_C,
+      bdfDone  => '0',
+      bdfIndex => 0,
       irqTimer => (others => '0'),
-      state    => IDLE_S);
+      state    => BDF_REQ_S);
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -114,6 +135,19 @@ begin
       -- State Machine
       case r.state is
          ----------------------------------------------------------------------
+         when BDF_REQ_S =>
+            -- Program the BDF table one 32-bit word at a time, in order.
+            v.req.request := '1';
+            v.req.rnw     := '0';
+            v.req.address := BDF_ADDR_C(r.bdfIndex);
+            v.req.wrData  := BDF_DATA_C(r.bdfIndex);
+            v.state       := WAIT_DONE_S;
+         ----------------------------------------------------------------------
+         when BDF_DONE_S =>
+            -- All BDF words written; latch done and move to IRQ service.
+            v.bdfDone := '1';
+            v.state   := IDLE_S;
+         ----------------------------------------------------------------------
          when IDLE_S =>
             v.irqTimer := (others => '0');
             -- Wait for the DMA interrupt request
@@ -130,11 +164,23 @@ begin
             v.state       := WAIT_DONE_S;
          ----------------------------------------------------------------------
          when WAIT_DONE_S =>
-            -- Wait for the AXI-Lite write to complete
+            -- Wait for the current AXI-Lite write to complete, then return to
+            -- the state that issued it (BDF programming or IRQ service).
             if (ack.done = '1') then
                -- Deassert the request (AxiLiteMaster clears ack when request=0)
                v.req.request := '0';
-               v.state       := HOLD_S;
+               if (r.bdfDone = '0') then
+                  -- Still programming the BDF table.
+                  if (r.bdfIndex = BDF_LEN_C-1) then
+                     v.state := BDF_DONE_S;
+                  else
+                     v.bdfIndex := r.bdfIndex + 1;
+                     v.state    := BDF_REQ_S;
+                  end if;
+               else
+                  -- IRQ service write completed.
+                  v.state := HOLD_S;
+               end if;
             end if;
          ----------------------------------------------------------------------
          when HOLD_S =>
@@ -158,6 +204,9 @@ begin
 
       -- Register the variable for next clock cycle
       rin <= v;
+
+      -- Outputs
+      bdfDone <= r.bdfDone;
 
    end process comb;
 

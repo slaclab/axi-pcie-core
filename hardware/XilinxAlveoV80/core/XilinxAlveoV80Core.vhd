@@ -3,6 +3,10 @@
 -------------------------------------------------------------------------------
 -- Description: AXI PCIe Core for Xilinx Alveo V80 board (PCIe GEN5 x 8 lanes)
 -- https://www.amd.com/en/products/accelerators/alveo/v80.html
+--
+-- Known limitation: DMA host accesses are routed through a single 128 GB CPM
+-- aperture (NoC remap 0x0 -> 0xA0_0000_0000). Host physical addresses at or
+-- above 128 GB have no NoC route until BDF table translation is programmed.
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the

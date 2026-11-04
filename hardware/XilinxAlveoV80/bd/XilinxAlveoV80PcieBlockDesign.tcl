@@ -251,6 +251,19 @@ proc create_root_design { parentCell } {
    CONFIG.PROTOCOL {AXI4} \
    ] $mAxi
 
+  # PL AXI4 slave driving the CIPS S_AXI_LPD port. Used by the PL MSI-IRQ FSM
+  # (XilinxAlveoV80MsiIrq) to write the CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) and
+  # generate the PCIe TX MSI directly, bypassing the broken bridge1_usr_irq
+  # handshake. PG347 v3.4 Table 215: the CPM5 bridge registers are reachable
+  # from PL only through the LPD AXI slave interface.
+  set sAxiLpd [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 sAxiLpd ]
+  set_property -dict [ list \
+   CONFIG.ADDR_WIDTH {32} \
+   CONFIG.DATA_WIDTH {32} \
+   CONFIG.FREQ_HZ {250000000} \
+   CONFIG.PROTOCOL {AXI4} \
+   ] $sAxiLpd
+
 
   # Create ports
   set dmaClk [ create_bd_port -dir I -type clk -freq_hz 250000000 dmaClk ]
@@ -260,12 +273,7 @@ proc create_root_design { parentCell } {
  ] $dmaClk
   set plRstN [ create_bd_port -dir O -type rst plRstN ]
   set plRefClk [ create_bd_port -dir O -type clk plRefClk ]
-  set dmaIrq [ create_bd_port -dir I -type intr dmaIrq ]
-  set_property -dict [ list \
-   CONFIG.SENSITIVITY {EDGE_RISING} \
- ] $dmaIrq
   set dmaRstN [ create_bd_port -dir I -type rst dmaRstN ]
-  set dmaAck [ create_bd_port -dir O -from 0 -to 0 dmaAck ]
 
   # Create instance: cips, and set properties
   set cips [ create_bd_cell -type ip -vlnv xilinx.com:ip:versal_cips:3.4 cips ]
@@ -289,7 +297,7 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_MODES {DMA} \
       CPM_PCIE1_MODE_SELECTION {Advanced} \
       CPM_PCIE1_MSI_X_OPTIONS {None} \
-      CPM_PCIE1_NUM_USR_IRQ {1} \
+      CPM_PCIE1_NUM_USR_IRQ {0} \
       CPM_PCIE1_PCIE_REGION_0_EN {0} \
       CPM_PCIE1_PCIE_REGION_1_EN {0} \
       CPM_PCIE1_PCIE_REGION_2_EN {1} \
@@ -489,7 +497,8 @@ proc create_root_design { parentCell } {
       PS_USE_PMCPL_CLK0 {1} \
       PS_USE_PMCPL_CLK1 {0} \
       PS_USE_PMCPL_CLK2 {0} \
-      PS_USE_S_AXI_LPD {0} \
+      PS_USE_S_AXI_LPD {1} \
+      PS_S_AXI_LPD_DATA_WIDTH {32} \
       SMON_ALARMS {Set_Alarms_On} \
       SMON_ENABLE_TEMP_AVERAGING {0} \
       SMON_MEAS100 {{ALARM_ENABLE 1} {ALARM_LOWER 0.00} {ALARM_UPPER 4.00} {AVERAGE_EN 0} {ENABLE 1} {MODE {4 V unipolar}} {NAME VCCO_500} {SUPPLY_NUM 9}} \
@@ -611,15 +620,15 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net cips_PMC_NOC_AXI_0 [get_bd_intf_pins cips/PMC_NOC_AXI_0] [get_bd_intf_pins axi_noc_mc_ddr4_0/S00_AXI]
   connect_bd_intf_net -intf_net gt_pcie_refclk_1 [get_bd_intf_ports gtPcieRefClk] [get_bd_intf_pins cips/gt_refclk1]
   connect_bd_intf_net -intf_net sAxi_1 [get_bd_intf_ports sAxi] [get_bd_intf_pins axi_noc_dma_0/S00_AXI]
+  connect_bd_intf_net -intf_net sAxiLpd_1 [get_bd_intf_ports sAxiLpd] [get_bd_intf_pins cips/S_AXI_LPD]
   connect_bd_intf_net -intf_net sys_clk0_0_1 [get_bd_intf_ports psDdrClk] [get_bd_intf_pins axi_noc_mc_ddr4_0/sys_clk0]
 
   # Create port connections
   connect_bd_net -net aclk3_0_1  [get_bd_ports dmaClk] \
   [get_bd_pins cips/dma1_intrfc_clk] \
   [get_bd_pins cips/cpm_pl_axi1_clk] \
+  [get_bd_pins cips/s_axi_lpd_aclk] \
   [get_bd_pins axi_noc_dma_0/aclk0]
-  connect_bd_net -net cips_bridge1_usr_irq_ack  [get_bd_pins cips/bridge1_usr_irq_ack] \
-  [get_bd_ports dmaAck]
   connect_bd_net -net cips_lpd_axi_noc_clk  [get_bd_pins cips/lpd_axi_noc_clk] \
   [get_bd_pins axi_noc_mc_ddr4_0/aclk1]
   connect_bd_net -net cips_noc_cpm_pcie_axi0_clk  [get_bd_pins cips/noc_cpm_pcie_axi0_clk] \
@@ -630,8 +639,6 @@ proc create_root_design { parentCell } {
   [get_bd_ports plRstN]
   connect_bd_net -net cips_pmc_axi_noc_axi0_clk  [get_bd_pins cips/pmc_axi_noc_axi0_clk] \
   [get_bd_pins axi_noc_mc_ddr4_0/aclk0]
-  connect_bd_net -net cpm_irq1_0_1  [get_bd_ports dmaIrq] \
-  [get_bd_pins cips/bridge1_usr_irq_req]
   connect_bd_net -net dma1_intrfc_resetn_0_1  [get_bd_ports dmaRstN] \
   [get_bd_pins cips/dma1_intrfc_resetn]
 
@@ -648,6 +655,33 @@ proc create_root_design { parentCell } {
   exclude_bd_addr_seg [get_bd_addr_segs sAxi/SEG_cips_pspmc_0_psv_noc_pcie_0]
   exclude_bd_addr_seg [get_bd_addr_segs sAxi/SEG_cips_pspmc_0_psv_noc_pcie_1]
   assign_bd_address -offset 0x0 -range 0x002000000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_2] -force
+
+  # ---------------------------------------------------------------------------
+  # sAxiLpd -> CPM5 register space (TX_IRQ_CSR @ 0x00FCEA0E7C) address mapping
+  #
+  # The PL MSI-IRQ FSM drives sAxiLpd (CIPS S_AXI_LPD) to write the CPM5_DMA1
+  # TX_IRQ_CSR at global address 0x00FCEA0E7C. PG347 v3.4 Table 215: the CPM5
+  # bridge register block (0xFCEA_0000 - 0xFCEA_7FFF) is reachable from PL only
+  # via the LPD AXI slave interface. On this CIPS 3.4 build the whole CPM
+  # register aperture is exposed to S_AXI_LPD as the fixed segment
+  # pspmc_0_psv_cpm (BASE 0xFC00_0000, RANGE 0x0100_0000 = 16 MB), which
+  # contains 0xFCEA0E7C. Assign that one segment (keeping the PL slave's address
+  # map identical to the global map, so the FSM can use the raw 0xFCEA0E7C
+  # address) and exclude every other S_AXI_LPD slave segment we do not use.
+  # ---------------------------------------------------------------------------
+  assign_bd_address -offset 0xFC000000 -range 0x01000000 \
+     -target_address_space [get_bd_addr_spaces sAxiLpd] \
+     [get_bd_addr_segs cips/S_AXI_LPD/pspmc_0_psv_cpm] -force
+
+  # Exclude all remaining (unused) S_AXI_LPD slave segments so the design has no
+  # unassigned-segment critical warnings. The CPM segment assigned above is
+  # already mapped, so it is skipped by the guard.
+  foreach seg [get_bd_addr_segs cips/S_AXI_LPD/*] {
+     if { [string match "*pspmc_0_psv_cpm" $seg] } {
+        continue
+     }
+     catch { exclude_bd_addr_seg -target_address_space [get_bd_addr_spaces sAxiLpd] $seg }
+  }
 
   # Restore current instance
   current_bd_instance $oldCurInst

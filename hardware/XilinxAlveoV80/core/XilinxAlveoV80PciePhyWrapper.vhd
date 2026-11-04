@@ -186,12 +186,49 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          mAxi_ruser         : in    std_logic_vector (127 downto 0);
          mAxi_wid           : out   std_logic_vector (15 downto 0);
          mAxi_wuser         : out   std_logic_vector (127 downto 0);
+         sAxiLpd_awid       : in    std_logic_vector (5 downto 0);
+         sAxiLpd_awaddr     : in    std_logic_vector (48 downto 0);
+         sAxiLpd_awlen      : in    std_logic_vector (7 downto 0);
+         sAxiLpd_awsize     : in    std_logic_vector (2 downto 0);
+         sAxiLpd_awburst    : in    std_logic_vector (1 downto 0);
+         sAxiLpd_awlock     : in    std_logic;
+         sAxiLpd_awcache    : in    std_logic_vector (3 downto 0);
+         sAxiLpd_awprot     : in    std_logic_vector (2 downto 0);
+         sAxiLpd_awqos      : in    std_logic_vector (3 downto 0);
+         sAxiLpd_awuser     : in    std_logic_vector (9 downto 0);
+         sAxiLpd_awvalid    : in    std_logic;
+         sAxiLpd_awready    : out   std_logic;
+         sAxiLpd_wdata      : in    std_logic_vector (31 downto 0);
+         sAxiLpd_wstrb      : in    std_logic_vector (3 downto 0);
+         sAxiLpd_wlast      : in    std_logic;
+         sAxiLpd_wvalid     : in    std_logic;
+         sAxiLpd_wready     : out   std_logic;
+         sAxiLpd_bid        : out   std_logic_vector (5 downto 0);
+         sAxiLpd_bresp      : out   std_logic_vector (1 downto 0);
+         sAxiLpd_bvalid     : out   std_logic;
+         sAxiLpd_bready     : in    std_logic;
+         sAxiLpd_arid       : in    std_logic_vector (5 downto 0);
+         sAxiLpd_araddr     : in    std_logic_vector (48 downto 0);
+         sAxiLpd_arlen      : in    std_logic_vector (7 downto 0);
+         sAxiLpd_arsize     : in    std_logic_vector (2 downto 0);
+         sAxiLpd_arburst    : in    std_logic_vector (1 downto 0);
+         sAxiLpd_arlock     : in    std_logic;
+         sAxiLpd_arcache    : in    std_logic_vector (3 downto 0);
+         sAxiLpd_arprot     : in    std_logic_vector (2 downto 0);
+         sAxiLpd_arqos      : in    std_logic_vector (3 downto 0);
+         sAxiLpd_aruser     : in    std_logic_vector (9 downto 0);
+         sAxiLpd_arvalid    : in    std_logic;
+         sAxiLpd_arready    : out   std_logic;
+         sAxiLpd_rid        : out   std_logic_vector (5 downto 0);
+         sAxiLpd_rdata      : out   std_logic_vector (31 downto 0);
+         sAxiLpd_rresp      : out   std_logic_vector (1 downto 0);
+         sAxiLpd_rlast      : out   std_logic;
+         sAxiLpd_rvalid     : out   std_logic;
+         sAxiLpd_rready     : in    std_logic;
          dmaClk             : in    std_logic;
          plRstN             : out   std_logic;
          plRefClk           : out   std_logic;
-         dmaIrq             : in    std_logic;
-         dmaRstN            : in    std_logic;
-         dmaAck             : out   std_logic_vector (0 to 0)
+         dmaRstN            : in    std_logic
          );
    end component;
 
@@ -200,8 +237,11 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal rstL   : sl;
    signal plRstN : sl;
 
-   signal usrIrqReq : sl;
-   signal usrIrqAck : sl;
+   -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR to generate the MSI
+   signal msiWriteMaster : AxiLiteWriteMasterType;
+   signal msiWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
+   signal msiReadMaster  : AxiLiteReadMasterType;
+   signal msiReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
 
 begin
 
@@ -215,18 +255,25 @@ begin
          rstIn  => rstL,
          rstOut => axiRst);
 
-   U_IRQ_FSM : entity axi_pcie_core.AxiPcieUltrascalePlusIrqFsm
+   -------------------------------------------------------------------------
+   -- PL MSI generator: writes CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) via S_AXI_LPD
+   -- to raise the PCIe TX MSI directly, replacing the defective CPM5 bridge1
+   -- usr_irq_req / usr_irq_ack hardware handshake.
+   -------------------------------------------------------------------------
+   U_MsiIrq : entity axi_pcie_core.XilinxAlveoV80MsiIrq
       generic map (
          TPD_G => TPD_G)
       port map (
          -- Clock and Reset
-         clk       => clk,
-         rstL      => rstL,
+         clk             => clk,
+         rstL            => rstL,
          -- Interrupt Interface
-         dmaIrq    => dmaIrq,
-         msiEnable => '1',
-         usrIrqAck => usrIrqAck,
-         usrIrqReq => usrIrqReq);
+         dmaIrq          => dmaIrq,
+         -- AXI-Lite Master (drives the CIPS S_AXI_LPD slave)
+         axilWriteMaster => msiWriteMaster,
+         axilWriteSlave  => msiWriteSlave,
+         axilReadMaster  => msiReadMaster,
+         axilReadSlave   => msiReadSlave);
 
    U_PwrUpRst : entity surf.PwrUpRst
       generic map(
@@ -249,9 +296,49 @@ begin
          dmaRstN            => plRstN,
          plRefClk           => clk,
          plRstN             => plRstN,
-         -- Interrupt Interface
-         dmaIrq             => usrIrqReq,
-         dmaAck(0)          => usrIrqAck,
+         -- LPD AXI4 Slave Interface (PL MSI generator -> CPM5 TX_IRQ_CSR)
+         -- AXI-Lite master mapped onto the AXI4 slave (single-beat 32-bit).
+         sAxiLpd_awid       => (others => '0'),
+         sAxiLpd_awaddr(31 downto 0)  => msiWriteMaster.awaddr(31 downto 0),
+         sAxiLpd_awaddr(48 downto 32) => (others => '0'),
+         sAxiLpd_awlen      => (others => '0'),  -- single beat
+         sAxiLpd_awsize     => "010",            -- 4 bytes
+         sAxiLpd_awburst    => "01",             -- INCR
+         sAxiLpd_awlock     => '0',
+         sAxiLpd_awcache    => "0011",           -- normal non-cacheable bufferable
+         sAxiLpd_awprot     => msiWriteMaster.awprot,
+         sAxiLpd_awqos      => (others => '0'),
+         sAxiLpd_awuser     => (others => '0'),
+         sAxiLpd_awvalid    => msiWriteMaster.awvalid,
+         sAxiLpd_awready    => msiWriteSlave.awready,
+         sAxiLpd_wdata      => msiWriteMaster.wdata(31 downto 0),
+         sAxiLpd_wstrb      => msiWriteMaster.wstrb(3 downto 0),
+         sAxiLpd_wlast      => '1',              -- single beat
+         sAxiLpd_wvalid     => msiWriteMaster.wvalid,
+         sAxiLpd_wready     => msiWriteSlave.wready,
+         sAxiLpd_bid        => open,
+         sAxiLpd_bresp      => msiWriteSlave.bresp,
+         sAxiLpd_bvalid     => msiWriteSlave.bvalid,
+         sAxiLpd_bready     => msiWriteMaster.bready,
+         sAxiLpd_arid       => (others => '0'),
+         sAxiLpd_araddr(31 downto 0)  => msiReadMaster.araddr(31 downto 0),
+         sAxiLpd_araddr(48 downto 32) => (others => '0'),
+         sAxiLpd_arlen      => (others => '0'),
+         sAxiLpd_arsize     => "010",
+         sAxiLpd_arburst    => "01",
+         sAxiLpd_arlock     => '0',
+         sAxiLpd_arcache    => "0011",
+         sAxiLpd_arprot     => msiReadMaster.arprot,
+         sAxiLpd_arqos      => (others => '0'),
+         sAxiLpd_aruser     => (others => '0'),
+         sAxiLpd_arvalid    => msiReadMaster.arvalid,
+         sAxiLpd_arready    => msiReadSlave.arready,
+         sAxiLpd_rid        => open,
+         sAxiLpd_rdata      => msiReadSlave.rdata(31 downto 0),
+         sAxiLpd_rresp      => msiReadSlave.rresp,
+         sAxiLpd_rlast      => open,
+         sAxiLpd_rvalid     => msiReadSlave.rvalid,
+         sAxiLpd_rready     => msiReadMaster.rready,
          -- PCIe PHY Interface
          gtPcieRefClk_clk_p => pciRefClkP,
          gtPcieRefClk_clk_n => pciRefClkN,

@@ -1,9 +1,9 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xEF9EFE7404BBCEE",
+      "boundary_crc": "0xEC77BCBBABE22A01",
       "device": "xcv80-lsva4737-2MHP-e-S",
-      "gen_directory": "../../../../XilinxAlveoV80DmaLoopback_project.gen/sources_1/bd/XilinxAlveoV80PcieBlockDesign",
+      "gen_directory": "../../../../project_1.gen/sources_1/bd/XilinxAlveoV80PcieBlockDesign",
       "name": "XilinxAlveoV80PcieBlockDesign",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
@@ -1000,6 +1000,335 @@
             "right": "0"
           }
         }
+      },
+      "sAxiLpd": {
+        "mode": "Slave",
+        "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+        "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+        "parameters": {
+          "ADDR_WIDTH": {
+            "value": "32"
+          },
+          "ARUSER_WIDTH": {
+            "value": "0"
+          },
+          "AWUSER_WIDTH": {
+            "value": "0"
+          },
+          "BUSER_WIDTH": {
+            "value": "0"
+          },
+          "CLK_DOMAIN": {
+            "value": "XilinxAlveoV80PcieBlockDesign_dmaClk",
+            "value_src": "default"
+          },
+          "DATA_WIDTH": {
+            "value": "32"
+          },
+          "FREQ_HZ": {
+            "value": "250000000"
+          },
+          "HAS_BRESP": {
+            "value": "1"
+          },
+          "HAS_BURST": {
+            "value": "1"
+          },
+          "HAS_CACHE": {
+            "value": "1"
+          },
+          "HAS_LOCK": {
+            "value": "1"
+          },
+          "HAS_PROT": {
+            "value": "1"
+          },
+          "HAS_QOS": {
+            "value": "1"
+          },
+          "HAS_REGION": {
+            "value": "1"
+          },
+          "HAS_RRESP": {
+            "value": "1"
+          },
+          "HAS_WSTRB": {
+            "value": "1"
+          },
+          "ID_WIDTH": {
+            "value": "0"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "MAX_BURST_LENGTH": {
+            "value": "256"
+          },
+          "NUM_READ_OUTSTANDING": {
+            "value": "1"
+          },
+          "NUM_READ_THREADS": {
+            "value": "1"
+          },
+          "NUM_WRITE_OUTSTANDING": {
+            "value": "1"
+          },
+          "NUM_WRITE_THREADS": {
+            "value": "1"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          },
+          "PROTOCOL": {
+            "value": "AXI4"
+          },
+          "READ_WRITE_MODE": {
+            "value": "READ_WRITE"
+          },
+          "RUSER_BITS_PER_BYTE": {
+            "value": "0"
+          },
+          "RUSER_WIDTH": {
+            "value": "0"
+          },
+          "SUPPORTS_NARROW_BURST": {
+            "value": "1"
+          },
+          "WUSER_BITS_PER_BYTE": {
+            "value": "0"
+          },
+          "WUSER_WIDTH": {
+            "value": "0"
+          }
+        },
+        "address_space_ref": "sAxiLpd",
+        "base_address": {
+          "minimum": "0x00000000",
+          "maximum": "0xFFFFFFFF",
+          "width": "32"
+        },
+        "bd_attributes": {
+          "TYPE": {
+            "value": "END_POINT",
+            "value_src": "auto"
+          }
+        },
+        "hdl_attributes": {
+          "LOCKED": {
+            "value": "FALSE",
+            "value_src": "default"
+          }
+        },
+        "port_maps": {
+          "ARADDR": {
+            "physical_name": "sAxiLpd_araddr",
+            "direction": "I",
+            "left": "48",
+            "right": "0"
+          },
+          "ARBURST": {
+            "physical_name": "sAxiLpd_arburst",
+            "direction": "I",
+            "left": "1",
+            "right": "0"
+          },
+          "ARCACHE": {
+            "physical_name": "sAxiLpd_arcache",
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "ARID": {
+            "physical_name": "sAxiLpd_arid",
+            "direction": "I",
+            "left": "5",
+            "right": "0"
+          },
+          "ARLEN": {
+            "physical_name": "sAxiLpd_arlen",
+            "direction": "I",
+            "left": "7",
+            "right": "0"
+          },
+          "ARLOCK": {
+            "physical_name": "sAxiLpd_arlock",
+            "direction": "I"
+          },
+          "ARPROT": {
+            "physical_name": "sAxiLpd_arprot",
+            "direction": "I",
+            "left": "2",
+            "right": "0"
+          },
+          "ARQOS": {
+            "physical_name": "sAxiLpd_arqos",
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "ARSIZE": {
+            "physical_name": "sAxiLpd_arsize",
+            "direction": "I",
+            "left": "2",
+            "right": "0"
+          },
+          "ARUSER": {
+            "physical_name": "sAxiLpd_aruser",
+            "direction": "I",
+            "left": "9",
+            "right": "0"
+          },
+          "AWADDR": {
+            "physical_name": "sAxiLpd_awaddr",
+            "direction": "I",
+            "left": "48",
+            "right": "0"
+          },
+          "AWBURST": {
+            "physical_name": "sAxiLpd_awburst",
+            "direction": "I",
+            "left": "1",
+            "right": "0"
+          },
+          "AWCACHE": {
+            "physical_name": "sAxiLpd_awcache",
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "AWID": {
+            "physical_name": "sAxiLpd_awid",
+            "direction": "I",
+            "left": "5",
+            "right": "0"
+          },
+          "AWLEN": {
+            "physical_name": "sAxiLpd_awlen",
+            "direction": "I",
+            "left": "7",
+            "right": "0"
+          },
+          "AWLOCK": {
+            "physical_name": "sAxiLpd_awlock",
+            "direction": "I"
+          },
+          "AWPROT": {
+            "physical_name": "sAxiLpd_awprot",
+            "direction": "I",
+            "left": "2",
+            "right": "0"
+          },
+          "AWQOS": {
+            "physical_name": "sAxiLpd_awqos",
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "AWSIZE": {
+            "physical_name": "sAxiLpd_awsize",
+            "direction": "I",
+            "left": "2",
+            "right": "0"
+          },
+          "AWUSER": {
+            "physical_name": "sAxiLpd_awuser",
+            "direction": "I",
+            "left": "9",
+            "right": "0"
+          },
+          "AWVALID": {
+            "physical_name": "sAxiLpd_awvalid",
+            "direction": "I"
+          },
+          "BREADY": {
+            "physical_name": "sAxiLpd_bready",
+            "direction": "I"
+          },
+          "RREADY": {
+            "physical_name": "sAxiLpd_rready",
+            "direction": "I"
+          },
+          "WLAST": {
+            "physical_name": "sAxiLpd_wlast",
+            "direction": "I"
+          },
+          "WVALID": {
+            "physical_name": "sAxiLpd_wvalid",
+            "direction": "I"
+          },
+          "ARREADY": {
+            "physical_name": "sAxiLpd_arready",
+            "direction": "O"
+          },
+          "ARVALID": {
+            "physical_name": "sAxiLpd_arvalid",
+            "direction": "I"
+          },
+          "AWREADY": {
+            "physical_name": "sAxiLpd_awready",
+            "direction": "O"
+          },
+          "BID": {
+            "physical_name": "sAxiLpd_bid",
+            "direction": "O",
+            "left": "5",
+            "right": "0"
+          },
+          "BRESP": {
+            "physical_name": "sAxiLpd_bresp",
+            "direction": "O",
+            "left": "1",
+            "right": "0"
+          },
+          "BVALID": {
+            "physical_name": "sAxiLpd_bvalid",
+            "direction": "O"
+          },
+          "RID": {
+            "physical_name": "sAxiLpd_rid",
+            "direction": "O",
+            "left": "5",
+            "right": "0"
+          },
+          "RLAST": {
+            "physical_name": "sAxiLpd_rlast",
+            "direction": "O"
+          },
+          "RRESP": {
+            "physical_name": "sAxiLpd_rresp",
+            "direction": "O",
+            "left": "1",
+            "right": "0"
+          },
+          "RVALID": {
+            "physical_name": "sAxiLpd_rvalid",
+            "direction": "O"
+          },
+          "WREADY": {
+            "physical_name": "sAxiLpd_wready",
+            "direction": "O"
+          },
+          "WDATA": {
+            "physical_name": "sAxiLpd_wdata",
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "WSTRB": {
+            "physical_name": "sAxiLpd_wstrb",
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "RDATA": {
+            "physical_name": "sAxiLpd_rdata",
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          }
+        }
       }
     },
     "ports": {
@@ -1008,7 +1337,7 @@
         "direction": "I",
         "parameters": {
           "ASSOCIATED_BUSIF": {
-            "value": "sAxi:mAxi"
+            "value": "sAxi:mAxi:sAxiLpd"
           },
           "ASSOCIATED_RESET": {
             "value": "dmaRstN"
@@ -1074,19 +1403,6 @@
           }
         }
       },
-      "dmaIrq": {
-        "type": "intr",
-        "direction": "I",
-        "parameters": {
-          "PortWidth": {
-            "value": "1",
-            "value_src": "default_prop"
-          },
-          "SENSITIVITY": {
-            "value": "EDGE_RISING"
-          }
-        }
-      },
       "dmaRstN": {
         "type": "rst",
         "direction": "I",
@@ -1100,11 +1416,6 @@
             "value_src": "default"
           }
         }
-      },
-      "dmaAck": {
-        "direction": "O",
-        "left": "0",
-        "right": "0"
       }
     },
     "components": {
@@ -1123,7 +1434,7 @@
             "value": [
               "CPM_AXI_SLV_BRIDGE0_BASE_ADDRR_H 0x00000000 CPM_AXI_SLV_BRIDGE1_BASE_ADDRR_H 0x00000000 CPM_PCIE0_FUNCTIONAL_MODE None CPM_PCIE0_MODES None CPM_PCIE1_ACS_CAP_ON 0 CPM_PCIE1_ARI_CAP_ENABLED 0",
               "CPM_PCIE1_AXIBAR2PCIE_BASEADDR_2_H 0x000000A0 CPM_PCIE1_BRIDGE_AXI_SLAVE_IF 1 CPM_PCIE1_CFG_EXT_IF 0 CPM_PCIE1_CFG_VEND_ID 1A4A CPM_PCIE1_COPY_PF0_QDMA_ENABLED 0 CPM_PCIE1_EXT_PCIE_CFG_SPACE_ENABLED",
-              "None CPM_PCIE1_FUNCTIONAL_MODE AXI_Bridge CPM_PCIE1_MAX_LINK_SPEED 32.0_GT/s CPM_PCIE1_MODES DMA CPM_PCIE1_MODE_SELECTION Advanced CPM_PCIE1_MSI_X_OPTIONS None CPM_PCIE1_NUM_USR_IRQ 1",
+              "None CPM_PCIE1_FUNCTIONAL_MODE AXI_Bridge CPM_PCIE1_MAX_LINK_SPEED 32.0_GT/s CPM_PCIE1_MODES DMA CPM_PCIE1_MODE_SELECTION Advanced CPM_PCIE1_MSI_X_OPTIONS None CPM_PCIE1_NUM_USR_IRQ 0",
               "CPM_PCIE1_PCIE_REGION_0_EN 0 CPM_PCIE1_PCIE_REGION_1_EN 0 CPM_PCIE1_PCIE_REGION_2_EN 1 CPM_PCIE1_PCIE_REGION_2_SCALE Gigabytes CPM_PCIE1_PCIE_REGION_2_SIZE 128 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_0",
               "0x0000008000000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_1 0x0000008040000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_2 0x0000008080000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_3 0x00000080C0000000",
               "CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_4 0x0000008100000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_5 0x0000008140000000 CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_0 0x000000803FFFFFFFF",
@@ -1247,6 +1558,7 @@
               "PS_PL_CONNECTIVITY_MODE Custom",
               "PS_SPI0 {{GRP_SS0_ENABLE 1} {GRP_SS0_IO {PS_MIO 15}} {GRP_SS1_ENABLE 0} {GRP_SS1_IO {PMC_MIO 14}} {GRP_SS2_ENABLE 0} {GRP_SS2_IO {PMC_MIO 13}} {PERIPHERAL_ENABLE 1} {PERIPHERAL_IO {PS_MIO 12 .. 17}}}",
               "PS_SPI1 {{GRP_SS0_ENABLE 0} {GRP_SS0_IO {PS_MIO 9}} {GRP_SS1_ENABLE 0} {GRP_SS1_IO {PS_MIO 8}} {GRP_SS2_ENABLE 0} {GRP_SS2_IO {PS_MIO 7}} {PERIPHERAL_ENABLE 0} {PERIPHERAL_IO {PS_MIO 6 .. 11}}}",
+              "PS_S_AXI_LPD_DATA_WIDTH 32",
               "PS_TTC0_PERIPHERAL_ENABLE 1",
               "PS_TTC1_PERIPHERAL_ENABLE 1",
               "PS_TTC2_PERIPHERAL_ENABLE 1",
@@ -1260,7 +1572,7 @@
               "PS_USE_PMCPL_CLK0 1",
               "PS_USE_PMCPL_CLK1 0",
               "PS_USE_PMCPL_CLK2 0",
-              "PS_USE_S_AXI_LPD 0",
+              "PS_USE_S_AXI_LPD 1",
               "SMON_ALARMS Set_Alarms_On",
               "SMON_ENABLE_TEMP_AVERAGING 0",
               "SMON_MEAS100 {{ALARM_ENABLE 1} {ALARM_LOWER 0.00} {ALARM_UPPER 4.00} {AVERAGE_EN 0} {ENABLE 1} {MODE {4 V unipolar}} {NAME VCCO_500} {SUPPLY_NUM 9}}",
@@ -1294,6 +1606,12 @@
           }
         },
         "interface_ports": {
+          "S_AXI_LPD": {
+            "mode": "Slave",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "memory_map_ref": "S_AXI_LPD"
+          },
           "LPD_AXI_NOC_0": {
             "mode": "Master",
             "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
@@ -1404,6 +1722,1872 @@
                       "base_address": "0x8000000000",
                       "range": "256G",
                       "width": "38",
+                      "usage": "memory"
+                    }
+                  }
+                }
+              }
+            },
+            "S_AXI_LPD": {
+              "address_blocks": {
+                "pspmc_0_psv_pmc_qspi_ospi_flash_0": {
+                  "base_address": "0xC0000000",
+                  "range": "512M",
+                  "width": "32",
+                  "usage": "flash",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_qspi_ospi_flash_0;/pspmc_0/OSPI_QSPI_FLASH/psv_pmc_qspi_ospi_flash_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xC0000000",
+                      "range": "512M",
+                      "width": "29",
+                      "usage": "flash"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_ppu1_mdm_0": {
+                  "base_address": "0xF0310000",
+                  "range": "32K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_ppu1_mdm_0;/pspmc_0/PPU1_MDM_HSD_INT/psv_pmc_ppu1_mdm_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0310000",
+                      "range": "32K",
+                      "width": "15",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_0": {
+                  "base_address": "0xF0800000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_0;/pspmc_0/CoreSight_PMC_ROM_INT/psv_coresight_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0800000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_pmc_cti": {
+                  "base_address": "0xF08D0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_pmc_cti;/pspmc_0/CoreSight_PMC_CTI_INT/psv_coresight_pmc_cti;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF08D0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_lpd_atm": {
+                  "base_address": "0xF0980000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_lpd_atm;/pspmc_0/CoreSight_LPD_ATM_INT/psv_coresight_lpd_atm;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0980000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_lpd_cti": {
+                  "base_address": "0xF09D0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_lpd_cti;/pspmc_0/CoreSight_LPD_CTI_INT/psv_coresight_lpd_cti;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF09D0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_r50_cti": {
+                  "base_address": "0xF0A10000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_r50_cti;/pspmc_0/CoreSight_R50_CTI_INT/psv_coresight_r50_cti;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0A10000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_r51_cti": {
+                  "base_address": "0xF0A50000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_r51_cti;/pspmc_0/CoreSight_R51_CTI_INT/psv_coresight_r51_cti;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0A50000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_fpd_stm": {
+                  "base_address": "0xF0B70000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_fpd_stm;/pspmc_0/CoreSight_FPD_STM_INT/psv_coresight_fpd_stm;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0B70000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_fpd_atm": {
+                  "base_address": "0xF0B80000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_fpd_atm;/pspmc_0/CoreSight_FPD_ATM_INT/psv_coresight_fpd_atm;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0B80000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_fpd_cti1b": {
+                  "base_address": "0xF0BB0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_fpd_cti1b;/pspmc_0/CoreSight_FPD_CTI1B_INT/psv_coresight_fpd_cti1b;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0BB0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_fpd_cti1c": {
+                  "base_address": "0xF0BC0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_fpd_cti1c;/pspmc_0/CoreSight_FPD_CTI1C_INT/psv_coresight_fpd_cti1c;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0BC0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_fpd_cti1d": {
+                  "base_address": "0xF0BD0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_fpd_cti1d;/pspmc_0/CoreSight_FPD_CTI1D_INT/psv_coresight_fpd_cti1d;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0BD0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_apu_fun": {
+                  "base_address": "0xF0C20000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_apu_fun;/pspmc_0/CoreSight_APU_FUN_INT/psv_coresight_apu_fun;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0C20000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_apu_etf": {
+                  "base_address": "0xF0C30000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_apu_etf;/pspmc_0/CoreSight_APU_ETF_INT/psv_coresight_apu_etf;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0C30000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_apu_ela": {
+                  "base_address": "0xF0C60000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_apu_ela;/pspmc_0/CoreSight_APU_ELA_INT/psv_coresight_apu_ela;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0C60000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_apu_cti": {
+                  "base_address": "0xF0CA0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_apu_cti;/pspmc_0/CoreSight_APU_CTI_INT/psv_coresight_apu_cti;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0CA0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_a720_dbg": {
+                  "base_address": "0xF0D00000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_a720_dbg;/pspmc_0/CoreSight_A720_DBG_INT/psv_coresight_a720_dbg;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0D00000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_a720_cti": {
+                  "base_address": "0xF0D10000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_a720_cti;/pspmc_0/CoreSight_A720_CTI_INT/psv_coresight_a720_cti;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0D10000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_a720_pmu": {
+                  "base_address": "0xF0D20000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_a720_pmu;/pspmc_0/CoreSight_A720_PMU_INT/psv_coresight_a720_pmu;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0D20000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_a720_etm": {
+                  "base_address": "0xF0D30000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_a720_etm;/pspmc_0/CoreSight_A720_ETM_INT/psv_coresight_a720_etm;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0D30000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_a721_dbg": {
+                  "base_address": "0xF0D40000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_a721_dbg;/pspmc_0/CoreSight_A721_DBG_INT/psv_coresight_a721_dbg;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0D40000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_a721_cti": {
+                  "base_address": "0xF0D50000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_a721_cti;/pspmc_0/CoreSight_A721_CTI_INT/psv_coresight_a721_cti;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0D50000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_a721_pmu": {
+                  "base_address": "0xF0D60000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_a721_pmu;/pspmc_0/CoreSight_A721_PMU_INT/psv_coresight_a721_pmu;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0D60000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_a721_etm": {
+                  "base_address": "0xF0D70000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_a721_etm;/pspmc_0/CoreSight_A721_ETM_INT/psv_coresight_a721_etm;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0D70000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_cpm_rom": {
+                  "base_address": "0xF0F00000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_cpm_rom;/pspmc_0/CoreSight_CPM_ROM_INT/psv_coresight_cpm_rom;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0F00000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_cpm_fun": {
+                  "base_address": "0xF0F20000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_cpm_fun;/pspmc_0/CoreSight_CPM_FUN_INT/psv_coresight_cpm_fun;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0F20000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_cpm_ela2a": {
+                  "base_address": "0xF0F40000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_cpm_ela2a;/pspmc_0/CoreSight_CPM_ELA2A_INT/psv_coresight_cpm_ela2a;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0F40000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_cpm_ela2b": {
+                  "base_address": "0xF0F50000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_cpm_ela2b;/pspmc_0/CoreSight_CPM_ELA2B_INT/psv_coresight_cpm_ela2b;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0F50000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_cpm_ela2c": {
+                  "base_address": "0xF0F60000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_cpm_ela2c;/pspmc_0/CoreSight_CPM_ELA2C_INT/psv_coresight_cpm_ela2c;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0F60000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_cpm_ela2d": {
+                  "base_address": "0xF0F70000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_cpm_ela2d;/pspmc_0/CoreSight_CPM_ELA2D_INT/psv_coresight_cpm_ela2d;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0F70000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_cpm_atm": {
+                  "base_address": "0xF0F80000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_cpm_atm;/pspmc_0/CoreSight_CPM_ATM_INT/psv_coresight_cpm_atm;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0F80000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_cpm_cti2a": {
+                  "base_address": "0xF0FA0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_cpm_cti2a;/pspmc_0/CoreSight_CPM_CTI2A_INT/psv_coresight_cpm_cti2a;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0FA0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_coresight_cpm_cti2d": {
+                  "base_address": "0xF0FD0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_coresight_cpm_cti2d;/pspmc_0/CoreSight_CPM_CTI2D_INT/psv_coresight_cpm_cti2d;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF0FD0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_ospi_0": {
+                  "base_address": "0xF1010000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_ospi_0;/pspmc_0/OSPI_INT/psv_pmc_ospi_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1010000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_gpio_0": {
+                  "base_address": "0xF1020000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_gpio_0;/pspmc_0/PMC_GPIO_INT/psv_pmc_gpio_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1020000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_sd_0": {
+                  "base_address": "0xF1040000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_sd_0;/pspmc_0/SD0_INT/psv_pmc_sd_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1040000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_iou_slcr_0": {
+                  "base_address": "0xF1060000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_iou_slcr_0;/pspmc_0/PMC_IOU_SLCR/psv_pmc_iou_slcr_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1060000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_global_0": {
+                  "base_address": "0xF1110000",
+                  "range": "320K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_global_0;/pspmc_0/PMC_GLOBAL_INT/psv_pmc_global_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1110000",
+                      "range": "320K",
+                      "width": "19",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_analog_0": {
+                  "base_address": "0xF1160000",
+                  "range": "192K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_analog_0;/pspmc_0/PMC_ANALOG_INT/psv_pmc_analog_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1160000",
+                      "range": "192K",
+                      "width": "18",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_tap": {
+                  "base_address": "0xF11A0000",
+                  "range": "128K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_tap;/pspmc_0/PMC_TAP_INT/psv_pmc_tap;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF11A0000",
+                      "range": "128K",
+                      "width": "17",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_dma_0": {
+                  "base_address": "0xF11C0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_dma_0;/pspmc_0/PMC_DMA0_INT/psv_pmc_dma_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF11C0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_dma_1": {
+                  "base_address": "0xF11D0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_dma_1;/pspmc_0/PMC_DMA1_INT/psv_pmc_dma_1;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF11D0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_aes": {
+                  "base_address": "0xF11E0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_aes;/pspmc_0/AES_INT/psv_pmc_aes;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF11E0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_bbram_ctrl": {
+                  "base_address": "0xF11F0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_bbram_ctrl;/pspmc_0/BBRAM_CTRL_INT/psv_pmc_bbram_ctrl;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF11F0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_rsa": {
+                  "base_address": "0xF1200000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_rsa;/pspmc_0/ECDSA_RSA_INT/psv_pmc_rsa;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1200000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_sha": {
+                  "base_address": "0xF1210000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_sha;/pspmc_0/SHA3_INT/psv_pmc_sha;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1210000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_slave_boot": {
+                  "base_address": "0xF1220000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_slave_boot;/pspmc_0/PMC_SLAVE_BOOT_INT/psv_pmc_slave_boot;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1220000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_trng": {
+                  "base_address": "0xF1230000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_trng;/pspmc_0/PSV_PMC_TRNG_INT/psv_pmc_trng;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1230000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_efuse_ctrl": {
+                  "base_address": "0xF1240000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_efuse_ctrl;/pspmc_0/EFUSE_CTRL_INT/psv_pmc_efuse_ctrl;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1240000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_efuse_cache": {
+                  "base_address": "0xF1250000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_efuse_cache;/pspmc_0/EFUSE_CACHE_INT/psv_pmc_efuse_cache;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1250000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_crp_0": {
+                  "base_address": "0xF1260000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_crp_0;/pspmc_0/CRP_INT/psv_crp_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1260000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_sysmon_0": {
+                  "base_address": "0xF1270000",
+                  "range": "192K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_sysmon_0;/pspmc_0/PMC_SYSMON_INT/psv_pmc_sysmon_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1270000",
+                      "range": "192K",
+                      "width": "18",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_rtc_0": {
+                  "base_address": "0xF12A0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_rtc_0;/pspmc_0/RTC_INT/psv_pmc_rtc_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12A0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfu_apb_0": {
+                  "base_address": "0xF12B0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfu_apb_0;/pspmc_0/CFU_APB_INT/psv_pmc_cfu_apb_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12B0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_0": {
+                  "base_address": "0xF12D0000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_0;/pspmc_0/CFRAME0_REG_INT/psv_pmc_cfi_cframe_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12D0000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_1": {
+                  "base_address": "0xF12D2000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_1;/pspmc_0/CFRAME1_REG_INT/psv_pmc_cfi_cframe_1;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12D2000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_2": {
+                  "base_address": "0xF12D4000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_2;/pspmc_0/CFRAME2_REG_INT/psv_pmc_cfi_cframe_2;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12D4000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_3": {
+                  "base_address": "0xF12D6000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_3;/pspmc_0/CFRAME3_REG_INT/psv_pmc_cfi_cframe_3;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12D6000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_4": {
+                  "base_address": "0xF12D8000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_4;/pspmc_0/CFRAME4_REG_INT/psv_pmc_cfi_cframe_4;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12D8000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_5": {
+                  "base_address": "0xF12DA000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_5;/pspmc_0/CFRAME5_REG_INT/psv_pmc_cfi_cframe_5;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12DA000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_6": {
+                  "base_address": "0xF12DC000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_6;/pspmc_0/CFRAME6_REG_INT/psv_pmc_cfi_cframe_6;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12DC000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_7": {
+                  "base_address": "0xF12DE000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_7;/pspmc_0/CFRAME7_REG_INT/psv_pmc_cfi_cframe_7;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12DE000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_8": {
+                  "base_address": "0xF12E0000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_8;/pspmc_0/CFRAME8_REG_INT/psv_pmc_cfi_cframe_8;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12E0000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_9": {
+                  "base_address": "0xF12E2000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_9;/pspmc_0/CFRAME9_REG_INT/psv_pmc_cfi_cframe_9;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12E2000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_10": {
+                  "base_address": "0xF12E4000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_10;/pspmc_0/CFRAME10_REG_INT/psv_pmc_cfi_cframe_10;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12E4000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_11": {
+                  "base_address": "0xF12E6000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_11;/pspmc_0/CFRAME11_REG_INT/psv_pmc_cfi_cframe_11;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12E6000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_12": {
+                  "base_address": "0xF12E8000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_12;/pspmc_0/CFRAME12_REG_INT/psv_pmc_cfi_cframe_12;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12E8000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_13": {
+                  "base_address": "0xF12EA000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_13;/pspmc_0/CFRAME13_REG_INT/psv_pmc_cfi_cframe_13;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12EA000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_14": {
+                  "base_address": "0xF12EC000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_14;/pspmc_0/CFRAME14_REG_INT/psv_pmc_cfi_cframe_14;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12EC000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_cfi_cframe_bcast": {
+                  "base_address": "0xF12EE000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_cfi_cframe_bcast;/pspmc_0/CFRAME_BCAST_REG_INT/psv_pmc_cfi_cframe_bcast;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12EE000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_xmpu_0": {
+                  "base_address": "0xF12F0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_xmpu_0;/pspmc_0/PMC_XMPU_INT/psv_pmc_xmpu_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF12F0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_xppu_npi_0": {
+                  "base_address": "0xF1300000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_xppu_npi_0;/pspmc_0/PMC_XPPU_NPI_INT/psv_pmc_xppu_npi_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1300000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_xppu_0": {
+                  "base_address": "0xF1310000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_xppu_0;/pspmc_0/PMC_XPPU_INT/psv_pmc_xppu_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF1310000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_ram": {
+                  "base_address": "0xF2000000",
+                  "range": "128K",
+                  "width": "32",
+                  "usage": "memory",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_ram;/pspmc_0/PMC_RAM_INT/psv_pmc_ram;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF2000000",
+                      "range": "128K",
+                      "width": "17",
+                      "usage": "memory"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_slave_boot_stream": {
+                  "base_address": "0xF2100000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_slave_boot_stream;/pspmc_0/PMC_SLAVE_BOOT_STREAM_INT/psv_pmc_slave_boot_stream;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF2100000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_pmc_ram_npi": {
+                  "base_address": "0xF6000000",
+                  "range": "32M",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_pmc_ram_npi;/pspmc_0/PMC_RAM_NPI_INT/psv_pmc_ram_npi;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xF6000000",
+                      "range": "32M",
+                      "width": "25",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_cpm": {
+                  "base_address": "0xFC000000",
+                  "range": "16M",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_cpm;/pspmc_0/CPM/psv_cpm;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFC000000",
+                      "range": "16M",
+                      "width": "24",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_maincci_0": {
+                  "base_address": "0xFD000000",
+                  "range": "1M",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_maincci_0;/pspmc_0/FPD_MAINCCI/psv_fpd_maincci_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD000000",
+                      "range": "1M",
+                      "width": "20",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_crf_0": {
+                  "base_address": "0xFD1A0000",
+                  "range": "1280K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_crf_0;/pspmc_0/CRF/psv_crf_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD1A0000",
+                      "range": "1280K",
+                      "width": "21",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_afi_0": {
+                  "base_address": "0xFD360000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_afi_0;/pspmc_0/FPD_AFIFM0/psv_fpd_afi_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD360000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_afi_2": {
+                  "base_address": "0xFD380000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_afi_2;/pspmc_0/FPD_AFIFM2/psv_fpd_afi_2;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD380000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_slave_xmpu_0": {
+                  "base_address": "0xFD390000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_slave_xmpu_0;/pspmc_0/FPD_SLAVE_XMPU/psv_fpd_slave_xmpu_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD390000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_apu_0": {
+                  "base_address": "0xFD5C0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_apu_0;/pspmc_0/FPD_APU/psv_apu_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD5C0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_cci_0": {
+                  "base_address": "0xFD5E0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_cci_0;/pspmc_0/FPD_GPCCI/psv_fpd_cci_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD5E0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_smmu_0": {
+                  "base_address": "0xFD5F0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_smmu_0;/pspmc_0/FPD_SMMU/psv_fpd_smmu_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD5F0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_slcr_0": {
+                  "base_address": "0xFD610000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_slcr_0;/pspmc_0/FPD_SLCR/psv_fpd_slcr_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD610000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_slcr_secure_0": {
+                  "base_address": "0xFD690000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_slcr_secure_0;/pspmc_0/FPD_SLCR_SECURE/psv_fpd_slcr_secure_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD690000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_gpv_0": {
+                  "base_address": "0xFD700000",
+                  "range": "1M",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_gpv_0;/pspmc_0/FPD_GPV/psv_fpd_gpv_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD700000",
+                      "range": "1M",
+                      "width": "20",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_fpd_smmutcu_0": {
+                  "base_address": "0xFD800000",
+                  "range": "8M",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_fpd_smmutcu_0;/pspmc_0/FPD_SMMUTCU/psv_fpd_smmutcu_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFD800000",
+                      "range": "8M",
+                      "width": "23",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_sbsauart_0": {
+                  "base_address": "0xFF000000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_sbsauart_0;/pspmc_0/UART0/psv_sbsauart_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF000000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_sbsauart_1": {
+                  "base_address": "0xFF010000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_sbsauart_1;/pspmc_0/UART1/psv_sbsauart_1;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF010000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_i2c_0": {
+                  "base_address": "0xFF020000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_i2c_0;/pspmc_0/PS_I2C0/psv_i2c_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF020000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_i2c_1": {
+                  "base_address": "0xFF030000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_i2c_1;/pspmc_0/PS_I2C1/psv_i2c_1;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF030000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_spi_0": {
+                  "base_address": "0xFF040000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_spi_0;/pspmc_0/SPI0/psv_spi_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF040000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_lpd_iou_slcr_0": {
+                  "base_address": "0xFF080000",
+                  "range": "128K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_lpd_iou_slcr_0;/pspmc_0/LPD_IOU_SLCR/psv_lpd_iou_slcr_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF080000",
+                      "range": "128K",
+                      "width": "17",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_lpd_iou_secure_slcr_0": {
+                  "base_address": "0xFF0A0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_lpd_iou_secure_slcr_0;/pspmc_0/LPD_IOU_SECURE_SLCR/psv_lpd_iou_secure_slcr_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF0A0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_gpio_2": {
+                  "base_address": "0xFF0B0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_gpio_2;/pspmc_0/PS_GPIO/psv_gpio_2;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF0B0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ttc_0": {
+                  "base_address": "0xFF0E0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ttc_0;/pspmc_0/TTC0/psv_ttc_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF0E0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ttc_1": {
+                  "base_address": "0xFF0F0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ttc_1;/pspmc_0/TTC1/psv_ttc_1;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF0F0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ttc_2": {
+                  "base_address": "0xFF100000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ttc_2;/pspmc_0/TTC2/psv_ttc_2;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF100000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ttc_3": {
+                  "base_address": "0xFF110000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ttc_3;/pspmc_0/TTC3/psv_ttc_3;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF110000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_scntr_0": {
+                  "base_address": "0xFF130000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_scntr_0;/pspmc_0/IOU_SCNTR/psv_scntr_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF130000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_scntrs_0": {
+                  "base_address": "0xFF140000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_scntrs_0;/pspmc_0/IOU_SCNTRS/psv_scntrs_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF140000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ipi_psm": {
+                  "base_address": "0xFF310000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ipi_psm;/pspmc_0/PSM_IPI/psv_ipi_psm;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF310000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ipi_pmc": {
+                  "base_address": "0xFF320000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ipi_pmc;/pspmc_0/PMC_IPI/psv_ipi_pmc;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF320000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ipi_3": {
+                  "base_address": "0xFF360000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ipi_3;/pspmc_0/IPI_3/psv_ipi_3;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF360000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ipi_4": {
+                  "base_address": "0xFF370000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ipi_4;/pspmc_0/IPI_4/psv_ipi_4;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF370000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ipi_5": {
+                  "base_address": "0xFF380000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ipi_5;/pspmc_0/IPI_5/psv_ipi_5;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF380000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ipi_pmc_nobuf": {
+                  "base_address": "0xFF390000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ipi_pmc_nobuf;/pspmc_0/PMC_NOBUF/psv_ipi_pmc_nobuf;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF390000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ipi_6": {
+                  "base_address": "0xFF3A0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ipi_6;/pspmc_0/IPI_6/psv_ipi_6;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF3A0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ipi_buffer": {
+                  "base_address": "0xFF3F0000",
+                  "range": "4K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ipi_buffer;/pspmc_0/IPI_BUFFER/psv_ipi_buffer;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF3F0000",
+                      "range": "4K",
+                      "width": "12",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_lpd_slcr_0": {
+                  "base_address": "0xFF410000",
+                  "range": "1M",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_lpd_slcr_0;/pspmc_0/LPD_SLCR/psv_lpd_slcr_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF410000",
+                      "range": "1M",
+                      "width": "20",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_lpd_slcr_secure_0": {
+                  "base_address": "0xFF510000",
+                  "range": "256K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_lpd_slcr_secure_0;/pspmc_0/LPD_SLCR_SECURE/psv_lpd_slcr_secure_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF510000",
+                      "range": "256K",
+                      "width": "18",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_crl_0": {
+                  "base_address": "0xFF5E0000",
+                  "range": "3M",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_crl_0;/pspmc_0/CRL/psv_crl_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF5E0000",
+                      "range": "3M",
+                      "width": "22",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ocm_ctrl": {
+                  "base_address": "0xFF960000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ocm_ctrl;/pspmc_0/OCM/psv_ocm_ctrl;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF960000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ocm_xmpu_0": {
+                  "base_address": "0xFF980000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ocm_xmpu_0;/pspmc_0/OCM_XMPU/psv_ocm_xmpu_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF980000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_lpd_xppu_0": {
+                  "base_address": "0xFF990000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_lpd_xppu_0;/pspmc_0/LPD_XPPU/psv_lpd_xppu_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF990000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_rpu_0": {
+                  "base_address": "0xFF9A0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_rpu_0;/pspmc_0/RPU/psv_rpu_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF9A0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_lpd_afi_0": {
+                  "base_address": "0xFF9B0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_lpd_afi_0;/pspmc_0/LPD_AFIFM4/psv_lpd_afi_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFF9B0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_adma_0": {
+                  "base_address": "0xFFA80000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_adma_0;/pspmc_0/ADMA_CH0/psv_adma_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFA80000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_adma_1": {
+                  "base_address": "0xFFA90000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_adma_1;/pspmc_0/ADMA_CH1/psv_adma_1;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFA90000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_adma_2": {
+                  "base_address": "0xFFAA0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_adma_2;/pspmc_0/ADMA_CH2/psv_adma_2;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFAA0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_adma_3": {
+                  "base_address": "0xFFAB0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_adma_3;/pspmc_0/ADMA_CH3/psv_adma_3;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFAB0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_adma_4": {
+                  "base_address": "0xFFAC0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_adma_4;/pspmc_0/ADMA_CH4/psv_adma_4;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFAC0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_adma_5": {
+                  "base_address": "0xFFAD0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_adma_5;/pspmc_0/ADMA_CH5/psv_adma_5;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFAD0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_adma_6": {
+                  "base_address": "0xFFAE0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_adma_6;/pspmc_0/ADMA_CH6/psv_adma_6;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFAE0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_adma_7": {
+                  "base_address": "0xFFAF0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_adma_7;/pspmc_0/ADMA_CH7/psv_adma_7;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFAF0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_psm_global_reg": {
+                  "base_address": "0xFFC90000",
+                  "range": "60K",
+                  "width": "32",
+                  "usage": "register",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_psm_global_reg;/pspmc_0/PSM_GLOBAL_REG/psv_psm_global_reg;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFC90000",
+                      "range": "60K",
+                      "width": "16",
+                      "usage": "register"
+                    }
+                  }
+                },
+                "pspmc_0_psv_r5_tcm_ram_global": {
+                  "base_address": "0xFFE00000",
+                  "range": "256K",
+                  "width": "32",
+                  "usage": "memory",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_r5_tcm_ram_global;/pspmc_0/R5__TCM_GLOBAL/psv_r5_tcm_ram_global;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFE00000",
+                      "range": "256K",
+                      "width": "18",
+                      "usage": "memory"
+                    }
+                  }
+                },
+                "pspmc_0_psv_r5_1_atcm_global": {
+                  "base_address": "0xFFE90000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "memory",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_r5_1_atcm_global;/pspmc_0/R5_1_ATCM/psv_r5_1_atcm_global;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFE90000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "memory"
+                    }
+                  }
+                },
+                "pspmc_0_psv_r5_1_btcm_global": {
+                  "base_address": "0xFFEB0000",
+                  "range": "64K",
+                  "width": "32",
+                  "usage": "memory",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_r5_1_btcm_global;/pspmc_0/R5_1_BTCM/psv_r5_1_btcm_global;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFEB0000",
+                      "range": "64K",
+                      "width": "16",
+                      "usage": "memory"
+                    }
+                  }
+                },
+                "pspmc_0_psv_ocm_ram_0": {
+                  "base_address": "0xFFFC0000",
+                  "range": "256K",
+                  "width": "32",
+                  "usage": "memory",
+                  "bank_blocks": {
+                    "SEG_pspmc_0_psv_ocm_ram_0;/pspmc_0/OCM_MEM/psv_ocm_ram_0;xilinx.com:ip:pspmc:1.4;/pspmc_0;S_AXI_LPD;C_S_AXI_BASEADDR;C_S_AXI_HIGHADDR": {
+                      "base_address": "0xFFFC0000",
+                      "range": "256K",
+                      "width": "18",
                       "usage": "memory"
                     }
                   }
@@ -1874,6 +4058,12 @@
           "cips/gt_refclk1"
         ]
       },
+      "sAxiLpd_1": {
+        "interface_ports": [
+          "sAxiLpd",
+          "cips/S_AXI_LPD"
+        ]
+      },
       "sAxi_1": {
         "interface_ports": [
           "sAxi",
@@ -1893,13 +4083,8 @@
           "dmaClk",
           "cips/dma1_intrfc_clk",
           "cips/cpm_pl_axi1_clk",
+          "cips/s_axi_lpd_aclk",
           "axi_noc_dma_0/aclk0"
-        ]
-      },
-      "cips_bridge1_usr_irq_ack": {
-        "ports": [
-          "cips/bridge1_usr_irq_ack",
-          "dmaAck"
         ]
       },
       "cips_lpd_axi_noc_clk": {
@@ -1932,12 +4117,6 @@
           "axi_noc_mc_ddr4_0/aclk0"
         ]
       },
-      "cpm_irq1_0_1": {
-        "ports": [
-          "dmaIrq",
-          "cips/bridge1_usr_irq_req"
-        ]
-      },
       "dma1_intrfc_resetn_0_1": {
         "ports": [
           "dmaRstN",
@@ -1968,6 +4147,809 @@
                 "address_block": "/cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_2",
                 "offset": "0x0000000000000000",
                 "range": "128G"
+              }
+            }
+          },
+          "sAxiLpd": {
+            "range": "4G",
+            "width": "32",
+            "segments": {
+              "SEG_cips_pspmc_0_psv_adma_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_1",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_2",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_3": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_3",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_4": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_4",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_5": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_5",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_6": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_6",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_7": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_7",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_apu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_apu_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a720_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_cti",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a720_dbg": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_dbg",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a720_etm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_etm",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a720_pmu": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_pmu",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a721_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_cti",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a721_dbg": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_dbg",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a721_etm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_etm",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a721_pmu": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_pmu",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_apu_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_cti",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_apu_ela": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_ela",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_apu_etf": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_etf",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_apu_fun": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_fun",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_atm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_atm",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_cti2a": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_cti2a",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_cti2d": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_cti2d",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_ela2a": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2a",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_ela2b": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2b",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_ela2c": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2c",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_ela2d": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2d",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_fun": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_fun",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_rom": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_rom",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_atm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_atm",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_cti1b": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_cti1b",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_cti1c": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_cti1c",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_cti1d": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_cti1d",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_stm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_stm",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_lpd_atm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_lpd_atm",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_lpd_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_lpd_cti",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_pmc_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_pmc_cti",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_r50_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_r50_cti",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_r51_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_r51_cti",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_cpm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_cpm",
+                "offset": "0xFC000000",
+                "range": "16M"
+              },
+              "SEG_cips_pspmc_0_psv_crf_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_crf_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_crl_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_crl_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_crp_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_crp_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_afi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_afi_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_afi_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_afi_2",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_cci_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_cci_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_gpv_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_gpv_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_maincci_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_maincci_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_slave_xmpu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_slave_xmpu_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_slcr_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_slcr_secure_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_slcr_secure_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_smmu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_smmu_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_smmutcu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_smmutcu_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_gpio_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_gpio_2",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_i2c_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_i2c_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_i2c_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_i2c_1",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_3": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_3",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_4": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_4",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_5": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_5",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_6": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_6",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_buffer": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_buffer",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_pmc": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_pmc",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_pmc_nobuf": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_pmc_nobuf",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_psm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_psm",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_afi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_afi_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_iou_secure_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_iou_secure_slcr_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_iou_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_iou_slcr_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_slcr_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_slcr_secure_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_slcr_secure_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_xppu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_xppu_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ocm_ctrl": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ocm_ctrl",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ocm_ram_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ocm_ram_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ocm_xmpu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ocm_xmpu_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_aes": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_aes",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_analog_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_analog_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_bbram_ctrl": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_bbram_ctrl",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_1",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_2",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_3": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_3",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_4": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_4",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_5": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_5",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_6": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_6",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_7": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_7",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_8": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_8",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_9": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_9",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_10": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_10",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_11": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_11",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_12": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_12",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_13": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_13",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_14": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_14",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_bcast": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_bcast",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfu_apb_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfu_apb_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_dma_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_dma_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_dma_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_dma_1",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_efuse_cache": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_efuse_cache",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_efuse_ctrl": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_efuse_ctrl",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_global_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_global_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_gpio_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_gpio_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_iou_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_iou_slcr_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_ospi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ospi_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_ppu1_mdm_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ppu1_mdm_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_qspi_ospi_flash_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_qspi_ospi_flash_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_ram": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ram",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_ram_npi": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ram_npi",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_rsa": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_rsa",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_rtc_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_rtc_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_sd_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_sd_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_sha": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_sha",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_slave_boot": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_slave_boot",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_slave_boot_stream": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_slave_boot_stream",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_sysmon_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_sysmon_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_tap": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_tap",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_trng": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_trng",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_xmpu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_xmpu_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_xppu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_xppu_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_xppu_npi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_xppu_npi_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_psm_global_reg": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_psm_global_reg",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_r5_1_atcm_global": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_r5_1_atcm_global",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_r5_1_btcm_global": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_r5_1_btcm_global",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_r5_tcm_ram_global": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_r5_tcm_ram_global",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_rpu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_rpu_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_sbsauart_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_sbsauart_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_sbsauart_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_sbsauart_1",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_scntr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_scntr_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_scntrs_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_scntrs_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_spi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_spi_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ttc_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_0",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ttc_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_1",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ttc_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_2",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ttc_3": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_3",
+                "offset": "0x00000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               }
             }
           }

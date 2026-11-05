@@ -44,7 +44,7 @@ entity XilinxAlveoV80Core is
       BUILD_INFO_G         : BuildInfoType;
       DMA_AXIS_CONFIG_G    : AxiStreamConfigType;
       DRIVER_TYPE_ID_G     : slv(31 downto 0)            := x"00000000";
-      DMA_BURST_BYTES_G    : positive range 256 to 4096  := 256;
+      DMA_BURST_BYTES_G    : positive range 256 to 4096  := 2048;
       DATAGPU_EN_G         : boolean                     := false;
       DMA_SIZE_G           : positive range 1 to 8       := 1);
    port (

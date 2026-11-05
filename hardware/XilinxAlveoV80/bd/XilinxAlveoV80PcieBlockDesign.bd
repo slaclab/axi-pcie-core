@@ -1,9 +1,9 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xEC77BCBBABE22A01",
+      "boundary_crc": "0xEC77BCBBA665079C",
       "device": "xcv80-lsva4737-2MHP-e-S",
-      "gen_directory": "../../../../project_1.gen/sources_1/bd/XilinxAlveoV80PcieBlockDesign",
+      "gen_directory": "../../../../XilinxAlveoV80PrbsTester_project.gen/sources_1/bd/XilinxAlveoV80PcieBlockDesign",
       "name": "XilinxAlveoV80PcieBlockDesign",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
@@ -335,13 +335,13 @@
             "value": "256"
           },
           "NUM_READ_OUTSTANDING": {
-            "value": "8"
+            "value": "256"
           },
           "NUM_READ_THREADS": {
             "value": "1"
           },
           "NUM_WRITE_OUTSTANDING": {
-            "value": "8"
+            "value": "256"
           },
           "NUM_WRITE_THREADS": {
             "value": "1"

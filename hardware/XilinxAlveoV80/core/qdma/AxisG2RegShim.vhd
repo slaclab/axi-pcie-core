@@ -109,11 +109,20 @@ entity AxisG2RegShim is
       forceInt        : out sl;
       irqHoldOff      : out slv(31 downto 0);
       -------------------------------------------------------------------------
+      -- Interrupt request to the parent (-> QDMA usr_irq / MSI-X). Level-held
+      -- while a request is pending and IRQs are enabled; cleared when software
+      -- acknowledges via the intAckAndEnable (0x4C) register. This reproduces
+      -- the AxiStreamDmaV2Desc interrupt the datadev driver depends on: the
+      -- driver queues TX descriptors, writes forceInt, then runs AxisG2_Process
+      -- ONLY from the interrupt handler -- without this IRQ no descriptors are
+      -- ever pushed and no data moves.
+      -------------------------------------------------------------------------
+      interrupt       : out sl;
+      -------------------------------------------------------------------------
       -- Status inputs (driven back into read-only registers by the parent)
       -------------------------------------------------------------------------
       hwWrIndex       : in  slv(31 downto 0) := (others => '0');
       hwRdIndex       : in  slv(31 downto 0) := (others => '0');
-      intReqCount     : in  slv(31 downto 0) := (others => '0');
       wrReqMissed     : in  slv(31 downto 0) := (others => '0'));
 end AxisG2RegShim;
 
@@ -172,6 +181,11 @@ architecture rtl of AxisG2RegShim is
       forceInt    : sl;
       irqHoldOff  : slv(31 downto 0);
       timeout     : slv(31 downto 0);
+      -- interrupt engine
+      intReqCount : slv(31 downto 0);    -- pending interrupt requests (0x50 RO)
+      intAckCount : slv(31 downto 0);    -- handled count from 0x4C write
+      intSwAckReq : sl;                  -- software ack in progress (0x4C write)
+      interrupt   : sl;                  -- level IRQ output
       -- descriptor capture
       txSub       : AxisG2TxSubType;
       txSizeDest  : slv(31 downto 0);    -- latched readFifoB (size/dest) word
@@ -201,6 +215,10 @@ architecture rtl of AxisG2RegShim is
       forceInt    => '0',
       irqHoldOff  => (others => '0'),
       timeout     => (others => '0'),
+      intReqCount => (others => '0'),
+      intAckCount => (others => '0'),
+      intSwAckReq => '0',
+      interrupt   => '0',
       txSub       => AXISG2_TX_SUB_INIT_C,
       txSizeDest  => (others => '0'),
       rxFree      => AXISG2_RX_FREE_INIT_C,
@@ -246,7 +264,7 @@ begin
    addrRdData <= ramRdData;
 
    comb : process (axilReadMaster, axilWriteMaster, hwRdIndex, hwWrIndex,
-                   intReqCount, r, rstL, rxFreeReady, txSubReady, wrReqMissed) is
+                   r, rstL, rxFreeReady, txSubReady, wrReqMissed) is
       variable v         : RegType;
       variable axilEp    : AxiLiteEndpointType;
       variable wrFifoA   : sl;
@@ -267,6 +285,7 @@ begin
       v.addrWrEn    := '0';
       v.acknowledge := '0';
       v.forceInt    := '0';
+      v.intSwAckReq := '0';
 
       wrFifoA   := '0';
       wrFifoB   := '0';
@@ -283,10 +302,19 @@ begin
       axiSlaveRegisterR(axilEp, ADDR_ENABLE_VER_C, 0, VERSION_G);
       axiSlaveRegisterR(axilEp, ADDR_CHAN_CNT_C,   0, CHAN_COUNT_G);
       axiSlaveRegisterR(axilEp, ADDR_ADDR_WIDTH_C, 0, ADDR_WIDTH_G);
-      axiSlaveRegisterR(axilEp, ADDR_INT_REQ_CNT_C,0, intReqCount);
+      axiSlaveRegisterR(axilEp, ADDR_INT_REQ_CNT_C,0, r.intReqCount);
       axiSlaveRegisterR(axilEp, ADDR_HW_WR_IDX_C,  0, hwWrIndex);
       axiSlaveRegisterR(axilEp, ADDR_HW_RD_IDX_C,  0, hwRdIndex);
       axiSlaveRegisterR(axilEp, ADDR_WR_REQ_MISS_C,0, wrReqMissed);
+
+      -- Interrupt acknowledge + enable (0x4C): driver writes 0x30000 +
+      -- handleCount, i.e. intAckCount[15:0]=handleCount, bit16=intReqEn (ack),
+      -- bit17=intEnable (matches AxiStreamDmaV2Desc's x"04C" offset 17). Capture
+      -- intAckCount[15:0] and intEnable (bit 17); the write itself is the
+      -- software-ack request (wrDetect -> intSwAckReq).
+      axiSlaveRegister(axilEp, ADDR_INT_ACK_EN_C, 0,  v.intAckCount(15 downto 0));
+      axiSlaveRegister(axilEp, ADDR_INT_ACK_EN_C, 17, v.intEnable);
+      axiWrDetect(axilEp, ADDR_INT_ACK_EN_C, v.intSwAckReq);
 
       -- Config registers (read/write capture)
       axiSlaveRegister(axilEp, ADDR_INT_EN_C,    0, v.intEnable);
@@ -360,6 +388,36 @@ begin
          null;  -- data already latched into v.txSizeDest
       end if;
 
+      --------------------------------------------------------------------
+      -- Interrupt engine (reproduces AxiStreamDmaV2Desc semantics).
+      -- A forceInt write (0x80) posts one interrupt request. The pending
+      -- request count is readable at 0x50 (intReqCount). An intAckAndEnable
+      -- write (0x4C) is the software acknowledge: it subtracts the handled
+      -- count (intAckCount) from the pending count and updates intEnable.
+      -- interrupt is held high while requests are pending and IRQs enabled,
+      -- except during the single-cycle ack to avoid a false re-fire.
+      --------------------------------------------------------------------
+      if (r.intSwAckReq = '1') then
+         -- Software acknowledged intAckCount requests; clear forceInt and
+         -- subtract (saturating at 0).
+         if (r.intAckCount >= r.intReqCount) then
+            v.intReqCount := (others => '0');
+         else
+            v.intReqCount := r.intReqCount - r.intAckCount;
+         end if;
+      elsif (v.forceInt = '1') then
+         -- Software posted work and requested an interrupt.
+         v.intReqCount := r.intReqCount + 1;
+      end if;
+
+      -- Drive the level interrupt: pending requests AND enabled, but not while
+      -- an ack is being processed this cycle.
+      if (v.intReqCount /= 0 and v.intEnable = '1' and r.intSwAckReq = '0') then
+         v.interrupt := '1';
+      else
+         v.interrupt := '0';
+      end if;
+
       -- Reset
       if (rstL = '0') then
          v := REG_INIT_C;
@@ -381,6 +439,7 @@ begin
       acknowledge    <= r.acknowledge;
       forceInt       <= r.forceInt;
       irqHoldOff     <= r.irqHoldOff;
+      interrupt      <= r.interrupt;
 
    end process comb;
 

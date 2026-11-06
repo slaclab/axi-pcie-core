@@ -511,6 +511,12 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal dma1_usr_irq_fnc                     : slv(12 downto 0);
    signal dma1_usr_irq_valid                   : sl;
    signal dma1_usr_irq_vec                     : slv(10 downto 0);
+
+   -- Shim interrupt -> QDMA usr_irq (MSI-X) handshake bridge
+   signal shimInterrupt : sl;
+   type UsrIrqStateType is (IDLE_S, REQ_S, WAIT_CLR_S);
+   signal usrIrqState  : UsrIrqStateType := IDLE_S;
+   signal usrIrqValid  : sl              := '0';
    signal mAxi_araddr                          : slv(63 downto 0);
    signal mAxi_arburst                         : slv(1 downto 0);
    signal mAxi_arcache                         : slv(3 downto 0);
@@ -707,7 +713,8 @@ begin
          fifoReset       => open,
          acknowledge     => open,
          forceInt        => open,
-         irqHoldOff      => open);
+         irqHoldOff      => open,
+         interrupt       => shimInterrupt);
 
    ----------------------------------------------------------------------------
    -- QDMA descriptor-bypass datapath adapter
@@ -806,9 +813,54 @@ begin
    dma1_dsc_crdt_in_fence <= '0';
    dma1_dsc_crdt_in_qid   <= (others => '0');
    dma1_dsc_crdt_in_valid <= '0';
-   dma1_usr_irq_fnc   <= (others => '0');
-   dma1_usr_irq_vec   <= (others => '0');
-   dma1_usr_irq_valid <= '0';
+   -------------------------------------------------------------------------
+   -- Shim interrupt -> QDMA user interrupt (MSI-X) handshake.
+   -- The datadev driver's descriptor flow is interrupt-driven: it queues TX
+   -- descriptors, writes forceInt, then performs the actual descriptor FIFO
+   -- pushes only from its interrupt handler (AxisG2_Process). The AxisG2RegShim
+   -- raises a level 'shimInterrupt'; this FSM converts it to the QDMA usr_irq
+   -- req/ack handshake (PG347 Table 57): assert usr_irq_valid and HOLD until
+   -- usr_irq_ack pulses, then wait for shimInterrupt to clear (software ack via
+   -- the 0x4C register) before re-arming, so one MSI-X is sent per request.
+   -------------------------------------------------------------------------
+   -- Function 0, MSI-X vector 0 -- matches the QdmaCtxtInit queue-context
+   -- programming (FUNC_ID/MSIX_VEC defaults = 0) so the vector the queues point
+   -- at is the one raised here.
+   dma1_usr_irq_fnc   <= (others => '0');          -- 13-bit; PF0
+   dma1_usr_irq_vec   <= (others => '0');          -- 11-bit MSI-X vector 0
+   dma1_usr_irq_valid <= usrIrqValid;
+
+   U_UsrIrq : process (clk) is
+   begin
+      if rising_edge(clk) then
+         if (rstL = '0') then
+            usrIrqState <= IDLE_S;
+            usrIrqValid <= '0';
+         else
+            case usrIrqState is
+               when IDLE_S =>
+                  usrIrqValid <= '0';
+                  -- New interrupt condition -> request an MSI-X.
+                  if (shimInterrupt = '1') then
+                     usrIrqValid <= '1';
+                     usrIrqState <= REQ_S;
+                  end if;
+               when REQ_S =>
+                  -- Hold valid until the DMA acks (or fails) the request.
+                  if (dma1_usr_irq_ack = '1' or dma1_usr_irq_fail = '1') then
+                     usrIrqValid <= '0';
+                     usrIrqState <= WAIT_CLR_S;
+                  end if;
+               when WAIT_CLR_S =>
+                  -- Wait for software to service/clear the interrupt before
+                  -- re-arming, so we send one MSI-X per interrupt condition.
+                  if (shimInterrupt = '0') then
+                     usrIrqState <= IDLE_S;
+                  end if;
+            end case;
+         end if;
+      end if;
+   end process;
 
    -------------------
    -- AXI PCIe IP Core

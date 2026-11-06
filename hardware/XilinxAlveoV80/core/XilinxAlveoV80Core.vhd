@@ -196,24 +196,30 @@ begin
 
       U_AxiPciePhy : entity axi_pcie_core.XilinxAlveoV80PciePhyWrapper
          generic map (
-            TPD_G => TPD_G)
+            TPD_G             => TPD_G,
+            DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G)
          port map (
             userClk        => userClock,
-            -- AXI4 Interfaces
+            -- Clocks/resets out
             axiClk         => sysClock,
             axiRst         => sysReset,
-            dmaReadMaster  => dmaReadMaster,
-            dmaReadSlave   => dmaReadSlave,
-            dmaWriteMaster => dmaWriteMaster,
-            dmaWriteSlave  => dmaWriteSlave,
+            -- User AXI-Stream (QDMA H2C -> user, user -> QDMA C2H). The QDMA
+            -- descriptor-bypass DMA engine now lives in the wrapper, so the
+            -- Core simply forwards the single-channel user stream.
+            dmaObMaster    => dmaObMasters(0),
+            dmaObSlave     => dmaObSlaves(0),
+            dmaIbMaster    => dmaIbMasters(0),
+            dmaIbSlave     => dmaIbSlaves(0),
+            -- BAR0 register AXI4 path to AxiPcieReg (U_REG) below
             regReadMaster  => regReadMaster,
             regReadSlave   => regReadSlave,
             regWriteMaster => regWriteMaster,
             regWriteSlave  => regWriteSlave,
-            phyReadMaster  => phyReadMaster,
-            phyReadSlave   => phyReadSlave,
-            phyWriteMaster => phyWriteMaster,
-            phyWriteSlave  => phyWriteSlave,
+            -- AGEN2/DMA crossbar slot -> AxisG2 shim (in the wrapper)
+            dmaCtrlReadMaster  => dmaCtrlReadMasters(0),
+            dmaCtrlReadSlave   => dmaCtrlReadSlaves(0),
+            dmaCtrlWriteMaster => dmaCtrlWriteMasters(0),
+            dmaCtrlWriteSlave  => dmaCtrlWriteSlaves(0),
             -- Interrupt Interface
             dmaIrq         => dmaIrq,
             -- PS DDR Ports
@@ -330,38 +336,13 @@ begin
    ---------------
    -- AXI PCIe DMA
    ---------------
-   U_AxiPcieDma : entity axi_pcie_core.AxiPcieDma
-      generic map (
-         TPD_G                => TPD_G,
-         ROGUE_SIM_EN_G       => ROGUE_SIM_EN_G,
-         ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
-         ROGUE_SIM_CH_COUNT_G => ROGUE_SIM_CH_COUNT_G,
-         DMA_SIZE_G           => DMA_SIZE_G,
-         DMA_BURST_BYTES_G    => DMA_BURST_BYTES_G,
-         DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,
-         DESC_SYNTH_MODE_G    => "xpm",
-         DESC_MEMORY_TYPE_G   => "ultra")
-      port map (
-         axiClk           => sysClock,
-         axiRst           => sysReset,
-         -- AXI4 Interfaces (
-         axiReadMaster    => dmaReadMaster,
-         axiReadSlave     => dmaReadSlave,
-         axiWriteMaster   => dmaWriteMaster,
-         axiWriteSlave    => dmaWriteSlave,
-         pipObMaster      => intPipObMaster,
-         pipObSlave       => intPipObSlave,
-         -- AXI4-Lite Interfaces
-         axilReadMasters  => dmaCtrlReadMasters,
-         axilReadSlaves   => dmaCtrlReadSlaves,
-         axilWriteMasters => dmaCtrlWriteMasters,
-         axilWriteSlaves  => dmaCtrlWriteSlaves,
-         -- DMA Interfaces
-         dmaIrq           => dmaIrq,
-         dmaBuffGrpPause  => dmaBuffGrpPause,
-         dmaObMasters     => dmaObMasters,
-         dmaObSlaves      => dmaObSlaves,
-         dmaIbMasters     => dmaIbMasters,
-         dmaIbSlaves      => dmaIbSlaves);
+   -- QDMA MIGRATION: the surf AxiStreamDmaV2 (AxiPcieDma) PL DMA engine is
+   -- REMOVED. The hardened CPM5 QDMA engine + descriptor-bypass adapter +
+   -- AxisG2 BAR0 shim now live in XilinxAlveoV80PciePhyWrapper, so the Core only
+   -- forwards the user AXI-Stream (dmaOb/dmaIbMasters(0)) wired above. The
+   -- legacy host-DMA AXI4 records and the dmaCtrl AXI-Lite endpoints are no
+   -- longer used here.
+   dmaIrq          <= '0';              -- QDMA raises MSI-X via adapter sdi
+   dmaBuffGrpPause <= (others => '0');
 
 end mapping;

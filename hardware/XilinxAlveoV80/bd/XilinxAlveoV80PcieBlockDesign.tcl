@@ -209,37 +209,10 @@ proc create_root_design { parentCell } {
 
   set gtPcie [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gt_rtl:1.0 gtPcie ]
 
-  set sAxi [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 sAxi ]
-  set_property -dict [ list \
-   CONFIG.ADDR_WIDTH {64} \
-   CONFIG.ARUSER_WIDTH {0} \
-   CONFIG.AWUSER_WIDTH {0} \
-   CONFIG.BUSER_WIDTH {0} \
-   CONFIG.DATA_WIDTH {512} \
-   CONFIG.FREQ_HZ {250000000} \
-   CONFIG.HAS_BRESP {1} \
-   CONFIG.HAS_BURST {1} \
-   CONFIG.HAS_CACHE {1} \
-   CONFIG.HAS_LOCK {1} \
-   CONFIG.HAS_PROT {1} \
-   CONFIG.HAS_QOS {1} \
-   CONFIG.HAS_REGION {1} \
-   CONFIG.HAS_RRESP {1} \
-   CONFIG.HAS_WSTRB {1} \
-   CONFIG.ID_WIDTH {4} \
-   CONFIG.MAX_BURST_LENGTH {256} \
-   CONFIG.NUM_READ_OUTSTANDING {256} \
-   CONFIG.NUM_READ_THREADS {1} \
-   CONFIG.NUM_WRITE_OUTSTANDING {256} \
-   CONFIG.NUM_WRITE_THREADS {1} \
-   CONFIG.PROTOCOL {AXI4} \
-   CONFIG.READ_WRITE_MODE {READ_WRITE} \
-   CONFIG.RUSER_BITS_PER_BYTE {0} \
-   CONFIG.RUSER_WIDTH {0} \
-   CONFIG.SUPPORTS_NARROW_BURST {1} \
-   CONFIG.WUSER_BITS_PER_BYTE {0} \
-   CONFIG.WUSER_WIDTH {0} \
-   ] $sAxi
+  # QDMA MIGRATION: the bridge-mode host-DMA slave port sAxi is removed (the
+  # QDMA engine moves DMA data over its own AXI4-ST C2H/H2C interfaces, not a
+  # PL-driven AXI slave into the CPM). mAxi (CPM_PL_AXI1) is retained as the
+  # host BAR0 user-window path into PL.
 
   set mAxi [ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 mAxi ]
   set_property -dict [ list \
@@ -275,6 +248,37 @@ proc create_root_design { parentCell } {
   set plRefClk [ create_bd_port -dir O -type clk plRefClk ]
   set dmaRstN [ create_bd_port -dir I -type rst dmaRstN ]
 
+  # ==========================================================================
+  # QDMA MIGRATION (descriptor-bypass) -- IN PROGRESS. See plan + memory
+  # [[v80-qdma-bypass-migration]]. The CPM_CONFIG dict below has been switched
+  # from AXI_Bridge to QDMA descriptor-bypass mode:
+  #   CPM_PCIE1_FUNCTIONAL_MODE  AXI_Bridge -> QDMA
+  #   CPM_PCIE1_BRIDGE_AXI_SLAVE_IF 1 -> 0   (no bridge slave)
+  #   + CPM_PCIE1_DMA_INTF AXI4S, DSC_BYPASS_RD 1, DSC_BYPASS_WR 1  (ST + H2C/C2H
+  #     descriptor bypass). These are the real cpm5_v1_0 param names (verified
+  #     against the IP component.xml BUSIF_ENABLEMENT deps); they enable the
+  #     dma1_{h2c_byp_in_st, c2h_byp_in_st_csh, s_axis_c2h, s_axis_c2h_cmpt,
+  #     m_axis_h2c} interfaces the adapter wires to.
+  #   CPM_PCIE1_MSI_X_OPTIONS None -> MSI-X_Internal, PF0 MSIX enabled (native
+  #     QDMA MSI-X replaces the broken bridge1_usr_irq / TX_IRQ_CSR workaround)
+  #   PF0 BAR0 QDMA 16 MB user BAR (AXI_Bridge_Master) -> datadev shim on BAR0
+  #
+  # STRUCTURAL REWORK THAT VIVADO REGEN MUST RESOLVE (cannot be reliably
+  # hand-written in this .tcl; do NOT trust blind edits for these):
+  #  1) The CIPS cell will now expose QDMA stream + descriptor-bypass ports
+  #     (dma0_h2c_byp_in_st_*, dma0_c2h_byp_in_st_csh_*, dma0_s_axis_c2h_cmpt_*,
+  #     dma0_m_axis_h2c_*, dma0_s_axis_c2h_*, dma0_tm_dsc_sts_*, usr_irq/msix,
+  #     the QDMA config-BAR AXI-Lite master) instead of the bridge sAxi/mAxi.
+  #     -> After regen, run `write_bd_tcl` and capture the generated CIPS port
+  #        list; the PciePhyWrapper component decl + QdmaBypassAdapter wiring is
+  #        written against THOSE authoritative names.
+  #  2) NoC (axi_noc_dma_0 / NOC_CPM_PCIE_0) connectivity changes: the bridge
+  #     sAxi->S00_AXI data path is replaced by the QDMA engine's own NoC master.
+  #  3) Address map: the bridge AXIBAR2PCIE / NOC_CPM_PCIE segments and the
+  #     S_AXI_LPD 0xFC000000 TX_IRQ_CSR segment (added for the old workaround)
+  #     are no longer used. QDMA config BAR must be reachable by QdmaCtxtInit.
+  #  4) sAxiLpd port + XilinxAlveoV80CpmManager are retired once MSI-X is proven.
+  # ==========================================================================
   # Create instance: cips, and set properties
   set cips [ create_bd_cell -type ip -vlnv xilinx.com:ip:versal_cips:3.4 cips ]
   set_property -dict [list \
@@ -287,16 +291,19 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_ACS_CAP_ON {0} \
       CPM_PCIE1_ARI_CAP_ENABLED {0} \
       CPM_PCIE1_AXIBAR2PCIE_BASEADDR_2_H {0x000000A0} \
-      CPM_PCIE1_BRIDGE_AXI_SLAVE_IF {1} \
+      CPM_PCIE1_BRIDGE_AXI_SLAVE_IF {0} \
       CPM_PCIE1_CFG_EXT_IF {0} \
       CPM_PCIE1_CFG_VEND_ID {1A4A} \
       CPM_PCIE1_COPY_PF0_QDMA_ENABLED {0} \
       CPM_PCIE1_EXT_PCIE_CFG_SPACE_ENABLED {None} \
-      CPM_PCIE1_FUNCTIONAL_MODE {AXI_Bridge} \
+      CPM_PCIE1_FUNCTIONAL_MODE {QDMA} \
       CPM_PCIE1_MAX_LINK_SPEED {32.0_GT/s} \
       CPM_PCIE1_MODES {DMA} \
       CPM_PCIE1_MODE_SELECTION {Advanced} \
-      CPM_PCIE1_MSI_X_OPTIONS {None} \
+      CPM_PCIE1_DMA_INTF {AXI4S} \
+      CPM_PCIE1_DSC_BYPASS_RD {1} \
+      CPM_PCIE1_DSC_BYPASS_WR {1} \
+      CPM_PCIE1_MSI_X_OPTIONS {MSI-X_Internal} \
       CPM_PCIE1_NUM_USR_IRQ {0} \
       CPM_PCIE1_PCIE_REGION_0_EN {0} \
       CPM_PCIE1_PCIE_REGION_1_EN {0} \
@@ -319,13 +326,13 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PF0_BAR0_BRIDGE_64BIT {1} \
       CPM_PCIE1_PF0_BAR0_BRIDGE_SCALE {Megabytes} \
       CPM_PCIE1_PF0_BAR0_BRIDGE_SIZE {16} \
-      CPM_PCIE1_PF0_BAR0_BRIDGE_STEERING {CPM_PL_AXI1} \
+      CPM_PCIE1_PF0_BAR0_BRIDGE_STEERING {CPM_PCIE_NOC_0} \
       CPM_PCIE1_PF0_BAR0_PREFETCHABLE {0} \
-      CPM_PCIE1_PF0_BAR0_QDMA_64BIT {0} \
-      CPM_PCIE1_PF0_BAR0_QDMA_ENABLED {0} \
+      CPM_PCIE1_PF0_BAR0_QDMA_64BIT {1} \
+      CPM_PCIE1_PF0_BAR0_QDMA_ENABLED {1} \
       CPM_PCIE1_PF0_BAR0_QDMA_PREFETCHABLE {0} \
-      CPM_PCIE1_PF0_BAR0_QDMA_SCALE {Kilobytes} \
-      CPM_PCIE1_PF0_BAR0_QDMA_SIZE {4} \
+      CPM_PCIE1_PF0_BAR0_QDMA_SCALE {Megabytes} \
+      CPM_PCIE1_PF0_BAR0_QDMA_SIZE {16} \
       CPM_PCIE1_PF0_BAR0_QDMA_TYPE {AXI_Bridge_Master} \
       CPM_PCIE1_PF0_BAR0_SIZE {16} \
       CPM_PCIE1_PF0_BAR1_BRIDGE_ENABLED {0} \
@@ -342,10 +349,10 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PF0_DEV_CAP_EXT_TAG_EN {1} \
       CPM_PCIE1_PF0_DEV_CAP_FUNCTION_LEVEL_RESET_CAPABLE {0} \
       CPM_PCIE1_PF0_INTERRUPT_PIN {NONE} \
-      CPM_PCIE1_PF0_MSIX_CAP_TABLE_OFFSET {40} \
-      CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE {1} \
-      CPM_PCIE1_PF0_MSIX_ENABLED {0} \
-      CPM_PCIE1_PF0_MSI_ENABLED {1} \
+      CPM_PCIE1_PF0_MSIX_CAP_TABLE_OFFSET {8000} \
+      CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE {8} \
+      CPM_PCIE1_PF0_MSIX_ENABLED {1} \
+      CPM_PCIE1_PF0_MSI_ENABLED {0} \
       CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0 {0x0000020100000000} \
       CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D0 {0} \
       CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D1 {0} \
@@ -377,7 +384,7 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PORT_TYPE {PCI_Express_Endpoint_device} \
       CPM_PCIE1_TL_PF_ENABLE_REG {1} \
       CPM_PL_AXI0_EN {0} \
-      CPM_PL_AXI1_EN {1} \
+      CPM_PL_AXI1_EN {0} \
       PS_USE_PS_NOC_PCI_0 {0} \
       PS_USE_PS_NOC_PCI_1 {0} \
     } \
@@ -579,60 +586,71 @@ proc create_root_design { parentCell } {
    CONFIG.ASSOCIATED_BUSIF {S01_AXI} \
  ] [get_bd_pins $axi_noc_mc_ddr4_0/aclk1]
 
-  # Create instance: axi_noc_dma_0, and set properties
-  set axi_noc_dma_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_noc:1.1 axi_noc_dma_0 ]
+  # QDMA MIGRATION: the bridge-mode host-DMA NoC (axi_noc_dma_0: sAxi -> CIPS
+  # NOC_CPM_PCIE_0) is removed. In CPM5 QDMA mode (PG347 Table 6) NOC_CPM_PCIE_0
+  # is NOT used and CPM_PL_AXI1 is NOT available (verified: the interface does
+  # not materialize in QDMA mode even with CPM_PL_AXI1_EN=1). The QDMA engine
+  # masters its own CPM_PCIE_NOC_0 and the AXI4-ST C2H/H2C interfaces carry the
+  # DMA payload. The host BAR0 user window (datadev register shim) is steered
+  # (BAR0_BRIDGE_STEERING {CPM_PCIE_NOC_0}) out CPM_PCIE_NOC_0, so we add a NoC
+  # (axi_noc_cpm_0) that routes CPM_PCIE_NOC_0 -> mAxi (PL AXI master) into the
+  # PL where AxisG2RegShim lives.
+
+  # Create instance: axi_noc_cpm_0 -- routes the QDMA CPM_PCIE_NOC_0 master to
+  # the PL mAxi port (host BAR0 user window -> AxisG2RegShim).
+  set axi_noc_cpm_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_noc:1.1 axi_noc_cpm_0 ]
   set_property -dict [list \
     CONFIG.NUM_CLKS {2} \
     CONFIG.NUM_MI {1} \
     CONFIG.NUM_SI {1} \
-  ] $axi_noc_dma_0
-
+  ] $axi_noc_cpm_0
 
   set_property -dict [ list \
-   CONFIG.CATEGORY {ps_pcie} \
- ] [get_bd_intf_pins $axi_noc_dma_0/M00_AXI]
+   CONFIG.CATEGORY {pl} \
+ ] [get_bd_intf_pins $axi_noc_cpm_0/M00_AXI]
 
-  # CONFIG.REMAPS moves IOs to where PCIe host space is mapped
   set_property -dict [ list \
    CONFIG.R_TRAFFIC_CLASS {BEST_EFFORT} \
    CONFIG.W_TRAFFIC_CLASS {BEST_EFFORT} \
-   CONFIG.CONNECTIONS {M00_AXI {read_bw {125} write_bw {12500} read_avg_burst {4} write_avg_burst {4}}} \
-   CONFIG.DEST_IDS {M00_AXI:0x80} \
+   CONFIG.CONNECTIONS {M00_AXI {read_bw {125} write_bw {125} read_avg_burst {4} write_avg_burst {4}}} \
+   CONFIG.DEST_IDS {M00_AXI:0x0} \
    CONFIG.NOC_PARAMS {} \
-   CONFIG.CATEGORY {pl} \
-   CONFIG.REMAPS {M00_AXI {{0x0000_0000 0xA0_0000_0000 128G}}} \
- ] [get_bd_intf_pins $axi_noc_dma_0/S00_AXI]
+   CONFIG.CATEGORY {ps_pcie} \
+ ] [get_bd_intf_pins $axi_noc_cpm_0/S00_AXI]
 
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {S00_AXI} \
- ] [get_bd_pins $axi_noc_dma_0/aclk0]
+ ] [get_bd_pins $axi_noc_cpm_0/aclk0]
 
   set_property -dict [ list \
    CONFIG.ASSOCIATED_BUSIF {M00_AXI} \
- ] [get_bd_pins $axi_noc_dma_0/aclk1]
+ ] [get_bd_pins $axi_noc_cpm_0/aclk1]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net axi_noc_0_M00_AXI [get_bd_intf_pins cips/NOC_CPM_PCIE_0] [get_bd_intf_pins axi_noc_dma_0/M00_AXI]
   connect_bd_intf_net -intf_net axi_noc_mc_ddr4_0_CH0_DDR4_0 [get_bd_intf_pins axi_noc_mc_ddr4_0/CH0_DDR4_0] [get_bd_intf_ports psDDR]
-  connect_bd_intf_net -intf_net cips_CPM_PL_AXI1 [get_bd_intf_ports mAxi] [get_bd_intf_pins cips/CPM_PL_AXI1]
+  connect_bd_intf_net -intf_net cips_CPM_PCIE_NOC_0 [get_bd_intf_pins cips/CPM_PCIE_NOC_0] [get_bd_intf_pins axi_noc_cpm_0/S00_AXI]
+  connect_bd_intf_net -intf_net axi_noc_cpm_0_M00_AXI [get_bd_intf_pins axi_noc_cpm_0/M00_AXI] [get_bd_intf_ports mAxi]
   connect_bd_intf_net -intf_net cips_LPD_AXI_NOC_0 [get_bd_intf_pins cips/LPD_AXI_NOC_0] [get_bd_intf_pins axi_noc_mc_ddr4_0/S01_AXI]
   connect_bd_intf_net -intf_net cips_PCIE1_GT [get_bd_intf_pins cips/PCIE1_GT] [get_bd_intf_ports gtPcie]
   connect_bd_intf_net -intf_net cips_PMC_NOC_AXI_0 [get_bd_intf_pins cips/PMC_NOC_AXI_0] [get_bd_intf_pins axi_noc_mc_ddr4_0/S00_AXI]
   connect_bd_intf_net -intf_net gt_pcie_refclk_1 [get_bd_intf_ports gtPcieRefClk] [get_bd_intf_pins cips/gt_refclk1]
-  connect_bd_intf_net -intf_net sAxi_1 [get_bd_intf_ports sAxi] [get_bd_intf_pins axi_noc_dma_0/S00_AXI]
   connect_bd_intf_net -intf_net sAxiLpd_1 [get_bd_intf_ports sAxiLpd] [get_bd_intf_pins cips/S_AXI_LPD]
   connect_bd_intf_net -intf_net sys_clk0_0_1 [get_bd_intf_ports psDdrClk] [get_bd_intf_pins axi_noc_mc_ddr4_0/sys_clk0]
 
   # Create port connections
+  # dmaClk drives the QDMA ST interface clock, the LPD slave clock, and the PL
+  # (M00_AXI) side of the CPM->PL NoC.
   connect_bd_net -net aclk3_0_1  [get_bd_ports dmaClk] \
   [get_bd_pins cips/dma1_intrfc_clk] \
-  [get_bd_pins cips/cpm_pl_axi1_clk] \
   [get_bd_pins cips/s_axi_lpd_aclk] \
-  [get_bd_pins axi_noc_dma_0/aclk0]
+  [get_bd_pins axi_noc_cpm_0/aclk1]
   connect_bd_net -net cips_lpd_axi_noc_clk  [get_bd_pins cips/lpd_axi_noc_clk] \
   [get_bd_pins axi_noc_mc_ddr4_0/aclk1]
-  connect_bd_net -net cips_noc_cpm_pcie_axi0_clk  [get_bd_pins cips/noc_cpm_pcie_axi0_clk] \
-  [get_bd_pins axi_noc_dma_0/aclk1]
+  # CPM_PCIE_NOC_0 master clock drives the S00_AXI (CPM) side of the CPM->PL NoC.
+  # (QDMA-mode pin is cpm_pcie_noc_axi0_clk, distinct from the bridge-mode
+  # noc_cpm_pcie_axi0_clk.)
+  connect_bd_net -net cips_cpm_pcie_noc_axi0_clk  [get_bd_pins cips/cpm_pcie_noc_axi0_clk] \
+  [get_bd_pins axi_noc_cpm_0/aclk0]
   connect_bd_net -net cips_pl0_ref_clk  [get_bd_pins cips/pl0_ref_clk] \
   [get_bd_ports plRefClk]
   connect_bd_net -net cips_pl0_resetn  [get_bd_pins cips/pl0_resetn] \
@@ -643,18 +661,22 @@ proc create_root_design { parentCell } {
   [get_bd_pins cips/dma1_intrfc_resetn]
 
   # Create address segments
-  assign_bd_address -offset 0x00000000 -range 0x01000000 -target_address_space [get_bd_addr_spaces cips/CPM_PL_AXI1] [get_bd_addr_segs mAxi/Reg] -force
+  # Host BAR0 user window (16 MB) egresses CPM_PCIE_NOC_0 and is routed by
+  # axi_noc_cpm_0 to the PL mAxi port. The CPM_PCIE_NOC_0 master can only reach
+  # mAxi through the PCIeBAR2AXIBAR aperture at 0x201_0000_0000 (matches
+  # CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0 {0x0000020100000000}); validate_bd_design
+  # reports this as the only valid aperture. The PL shim decodes the low 16 MB
+  # of this window (the AxiPcieReg/AxisG2 map is offset-relative).
+  assign_bd_address -offset 0x0000020100000000 -range 0x01000000 -target_address_space [get_bd_addr_spaces cips/CPM_PCIE_NOC_0] [get_bd_addr_segs mAxi/Reg] -force
   assign_bd_address -offset 0x050000000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/LPD_AXI_NOC_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S01_AXI/C1_DDR_CH1] -force
   assign_bd_address -offset 0x00000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/LPD_AXI_NOC_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S01_AXI/C1_DDR_LOW0] -force
   assign_bd_address -offset 0x050000000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/PMC_NOC_AXI_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S00_AXI/C0_DDR_CH1] -force
   assign_bd_address -offset 0x00000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/PMC_NOC_AXI_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S00_AXI/C0_DDR_LOW0] -force
 
-  # Disable bridge configuration in PCIe (PSV_noc_pcie_0, PSV_noc_pcie_1), map range from 0 to PCIe host mem space
-  assign_bd_address -offset 0xE0000000 -range 0x10000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_0] -force
-  assign_bd_address -offset 0x000600000000 -range 0x000200000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_1] -force
-  exclude_bd_addr_seg [get_bd_addr_segs sAxi/SEG_cips_pspmc_0_psv_noc_pcie_0]
-  exclude_bd_addr_seg [get_bd_addr_segs sAxi/SEG_cips_pspmc_0_psv_noc_pcie_1]
-  assign_bd_address -offset 0x0 -range 0x002000000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_2] -force
+  # QDMA MIGRATION: the bridge-mode sAxi -> NOC_CPM_PCIE_0 host-space address
+  # assignments are removed (sAxi port and NOC_CPM_PCIE_0 usage are gone in QDMA
+  # mode). QDMA host addressing is handled inside the QDMA engine via the
+  # descriptors supplied on the bypass interface, not by a PL-side address map.
 
   # ---------------------------------------------------------------------------
   # sAxiLpd -> CPM5 register space (TX_IRQ_CSR @ 0x00FCEA0E7C) address mapping
@@ -681,6 +703,25 @@ proc create_root_design { parentCell } {
         continue
      }
      catch { exclude_bd_addr_seg -target_address_space [get_bd_addr_spaces sAxiLpd] $seg }
+  }
+
+  # ---------------------------------------------------------------------------
+  # QDMA MIGRATION: expose the CPM5 QDMA datapath interfaces at the BD boundary
+  # so the PL wrapper (XilinxAlveoV80PciePhyWrapper) can drive/observe them
+  # (descriptor bypass in/out, AXI4-ST H2C/C2H, CMPT, mgmt, traffic-manager
+  # status, descriptor credit, user IRQ, queue status). Each becomes an external
+  # BD interface port named after the CIPS pin (external name = pin leaf name),
+  # which the wrapper's component declaration mirrors.
+  # ---------------------------------------------------------------------------
+  foreach qp {
+     dma1_h2c_byp_in_st  dma1_c2h_byp_in_st_csh
+     dma1_h2c_byp_out    dma1_c2h_byp_out
+     dma1_m_axis_h2c     dma1_s_axis_c2h        dma1_s_axis_c2h_cmpt
+     dma1_axis_c2h_dmawr dma1_axis_c2h_status
+     dma1_mgmt           dma1_tm_dsc_sts        dma1_dsc_crdt_in
+     dma1_usr_irq        dma1_qsts_out          dma1_st_rx_msg
+  } {
+     make_bd_intf_pins_external -name $qp [get_bd_intf_pins cips/$qp]
   }
 
   # Restore current instance

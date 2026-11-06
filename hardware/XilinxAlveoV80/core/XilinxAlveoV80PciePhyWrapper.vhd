@@ -1,7 +1,20 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: Wrapper for AXI PCIe Core
+-- Description: Wrapper for the AXI PCIe Core (CPM5 QDMA descriptor-bypass).
+--
+-- Instantiates the regenerated CPM5 QDMA block design and the PL-side QDMA
+-- glue: QdmaCtxtInit (programs queue contexts over dma1_mgmt), QdmaBypassAdapter
+-- (turns AxisG2 descriptor submissions into QDMA bypass-in descriptors and moves
+-- the AXI-Stream payload over dma1_m_axis_h2c / dma1_s_axis_c2h), and
+-- AxisG2RegShim (reproduces the datadev BAR0 register map, fed from the host
+-- BAR0 user window mAxi, passed to the Core's AxiPcieReg as an AXI4 reg master;
+-- the AGEN2 crossbar slot comes back as the shim's AXI-Lite). The user
+-- AXI-Stream (dmaOb/dmaIb) is exposed to the Core so top-levels are unchanged.
+--
+-- NOTE (interface change vs. the old bridge wrapper): the DMA engine now lives
+-- here, so this wrapper exposes the user AXIS (dmaObMaster/dmaIbMaster + the
+-- AxisG2 reg/version AXI-Lite) instead of the old dma/reg AXI4 record ports.
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -21,34 +34,41 @@ library surf;
 use surf.StdRtlPkg.all;
 use surf.AxiPkg.all;
 use surf.AxiLitePkg.all;
+use surf.AxiStreamPkg.all;
 
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
+use axi_pcie_core.QdmaCtxtPkg.all;
+use axi_pcie_core.AxisG2ShimPkg.all;
 
-library unisim;
-use unisim.vcomponents.all;
 
 entity XilinxAlveoV80PciePhyWrapper is
    generic (
-      TPD_G : time := 1 ns);
+      TPD_G             : time               := 1 ns;
+      DMA_AXIS_CONFIG_G : AxiStreamConfigType);
    port (
       userClk        : in    sl;
-      -- AXI4 Interfaces
+      -- Clocks/resets out
       axiClk         : out   sl;
       axiRst         : out   sl;
-      dmaReadMaster  : in    AxiReadMasterType;
-      dmaReadSlave   : out   AxiReadSlaveType;
-      dmaWriteMaster : in    AxiWriteMasterType;
-      dmaWriteSlave  : out   AxiWriteSlaveType;
+      -- User AXI-Stream (QDMA H2C -> user, user -> QDMA C2H)
+      dmaObMaster    : out   AxiStreamMasterType;
+      dmaObSlave     : in    AxiStreamSlaveType;
+      dmaIbMaster    : in    AxiStreamMasterType;
+      dmaIbSlave     : out   AxiStreamSlaveType;
+      -- BAR0 register AXI4 path (mAxi = CPM_PCIE_NOC_0->PL window) to the Core's
+      -- AxiPcieReg (which owns the full SLAC BAR0 map incl. AxiVersion@0x20000).
       regReadMaster  : out   AxiReadMasterType;
       regReadSlave   : in    AxiReadSlaveType;
       regWriteMaster : out   AxiWriteMasterType;
       regWriteSlave  : in    AxiWriteSlaveType;
-      phyReadMaster  : in    AxiLiteReadMasterType;
-      phyReadSlave   : out   AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      phyWriteMaster : in    AxiLiteWriteMasterType;
-      phyWriteSlave  : out   AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
-      -- Interrupt Interface
+      -- AGEN2/DMA crossbar slot (AxiPcieReg dmaCtrl(0)) that drives the AxisG2
+      -- register shim living in this wrapper.
+      dmaCtrlReadMaster  : in  AxiLiteReadMasterType;
+      dmaCtrlReadSlave   : out AxiLiteReadSlaveType;
+      dmaCtrlWriteMaster : in  AxiLiteWriteMasterType;
+      dmaCtrlWriteSlave  : out AxiLiteWriteSlaveType;
+      -- Interrupt (legacy dmaIrq input; QDMA MSI-X is driven via adapter sdi)
       dmaIrq         : in    sl;
       -- PS DDR Ports
       psDdrDq        : inout slv(71 downto 0);
@@ -80,172 +100,462 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
 
    component XilinxAlveoV80PcieBlockDesign is
       port (
-         psDDR_dq           : inout std_logic_vector (71 downto 0);
-         psDDR_dqs_t        : inout std_logic_vector (8 downto 0);
-         psDDR_dqs_c        : inout std_logic_vector (8 downto 0);
-         psDDR_adr          : out   std_logic_vector (16 downto 0);
-         psDDR_ba           : out   std_logic_vector (1 downto 0);
-         psDDR_bg           : out   std_logic_vector (0 to 0);
-         psDDR_act_n        : out   std_logic_vector (0 to 0);
-         psDDR_reset_n      : out   std_logic_vector (0 to 0);
-         psDDR_ck_t         : out   std_logic_vector (0 to 0);
-         psDDR_ck_c         : out   std_logic_vector (0 to 0);
-         psDDR_cke          : out   std_logic_vector (0 to 0);
-         psDDR_cs_n         : out   std_logic_vector (0 to 0);
-         psDDR_dm_n         : inout std_logic_vector (8 downto 0);
-         psDDR_odt          : out   std_logic_vector (0 to 0);
-         psDdrClk_clk_p     : in    std_logic_vector (0 to 0);
-         psDdrClk_clk_n     : in    std_logic_vector (0 to 0);
-         gtPcieRefClk_clk_n : in    std_logic;
-         gtPcieRefClk_clk_p : in    std_logic;
-         gtPcie_grx_n       : in    std_logic_vector (7 downto 0);
-         gtPcie_gtx_n       : out   std_logic_vector (7 downto 0);
-         gtPcie_grx_p       : in    std_logic_vector (7 downto 0);
-         gtPcie_gtx_p       : out   std_logic_vector (7 downto 0);
-         sAxi_awid          : in    std_logic_vector (3 downto 0);
-         sAxi_awaddr        : in    std_logic_vector (63 downto 0);
-         sAxi_awlen         : in    std_logic_vector (7 downto 0);
-         sAxi_awsize        : in    std_logic_vector (2 downto 0);
-         sAxi_awburst       : in    std_logic_vector (1 downto 0);
-         sAxi_awlock        : in    std_logic_vector (0 to 0);
-         sAxi_awcache       : in    std_logic_vector (3 downto 0);
-         sAxi_awprot        : in    std_logic_vector (2 downto 0);
-         sAxi_awregion      : in    std_logic_vector (3 downto 0);
-         sAxi_awqos         : in    std_logic_vector (3 downto 0);
-         sAxi_awvalid       : in    std_logic_vector (0 to 0);
-         sAxi_awready       : out   std_logic_vector (0 to 0);
-         sAxi_wdata         : in    std_logic_vector (511 downto 0);
-         sAxi_wstrb         : in    std_logic_vector (63 downto 0);
-         sAxi_wlast         : in    std_logic_vector (0 to 0);
-         sAxi_wvalid        : in    std_logic_vector (0 to 0);
-         sAxi_wready        : out   std_logic_vector (0 to 0);
-         sAxi_bid           : out   std_logic_vector (3 downto 0);
-         sAxi_bresp         : out   std_logic_vector (1 downto 0);
-         sAxi_bvalid        : out   std_logic_vector (0 to 0);
-         sAxi_bready        : in    std_logic_vector (0 to 0);
-         sAxi_arid          : in    std_logic_vector (3 downto 0);
-         sAxi_araddr        : in    std_logic_vector (63 downto 0);
-         sAxi_arlen         : in    std_logic_vector (7 downto 0);
-         sAxi_arsize        : in    std_logic_vector (2 downto 0);
-         sAxi_arburst       : in    std_logic_vector (1 downto 0);
-         sAxi_arlock        : in    std_logic_vector (0 to 0);
-         sAxi_arcache       : in    std_logic_vector (3 downto 0);
-         sAxi_arprot        : in    std_logic_vector (2 downto 0);
-         sAxi_arregion      : in    std_logic_vector (3 downto 0);
-         sAxi_arqos         : in    std_logic_vector (3 downto 0);
-         sAxi_arvalid       : in    std_logic_vector (0 to 0);
-         sAxi_arready       : out   std_logic_vector (0 to 0);
-         sAxi_rid           : out   std_logic_vector (3 downto 0);
-         sAxi_rdata         : out   std_logic_vector (511 downto 0);
-         sAxi_rresp         : out   std_logic_vector (1 downto 0);
-         sAxi_rlast         : out   std_logic_vector (0 to 0);
-         sAxi_rvalid        : out   std_logic_vector (0 to 0);
-         sAxi_rready        : in    std_logic_vector (0 to 0);
-         mAxi_awid          : out   std_logic_vector (15 downto 0);
-         mAxi_awaddr        : out   std_logic_vector (63 downto 0);
-         mAxi_awlen         : out   std_logic_vector (7 downto 0);
-         mAxi_awsize        : out   std_logic_vector (2 downto 0);
-         mAxi_awburst       : out   std_logic_vector (1 downto 0);
-         mAxi_awlock        : out   std_logic_vector (0 to 0);
-         mAxi_awcache       : out   std_logic_vector (3 downto 0);
-         mAxi_awprot        : out   std_logic_vector (2 downto 0);
-         mAxi_awregion      : out   std_logic_vector (3 downto 0);
-         mAxi_awqos         : out   std_logic_vector (3 downto 0);
-         mAxi_awuser        : out   std_logic_vector (31 downto 0);
-         mAxi_awvalid       : out   std_logic_vector (0 to 0);
-         mAxi_awready       : in    std_logic_vector (0 to 0);
-         mAxi_wdata         : out   std_logic_vector (511 downto 0);
-         mAxi_wstrb         : out   std_logic_vector (63 downto 0);
-         mAxi_wlast         : out   std_logic_vector (0 to 0);
-         mAxi_wvalid        : out   std_logic_vector (0 to 0);
-         mAxi_wready        : in    std_logic_vector (0 to 0);
-         mAxi_bid           : in    std_logic_vector (15 downto 0);
-         mAxi_bresp         : in    std_logic_vector (1 downto 0);
-         mAxi_bvalid        : in    std_logic_vector (0 to 0);
-         mAxi_bready        : out   std_logic_vector (0 to 0);
-         mAxi_arid          : out   std_logic_vector (15 downto 0);
-         mAxi_araddr        : out   std_logic_vector (63 downto 0);
-         mAxi_arlen         : out   std_logic_vector (7 downto 0);
-         mAxi_arsize        : out   std_logic_vector (2 downto 0);
-         mAxi_arburst       : out   std_logic_vector (1 downto 0);
-         mAxi_arlock        : out   std_logic_vector (0 to 0);
-         mAxi_arcache       : out   std_logic_vector (3 downto 0);
-         mAxi_arprot        : out   std_logic_vector (2 downto 0);
-         mAxi_arregion      : out   std_logic_vector (3 downto 0);
-         mAxi_arqos         : out   std_logic_vector (3 downto 0);
-         mAxi_aruser        : out   std_logic_vector (31 downto 0);
-         mAxi_arvalid       : out   std_logic_vector (0 to 0);
-         mAxi_arready       : in    std_logic_vector (0 to 0);
-         mAxi_rid           : in    std_logic_vector (15 downto 0);
-         mAxi_rdata         : in    std_logic_vector (511 downto 0);
-         mAxi_rresp         : in    std_logic_vector (1 downto 0);
-         mAxi_rlast         : in    std_logic_vector (0 to 0);
-         mAxi_rvalid        : in    std_logic_vector (0 to 0);
-         mAxi_rready        : out   std_logic_vector (0 to 0);
-         mAxi_buser         : in    std_logic;
-         mAxi_ruser         : in    std_logic_vector (127 downto 0);
-         mAxi_wid           : out   std_logic_vector (15 downto 0);
-         mAxi_wuser         : out   std_logic_vector (127 downto 0);
-         sAxiLpd_awid       : in    std_logic_vector (5 downto 0);
-         sAxiLpd_awaddr     : in    std_logic_vector (48 downto 0);
-         sAxiLpd_awlen      : in    std_logic_vector (7 downto 0);
-         sAxiLpd_awsize     : in    std_logic_vector (2 downto 0);
-         sAxiLpd_awburst    : in    std_logic_vector (1 downto 0);
-         sAxiLpd_awlock     : in    std_logic;
-         sAxiLpd_awcache    : in    std_logic_vector (3 downto 0);
-         sAxiLpd_awprot     : in    std_logic_vector (2 downto 0);
-         sAxiLpd_awqos      : in    std_logic_vector (3 downto 0);
-         sAxiLpd_awuser     : in    std_logic_vector (9 downto 0);
-         sAxiLpd_awvalid    : in    std_logic;
-         sAxiLpd_awready    : out   std_logic;
-         sAxiLpd_wdata      : in    std_logic_vector (31 downto 0);
-         sAxiLpd_wstrb      : in    std_logic_vector (3 downto 0);
-         sAxiLpd_wlast      : in    std_logic;
-         sAxiLpd_wvalid     : in    std_logic;
-         sAxiLpd_wready     : out   std_logic;
-         sAxiLpd_bid        : out   std_logic_vector (5 downto 0);
-         sAxiLpd_bresp      : out   std_logic_vector (1 downto 0);
-         sAxiLpd_bvalid     : out   std_logic;
-         sAxiLpd_bready     : in    std_logic;
-         sAxiLpd_arid       : in    std_logic_vector (5 downto 0);
-         sAxiLpd_araddr     : in    std_logic_vector (48 downto 0);
-         sAxiLpd_arlen      : in    std_logic_vector (7 downto 0);
-         sAxiLpd_arsize     : in    std_logic_vector (2 downto 0);
-         sAxiLpd_arburst    : in    std_logic_vector (1 downto 0);
-         sAxiLpd_arlock     : in    std_logic;
-         sAxiLpd_arcache    : in    std_logic_vector (3 downto 0);
-         sAxiLpd_arprot     : in    std_logic_vector (2 downto 0);
-         sAxiLpd_arqos      : in    std_logic_vector (3 downto 0);
-         sAxiLpd_aruser     : in    std_logic_vector (9 downto 0);
-         sAxiLpd_arvalid    : in    std_logic;
-         sAxiLpd_arready    : out   std_logic;
-         sAxiLpd_rid        : out   std_logic_vector (5 downto 0);
-         sAxiLpd_rdata      : out   std_logic_vector (31 downto 0);
-         sAxiLpd_rresp      : out   std_logic_vector (1 downto 0);
-         sAxiLpd_rlast      : out   std_logic;
-         sAxiLpd_rvalid     : out   std_logic;
-         sAxiLpd_rready     : in    std_logic;
-         dmaClk             : in    std_logic;
-         plRstN             : out   std_logic;
-         plRefClk           : out   std_logic;
-         dmaRstN            : in    std_logic
-         );
+      dma1_axis_c2h_dmawr_cmp              : out   std_logic;
+      dma1_axis_c2h_dmawr_port_id          : out   std_logic_vector (2 downto 0);
+      dma1_axis_c2h_dmawr_target_vch       : out   std_logic;
+      dma1_axis_c2h_status_drop            : out   std_logic;
+      dma1_axis_c2h_status_error           : out   std_logic;
+      dma1_axis_c2h_status_last            : out   std_logic;
+      dma1_axis_c2h_status_qid             : out   std_logic_vector (11 downto 0);
+      dma1_axis_c2h_status_status_cmp      : out   std_logic;
+      dma1_axis_c2h_status_valid           : out   std_logic;
+      dma1_c2h_byp_in_st_csh_addr          : in    std_logic_vector (63 downto 0);
+      dma1_c2h_byp_in_st_csh_error         : in    std_logic;
+      dma1_c2h_byp_in_st_csh_func          : in    std_logic_vector (11 downto 0);
+      dma1_c2h_byp_in_st_csh_pfch_tag      : in    std_logic_vector (6 downto 0);
+      dma1_c2h_byp_in_st_csh_port_id       : in    std_logic_vector (2 downto 0);
+      dma1_c2h_byp_in_st_csh_qid           : in    std_logic_vector (11 downto 0);
+      dma1_c2h_byp_in_st_csh_ready         : out   std_logic;
+      dma1_c2h_byp_in_st_csh_valid         : in    std_logic;
+      dma1_c2h_byp_out_cidx                : out   std_logic_vector (15 downto 0);
+      dma1_c2h_byp_out_dsc                 : out   std_logic_vector (255 downto 0);
+      dma1_c2h_byp_out_dsc_sz              : out   std_logic_vector (1 downto 0);
+      dma1_c2h_byp_out_error               : out   std_logic;
+      dma1_c2h_byp_out_fmt                 : out   std_logic_vector (2 downto 0);
+      dma1_c2h_byp_out_func                : out   std_logic_vector (11 downto 0);
+      dma1_c2h_byp_out_mm_chn              : out   std_logic;
+      dma1_c2h_byp_out_pfch_tag            : out   std_logic_vector (6 downto 0);
+      dma1_c2h_byp_out_port_id             : out   std_logic_vector (2 downto 0);
+      dma1_c2h_byp_out_qid                 : out   std_logic_vector (11 downto 0);
+      dma1_c2h_byp_out_ready               : in    std_logic;
+      dma1_c2h_byp_out_st_mm               : out   std_logic;
+      dma1_c2h_byp_out_valid               : out   std_logic;
+      dma1_dsc_crdt_in_crdt                : in    std_logic_vector (15 downto 0);
+      dma1_dsc_crdt_in_dir                 : in    std_logic;
+      dma1_dsc_crdt_in_fence               : in    std_logic;
+      dma1_dsc_crdt_in_qid                 : in    std_logic_vector (11 downto 0);
+      dma1_dsc_crdt_in_rdy                 : out   std_logic;
+      dma1_dsc_crdt_in_valid               : in    std_logic;
+      dma1_h2c_byp_in_st_addr              : in    std_logic_vector (63 downto 0);
+      dma1_h2c_byp_in_st_cidx              : in    std_logic_vector (15 downto 0);
+      dma1_h2c_byp_in_st_eop               : in    std_logic;
+      dma1_h2c_byp_in_st_error             : in    std_logic;
+      dma1_h2c_byp_in_st_func              : in    std_logic_vector (11 downto 0);
+      dma1_h2c_byp_in_st_len               : in    std_logic_vector (15 downto 0);
+      dma1_h2c_byp_in_st_mrkr_req          : in    std_logic;
+      dma1_h2c_byp_in_st_no_dma            : in    std_logic;
+      dma1_h2c_byp_in_st_port_id           : in    std_logic_vector (2 downto 0);
+      dma1_h2c_byp_in_st_qid               : in    std_logic_vector (11 downto 0);
+      dma1_h2c_byp_in_st_ready             : out   std_logic;
+      dma1_h2c_byp_in_st_sdi               : in    std_logic;
+      dma1_h2c_byp_in_st_sop               : in    std_logic;
+      dma1_h2c_byp_in_st_valid             : in    std_logic;
+      dma1_h2c_byp_out_cidx                : out   std_logic_vector (15 downto 0);
+      dma1_h2c_byp_out_dsc                 : out   std_logic_vector (255 downto 0);
+      dma1_h2c_byp_out_dsc_sz              : out   std_logic_vector (1 downto 0);
+      dma1_h2c_byp_out_error               : out   std_logic;
+      dma1_h2c_byp_out_fmt                 : out   std_logic_vector (2 downto 0);
+      dma1_h2c_byp_out_func                : out   std_logic_vector (11 downto 0);
+      dma1_h2c_byp_out_mm_chn              : out   std_logic;
+      dma1_h2c_byp_out_port_id             : out   std_logic_vector (2 downto 0);
+      dma1_h2c_byp_out_qid                 : out   std_logic_vector (11 downto 0);
+      dma1_h2c_byp_out_ready               : in    std_logic;
+      dma1_h2c_byp_out_st_mm               : out   std_logic;
+      dma1_h2c_byp_out_valid               : out   std_logic;
+      dma1_m_axis_h2c_err                  : out   std_logic;
+      dma1_m_axis_h2c_mdata                : out   std_logic_vector (31 downto 0);
+      dma1_m_axis_h2c_mty                  : out   std_logic_vector (5 downto 0);
+      dma1_m_axis_h2c_port_id              : out   std_logic_vector (2 downto 0);
+      dma1_m_axis_h2c_qid                  : out   std_logic_vector (11 downto 0);
+      dma1_m_axis_h2c_tcrc                 : out   std_logic_vector (31 downto 0);
+      dma1_m_axis_h2c_tdata                : out   std_logic_vector (511 downto 0);
+      dma1_m_axis_h2c_tlast                : out   std_logic;
+      dma1_m_axis_h2c_tready               : in    std_logic;
+      dma1_m_axis_h2c_tvalid               : out   std_logic;
+      dma1_m_axis_h2c_zero_byte            : out   std_logic;
+      dma1_mgmt_cpl_dat                    : out   std_logic_vector (31 downto 0);
+      dma1_mgmt_cpl_rdy                    : in    std_logic;
+      dma1_mgmt_cpl_sts                    : out   std_logic_vector (1 downto 0);
+      dma1_mgmt_cpl_vld                    : out   std_logic;
+      dma1_mgmt_req_adr                    : in    std_logic_vector (31 downto 0);
+      dma1_mgmt_req_cmd                    : in    std_logic_vector (1 downto 0);
+      dma1_mgmt_req_dat                    : in    std_logic_vector (31 downto 0);
+      dma1_mgmt_req_fnc                    : in    std_logic_vector (12 downto 0);
+      dma1_mgmt_req_msc                    : in    std_logic_vector (5 downto 0);
+      dma1_mgmt_req_rdy                    : out   std_logic;
+      dma1_mgmt_req_vld                    : in    std_logic;
+      dma1_qsts_out_data                   : out   std_logic_vector (63 downto 0);
+      dma1_qsts_out_op                     : out   std_logic_vector (7 downto 0);
+      dma1_qsts_out_port_id                : out   std_logic_vector (2 downto 0);
+      dma1_qsts_out_qid                    : out   std_logic_vector (12 downto 0);
+      dma1_qsts_out_rdy                    : in    std_logic;
+      dma1_qsts_out_vld                    : out   std_logic;
+      dma1_s_axis_c2h_cmpt_cmpt_type       : in    std_logic_vector (1 downto 0);
+      dma1_s_axis_c2h_cmpt_col_idx         : in    std_logic_vector (2 downto 0);
+      dma1_s_axis_c2h_cmpt_data            : in    std_logic_vector (511 downto 0);
+      dma1_s_axis_c2h_cmpt_dpar            : in    std_logic_vector (15 downto 0);
+      dma1_s_axis_c2h_cmpt_err_idx         : in    std_logic_vector (2 downto 0);
+      dma1_s_axis_c2h_cmpt_marker          : in    std_logic;
+      dma1_s_axis_c2h_cmpt_no_wrb_marker   : in    std_logic;
+      dma1_s_axis_c2h_cmpt_port_id         : in    std_logic_vector (2 downto 0);
+      dma1_s_axis_c2h_cmpt_qid             : in    std_logic_vector (12 downto 0);
+      dma1_s_axis_c2h_cmpt_size            : in    std_logic_vector (1 downto 0);
+      dma1_s_axis_c2h_cmpt_tready          : out   std_logic;
+      dma1_s_axis_c2h_cmpt_tvalid          : in    std_logic;
+      dma1_s_axis_c2h_cmpt_user_trig       : in    std_logic;
+      dma1_s_axis_c2h_cmpt_wait_pld_pkt_id : in    std_logic_vector (15 downto 0);
+      dma1_s_axis_c2h_ctrl_has_cmpt        : in    std_logic;
+      dma1_s_axis_c2h_ctrl_len             : in    std_logic_vector (15 downto 0);
+      dma1_s_axis_c2h_ctrl_marker          : in    std_logic;
+      dma1_s_axis_c2h_ctrl_port_id         : in    std_logic_vector (2 downto 0);
+      dma1_s_axis_c2h_ctrl_qid             : in    std_logic_vector (11 downto 0);
+      dma1_s_axis_c2h_ecc                  : in    std_logic_vector (6 downto 0);
+      dma1_s_axis_c2h_mty                  : in    std_logic_vector (5 downto 0);
+      dma1_s_axis_c2h_tcrc                 : in    std_logic_vector (31 downto 0);
+      dma1_s_axis_c2h_tdata                : in    std_logic_vector (511 downto 0);
+      dma1_s_axis_c2h_tlast                : in    std_logic;
+      dma1_s_axis_c2h_tready               : out   std_logic;
+      dma1_s_axis_c2h_tvalid               : in    std_logic;
+      dma1_st_rx_msg_tdata                 : out   std_logic_vector (31 downto 0);
+      dma1_st_rx_msg_tlast                 : out   std_logic;
+      dma1_st_rx_msg_tready                : in    std_logic;
+      dma1_st_rx_msg_tvalid                : out   std_logic;
+      dma1_tm_dsc_sts_avl                  : out   std_logic_vector (15 downto 0);
+      dma1_tm_dsc_sts_byp                  : out   std_logic;
+      dma1_tm_dsc_sts_dir                  : out   std_logic;
+      dma1_tm_dsc_sts_error                : out   std_logic;
+      dma1_tm_dsc_sts_irq_arm              : out   std_logic;
+      dma1_tm_dsc_sts_mm                   : out   std_logic;
+      dma1_tm_dsc_sts_pidx                 : out   std_logic_vector (15 downto 0);
+      dma1_tm_dsc_sts_port_id              : out   std_logic_vector (2 downto 0);
+      dma1_tm_dsc_sts_qen                  : out   std_logic;
+      dma1_tm_dsc_sts_qid                  : out   std_logic_vector (11 downto 0);
+      dma1_tm_dsc_sts_qinv                 : out   std_logic;
+      dma1_tm_dsc_sts_rdy                  : in    std_logic;
+      dma1_tm_dsc_sts_valid                : out   std_logic;
+      dma1_usr_irq_ack                     : out   std_logic;
+      dma1_usr_irq_fail                    : out   std_logic;
+      dma1_usr_irq_fnc                     : in    std_logic_vector (12 downto 0);
+      dma1_usr_irq_valid                   : in    std_logic;
+      dma1_usr_irq_vec                     : in    std_logic_vector (10 downto 0);
+      dmaClk                               : in    std_logic;
+      dmaRstN                              : in    std_logic;
+      gtPcieRefClk_clk_n                   : in    std_logic;
+      gtPcieRefClk_clk_p                   : in    std_logic;
+      gtPcie_grx_n                         : in    std_logic_vector (7 downto 0);
+      gtPcie_grx_p                         : in    std_logic_vector (7 downto 0);
+      gtPcie_gtx_n                         : out   std_logic_vector (7 downto 0);
+      gtPcie_gtx_p                         : out   std_logic_vector (7 downto 0);
+      mAxi_araddr                          : out   std_logic_vector (63 downto 0);
+      mAxi_arburst                         : out   std_logic_vector (1 downto 0);
+      mAxi_arcache                         : out   std_logic_vector (3 downto 0);
+      mAxi_arid                            : out   std_logic_vector (1 downto 0);
+      mAxi_arlen                           : out   std_logic_vector (7 downto 0);
+      mAxi_arlock                          : out   std_logic_vector (0 downto 0);
+      mAxi_arprot                          : out   std_logic_vector (2 downto 0);
+      mAxi_arqos                           : out   std_logic_vector (3 downto 0);
+      mAxi_arready                         : in    std_logic_vector (0 downto 0);
+      mAxi_arregion                        : out   std_logic_vector (3 downto 0);
+      mAxi_arsize                          : out   std_logic_vector (2 downto 0);
+      mAxi_aruser                          : out   std_logic_vector (17 downto 0);
+      mAxi_arvalid                         : out   std_logic_vector (0 downto 0);
+      mAxi_awaddr                          : out   std_logic_vector (63 downto 0);
+      mAxi_awburst                         : out   std_logic_vector (1 downto 0);
+      mAxi_awcache                         : out   std_logic_vector (3 downto 0);
+      mAxi_awid                            : out   std_logic_vector (1 downto 0);
+      mAxi_awlen                           : out   std_logic_vector (7 downto 0);
+      mAxi_awlock                          : out   std_logic_vector (0 downto 0);
+      mAxi_awprot                          : out   std_logic_vector (2 downto 0);
+      mAxi_awqos                           : out   std_logic_vector (3 downto 0);
+      mAxi_awready                         : in    std_logic_vector (0 downto 0);
+      mAxi_awregion                        : out   std_logic_vector (3 downto 0);
+      mAxi_awsize                          : out   std_logic_vector (2 downto 0);
+      mAxi_awuser                          : out   std_logic_vector (17 downto 0);
+      mAxi_awvalid                         : out   std_logic_vector (0 downto 0);
+      mAxi_bid                             : in    std_logic_vector (1 downto 0);
+      mAxi_bready                          : out   std_logic_vector (0 downto 0);
+      mAxi_bresp                           : in    std_logic_vector (1 downto 0);
+      mAxi_bvalid                          : in    std_logic_vector (0 downto 0);
+      mAxi_rdata                           : in    std_logic_vector (511 downto 0);
+      mAxi_rid                             : in    std_logic_vector (1 downto 0);
+      mAxi_rlast                           : in    std_logic_vector (0 downto 0);
+      mAxi_rready                          : out   std_logic_vector (0 downto 0);
+      mAxi_rresp                           : in    std_logic_vector (1 downto 0);
+      mAxi_rvalid                          : in    std_logic_vector (0 downto 0);
+      mAxi_wdata                           : out   std_logic_vector (511 downto 0);
+      mAxi_wlast                           : out   std_logic_vector (0 downto 0);
+      mAxi_wready                          : in    std_logic_vector (0 downto 0);
+      mAxi_wstrb                           : out   std_logic_vector (63 downto 0);
+      mAxi_wvalid                          : out   std_logic_vector (0 downto 0);
+      plRefClk                             : out   std_logic;
+      plRstN                               : out   std_logic;
+      psDDR_act_n                          : out   std_logic_vector (0 downto 0);
+      psDDR_adr                            : out   std_logic_vector (16 downto 0);
+      psDDR_ba                             : out   std_logic_vector (1 downto 0);
+      psDDR_bg                             : out   std_logic_vector (0 downto 0);
+      psDDR_ck_c                           : out   std_logic_vector (0 downto 0);
+      psDDR_ck_t                           : out   std_logic_vector (0 downto 0);
+      psDDR_cke                            : out   std_logic_vector (0 downto 0);
+      psDDR_cs_n                           : out   std_logic_vector (0 downto 0);
+      psDDR_dm_n                           : inout std_logic_vector (8 downto 0);
+      psDDR_dq                             : inout std_logic_vector (71 downto 0);
+      psDDR_dqs_c                          : inout std_logic_vector (8 downto 0);
+      psDDR_dqs_t                          : inout std_logic_vector (8 downto 0);
+      psDDR_odt                            : out   std_logic_vector (0 downto 0);
+      psDDR_reset_n                        : out   std_logic_vector (0 downto 0);
+      psDdrClk_clk_n                       : in    std_logic_vector (0 downto 0);
+      psDdrClk_clk_p                       : in    std_logic_vector (0 downto 0);
+      sAxiLpd_araddr                       : in    std_logic_vector (48 downto 0);
+      sAxiLpd_arburst                      : in    std_logic_vector (1 downto 0);
+      sAxiLpd_arcache                      : in    std_logic_vector (3 downto 0);
+      sAxiLpd_arid                         : in    std_logic_vector (5 downto 0);
+      sAxiLpd_arlen                        : in    std_logic_vector (7 downto 0);
+      sAxiLpd_arlock                       : in    std_logic;
+      sAxiLpd_arprot                       : in    std_logic_vector (2 downto 0);
+      sAxiLpd_arqos                        : in    std_logic_vector (3 downto 0);
+      sAxiLpd_arready                      : out   std_logic;
+      sAxiLpd_arsize                       : in    std_logic_vector (2 downto 0);
+      sAxiLpd_aruser                       : in    std_logic_vector (9 downto 0);
+      sAxiLpd_arvalid                      : in    std_logic;
+      sAxiLpd_awaddr                       : in    std_logic_vector (48 downto 0);
+      sAxiLpd_awburst                      : in    std_logic_vector (1 downto 0);
+      sAxiLpd_awcache                      : in    std_logic_vector (3 downto 0);
+      sAxiLpd_awid                         : in    std_logic_vector (5 downto 0);
+      sAxiLpd_awlen                        : in    std_logic_vector (7 downto 0);
+      sAxiLpd_awlock                       : in    std_logic;
+      sAxiLpd_awprot                       : in    std_logic_vector (2 downto 0);
+      sAxiLpd_awqos                        : in    std_logic_vector (3 downto 0);
+      sAxiLpd_awready                      : out   std_logic;
+      sAxiLpd_awsize                       : in    std_logic_vector (2 downto 0);
+      sAxiLpd_awuser                       : in    std_logic_vector (9 downto 0);
+      sAxiLpd_awvalid                      : in    std_logic;
+      sAxiLpd_bid                          : out   std_logic_vector (5 downto 0);
+      sAxiLpd_bready                       : in    std_logic;
+      sAxiLpd_bresp                        : out   std_logic_vector (1 downto 0);
+      sAxiLpd_bvalid                       : out   std_logic;
+      sAxiLpd_rdata                        : out   std_logic_vector (31 downto 0);
+      sAxiLpd_rid                          : out   std_logic_vector (5 downto 0);
+      sAxiLpd_rlast                        : out   std_logic;
+      sAxiLpd_rready                       : in    std_logic;
+      sAxiLpd_rresp                        : out   std_logic_vector (1 downto 0);
+      sAxiLpd_rvalid                       : out   std_logic;
+      sAxiLpd_wdata                        : in    std_logic_vector (31 downto 0);
+      sAxiLpd_wlast                        : in    std_logic;
+      sAxiLpd_wready                       : out   std_logic;
+      sAxiLpd_wstrb                        : in    std_logic_vector (3 downto 0);
+      sAxiLpd_wvalid                       : in    std_logic      );
    end component;
 
    signal clk    : sl;
-   signal rst    : sl;
    signal rstL   : sl;
    signal plRstN : sl;
 
-   -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR to generate the MSI
-   signal msiWriteMaster : AxiLiteWriteMasterType;
-   signal msiWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
-   signal msiReadMaster  : AxiLiteReadMasterType;
-   signal msiReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
+   -- QDMA mgmt (QdmaCtxtInit <-> dma1_mgmt)
+   signal mgmtMaster : QdmaMgmtReqMasterType;
+   signal mgmtSlave  : QdmaMgmtReqSlaveType;
 
+   -- AxisG2 shim <-> adapter
+   signal txSub       : AxisG2TxSubType;
+   signal txSubReady  : sl;
+   signal rxFree      : AxisG2RxFreeType;
+   signal rxFreeReady : sl;
+   signal addrRdIndex : slv(AXISG2_INDEX_BITS_C-1 downto 0);
+   signal addrRdData  : slv(63 downto 0);
+
+   -- mAxi (BAR0 user window) as AXI4 record, converted to AXI-Lite for the shim
+   signal mAxiWriteMaster : AxiWriteMasterType := AXI_WRITE_MASTER_INIT_C;
+   signal mAxiWriteSlave  : AxiWriteSlaveType  := AXI_WRITE_SLAVE_INIT_C;
+   signal mAxiReadMaster  : AxiReadMasterType  := AXI_READ_MASTER_INIT_C;
+   signal mAxiReadSlave   : AxiReadSlaveType   := AXI_READ_SLAVE_INIT_C;
+
+   -- QdmaCtxtInit start trigger (deferred until past reset)
+   signal ctxtStart : sl := '0';
+   signal startCnt  : slv(27 downto 0) := (others => '0');
+
+   -- BD boundary signals (dma1_* QDMA + mAxi AXI4 master), auto-declared:
+   signal dma1_axis_c2h_dmawr_cmp              : sl;
+   signal dma1_axis_c2h_dmawr_port_id          : slv(2 downto 0);
+   signal dma1_axis_c2h_dmawr_target_vch       : sl;
+   signal dma1_axis_c2h_status_drop            : sl;
+   signal dma1_axis_c2h_status_error           : sl;
+   signal dma1_axis_c2h_status_last            : sl;
+   signal dma1_axis_c2h_status_qid             : slv(11 downto 0);
+   signal dma1_axis_c2h_status_status_cmp      : sl;
+   signal dma1_axis_c2h_status_valid           : sl;
+   signal dma1_c2h_byp_in_st_csh_addr          : slv(63 downto 0);
+   signal dma1_c2h_byp_in_st_csh_error         : sl;
+   signal dma1_c2h_byp_in_st_csh_func          : slv(11 downto 0);
+   signal dma1_c2h_byp_in_st_csh_pfch_tag      : slv(6 downto 0);
+   signal dma1_c2h_byp_in_st_csh_port_id       : slv(2 downto 0);
+   signal dma1_c2h_byp_in_st_csh_qid           : slv(11 downto 0);
+   signal dma1_c2h_byp_in_st_csh_ready         : sl;
+   signal dma1_c2h_byp_in_st_csh_valid         : sl;
+   signal dma1_c2h_byp_out_cidx                : slv(15 downto 0);
+   signal dma1_c2h_byp_out_dsc                 : slv(255 downto 0);
+   signal dma1_c2h_byp_out_dsc_sz              : slv(1 downto 0);
+   signal dma1_c2h_byp_out_error               : sl;
+   signal dma1_c2h_byp_out_fmt                 : slv(2 downto 0);
+   signal dma1_c2h_byp_out_func                : slv(11 downto 0);
+   signal dma1_c2h_byp_out_mm_chn              : sl;
+   signal dma1_c2h_byp_out_pfch_tag            : slv(6 downto 0);
+   signal dma1_c2h_byp_out_port_id             : slv(2 downto 0);
+   signal dma1_c2h_byp_out_qid                 : slv(11 downto 0);
+   signal dma1_c2h_byp_out_ready               : sl;
+   signal dma1_c2h_byp_out_st_mm               : sl;
+   signal dma1_c2h_byp_out_valid               : sl;
+   signal dma1_dsc_crdt_in_crdt                : slv(15 downto 0);
+   signal dma1_dsc_crdt_in_dir                 : sl;
+   signal dma1_dsc_crdt_in_fence               : sl;
+   signal dma1_dsc_crdt_in_qid                 : slv(11 downto 0);
+   signal dma1_dsc_crdt_in_rdy                 : sl;
+   signal dma1_dsc_crdt_in_valid               : sl;
+   signal dma1_h2c_byp_in_st_addr              : slv(63 downto 0);
+   signal dma1_h2c_byp_in_st_cidx              : slv(15 downto 0);
+   signal dma1_h2c_byp_in_st_eop               : sl;
+   signal dma1_h2c_byp_in_st_error             : sl;
+   signal dma1_h2c_byp_in_st_func              : slv(11 downto 0);
+   signal dma1_h2c_byp_in_st_len               : slv(15 downto 0);
+   signal dma1_h2c_byp_in_st_mrkr_req          : sl;
+   signal dma1_h2c_byp_in_st_no_dma            : sl;
+   signal dma1_h2c_byp_in_st_port_id           : slv(2 downto 0);
+   signal dma1_h2c_byp_in_st_qid               : slv(11 downto 0);
+   signal dma1_h2c_byp_in_st_ready             : sl;
+   signal dma1_h2c_byp_in_st_sdi               : sl;
+   signal dma1_h2c_byp_in_st_sop               : sl;
+   signal dma1_h2c_byp_in_st_valid             : sl;
+   signal dma1_h2c_byp_out_cidx                : slv(15 downto 0);
+   signal dma1_h2c_byp_out_dsc                 : slv(255 downto 0);
+   signal dma1_h2c_byp_out_dsc_sz              : slv(1 downto 0);
+   signal dma1_h2c_byp_out_error               : sl;
+   signal dma1_h2c_byp_out_fmt                 : slv(2 downto 0);
+   signal dma1_h2c_byp_out_func                : slv(11 downto 0);
+   signal dma1_h2c_byp_out_mm_chn              : sl;
+   signal dma1_h2c_byp_out_port_id             : slv(2 downto 0);
+   signal dma1_h2c_byp_out_qid                 : slv(11 downto 0);
+   signal dma1_h2c_byp_out_ready               : sl;
+   signal dma1_h2c_byp_out_st_mm               : sl;
+   signal dma1_h2c_byp_out_valid               : sl;
+   signal dma1_m_axis_h2c_err                  : sl;
+   signal dma1_m_axis_h2c_mdata                : slv(31 downto 0);
+   signal dma1_m_axis_h2c_mty                  : slv(5 downto 0);
+   signal dma1_m_axis_h2c_port_id              : slv(2 downto 0);
+   signal dma1_m_axis_h2c_qid                  : slv(11 downto 0);
+   signal dma1_m_axis_h2c_tcrc                 : slv(31 downto 0);
+   signal dma1_m_axis_h2c_tdata                : slv(511 downto 0);
+   signal dma1_m_axis_h2c_tlast                : sl;
+   signal dma1_m_axis_h2c_tready               : sl;
+   signal dma1_m_axis_h2c_tvalid               : sl;
+   signal dma1_m_axis_h2c_zero_byte            : sl;
+   signal dma1_mgmt_cpl_dat                    : slv(31 downto 0);
+   signal dma1_mgmt_cpl_rdy                    : sl;
+   signal dma1_mgmt_cpl_sts                    : slv(1 downto 0);
+   signal dma1_mgmt_cpl_vld                    : sl;
+   signal dma1_mgmt_req_adr                    : slv(31 downto 0);
+   signal dma1_mgmt_req_cmd                    : slv(1 downto 0);
+   signal dma1_mgmt_req_dat                    : slv(31 downto 0);
+   signal dma1_mgmt_req_fnc                    : slv(12 downto 0);
+   signal dma1_mgmt_req_msc                    : slv(5 downto 0);
+   signal dma1_mgmt_req_rdy                    : sl;
+   signal dma1_mgmt_req_vld                    : sl;
+   signal dma1_qsts_out_data                   : slv(63 downto 0);
+   signal dma1_qsts_out_op                     : slv(7 downto 0);
+   signal dma1_qsts_out_port_id                : slv(2 downto 0);
+   signal dma1_qsts_out_qid                    : slv(12 downto 0);
+   signal dma1_qsts_out_rdy                    : sl;
+   signal dma1_qsts_out_vld                    : sl;
+   signal dma1_s_axis_c2h_cmpt_cmpt_type       : slv(1 downto 0);
+   signal dma1_s_axis_c2h_cmpt_col_idx         : slv(2 downto 0);
+   signal dma1_s_axis_c2h_cmpt_data            : slv(511 downto 0);
+   signal dma1_s_axis_c2h_cmpt_dpar            : slv(15 downto 0);
+   signal dma1_s_axis_c2h_cmpt_err_idx         : slv(2 downto 0);
+   signal dma1_s_axis_c2h_cmpt_marker          : sl;
+   signal dma1_s_axis_c2h_cmpt_no_wrb_marker   : sl;
+   signal dma1_s_axis_c2h_cmpt_port_id         : slv(2 downto 0);
+   signal dma1_s_axis_c2h_cmpt_qid             : slv(12 downto 0);
+   signal dma1_s_axis_c2h_cmpt_size            : slv(1 downto 0);
+   signal dma1_s_axis_c2h_cmpt_tready          : sl;
+   signal dma1_s_axis_c2h_cmpt_tvalid          : sl;
+   signal dma1_s_axis_c2h_cmpt_user_trig       : sl;
+   signal dma1_s_axis_c2h_cmpt_wait_pld_pkt_id : slv(15 downto 0);
+   signal dma1_s_axis_c2h_ctrl_has_cmpt        : sl;
+   signal dma1_s_axis_c2h_ctrl_len             : slv(15 downto 0);
+   signal dma1_s_axis_c2h_ctrl_marker          : sl;
+   signal dma1_s_axis_c2h_ctrl_port_id         : slv(2 downto 0);
+   signal dma1_s_axis_c2h_ctrl_qid             : slv(11 downto 0);
+   signal dma1_s_axis_c2h_ecc                  : slv(6 downto 0);
+   signal dma1_s_axis_c2h_mty                  : slv(5 downto 0);
+   signal dma1_s_axis_c2h_tcrc                 : slv(31 downto 0);
+   signal dma1_s_axis_c2h_tdata                : slv(511 downto 0);
+   signal dma1_s_axis_c2h_tlast                : sl;
+   signal dma1_s_axis_c2h_tready               : sl;
+   signal dma1_s_axis_c2h_tvalid               : sl;
+   signal dma1_st_rx_msg_tdata                 : slv(31 downto 0);
+   signal dma1_st_rx_msg_tlast                 : sl;
+   signal dma1_st_rx_msg_tready                : sl;
+   signal dma1_st_rx_msg_tvalid                : sl;
+   signal dma1_tm_dsc_sts_avl                  : slv(15 downto 0);
+   signal dma1_tm_dsc_sts_byp                  : sl;
+   signal dma1_tm_dsc_sts_dir                  : sl;
+   signal dma1_tm_dsc_sts_error                : sl;
+   signal dma1_tm_dsc_sts_irq_arm              : sl;
+   signal dma1_tm_dsc_sts_mm                   : sl;
+   signal dma1_tm_dsc_sts_pidx                 : slv(15 downto 0);
+   signal dma1_tm_dsc_sts_port_id              : slv(2 downto 0);
+   signal dma1_tm_dsc_sts_qen                  : sl;
+   signal dma1_tm_dsc_sts_qid                  : slv(11 downto 0);
+   signal dma1_tm_dsc_sts_qinv                 : sl;
+   signal dma1_tm_dsc_sts_rdy                  : sl;
+   signal dma1_tm_dsc_sts_valid                : sl;
+   signal dma1_usr_irq_ack                     : sl;
+   signal dma1_usr_irq_fail                    : sl;
+   signal dma1_usr_irq_fnc                     : slv(12 downto 0);
+   signal dma1_usr_irq_valid                   : sl;
+   signal dma1_usr_irq_vec                     : slv(10 downto 0);
+   signal mAxi_araddr                          : slv(63 downto 0);
+   signal mAxi_arburst                         : slv(1 downto 0);
+   signal mAxi_arcache                         : slv(3 downto 0);
+   signal mAxi_arid                            : slv(1 downto 0);
+   signal mAxi_arlen                           : slv(7 downto 0);
+   signal mAxi_arlock                          : slv(0 downto 0);
+   signal mAxi_arprot                          : slv(2 downto 0);
+   signal mAxi_arqos                           : slv(3 downto 0);
+   signal mAxi_arready                         : slv(0 downto 0);
+   signal mAxi_arregion                        : slv(3 downto 0);
+   signal mAxi_arsize                          : slv(2 downto 0);
+   signal mAxi_aruser                          : slv(17 downto 0);
+   signal mAxi_arvalid                         : slv(0 downto 0);
+   signal mAxi_awaddr                          : slv(63 downto 0);
+   signal mAxi_awburst                         : slv(1 downto 0);
+   signal mAxi_awcache                         : slv(3 downto 0);
+   signal mAxi_awid                            : slv(1 downto 0);
+   signal mAxi_awlen                           : slv(7 downto 0);
+   signal mAxi_awlock                          : slv(0 downto 0);
+   signal mAxi_awprot                          : slv(2 downto 0);
+   signal mAxi_awqos                           : slv(3 downto 0);
+   signal mAxi_awready                         : slv(0 downto 0);
+   signal mAxi_awregion                        : slv(3 downto 0);
+   signal mAxi_awsize                          : slv(2 downto 0);
+   signal mAxi_awuser                          : slv(17 downto 0);
+   signal mAxi_awvalid                         : slv(0 downto 0);
+   signal mAxi_bid                             : slv(1 downto 0);
+   signal mAxi_bready                          : slv(0 downto 0);
+   signal mAxi_bresp                           : slv(1 downto 0);
+   signal mAxi_bvalid                          : slv(0 downto 0);
+   signal mAxi_rdata                           : slv(511 downto 0);
+   signal mAxi_rid                             : slv(1 downto 0);
+   signal mAxi_rlast                           : slv(0 downto 0);
+   signal mAxi_rready                          : slv(0 downto 0);
+   signal mAxi_rresp                           : slv(1 downto 0);
+   signal mAxi_rvalid                          : slv(0 downto 0);
+   signal mAxi_wdata                           : slv(511 downto 0);
+   signal mAxi_wlast                           : slv(0 downto 0);
+   signal mAxi_wready                          : slv(0 downto 0);
+   signal mAxi_wstrb                           : slv(63 downto 0);
+   signal mAxi_wvalid                          : slv(0 downto 0);
 begin
 
    axiClk <= clk;
+
    U_Rst : entity surf.RstPipeline
       generic map (
          TPD_G     => TPD_G,
@@ -255,202 +565,504 @@ begin
          rstIn  => rstL,
          rstOut => axiRst);
 
-   -------------------------------------------------------------------------
-   -- PL CPM5 manager: after reset it programs the CPM5_DMA1 BDF
-   -- address-translation table, then services DMA interrupts by writing
-   -- TX_IRQ_CSR (0xFCEA0E7C) via S_AXI_LPD to raise the PCIe TX MSI directly,
-   -- replacing the defective CPM5 bridge1 usr_irq_req / usr_irq_ack handshake.
-   -------------------------------------------------------------------------
-   U_CpmManager : entity axi_pcie_core.XilinxAlveoV80CpmManager
-      generic map (
-         TPD_G => TPD_G)
-      port map (
-         -- Clock and Reset
-         clk             => clk,
-         rstL            => rstL,
-         -- Interrupt Interface
-         dmaIrq          => dmaIrq,
-         -- Status
-         bdfDone         => open,
-         -- AXI-Lite Master (drives the CIPS S_AXI_LPD slave)
-         axilWriteMaster => msiWriteMaster,
-         axilWriteSlave  => msiWriteSlave,
-         axilReadMaster  => msiReadMaster,
-         axilReadSlave   => msiReadSlave);
-
    U_PwrUpRst : entity surf.PwrUpRst
       generic map(
          TPD_G          => TPD_G,
-         IN_POLARITY_G  => '0',                          -- Active LOW reset
-         OUT_POLARITY_G => '0',                          -- Active LOW reset
-         DURATION_G     => getTimeRatio(250.0E+6, 1.0))  -- 1 s reset
+         IN_POLARITY_G  => '0',
+         OUT_POLARITY_G => '0',
+         DURATION_G     => getTimeRatio(250.0E+6, 1.0))
       port map(
          clk    => clk,
          arst   => plRstN,
          rstOut => rstL);
+
+   -- Deferred one-shot start for QdmaCtxtInit: wait ~some cycles after reset
+   -- release so the CPM5 is past boot before programming contexts (mirrors the
+   -- deferred BDF programming rationale in the old CpmManager).
+   process (clk) is
+   begin
+      if rising_edge(clk) then
+         if (rstL = '0') then
+            startCnt  <= (others => '0') after TPD_G;
+            ctxtStart <= '0'             after TPD_G;
+         elsif (startCnt = x"3FFFFFF") then
+            ctxtStart <= '1' after TPD_G;
+         else
+            startCnt <= startCnt + 1 after TPD_G;
+         end if;
+      end if;
+   end process;
+
+   ----------------------------------------------------------------------------
+   -- QDMA queue-context auto-init (drives dma1_mgmt req/cpl)
+   ----------------------------------------------------------------------------
+   U_QdmaCtxtInit : entity axi_pcie_core.QdmaCtxtInit
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk        => clk,
+         rstL       => rstL,
+         start      => ctxtStart,
+         ctxtDone   => open,
+         mgmtMaster => mgmtMaster,
+         mgmtSlave  => mgmtSlave);
+
+   -- mgmt record <-> flat dma1_mgmt pins
+   dma1_mgmt_req_adr <= mgmtMaster.reqAdr;
+   dma1_mgmt_req_dat <= mgmtMaster.reqDat;
+   dma1_mgmt_req_cmd <= mgmtMaster.reqCmd;
+   dma1_mgmt_req_fnc <= mgmtMaster.reqFnc;
+   dma1_mgmt_req_msc <= mgmtMaster.reqMsc;
+   dma1_mgmt_req_vld <= mgmtMaster.reqVld;
+   dma1_mgmt_cpl_rdy <= mgmtMaster.cplRdy;
+   mgmtSlave.reqRdy  <= dma1_mgmt_req_rdy;
+   mgmtSlave.cplDat  <= dma1_mgmt_cpl_dat;
+   mgmtSlave.cplSts  <= dma1_mgmt_cpl_sts;
+   mgmtSlave.cplVld  <= dma1_mgmt_cpl_vld;
+
+   ----------------------------------------------------------------------------
+   -- Host BAR0 user window: mAxi (AXI4 512b) -> regRead/WriteMaster -> Core's
+   -- AxiPcieReg (owns AxiVersion@0x20000 + the REG_AXIS_GEN2 offset table +
+   -- internal AXI4->AXI-Lite crossbar) -> dmaCtrl(0) -> AxisG2RegShim. This
+   -- preserves the datadev discovery path (probe reads AxiVersion, then uses
+   -- its offset table to locate the AxisG2 window = the shim on dmaCtrl(0)).
+   -- mAxi is a BD *output* (CPM masters into PL), so it drives mAxiWriteMaster/
+   -- mAxiReadMaster here.
+   ----------------------------------------------------------------------------
+   mAxiWriteMaster.awvalid <= mAxi_awvalid(0);
+   mAxiWriteMaster.awaddr  <= mAxi_awaddr;
+   mAxiWriteMaster.awid(1 downto 0) <= mAxi_awid;
+   mAxiWriteMaster.awlen   <= mAxi_awlen;
+   mAxiWriteMaster.awsize  <= mAxi_awsize;
+   mAxiWriteMaster.awburst <= mAxi_awburst;
+   mAxiWriteMaster.awcache <= mAxi_awcache;
+   mAxiWriteMaster.awprot  <= mAxi_awprot;
+   mAxiWriteMaster.awqos   <= mAxi_awqos;
+   mAxiWriteMaster.awregion<= mAxi_awregion;
+   mAxiWriteMaster.wdata(511 downto 0) <= mAxi_wdata;
+   mAxiWriteMaster.wlast   <= mAxi_wlast(0);
+   mAxiWriteMaster.wvalid  <= mAxi_wvalid(0);
+   mAxiWriteMaster.wstrb(63 downto 0) <= mAxi_wstrb;
+   mAxiWriteMaster.bready  <= mAxi_bready(0);
+   mAxi_awready(0) <= mAxiWriteSlave.awready;
+   mAxi_wready(0)  <= mAxiWriteSlave.wready;
+   mAxi_bvalid(0)  <= mAxiWriteSlave.bvalid;
+   mAxi_bresp      <= mAxiWriteSlave.bresp;
+   mAxi_bid        <= mAxiWriteSlave.bid(1 downto 0);
+   mAxiReadMaster.arvalid <= mAxi_arvalid(0);
+   mAxiReadMaster.araddr  <= mAxi_araddr;
+   mAxiReadMaster.arid(1 downto 0) <= mAxi_arid;
+   mAxiReadMaster.arlen   <= mAxi_arlen;
+   mAxiReadMaster.arsize  <= mAxi_arsize;
+   mAxiReadMaster.arburst <= mAxi_arburst;
+   mAxiReadMaster.arcache <= mAxi_arcache;
+   mAxiReadMaster.arprot  <= mAxi_arprot;
+   mAxiReadMaster.arqos   <= mAxi_arqos;
+   mAxiReadMaster.arregion<= mAxi_arregion;
+   mAxiReadMaster.rready  <= mAxi_rready(0);
+   mAxi_arready(0) <= mAxiReadSlave.arready;
+   mAxi_rvalid(0)  <= mAxiReadSlave.rvalid;
+   mAxi_rdata      <= mAxiReadSlave.rdata(511 downto 0);
+   mAxi_rlast(0)   <= mAxiReadSlave.rlast;
+   mAxi_rresp      <= mAxiReadSlave.rresp;
+   mAxi_rid        <= mAxiReadSlave.rid(1 downto 0);
+
+   -- BAR0 AXI4 reg path to the Core's AxiPcieReg (full SLAC BAR0 map: AGEN2
+   -- @0x0, AxiVersion @0x20000 with the offset-discovery table datadev needs,
+   -- PHY, PROM). AxiPcieReg takes AXI4 reg masters directly (NO AxiToAxiLite),
+   -- converting to its internal AXI-Lite crossbar. The AGEN2/DMA slot comes
+   -- back down as the shim AXI-Lite below.
+   regReadMaster  <= mAxiReadMaster;
+   mAxiReadSlave  <= regReadSlave;
+   regWriteMaster <= mAxiWriteMaster;
+   mAxiWriteSlave <= regWriteSlave;
+
+   ----------------------------------------------------------------------------
+   -- AxisG2 BAR0 register shim (datadev-compatible AGEN2 register map). Its
+   -- AXI-Lite slave is the AGEN2/DMA crossbar slot (dmaCtrl(0)) routed down
+   -- from AxiPcieReg in the Core, so datadev reaches it via AxiVersion's
+   -- REG_AXIS_GEN2 offset-table entry exactly as before.
+   ----------------------------------------------------------------------------
+   U_AxisG2RegShim : entity axi_pcie_core.AxisG2RegShim
+      generic map (
+         TPD_G => TPD_G)
+      port map (
+         clk             => clk,
+         rstL            => rstL,
+         axilReadMaster  => dmaCtrlReadMaster,
+         axilReadSlave   => dmaCtrlReadSlave,
+         axilWriteMaster => dmaCtrlWriteMaster,
+         axilWriteSlave  => dmaCtrlWriteSlave,
+         txSub           => txSub,
+         txSubReady      => txSubReady,
+         rxFree          => rxFree,
+         rxFreeReady     => rxFreeReady,
+         addrRdIndex     => addrRdIndex,
+         addrRdData      => addrRdData,
+         online          => open,
+         intEnable       => open,
+         contEnable      => open,
+         dropEnable      => open,
+         maxSize         => open,
+         fifoReset       => open,
+         acknowledge     => open,
+         forceInt        => open,
+         irqHoldOff      => open);
+
+   ----------------------------------------------------------------------------
+   -- QDMA descriptor-bypass datapath adapter
+   ----------------------------------------------------------------------------
+   U_QdmaBypassAdapter : entity axi_pcie_core.QdmaBypassAdapter
+      generic map (
+         TPD_G             => TPD_G,
+         DMA_AXIS_CONFIG_G => DMA_AXIS_CONFIG_G)
+      port map (
+         clk          => clk,
+         rstL         => rstL,
+         txSub        => txSub,
+         txSubReady   => txSubReady,
+         rxFree       => rxFree,
+         rxFreeReady  => rxFreeReady,
+         addrRdIndex  => addrRdIndex,
+         addrRdData   => addrRdData,
+         mAxisMaster  => dmaObMaster,
+         mAxisSlave   => dmaObSlave,
+         sAxisMaster  => dmaIbMaster,
+         sAxisSlave   => dmaIbSlave,
+         -- H2C bypass-in
+         h2cBypAddr    => dma1_h2c_byp_in_st_addr,
+         h2cBypLen     => dma1_h2c_byp_in_st_len,
+         h2cBypCidx    => dma1_h2c_byp_in_st_cidx,
+         h2cBypQid     => dma1_h2c_byp_in_st_qid,
+         h2cBypFunc    => dma1_h2c_byp_in_st_func,
+         h2cBypPortId  => dma1_h2c_byp_in_st_port_id,
+         h2cBypSop     => dma1_h2c_byp_in_st_sop,
+         h2cBypEop     => dma1_h2c_byp_in_st_eop,
+         h2cBypSdi     => dma1_h2c_byp_in_st_sdi,
+         h2cBypMrkrReq => dma1_h2c_byp_in_st_mrkr_req,
+         h2cBypNoDma   => dma1_h2c_byp_in_st_no_dma,
+         h2cBypError   => dma1_h2c_byp_in_st_error,
+         h2cBypValid   => dma1_h2c_byp_in_st_valid,
+         h2cBypReady   => dma1_h2c_byp_in_st_ready,
+         -- C2H bypass-in
+         c2hBypAddr    => dma1_c2h_byp_in_st_csh_addr,
+         c2hBypQid     => dma1_c2h_byp_in_st_csh_qid,
+         c2hBypFunc    => dma1_c2h_byp_in_st_csh_func,
+         c2hBypPfchTag => dma1_c2h_byp_in_st_csh_pfch_tag,
+         c2hBypPortId  => dma1_c2h_byp_in_st_csh_port_id,
+         c2hBypError   => dma1_c2h_byp_in_st_csh_error,
+         c2hBypValid   => dma1_c2h_byp_in_st_csh_valid,
+         c2hBypReady   => dma1_c2h_byp_in_st_csh_ready,
+         -- H2C stream data out
+         h2cStData     => dma1_m_axis_h2c_tdata,
+         h2cStMty      => dma1_m_axis_h2c_mty,
+         h2cStLast     => dma1_m_axis_h2c_tlast,
+         h2cStValid    => dma1_m_axis_h2c_tvalid,
+         h2cStReady    => dma1_m_axis_h2c_tready,
+         -- C2H stream data in
+         c2hStData     => dma1_s_axis_c2h_tdata,
+         c2hStCtrlLen  => dma1_s_axis_c2h_ctrl_len,
+         c2hStCtrlQid  => dma1_s_axis_c2h_ctrl_qid,
+         c2hStMty      => dma1_s_axis_c2h_mty,
+         c2hStLast     => dma1_s_axis_c2h_tlast,
+         c2hStValid    => dma1_s_axis_c2h_tvalid,
+         c2hStReady    => dma1_s_axis_c2h_tready,
+         -- C2H completion
+         cmptData      => dma1_s_axis_c2h_cmpt_data,
+         cmptSize      => dma1_s_axis_c2h_cmpt_size,
+         cmptQid       => dma1_s_axis_c2h_cmpt_qid,
+         cmptValid     => dma1_s_axis_c2h_cmpt_tvalid,
+         cmptReady     => dma1_s_axis_c2h_cmpt_tready,
+         -- Traffic manager status
+         tmDscStsValid  => dma1_tm_dsc_sts_valid,
+         tmDscStsQid    => dma1_tm_dsc_sts_qid,
+         tmDscStsIrqArm => dma1_tm_dsc_sts_irq_arm,
+         tmDscStsDir    => dma1_tm_dsc_sts_dir);
+
+
+   -- Tie-offs for QDMA interfaces not driven by the adapter (PG347: unused
+   -- *_ready/*_rdy inputs must be tied high; unused valids low):
+   dma1_s_axis_c2h_ctrl_marker   <= '0';
+   dma1_s_axis_c2h_ctrl_port_id  <= (others => '0');
+   dma1_s_axis_c2h_ctrl_has_cmpt <= '1';
+   dma1_s_axis_c2h_ecc           <= (others => '0');
+   dma1_s_axis_c2h_tcrc          <= (others => '0');
+   dma1_s_axis_c2h_cmpt_cmpt_type     <= "01";  -- NO_PLD_NO_WAIT / valid cmpt
+   dma1_s_axis_c2h_cmpt_col_idx       <= (others => '0');
+   dma1_s_axis_c2h_cmpt_err_idx       <= (others => '0');
+   dma1_s_axis_c2h_cmpt_dpar          <= (others => '0');
+   dma1_s_axis_c2h_cmpt_marker        <= '0';
+   dma1_s_axis_c2h_cmpt_no_wrb_marker <= '0';
+   dma1_s_axis_c2h_cmpt_port_id       <= (others => '0');
+   dma1_s_axis_c2h_cmpt_user_trig     <= '0';
+   dma1_s_axis_c2h_cmpt_wait_pld_pkt_id <= (others => '0');
+   dma1_tm_dsc_sts_rdy  <= '1';
+   dma1_qsts_out_rdy    <= '1';
+   dma1_st_rx_msg_tready <= '1';
+   dma1_h2c_byp_out_ready <= '1';
+   dma1_c2h_byp_out_ready <= '1';
+   dma1_dsc_crdt_in_crdt  <= (others => '0');
+   dma1_dsc_crdt_in_dir   <= '0';
+   dma1_dsc_crdt_in_fence <= '0';
+   dma1_dsc_crdt_in_qid   <= (others => '0');
+   dma1_dsc_crdt_in_valid <= '0';
+   dma1_usr_irq_fnc   <= (others => '0');
+   dma1_usr_irq_vec   <= (others => '0');
+   dma1_usr_irq_valid <= '0';
 
    -------------------
    -- AXI PCIe IP Core
    -------------------
    U_AxiPcie : XilinxAlveoV80PcieBlockDesign
       port map (
-         -- Clocks and Resets
-         dmaClk             => clk,
-         dmaRstN            => plRstN,
-         plRefClk           => clk,
-         plRstN             => plRstN,
-         -- LPD AXI4 Slave Interface (PL MSI generator -> CPM5 TX_IRQ_CSR)
-         -- AXI-Lite master mapped onto the AXI4 slave (single-beat 32-bit).
-         sAxiLpd_awid       => (others => '0'),
-         sAxiLpd_awaddr(31 downto 0)  => msiWriteMaster.awaddr(31 downto 0),
-         sAxiLpd_awaddr(48 downto 32) => (others => '0'),
-         sAxiLpd_awlen      => (others => '0'),  -- single beat
-         sAxiLpd_awsize     => "010",            -- 4 bytes
-         sAxiLpd_awburst    => "01",             -- INCR
-         sAxiLpd_awlock     => '0',
-         sAxiLpd_awcache    => "0011",           -- normal non-cacheable bufferable
-         sAxiLpd_awprot     => msiWriteMaster.awprot,
-         sAxiLpd_awqos      => (others => '0'),
-         sAxiLpd_awuser     => (others => '0'),
-         sAxiLpd_awvalid    => msiWriteMaster.awvalid,
-         sAxiLpd_awready    => msiWriteSlave.awready,
-         sAxiLpd_wdata      => msiWriteMaster.wdata(31 downto 0),
-         sAxiLpd_wstrb      => msiWriteMaster.wstrb(3 downto 0),
-         sAxiLpd_wlast      => '1',              -- single beat
-         sAxiLpd_wvalid     => msiWriteMaster.wvalid,
-         sAxiLpd_wready     => msiWriteSlave.wready,
-         sAxiLpd_bid        => open,
-         sAxiLpd_bresp      => msiWriteSlave.bresp,
-         sAxiLpd_bvalid     => msiWriteSlave.bvalid,
-         sAxiLpd_bready     => msiWriteMaster.bready,
-         sAxiLpd_arid       => (others => '0'),
-         sAxiLpd_araddr(31 downto 0)  => msiReadMaster.araddr(31 downto 0),
-         sAxiLpd_araddr(48 downto 32) => (others => '0'),
-         sAxiLpd_arlen      => (others => '0'),
-         sAxiLpd_arsize     => "010",
-         sAxiLpd_arburst    => "01",
-         sAxiLpd_arlock     => '0',
-         sAxiLpd_arcache    => "0011",
-         sAxiLpd_arprot     => msiReadMaster.arprot,
-         sAxiLpd_arqos      => (others => '0'),
-         sAxiLpd_aruser     => (others => '0'),
-         sAxiLpd_arvalid    => msiReadMaster.arvalid,
-         sAxiLpd_arready    => msiReadSlave.arready,
-         sAxiLpd_rid        => open,
-         sAxiLpd_rdata      => msiReadSlave.rdata(31 downto 0),
-         sAxiLpd_rresp      => msiReadSlave.rresp,
-         sAxiLpd_rlast      => open,
-         sAxiLpd_rvalid     => msiReadSlave.rvalid,
-         sAxiLpd_rready     => msiReadMaster.rready,
-         -- PCIe PHY Interface
-         gtPcieRefClk_clk_p => pciRefClkP,
-         gtPcieRefClk_clk_n => pciRefClkN,
-         gtPcie_grx_p       => pciRxP,
-         gtPcie_grx_n       => pciRxN,
-         gtPcie_gtx_p       => pciTxP,
-         gtPcie_gtx_n       => pciTxN,
-         -- Master AXI4 Interface
-         mAxi_awid          => regWriteMaster.awid(15 downto 0),
-         mAxi_awaddr        => regWriteMaster.awaddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
-         mAxi_awlen         => regWriteMaster.awlen(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0),
-         mAxi_awsize        => regWriteMaster.awsize(2 downto 0),
-         mAxi_awburst       => regWriteMaster.awburst(1 downto 0),
-         mAxi_awlock(0)     => regWriteMaster.awlock(0),
-         mAxi_awcache       => regWriteMaster.awcache,
-         mAxi_awprot        => regWriteMaster.awprot,
-         mAxi_awregion      => regWriteMaster.awregion(3 downto 0),
-         mAxi_awqos         => regWriteMaster.awqos(3 downto 0),
-         mAxi_awuser        => open,
-         mAxi_awvalid(0)    => regWriteMaster.awvalid,
-         mAxi_awready(0)    => regWriteSlave.awready,
-         mAxi_wdata         => regWriteMaster.wdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
-         mAxi_wstrb         => regWriteMaster.wstrb(AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
-         mAxi_wlast(0)      => regWriteMaster.wlast,
-         mAxi_wvalid(0)     => regWriteMaster.wvalid,
-         mAxi_wready(0)     => regWriteSlave.wready,
-         mAxi_bid           => regWriteSlave.bid(15 downto 0),
-         mAxi_bresp         => AXI_RESP_OK_C,  -- Always respond OK
-         mAxi_bvalid(0)     => regWriteSlave.bvalid,
-         mAxi_bready(0)     => regWriteMaster.bready,
-         mAxi_arid          => regReadMaster.arid(15 downto 0),
-         mAxi_araddr        => regReadMaster.araddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
-         mAxi_arlen         => regReadMaster.arlen(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0),
-         mAxi_arsize        => regReadMaster.arsize(2 downto 0),
-         mAxi_arburst       => regReadMaster.arburst(1 downto 0),
-         mAxi_arlock(0)     => regReadMaster.arlock(0),
-         mAxi_arcache       => regReadMaster.arcache,
-         mAxi_arprot        => regReadMaster.arprot,
-         mAxi_arregion      => regReadMaster.arregion(3 downto 0),
-         mAxi_arqos         => regReadMaster.arqos(3 downto 0),
-         mAxi_aruser        => open,
-         mAxi_arvalid(0)    => regReadMaster.arvalid,
-         mAxi_arready(0)    => regReadSlave.arready,
-         mAxi_rid           => regReadSlave.rid(15 downto 0),
-         mAxi_rdata         => regReadSlave.rdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
-         mAxi_rresp         => AXI_RESP_OK_C,  -- Always respond OK
-         mAxi_rlast(0)      => regReadSlave.rlast,
-         mAxi_rvalid(0)     => regReadSlave.rvalid,
-         mAxi_rready(0)     => regReadMaster.rready,
-         maxi_buser         => '0',
-         maxi_ruser         => (others => '0'),
-         mAxi_wid           => open,
-         mAxi_wuser         => open,
-         -- PS DDR Interface
-         psDDR_dq           => psDdrDq,
-         psDDR_dqs_t        => psDdrDqsT,
-         psDDR_dqs_c        => psDdrDqsC,
-         psDDR_adr          => psDdrAdr,
-         psDDR_ba           => psDdrBa,
-         psDDR_bg           => psDdrBg,
-         psDDR_act_n        => psDdrActN,
-         psDDR_reset_n      => psDdrResetN,
-         psDDR_ck_t         => psDdrCkT,
-         psDDR_ck_c         => psDdrCkC,
-         psDDR_cke          => psDdrCke,
-         psDDR_cs_n         => psDdrCsN,
-         psDDR_dm_n         => psDdrDmN,
-         psDDR_odt          => psDdrOdt,
-         psDdrClk_clk_p     => psDdrClkP,
-         psDdrClk_clk_n     => psDdrClkN,
-         -- Slave AXI4 Interface
-         sAxi_awid          => dmaWriteMaster.awid(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0),
-         sAxi_awaddr        => dmaWriteMaster.awaddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
-         sAxi_awregion      => dmaWriteMaster.awregion,
-         sAxi_awlen         => dmaWriteMaster.awlen(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0),
-         sAxi_awsize        => dmaWriteMaster.awsize(2 downto 0),
-         sAxi_awburst       => dmaWriteMaster.awburst(1 downto 0),
-         sAxi_awvalid(0)    => dmaWriteMaster.awvalid,
-         sAxi_awready(0)    => dmaWriteSlave.awready,
-         sAxi_wdata         => dmaWriteMaster.wdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
-         sAxi_wstrb         => dmaWriteMaster.wstrb(AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
-         sAxi_wlast(0)      => dmaWriteMaster.wlast,
-         sAxi_wvalid(0)     => dmaWriteMaster.wvalid,
-         sAxi_wready(0)     => dmaWriteSlave.wready,
-         sAxi_bid           => dmaWriteSlave.bid(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0),
-         sAxi_bresp         => dmaWriteSlave.bresp(1 downto 0),
-         sAxi_bvalid(0)     => dmaWriteSlave.bvalid,
-         sAxi_bready(0)     => dmaWriteMaster.bready,
-         sAxi_arid          => dmaReadMaster.arid(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0),
-         sAxi_araddr        => dmaReadMaster.araddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
-         sAxi_arregion      => dmaReadMaster.arregion,
-         sAxi_arlen         => dmaReadMaster.arlen(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0),
-         sAxi_arsize        => dmaReadMaster.arsize(2 downto 0),
-         sAxi_arburst       => dmaReadMaster.arburst(1 downto 0),
-         sAxi_arvalid(0)    => dmaReadMaster.arvalid,
-         sAxi_arready(0)    => dmaReadSlave.arready,
-         sAxi_rid           => dmaReadSlave.rid(AXI_PCIE_CONFIG_C.ID_BITS_C-1 downto 0),
-         sAxi_rdata         => dmaReadSlave.rdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
-         sAxi_rresp         => dmaReadSlave.rresp(1 downto 0),
-         sAxi_rlast(0)      => dmaReadSlave.rlast,
-         sAxi_rvalid(0)     => dmaReadSlave.rvalid,
-         sAxi_rready(0)     => dmaReadMaster.rready,
-         sAxi_arcache       => dmaReadMaster.arcache(3 downto 0),
-         sAxi_arlock(0)     => dmaReadMaster.arlock(0),
-         sAxi_arprot        => dmaReadMaster.arprot(2 downto 0),
-         sAxi_arqos         => dmaReadMaster.arqos(3 downto 0),
-         sAxi_awcache       => dmaWriteMaster.awcache(3 downto 0),
-         sAxi_awlock(0)     => dmaWriteMaster.awlock(0),
-         sAxi_awprot        => dmaWriteMaster.awprot(2 downto 0),
-         sAxi_awqos         => dmaWriteMaster.awqos(3 downto 0));
+         dma1_axis_c2h_dmawr_cmp              => dma1_axis_c2h_dmawr_cmp,
+         dma1_axis_c2h_dmawr_port_id          => dma1_axis_c2h_dmawr_port_id,
+         dma1_axis_c2h_dmawr_target_vch       => dma1_axis_c2h_dmawr_target_vch,
+         dma1_axis_c2h_status_drop            => dma1_axis_c2h_status_drop,
+         dma1_axis_c2h_status_error           => dma1_axis_c2h_status_error,
+         dma1_axis_c2h_status_last            => dma1_axis_c2h_status_last,
+         dma1_axis_c2h_status_qid             => dma1_axis_c2h_status_qid,
+         dma1_axis_c2h_status_status_cmp      => dma1_axis_c2h_status_status_cmp,
+         dma1_axis_c2h_status_valid           => dma1_axis_c2h_status_valid,
+         dma1_c2h_byp_in_st_csh_addr          => dma1_c2h_byp_in_st_csh_addr,
+         dma1_c2h_byp_in_st_csh_error         => dma1_c2h_byp_in_st_csh_error,
+         dma1_c2h_byp_in_st_csh_func          => dma1_c2h_byp_in_st_csh_func,
+         dma1_c2h_byp_in_st_csh_pfch_tag      => dma1_c2h_byp_in_st_csh_pfch_tag,
+         dma1_c2h_byp_in_st_csh_port_id       => dma1_c2h_byp_in_st_csh_port_id,
+         dma1_c2h_byp_in_st_csh_qid           => dma1_c2h_byp_in_st_csh_qid,
+         dma1_c2h_byp_in_st_csh_ready         => dma1_c2h_byp_in_st_csh_ready,
+         dma1_c2h_byp_in_st_csh_valid         => dma1_c2h_byp_in_st_csh_valid,
+         dma1_c2h_byp_out_cidx                => dma1_c2h_byp_out_cidx,
+         dma1_c2h_byp_out_dsc                 => dma1_c2h_byp_out_dsc,
+         dma1_c2h_byp_out_dsc_sz              => dma1_c2h_byp_out_dsc_sz,
+         dma1_c2h_byp_out_error               => dma1_c2h_byp_out_error,
+         dma1_c2h_byp_out_fmt                 => dma1_c2h_byp_out_fmt,
+         dma1_c2h_byp_out_func                => dma1_c2h_byp_out_func,
+         dma1_c2h_byp_out_mm_chn              => dma1_c2h_byp_out_mm_chn,
+         dma1_c2h_byp_out_pfch_tag            => dma1_c2h_byp_out_pfch_tag,
+         dma1_c2h_byp_out_port_id             => dma1_c2h_byp_out_port_id,
+         dma1_c2h_byp_out_qid                 => dma1_c2h_byp_out_qid,
+         dma1_c2h_byp_out_ready               => dma1_c2h_byp_out_ready,
+         dma1_c2h_byp_out_st_mm               => dma1_c2h_byp_out_st_mm,
+         dma1_c2h_byp_out_valid               => dma1_c2h_byp_out_valid,
+         dma1_dsc_crdt_in_crdt                => dma1_dsc_crdt_in_crdt,
+         dma1_dsc_crdt_in_dir                 => dma1_dsc_crdt_in_dir,
+         dma1_dsc_crdt_in_fence               => dma1_dsc_crdt_in_fence,
+         dma1_dsc_crdt_in_qid                 => dma1_dsc_crdt_in_qid,
+         dma1_dsc_crdt_in_rdy                 => dma1_dsc_crdt_in_rdy,
+         dma1_dsc_crdt_in_valid               => dma1_dsc_crdt_in_valid,
+         dma1_h2c_byp_in_st_addr              => dma1_h2c_byp_in_st_addr,
+         dma1_h2c_byp_in_st_cidx              => dma1_h2c_byp_in_st_cidx,
+         dma1_h2c_byp_in_st_eop               => dma1_h2c_byp_in_st_eop,
+         dma1_h2c_byp_in_st_error             => dma1_h2c_byp_in_st_error,
+         dma1_h2c_byp_in_st_func              => dma1_h2c_byp_in_st_func,
+         dma1_h2c_byp_in_st_len               => dma1_h2c_byp_in_st_len,
+         dma1_h2c_byp_in_st_mrkr_req          => dma1_h2c_byp_in_st_mrkr_req,
+         dma1_h2c_byp_in_st_no_dma            => dma1_h2c_byp_in_st_no_dma,
+         dma1_h2c_byp_in_st_port_id           => dma1_h2c_byp_in_st_port_id,
+         dma1_h2c_byp_in_st_qid               => dma1_h2c_byp_in_st_qid,
+         dma1_h2c_byp_in_st_ready             => dma1_h2c_byp_in_st_ready,
+         dma1_h2c_byp_in_st_sdi               => dma1_h2c_byp_in_st_sdi,
+         dma1_h2c_byp_in_st_sop               => dma1_h2c_byp_in_st_sop,
+         dma1_h2c_byp_in_st_valid             => dma1_h2c_byp_in_st_valid,
+         dma1_h2c_byp_out_cidx                => dma1_h2c_byp_out_cidx,
+         dma1_h2c_byp_out_dsc                 => dma1_h2c_byp_out_dsc,
+         dma1_h2c_byp_out_dsc_sz              => dma1_h2c_byp_out_dsc_sz,
+         dma1_h2c_byp_out_error               => dma1_h2c_byp_out_error,
+         dma1_h2c_byp_out_fmt                 => dma1_h2c_byp_out_fmt,
+         dma1_h2c_byp_out_func                => dma1_h2c_byp_out_func,
+         dma1_h2c_byp_out_mm_chn              => dma1_h2c_byp_out_mm_chn,
+         dma1_h2c_byp_out_port_id             => dma1_h2c_byp_out_port_id,
+         dma1_h2c_byp_out_qid                 => dma1_h2c_byp_out_qid,
+         dma1_h2c_byp_out_ready               => dma1_h2c_byp_out_ready,
+         dma1_h2c_byp_out_st_mm               => dma1_h2c_byp_out_st_mm,
+         dma1_h2c_byp_out_valid               => dma1_h2c_byp_out_valid,
+         dma1_m_axis_h2c_err                  => dma1_m_axis_h2c_err,
+         dma1_m_axis_h2c_mdata                => dma1_m_axis_h2c_mdata,
+         dma1_m_axis_h2c_mty                  => dma1_m_axis_h2c_mty,
+         dma1_m_axis_h2c_port_id              => dma1_m_axis_h2c_port_id,
+         dma1_m_axis_h2c_qid                  => dma1_m_axis_h2c_qid,
+         dma1_m_axis_h2c_tcrc                 => dma1_m_axis_h2c_tcrc,
+         dma1_m_axis_h2c_tdata                => dma1_m_axis_h2c_tdata,
+         dma1_m_axis_h2c_tlast                => dma1_m_axis_h2c_tlast,
+         dma1_m_axis_h2c_tready               => dma1_m_axis_h2c_tready,
+         dma1_m_axis_h2c_tvalid               => dma1_m_axis_h2c_tvalid,
+         dma1_m_axis_h2c_zero_byte            => dma1_m_axis_h2c_zero_byte,
+         dma1_mgmt_cpl_dat                    => dma1_mgmt_cpl_dat,
+         dma1_mgmt_cpl_rdy                    => dma1_mgmt_cpl_rdy,
+         dma1_mgmt_cpl_sts                    => dma1_mgmt_cpl_sts,
+         dma1_mgmt_cpl_vld                    => dma1_mgmt_cpl_vld,
+         dma1_mgmt_req_adr                    => dma1_mgmt_req_adr,
+         dma1_mgmt_req_cmd                    => dma1_mgmt_req_cmd,
+         dma1_mgmt_req_dat                    => dma1_mgmt_req_dat,
+         dma1_mgmt_req_fnc                    => dma1_mgmt_req_fnc,
+         dma1_mgmt_req_msc                    => dma1_mgmt_req_msc,
+         dma1_mgmt_req_rdy                    => dma1_mgmt_req_rdy,
+         dma1_mgmt_req_vld                    => dma1_mgmt_req_vld,
+         dma1_qsts_out_data                   => dma1_qsts_out_data,
+         dma1_qsts_out_op                     => dma1_qsts_out_op,
+         dma1_qsts_out_port_id                => dma1_qsts_out_port_id,
+         dma1_qsts_out_qid                    => dma1_qsts_out_qid,
+         dma1_qsts_out_rdy                    => dma1_qsts_out_rdy,
+         dma1_qsts_out_vld                    => dma1_qsts_out_vld,
+         dma1_s_axis_c2h_cmpt_cmpt_type       => dma1_s_axis_c2h_cmpt_cmpt_type,
+         dma1_s_axis_c2h_cmpt_col_idx         => dma1_s_axis_c2h_cmpt_col_idx,
+         dma1_s_axis_c2h_cmpt_data            => dma1_s_axis_c2h_cmpt_data,
+         dma1_s_axis_c2h_cmpt_dpar            => dma1_s_axis_c2h_cmpt_dpar,
+         dma1_s_axis_c2h_cmpt_err_idx         => dma1_s_axis_c2h_cmpt_err_idx,
+         dma1_s_axis_c2h_cmpt_marker          => dma1_s_axis_c2h_cmpt_marker,
+         dma1_s_axis_c2h_cmpt_no_wrb_marker   => dma1_s_axis_c2h_cmpt_no_wrb_marker,
+         dma1_s_axis_c2h_cmpt_port_id         => dma1_s_axis_c2h_cmpt_port_id,
+         dma1_s_axis_c2h_cmpt_qid             => dma1_s_axis_c2h_cmpt_qid,
+         dma1_s_axis_c2h_cmpt_size            => dma1_s_axis_c2h_cmpt_size,
+         dma1_s_axis_c2h_cmpt_tready          => dma1_s_axis_c2h_cmpt_tready,
+         dma1_s_axis_c2h_cmpt_tvalid          => dma1_s_axis_c2h_cmpt_tvalid,
+         dma1_s_axis_c2h_cmpt_user_trig       => dma1_s_axis_c2h_cmpt_user_trig,
+         dma1_s_axis_c2h_cmpt_wait_pld_pkt_id => dma1_s_axis_c2h_cmpt_wait_pld_pkt_id,
+         dma1_s_axis_c2h_ctrl_has_cmpt        => dma1_s_axis_c2h_ctrl_has_cmpt,
+         dma1_s_axis_c2h_ctrl_len             => dma1_s_axis_c2h_ctrl_len,
+         dma1_s_axis_c2h_ctrl_marker          => dma1_s_axis_c2h_ctrl_marker,
+         dma1_s_axis_c2h_ctrl_port_id         => dma1_s_axis_c2h_ctrl_port_id,
+         dma1_s_axis_c2h_ctrl_qid             => dma1_s_axis_c2h_ctrl_qid,
+         dma1_s_axis_c2h_ecc                  => dma1_s_axis_c2h_ecc,
+         dma1_s_axis_c2h_mty                  => dma1_s_axis_c2h_mty,
+         dma1_s_axis_c2h_tcrc                 => dma1_s_axis_c2h_tcrc,
+         dma1_s_axis_c2h_tdata                => dma1_s_axis_c2h_tdata,
+         dma1_s_axis_c2h_tlast                => dma1_s_axis_c2h_tlast,
+         dma1_s_axis_c2h_tready               => dma1_s_axis_c2h_tready,
+         dma1_s_axis_c2h_tvalid               => dma1_s_axis_c2h_tvalid,
+         dma1_st_rx_msg_tdata                 => dma1_st_rx_msg_tdata,
+         dma1_st_rx_msg_tlast                 => dma1_st_rx_msg_tlast,
+         dma1_st_rx_msg_tready                => dma1_st_rx_msg_tready,
+         dma1_st_rx_msg_tvalid                => dma1_st_rx_msg_tvalid,
+         dma1_tm_dsc_sts_avl                  => dma1_tm_dsc_sts_avl,
+         dma1_tm_dsc_sts_byp                  => dma1_tm_dsc_sts_byp,
+         dma1_tm_dsc_sts_dir                  => dma1_tm_dsc_sts_dir,
+         dma1_tm_dsc_sts_error                => dma1_tm_dsc_sts_error,
+         dma1_tm_dsc_sts_irq_arm              => dma1_tm_dsc_sts_irq_arm,
+         dma1_tm_dsc_sts_mm                   => dma1_tm_dsc_sts_mm,
+         dma1_tm_dsc_sts_pidx                 => dma1_tm_dsc_sts_pidx,
+         dma1_tm_dsc_sts_port_id              => dma1_tm_dsc_sts_port_id,
+         dma1_tm_dsc_sts_qen                  => dma1_tm_dsc_sts_qen,
+         dma1_tm_dsc_sts_qid                  => dma1_tm_dsc_sts_qid,
+         dma1_tm_dsc_sts_qinv                 => dma1_tm_dsc_sts_qinv,
+         dma1_tm_dsc_sts_rdy                  => dma1_tm_dsc_sts_rdy,
+         dma1_tm_dsc_sts_valid                => dma1_tm_dsc_sts_valid,
+         dma1_usr_irq_ack                     => dma1_usr_irq_ack,
+         dma1_usr_irq_fail                    => dma1_usr_irq_fail,
+         dma1_usr_irq_fnc                     => dma1_usr_irq_fnc,
+         dma1_usr_irq_valid                   => dma1_usr_irq_valid,
+         dma1_usr_irq_vec                     => dma1_usr_irq_vec,
+         dmaClk                               => clk,
+         dmaRstN                              => plRstN,
+         gtPcieRefClk_clk_n                   => pciRefClkN,
+         gtPcieRefClk_clk_p                   => pciRefClkP,
+         gtPcie_grx_n                         => pciRxN,
+         gtPcie_grx_p                         => pciRxP,
+         gtPcie_gtx_n                         => pciTxN,
+         gtPcie_gtx_p                         => pciTxP,
+         mAxi_araddr                          => mAxi_araddr,
+         mAxi_arburst                         => mAxi_arburst,
+         mAxi_arcache                         => mAxi_arcache,
+         mAxi_arid                            => mAxi_arid,
+         mAxi_arlen                           => mAxi_arlen,
+         mAxi_arlock                          => mAxi_arlock,
+         mAxi_arprot                          => mAxi_arprot,
+         mAxi_arqos                           => mAxi_arqos,
+         mAxi_arready                         => mAxi_arready,
+         mAxi_arregion                        => mAxi_arregion,
+         mAxi_arsize                          => mAxi_arsize,
+         mAxi_aruser                          => mAxi_aruser,
+         mAxi_arvalid                         => mAxi_arvalid,
+         mAxi_awaddr                          => mAxi_awaddr,
+         mAxi_awburst                         => mAxi_awburst,
+         mAxi_awcache                         => mAxi_awcache,
+         mAxi_awid                            => mAxi_awid,
+         mAxi_awlen                           => mAxi_awlen,
+         mAxi_awlock                          => mAxi_awlock,
+         mAxi_awprot                          => mAxi_awprot,
+         mAxi_awqos                           => mAxi_awqos,
+         mAxi_awready                         => mAxi_awready,
+         mAxi_awregion                        => mAxi_awregion,
+         mAxi_awsize                          => mAxi_awsize,
+         mAxi_awuser                          => mAxi_awuser,
+         mAxi_awvalid                         => mAxi_awvalid,
+         mAxi_bid                             => mAxi_bid,
+         mAxi_bready                          => mAxi_bready,
+         mAxi_bresp                           => mAxi_bresp,
+         mAxi_bvalid                          => mAxi_bvalid,
+         mAxi_rdata                           => mAxi_rdata,
+         mAxi_rid                             => mAxi_rid,
+         mAxi_rlast                           => mAxi_rlast,
+         mAxi_rready                          => mAxi_rready,
+         mAxi_rresp                           => mAxi_rresp,
+         mAxi_rvalid                          => mAxi_rvalid,
+         mAxi_wdata                           => mAxi_wdata,
+         mAxi_wlast                           => mAxi_wlast,
+         mAxi_wready                          => mAxi_wready,
+         mAxi_wstrb                           => mAxi_wstrb,
+         mAxi_wvalid                          => mAxi_wvalid,
+         -- plRefClk is the BD's GENERATED PL reference clock OUTPUT; it must
+         -- feed back into the internal clk that drives the PL (adapter, shim,
+         -- ctxt-init, and axiClk -> the whole app). Leaving it 'open' left clk
+         -- undriven -> no clock -> all PL logic (incl. the PRBS app) optimized
+         -- away, no netlist, no timing. (Matches the original bridge wiring.)
+         plRefClk                             => clk,
+         plRstN                               => plRstN,
+         psDDR_act_n                          => psDdrActN,
+         psDDR_adr                            => psDdrAdr,
+         psDDR_ba                             => psDdrBa,
+         psDDR_bg                             => psDdrBg,
+         psDDR_ck_c                           => psDdrCkC,
+         psDDR_ck_t                           => psDdrCkT,
+         psDDR_cke                            => psDdrCke,
+         psDDR_cs_n                           => psDdrCsN,
+         psDDR_dm_n                           => psDdrDmN,
+         psDDR_dq                             => psDdrDq,
+         psDDR_dqs_c                          => psDdrDqsC,
+         psDDR_dqs_t                          => psDdrDqsT,
+         psDDR_odt                            => psDdrOdt,
+         psDDR_reset_n                        => psDdrResetN,
+         psDdrClk_clk_n                       => psDdrClkN,
+         psDdrClk_clk_p                       => psDdrClkP,
+         sAxiLpd_araddr                       => (others => '0'),
+         sAxiLpd_arburst                      => (others => '0'),
+         sAxiLpd_arcache                      => (others => '0'),
+         sAxiLpd_arid                         => (others => '0'),
+         sAxiLpd_arlen                        => (others => '0'),
+         sAxiLpd_arlock                       => '0',
+         sAxiLpd_arprot                       => (others => '0'),
+         sAxiLpd_arqos                        => (others => '0'),
+         sAxiLpd_arready                      => open,
+         sAxiLpd_arsize                       => (others => '0'),
+         sAxiLpd_aruser                       => (others => '0'),
+         sAxiLpd_arvalid                      => '0',
+         sAxiLpd_awaddr                       => (others => '0'),
+         sAxiLpd_awburst                      => (others => '0'),
+         sAxiLpd_awcache                      => (others => '0'),
+         sAxiLpd_awid                         => (others => '0'),
+         sAxiLpd_awlen                        => (others => '0'),
+         sAxiLpd_awlock                       => '0',
+         sAxiLpd_awprot                       => (others => '0'),
+         sAxiLpd_awqos                        => (others => '0'),
+         sAxiLpd_awready                      => open,
+         sAxiLpd_awsize                       => (others => '0'),
+         sAxiLpd_awuser                       => (others => '0'),
+         sAxiLpd_awvalid                      => '0',
+         sAxiLpd_bid                          => open,
+         sAxiLpd_bready                       => '0',
+         sAxiLpd_bresp                        => open,
+         sAxiLpd_bvalid                       => open,
+         sAxiLpd_rdata                        => open,
+         sAxiLpd_rid                          => open,
+         sAxiLpd_rlast                        => open,
+         sAxiLpd_rready                       => '0',
+         sAxiLpd_rresp                        => open,
+         sAxiLpd_rvalid                       => open,
+         sAxiLpd_wdata                        => (others => '0'),
+         sAxiLpd_wlast                        => '0',
+         sAxiLpd_wready                       => open,
+         sAxiLpd_wstrb                        => (others => '0'),
+         sAxiLpd_wvalid                       => '0'      );
 
 end mapping;

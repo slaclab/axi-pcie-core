@@ -18,10 +18,17 @@ if { $::env(PRJ_PART) != "xcv80-lsva4737-2MHP-e-S" } {
 # Set the board part
 set_property board_part xilinx.com:v80:part0:1.0 [current_project]
 
+# The .bd is regenerated from the sibling .tcl (the validated QDMA descriptor-
+# bypass design) whenever the .tcl changes -- keep them in sync or synthesis
+# builds a stale design against the new wrapper (caused the first synth width
+# errors). Regen: open the .tcl in Vivado, write_bd_tcl/save the .bd here.
 loadBlockDesign -path "$::DIR_PATH/bd/XilinxAlveoV80PcieBlockDesign.bd"
 # loadBlockDesign -path "$::DIR_PATH/bd/XilinxAlveoV80PcieBlockDesign.tcl"
 
 # Load local Source Code and Constraints
+# NOTE: loadSource -dir globs a single directory (no recursion), so the QDMA
+# migration sources under core/qdma are loaded with their own line.
 loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/core"
+loadSource -lib axi_pcie_core  -dir "$::DIR_PATH/core/qdma"
 loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoV80Core.xdc"
 loadConstraints               -path "$::DIR_PATH/xdc/XilinxAlveoV80App.xdc"

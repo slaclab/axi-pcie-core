@@ -59,6 +59,12 @@ entity XilinxAlveoV80CpmManager is
       BDF_TABLE_ADDR_G  : slv(31 downto 0) := x"FCEA2420";
       -- BDF address-translation table to program after reset
       BDF_TABLE_G       : CpmBdfEntryArray := (0 => CPM_BDF_ENTRY_INIT_C);
+      -- Skip the BDF (address-translation) table programming entirely and act
+      -- as a pure TX_IRQ_CSR MSI generator. In QDMA mode the CPM5 handles host
+      -- addressing via the descriptors supplied on the bypass interface, so the
+      -- bridge-mode BDF table is neither needed nor valid; set true so the first
+      -- interrupt goes straight to the TX_IRQ_CSR write.
+      SKIP_BDF_G        : boolean  := false;
       -- Re-arm watchdog (clock cycles) if dmaIrq remains asserted; 250e6 ~ 1 s
       -- at the 250 MHz PL clock.
       WATCHDOG_G        : positive := 250000000);
@@ -99,9 +105,11 @@ architecture rtl of XilinxAlveoV80CpmManager is
       state    : StateType;
    end record RegType;
 
+   -- When SKIP_BDF_G, start with bdfDone='1' so the first interrupt bypasses
+   -- BDF programming and goes straight to the TX_IRQ_CSR write (pure MSI gen).
    constant REG_INIT_C : RegType := (
       req      => AXI_LITE_REQ_INIT_C,
-      bdfDone  => '0',
+      bdfDone  => ite(SKIP_BDF_G, '1', '0'),
       bdfIndex => 0,
       irqTimer => (others => '0'),
       state    => IDLE_S);

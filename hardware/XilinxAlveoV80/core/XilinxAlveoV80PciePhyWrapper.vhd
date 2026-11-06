@@ -512,11 +512,18 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal dma1_usr_irq_valid                   : sl;
    signal dma1_usr_irq_vec                     : slv(10 downto 0);
 
-   -- Shim interrupt -> QDMA usr_irq (MSI-X) handshake bridge
+   -- Shim interrupt -> MSI
    signal shimInterrupt : sl;
-   type UsrIrqStateType is (IDLE_S, REQ_S, WAIT_CLR_S);
-   signal usrIrqState  : UsrIrqStateType := IDLE_S;
-   signal usrIrqValid  : sl              := '0';
+
+   -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR over S_AXI_LPD to
+   -- raise the PCIe MSI (XilinxAlveoV80CpmManager). This is the proven IRQ path
+   -- (the native QDMA usr_irq interface did not deliver on hardware); in QDMA
+   -- mode the CpmManager runs with SKIP_BDF_G=true so it only does the
+   -- TX_IRQ_CSR write (no bridge-mode BDF table).
+   signal msiWriteMaster : AxiLiteWriteMasterType;
+   signal msiWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
+   signal msiReadMaster  : AxiLiteReadMasterType;
+   signal msiReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
    signal mAxi_araddr                          : slv(63 downto 0);
    signal mAxi_arburst                         : slv(1 downto 0);
    signal mAxi_arcache                         : slv(3 downto 0);
@@ -813,54 +820,33 @@ begin
    dma1_dsc_crdt_in_fence <= '0';
    dma1_dsc_crdt_in_qid   <= (others => '0');
    dma1_dsc_crdt_in_valid <= '0';
-   -------------------------------------------------------------------------
-   -- Shim interrupt -> QDMA user interrupt (MSI-X) handshake.
-   -- The datadev driver's descriptor flow is interrupt-driven: it queues TX
-   -- descriptors, writes forceInt, then performs the actual descriptor FIFO
-   -- pushes only from its interrupt handler (AxisG2_Process). The AxisG2RegShim
-   -- raises a level 'shimInterrupt'; this FSM converts it to the QDMA usr_irq
-   -- req/ack handshake (PG347 Table 57): assert usr_irq_valid and HOLD until
-   -- usr_irq_ack pulses, then wait for shimInterrupt to clear (software ack via
-   -- the 0x4C register) before re-arming, so one MSI-X is sent per request.
-   -------------------------------------------------------------------------
-   -- Function 0, MSI-X vector 0 -- matches the QdmaCtxtInit queue-context
-   -- programming (FUNC_ID/MSIX_VEC defaults = 0) so the vector the queues point
-   -- at is the one raised here.
-   dma1_usr_irq_fnc   <= (others => '0');          -- 13-bit; PF0
-   dma1_usr_irq_vec   <= (others => '0');          -- 11-bit MSI-X vector 0
-   dma1_usr_irq_valid <= usrIrqValid;
+   -- Native QDMA user-interrupt interface is NOT used (did not deliver MSI on
+   -- hardware). Tie it off; the IRQ is raised via the CpmManager -> S_AXI_LPD ->
+   -- TX_IRQ_CSR path below.
+   dma1_usr_irq_fnc   <= (others => '0');
+   dma1_usr_irq_vec   <= (others => '0');
+   dma1_usr_irq_valid <= '0';
 
-   U_UsrIrq : process (clk) is
-   begin
-      if rising_edge(clk) then
-         if (rstL = '0') then
-            usrIrqState <= IDLE_S;
-            usrIrqValid <= '0';
-         else
-            case usrIrqState is
-               when IDLE_S =>
-                  usrIrqValid <= '0';
-                  -- New interrupt condition -> request an MSI-X.
-                  if (shimInterrupt = '1') then
-                     usrIrqValid <= '1';
-                     usrIrqState <= REQ_S;
-                  end if;
-               when REQ_S =>
-                  -- Hold valid until the DMA acks (or fails) the request.
-                  if (dma1_usr_irq_ack = '1' or dma1_usr_irq_fail = '1') then
-                     usrIrqValid <= '0';
-                     usrIrqState <= WAIT_CLR_S;
-                  end if;
-               when WAIT_CLR_S =>
-                  -- Wait for software to service/clear the interrupt before
-                  -- re-arming, so we send one MSI-X per interrupt condition.
-                  if (shimInterrupt = '0') then
-                     usrIrqState <= IDLE_S;
-                  end if;
-            end case;
-         end if;
-      end if;
-   end process;
+   -------------------------------------------------------------------------
+   -- PL MSI generator: on each shim interrupt, CpmManager writes int_set to the
+   -- CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) over S_AXI_LPD, raising the PCIe MSI.
+   -- This is the datadev-required interrupt (driver pushes descriptors only
+   -- from its IRQ handler). SKIP_BDF_G=true: QDMA addressing is descriptor-based
+   -- so the bridge-mode BDF table is skipped; this is a pure MSI generator.
+   -------------------------------------------------------------------------
+   U_CpmManager : entity axi_pcie_core.XilinxAlveoV80CpmManager
+      generic map (
+         TPD_G      => TPD_G,
+         SKIP_BDF_G => true)
+      port map (
+         clk             => clk,
+         rstL            => rstL,
+         dmaIrq          => shimInterrupt,
+         bdfDone         => open,
+         axilWriteMaster => msiWriteMaster,
+         axilWriteSlave  => msiWriteSlave,
+         axilReadMaster  => msiReadMaster,
+         axilReadSlave   => msiReadSlave);
 
    -------------------
    -- AXI PCIe IP Core
@@ -1077,44 +1063,48 @@ begin
          psDDR_reset_n                        => psDdrResetN,
          psDdrClk_clk_n                       => psDdrClkN,
          psDdrClk_clk_p                       => psDdrClkP,
-         sAxiLpd_araddr                       => (others => '0'),
-         sAxiLpd_arburst                      => (others => '0'),
-         sAxiLpd_arcache                      => (others => '0'),
+         -- S_AXI_LPD slave driven by CpmManager's AXI-Lite master (single-beat
+         -- 32-bit writes to the CPM5 TX_IRQ_CSR to raise the MSI).
+         sAxiLpd_araddr(31 downto 0)          => msiReadMaster.araddr(31 downto 0),
+         sAxiLpd_araddr(48 downto 32)         => (others => '0'),
+         sAxiLpd_arburst                      => "01",
+         sAxiLpd_arcache                      => "0011",
          sAxiLpd_arid                         => (others => '0'),
          sAxiLpd_arlen                        => (others => '0'),
          sAxiLpd_arlock                       => '0',
-         sAxiLpd_arprot                       => (others => '0'),
+         sAxiLpd_arprot                       => msiReadMaster.arprot,
          sAxiLpd_arqos                        => (others => '0'),
-         sAxiLpd_arready                      => open,
-         sAxiLpd_arsize                       => (others => '0'),
+         sAxiLpd_arready                      => msiReadSlave.arready,
+         sAxiLpd_arsize                       => "010",
          sAxiLpd_aruser                       => (others => '0'),
-         sAxiLpd_arvalid                      => '0',
-         sAxiLpd_awaddr                       => (others => '0'),
-         sAxiLpd_awburst                      => (others => '0'),
-         sAxiLpd_awcache                      => (others => '0'),
+         sAxiLpd_arvalid                      => msiReadMaster.arvalid,
+         sAxiLpd_awaddr(31 downto 0)          => msiWriteMaster.awaddr(31 downto 0),
+         sAxiLpd_awaddr(48 downto 32)         => (others => '0'),
+         sAxiLpd_awburst                      => "01",
+         sAxiLpd_awcache                      => "0011",
          sAxiLpd_awid                         => (others => '0'),
          sAxiLpd_awlen                        => (others => '0'),
          sAxiLpd_awlock                       => '0',
-         sAxiLpd_awprot                       => (others => '0'),
+         sAxiLpd_awprot                       => msiWriteMaster.awprot,
          sAxiLpd_awqos                        => (others => '0'),
-         sAxiLpd_awready                      => open,
-         sAxiLpd_awsize                       => (others => '0'),
+         sAxiLpd_awready                      => msiWriteSlave.awready,
+         sAxiLpd_awsize                       => "010",
          sAxiLpd_awuser                       => (others => '0'),
-         sAxiLpd_awvalid                      => '0',
+         sAxiLpd_awvalid                      => msiWriteMaster.awvalid,
          sAxiLpd_bid                          => open,
-         sAxiLpd_bready                       => '0',
-         sAxiLpd_bresp                        => open,
-         sAxiLpd_bvalid                       => open,
-         sAxiLpd_rdata                        => open,
+         sAxiLpd_bready                       => msiWriteMaster.bready,
+         sAxiLpd_bresp                        => msiWriteSlave.bresp,
+         sAxiLpd_bvalid                       => msiWriteSlave.bvalid,
+         sAxiLpd_rdata                        => msiReadSlave.rdata(31 downto 0),
          sAxiLpd_rid                          => open,
          sAxiLpd_rlast                        => open,
-         sAxiLpd_rready                       => '0',
-         sAxiLpd_rresp                        => open,
-         sAxiLpd_rvalid                       => open,
-         sAxiLpd_wdata                        => (others => '0'),
-         sAxiLpd_wlast                        => '0',
-         sAxiLpd_wready                       => open,
-         sAxiLpd_wstrb                        => (others => '0'),
-         sAxiLpd_wvalid                       => '0'      );
+         sAxiLpd_rready                       => msiReadMaster.rready,
+         sAxiLpd_rresp                        => msiReadSlave.rresp,
+         sAxiLpd_rvalid                       => msiReadSlave.rvalid,
+         sAxiLpd_wdata                        => msiWriteMaster.wdata(31 downto 0),
+         sAxiLpd_wlast                        => '1',
+         sAxiLpd_wready                       => msiWriteSlave.wready,
+         sAxiLpd_wstrb                        => msiWriteMaster.wstrb(3 downto 0),
+         sAxiLpd_wvalid                       => msiWriteMaster.wvalid      );
 
 end mapping;

@@ -41,6 +41,10 @@ entity AxiPciePipReg is
       axilReadSlave     : out AxiLiteReadSlaveType;
       axilWriteMaster   : in  AxiLiteWriteMasterType;
       axilWriteSlave    : out AxiLiteWriteSlaveType;
+      -- AXI Stream Interface (axisClk domain)
+      axisClk           : in  sl;
+      axisRst           : in  sl;
+      depackDebug       : in  Packetizer2DebugArray(NUM_AXIS_G-1 downto 0);
       -- AXI4 Interfaces (axiClk domain)
       axiClk            : in  sl;
       axiRst            : in  sl;
@@ -49,7 +53,6 @@ entity AxiPciePipReg is
       rxFrame           : in  sl;
       txFrame           : in  sl;
       txAxiError        : in  sl;
-      depackDebug       : in  Packetizer2DebugArray(NUM_AXIS_G-1 downto 0);
       enableTx          : out slv(NUM_AXIS_G-1 downto 0);
       awcache           : out slv(3 downto 0);
       remoteBarBaseAddr : out Slv32Array(NUM_AXIS_G-1 downto 0);
@@ -64,7 +67,6 @@ architecture mapping of AxiPciePipReg is
       rxDropFrameCnt    : slv(31 downto 0);
       txDropFrameCnt    : slv(31 downto 0);
       txAxiErrorCnt     : slv(31 downto 0);
-      depackEofeCnt     : Slv32Array(NUM_AXIS_G-1 downto 0);
       cntRst            : sl;
       enableTx          : slv(NUM_AXIS_G-1 downto 0);
       awcache           : slv(3 downto 0);
@@ -79,7 +81,6 @@ architecture mapping of AxiPciePipReg is
       rxDropFrameCnt    => (others => '0'),
       txDropFrameCnt    => (others => '0'),
       txAxiErrorCnt     => (others => '0'),
-      depackEofeCnt     => (others => (others => '0')),
       cntRst            => '0',
       enableTx          => (others => '0'),
       awcache           => (others => '0'),
@@ -94,6 +95,9 @@ architecture mapping of AxiPciePipReg is
    signal readSlave   : AxiLiteReadSlaveType;
    signal writeMaster : AxiLiteWriteMasterType;
    signal writeSlave  : AxiLiteWriteSlaveType;
+
+   signal depackEofe    : slv(NUM_AXIS_G-1 downto 0);
+   signal depackEofeCnt : SlVectorArray(NUM_AXIS_G-1 downto 0, 31 downto 0);
 
 begin
 
@@ -120,10 +124,36 @@ begin
          mAxiWriteMaster => writeMaster,
          mAxiWriteSlave  => writeSlave);
 
+   ----------------------------------------------
+   -- Depacketizer EOFE counters (axisClk domain)
+   ----------------------------------------------
+   GEN_EOFE :
+   for i in NUM_AXIS_G-1 downto 0 generate
+      depackEofe(i) <= depackDebug(i).eofe;
+   end generate GEN_EOFE;
+
+   U_DepackEofeCnt : entity surf.SyncStatusVector
+      generic map (
+         TPD_G       => TPD_G,
+         CNT_WIDTH_G => 32,
+         WIDTH_G     => NUM_AXIS_G)
+      port map (
+         -- Input Status bit Signals (wrClk domain)
+         statusIn     => depackEofe,
+         -- Status Bit Counters Signals (rdClk domain)
+         cntRstIn     => r.cntRst,
+         rollOverEnIn => (others => '1'),
+         cntOut       => depackEofeCnt,
+         -- Clocks and Reset Ports
+         wrClk        => axisClk,
+         wrRst        => axisRst,
+         rdClk        => axiClk,
+         rdRst        => axiRst);
+
    ---------------------
    -- AXI Lite Interface
    ---------------------
-   comb : process (axiRst, depackDebug, r, readMaster, rxDropFrame, rxFrame,
+   comb : process (axiRst, depackEofeCnt, r, readMaster, rxDropFrame, rxFrame,
                    txAxiError, txDropFrame, txFrame, writeMaster) is
       variable v      : RegType;
       variable axilEp : AxiLiteEndPointType;
@@ -153,13 +183,6 @@ begin
          v.txFrameCnt := r.txFrameCnt + 1;
       end if;
 
-      -- Check for EOFE on the depacker
-      for i in NUM_AXIS_G-1 downto 0 loop
-         if (depackDebug(i).eofe = '1') then
-            v.depackEofeCnt(i) := r.depackEofeCnt(i) + 1;
-         end if;
-      end loop;
-
       -- Check for counter reset
       if (r.cntRst = '1') then
          -- Reset counters
@@ -168,7 +191,6 @@ begin
          v.rxDropFrameCnt := (others => '0');
          v.txDropFrameCnt := (others => '0');
          v.txAxiErrorCnt  := (others => '0');
-         v.depackEofeCnt  := (others => (others => '0'));
       end if;
 
       --------------------------------------------------------------------------------------------
@@ -179,7 +201,7 @@ begin
       -- Register Mapping
       for i in NUM_AXIS_G-1 downto 0 loop
          axiSlaveRegister (axilEp, toSlv(i*8, 12), 0, v.remoteBarBaseAddr(i));  -- [0x000:0x07F]
-         axiSlaveRegisterR(axilEp, toSlv(128+i*4, 12), 0, r.depackEofeCnt(i));  -- [0x080:0x0BF]
+         axiSlaveRegisterR(axilEp, toSlv(128+i*4, 12), 0, muxSlVectorArray(depackEofeCnt, i));  -- [0x080:0x0BF]
       end loop;
 
       axiSlaveRegisterR(axilEp, x"0E0", 0, r.rxFrameCnt);

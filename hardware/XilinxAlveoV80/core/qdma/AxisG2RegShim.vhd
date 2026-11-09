@@ -123,7 +123,18 @@ entity AxisG2RegShim is
       -------------------------------------------------------------------------
       hwWrIndex       : in  slv(31 downto 0) := (others => '0');
       hwRdIndex       : in  slv(31 downto 0) := (others => '0');
-      wrReqMissed     : in  slv(31 downto 0) := (others => '0'));
+      wrReqMissed     : in  slv(31 downto 0) := (others => '0');
+      -------------------------------------------------------------------------
+      -- Debug observability inputs (QDMA-side status). Counted/sampled into the
+      -- read-only debug registers at 0x90.. so the C2H bring-up stall can be
+      -- localized from the host (BAR0 dmaCtrl(0) base = 0x0) without an ILA.
+      -------------------------------------------------------------------------
+      dbgCtxtDone     : in  sl := '0';   -- QdmaCtxtInit done (engines enabled)
+      dbgC2hBypValid  : in  sl := '0';   -- C2H free-buffer descriptor valid (->QDMA)
+      dbgC2hBypReady  : in  sl := '0';   -- C2H free-buffer descriptor ready (<-QDMA)
+      dbgC2hStValid   : in  sl := '0';   -- C2H payload tvalid (user->QDMA)
+      dbgC2hStReady   : in  sl := '0';   -- C2H payload tready (QDMA->user)
+      dbgTmDscValid   : in  sl := '0');  -- tm_dsc_sts valid (queue status strobe)
 end AxisG2RegShim;
 
 architecture rtl of AxisG2RegShim is
@@ -158,6 +169,19 @@ architecture rtl of AxisG2RegShim is
    constant ADDR_FORCE_INT_C  : slv(15 downto 0) := x"0080";
    constant ADDR_IRQ_HOLDOFF_C: slv(15 downto 0) := x"0084";
    constant ADDR_TIMEOUT_C    : slv(15 downto 0) := x"0088";
+
+   -- Debug/observability read-only registers (NOT part of the datadev AxisG2
+   -- map; added for QDMA bring-up). Free-running counters, cleared only by
+   -- reset; read via BAR0 at these offsets (dmaCtrl(0) base = 0x0).
+   constant ADDR_DBG_WRFIFOA_C : slv(15 downto 0) := x"0090";  -- driver RX-buffer posts (writeFifoA)
+   constant ADDR_DBG_RXFREE_C  : slv(15 downto 0) := x"0094";  -- rxFree accepted by adapter
+   constant ADDR_DBG_TXSUB_C   : slv(15 downto 0) := x"0098";  -- txSub accepted by adapter
+   constant ADDR_DBG_FORCEINT_C: slv(15 downto 0) := x"009C";  -- driver forceInt writes
+   constant ADDR_DBG_INTRISE_C : slv(15 downto 0) := x"00A0";  -- shim interrupt rising edges
+   constant ADDR_DBG_C2HBYP_C  : slv(15 downto 0) := x"00A4";  -- C2H free-buf descs accepted by QDMA
+   constant ADDR_DBG_C2HST_C   : slv(15 downto 0) := x"00A8";  -- C2H payload beats accepted by QDMA
+   constant ADDR_DBG_TMDSC_C   : slv(15 downto 0) := x"00AC";  -- tm_dsc_sts strobes
+   constant ADDR_DBG_STATUS_C  : slv(15 downto 0) := x"00B0";  -- live status bits (see comb)
 
    -- dmaAddr[] table region: 0x4000 .. 0x7FFC (4096 x 32-bit). The driver
    -- writes a 32-bit host handle per index; we assemble the 64-bit address
@@ -194,6 +218,16 @@ architecture rtl of AxisG2RegShim is
       addrWrEn    : sl;
       addrWrIdx   : slv(AXISG2_INDEX_BITS_C-1 downto 0);
       addrWrData  : slv(31 downto 0);
+      -- debug observability counters (free-running; cleared only by reset)
+      dbgWrFifoA  : slv(31 downto 0);
+      dbgRxFree   : slv(31 downto 0);
+      dbgTxSub    : slv(31 downto 0);
+      dbgForceInt : slv(31 downto 0);
+      dbgIntRise  : slv(31 downto 0);
+      dbgC2hByp   : slv(31 downto 0);
+      dbgC2hSt    : slv(31 downto 0);
+      dbgTmDsc    : slv(31 downto 0);
+      dbgTmPrev   : sl;
       -- AXI-Lite
       axilReadSlave  : AxiLiteReadSlaveType;
       axilWriteSlave : AxiLiteWriteSlaveType;
@@ -225,6 +259,15 @@ architecture rtl of AxisG2RegShim is
       addrWrEn    => '0',
       addrWrIdx   => (others => '0'),
       addrWrData  => (others => '0'),
+      dbgWrFifoA  => (others => '0'),
+      dbgRxFree   => (others => '0'),
+      dbgTxSub    => (others => '0'),
+      dbgForceInt => (others => '0'),
+      dbgIntRise  => (others => '0'),
+      dbgC2hByp   => (others => '0'),
+      dbgC2hSt    => (others => '0'),
+      dbgTmDsc    => (others => '0'),
+      dbgTmPrev   => '0',
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
 
@@ -263,8 +306,10 @@ begin
 
    addrRdData <= ramRdData;
 
-   comb : process (axilReadMaster, axilWriteMaster, hwRdIndex, hwWrIndex,
-                   r, rstL, rxFreeReady, txSubReady, wrReqMissed) is
+   comb : process (axilReadMaster, axilWriteMaster, dbgC2hBypReady,
+                   dbgC2hBypValid, dbgC2hStReady, dbgC2hStValid, dbgCtxtDone,
+                   dbgTmDscValid, hwRdIndex, hwWrIndex, r, rstL, rxFreeReady,
+                   txSubReady, wrReqMissed) is
       variable v         : RegType;
       variable axilEp    : AxiLiteEndpointType;
       variable wrFifoA   : sl;
@@ -306,6 +351,28 @@ begin
       axiSlaveRegisterR(axilEp, ADDR_HW_WR_IDX_C,  0, hwWrIndex);
       axiSlaveRegisterR(axilEp, ADDR_HW_RD_IDX_C,  0, hwRdIndex);
       axiSlaveRegisterR(axilEp, ADDR_WR_REQ_MISS_C,0, wrReqMissed);
+
+      -- Debug/observability read-only registers (QDMA bring-up; see counters)
+      axiSlaveRegisterR(axilEp, ADDR_DBG_WRFIFOA_C, 0, r.dbgWrFifoA);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_RXFREE_C,  0, r.dbgRxFree);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_TXSUB_C,   0, r.dbgTxSub);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_FORCEINT_C,0, r.dbgForceInt);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_INTRISE_C, 0, r.dbgIntRise);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_C2HBYP_C,  0, r.dbgC2hByp);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_C2HST_C,   0, r.dbgC2hSt);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_TMDSC_C,   0, r.dbgTmDsc);
+      -- Live status bits at ADDR_DBG_STATUS_C:
+      --   [0]=interrupt level  [1]=intEnable  [2]=ctxtDone
+      --   [3]=c2hBypValid [4]=c2hBypReady [5]=c2hStValid [6]=c2hStReady
+      --   [7]=tmDscValid
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 0, r.interrupt);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 1, r.intEnable);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 2, dbgCtxtDone);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 3, dbgC2hBypValid);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 4, dbgC2hBypReady);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 5, dbgC2hStValid);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 6, dbgC2hStReady);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 7, dbgTmDscValid);
 
       -- Interrupt acknowledge + enable (0x4C): driver writes 0x30000 +
       -- handleCount, i.e. intAckCount[15:0]=handleCount, bit16=intReqEn (ack),
@@ -416,6 +483,44 @@ begin
          v.interrupt := '1';
       else
          v.interrupt := '0';
+      end if;
+
+      --------------------------------------------------------------------
+      -- Debug observability counters (free-running; cleared only by reset).
+      -- These localize the C2H bring-up stall from the host:
+      --   dbgWrFifoA : driver posted RX buffers (writeFifoA writes)
+      --   dbgRxFree  : rxFree submissions the adapter consumed
+      --   dbgTxSub   : txSub submissions the adapter consumed
+      --   dbgForceInt: driver forceInt writes (interrupt requests)
+      --   dbgIntRise : shim interrupt (-> CpmManager/MSI-X) rising edges
+      --   dbgC2hByp  : C2H free-buffer descriptors QDMA accepted (valid&ready)
+      --   dbgC2hSt   : C2H payload beats QDMA accepted (tvalid&tready)
+      --   dbgTmDsc   : tm_dsc_sts strobes (queue alive)
+      --------------------------------------------------------------------
+      if (wrWrFifoA = '1') then
+         v.dbgWrFifoA := r.dbgWrFifoA + 1;
+      end if;
+      if (r.rxFree.valid = '1' and rxFreeReady = '1') then
+         v.dbgRxFree := r.dbgRxFree + 1;
+      end if;
+      if (r.txSub.valid = '1' and txSubReady = '1') then
+         v.dbgTxSub := r.dbgTxSub + 1;
+      end if;
+      if (v.forceInt = '1') then
+         v.dbgForceInt := r.dbgForceInt + 1;
+      end if;
+      if (v.interrupt = '1' and r.interrupt = '0') then
+         v.dbgIntRise := r.dbgIntRise + 1;
+      end if;
+      if (dbgC2hBypValid = '1' and dbgC2hBypReady = '1') then
+         v.dbgC2hByp := r.dbgC2hByp + 1;
+      end if;
+      if (dbgC2hStValid = '1' and dbgC2hStReady = '1') then
+         v.dbgC2hSt := r.dbgC2hSt + 1;
+      end if;
+      v.dbgTmPrev := dbgTmDscValid;
+      if (dbgTmDscValid = '1' and r.dbgTmPrev = '0') then
+         v.dbgTmDsc := r.dbgTmDsc + 1;
       end if;
 
       -- Reset

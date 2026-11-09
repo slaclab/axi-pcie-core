@@ -514,6 +514,7 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
 
    -- Shim interrupt -> MSI
    signal shimInterrupt : sl;
+   signal ctxtDone      : sl;         -- QdmaCtxtInit done (exposed for debug)
 
    -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR over S_AXI_LPD to
    -- raise the PCIe MSI (XilinxAlveoV80CpmManager). This is the proven IRQ path
@@ -616,7 +617,7 @@ begin
          clk        => clk,
          rstL       => rstL,
          start      => ctxtStart,
-         ctxtDone   => open,
+         ctxtDone   => ctxtDone,
          mgmtMaster => mgmtMaster,
          mgmtSlave  => mgmtSlave);
 
@@ -721,7 +722,14 @@ begin
          acknowledge     => open,
          forceInt        => open,
          irqHoldOff      => open,
-         interrupt       => shimInterrupt);
+         interrupt       => shimInterrupt,
+         -- Debug observability (host-readable counters @ BAR0 0x90..0xB0)
+         dbgCtxtDone     => ctxtDone,
+         dbgC2hBypValid  => dma1_c2h_byp_in_st_csh_valid,
+         dbgC2hBypReady  => dma1_c2h_byp_in_st_csh_ready,
+         dbgC2hStValid   => dma1_s_axis_c2h_tvalid,
+         dbgC2hStReady   => dma1_s_axis_c2h_tready,
+         dbgTmDscValid   => dma1_tm_dsc_sts_valid);
 
    ----------------------------------------------------------------------------
    -- QDMA descriptor-bypass datapath adapter

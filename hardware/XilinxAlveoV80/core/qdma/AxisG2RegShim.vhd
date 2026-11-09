@@ -134,7 +134,8 @@ entity AxisG2RegShim is
       dbgC2hBypReady  : in  sl := '0';   -- C2H free-buffer descriptor ready (<-QDMA)
       dbgC2hStValid   : in  sl := '0';   -- C2H payload tvalid (user->QDMA)
       dbgC2hStReady   : in  sl := '0';   -- C2H payload tready (QDMA->user)
-      dbgTmDscValid   : in  sl := '0');  -- tm_dsc_sts valid (queue status strobe)
+      dbgTmDscValid   : in  sl := '0';   -- tm_dsc_sts valid (queue status strobe)
+      dbgCtxtState    : in  slv(31 downto 0) := (others => '0'));  -- QdmaCtxtInit FSM status
 end AxisG2RegShim;
 
 architecture rtl of AxisG2RegShim is
@@ -182,6 +183,7 @@ architecture rtl of AxisG2RegShim is
    constant ADDR_DBG_C2HST_C   : slv(15 downto 0) := x"00A8";  -- C2H payload beats accepted by QDMA
    constant ADDR_DBG_TMDSC_C   : slv(15 downto 0) := x"00AC";  -- tm_dsc_sts strobes
    constant ADDR_DBG_STATUS_C  : slv(15 downto 0) := x"00B0";  -- live status bits (see comb)
+   constant ADDR_DBG_CTXT_C    : slv(15 downto 0) := x"00B4";  -- QdmaCtxtInit FSM status word
 
    -- dmaAddr[] table region: 0x4000 .. 0x7FFC (4096 x 32-bit). The driver
    -- writes a 32-bit host handle per index; we assemble the 64-bit address
@@ -308,8 +310,8 @@ begin
 
    comb : process (axilReadMaster, axilWriteMaster, dbgC2hBypReady,
                    dbgC2hBypValid, dbgC2hStReady, dbgC2hStValid, dbgCtxtDone,
-                   dbgTmDscValid, hwRdIndex, hwWrIndex, r, rstL, rxFreeReady,
-                   txSubReady, wrReqMissed) is
+                   dbgCtxtState, dbgTmDscValid, hwRdIndex, hwWrIndex, r, rstL,
+                   rxFreeReady, txSubReady, wrReqMissed) is
       variable v         : RegType;
       variable axilEp    : AxiLiteEndpointType;
       variable wrFifoA   : sl;
@@ -373,6 +375,10 @@ begin
       axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 5, dbgC2hStValid);
       axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 6, dbgC2hStReady);
       axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 7, dbgTmDscValid);
+      -- QdmaCtxtInit FSM status word (see QdmaCtxtInit dbgStatus packing):
+      --   [6:0]=curOpIndex [10:8]=curState [14:12]=hangState
+      --   [22:16]=hangOpIndex [23]=sawMgmtAck [31:24]=watchdogAbortCount
+      axiSlaveRegisterR(axilEp, ADDR_DBG_CTXT_C, 0, dbgCtxtState);
 
       -- Interrupt acknowledge + enable (0x4C): driver writes 0x30000 +
       -- handleCount, i.e. intAckCount[15:0]=handleCount, bit16=intReqEn (ack),

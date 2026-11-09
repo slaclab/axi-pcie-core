@@ -515,6 +515,8 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    -- Shim interrupt -> MSI
    signal shimInterrupt : sl;
    signal ctxtDone      : sl;         -- QdmaCtxtInit done (exposed for debug)
+   signal ctxtStatus    : slv(31 downto 0);  -- QdmaCtxtInit FSM status (debug)
+   signal ctxtPfchTag   : slv(6 downto 0);   -- reserved C2H simple-bypass prefetch tag
 
    -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR over S_AXI_LPD to
    -- raise the PCIe MSI (XilinxAlveoV80CpmManager). This is the proven IRQ path
@@ -616,10 +618,13 @@ begin
       port map (
          clk        => clk,
          rstL       => rstL,
-         start      => ctxtStart,
-         ctxtDone   => ctxtDone,
-         mgmtMaster => mgmtMaster,
-         mgmtSlave  => mgmtSlave);
+         start        => ctxtStart,
+         ctxtDone     => ctxtDone,
+         dbgStatus    => ctxtStatus,
+         pfchTag      => ctxtPfchTag,
+         pfchTagValid => open,
+         mgmtMaster   => mgmtMaster,
+         mgmtSlave    => mgmtSlave);
 
    -- mgmt record <-> flat dma1_mgmt pins
    dma1_mgmt_req_adr <= mgmtMaster.reqAdr;
@@ -729,7 +734,8 @@ begin
          dbgC2hBypReady  => dma1_c2h_byp_in_st_csh_ready,
          dbgC2hStValid   => dma1_s_axis_c2h_tvalid,
          dbgC2hStReady   => dma1_s_axis_c2h_tready,
-         dbgTmDscValid   => dma1_tm_dsc_sts_valid);
+         dbgTmDscValid   => dma1_tm_dsc_sts_valid,
+         dbgCtxtState    => ctxtStatus);
 
    ----------------------------------------------------------------------------
    -- QDMA descriptor-bypass datapath adapter
@@ -741,6 +747,7 @@ begin
       port map (
          clk          => clk,
          rstL         => rstL,
+         pfchTag      => ctxtPfchTag,
          txSub        => txSub,
          txSubReady   => txSubReady,
          rxFree       => rxFree,

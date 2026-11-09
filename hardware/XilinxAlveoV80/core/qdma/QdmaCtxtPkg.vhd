@@ -70,6 +70,12 @@ package QdmaCtxtPkg is
    constant QDMA_H2C_ENGINE_EN_C : slv(31 downto 0) := x"00001204";  -- H2C engine command (val 0x1)
    constant QDMA_C2H_ENGINE_EN_C : slv(31 downto 0) := x"00001004";  -- C2H engine command (val 0x1)
 
+   -- C2H simple-bypass prefetch-tag reservation (PG347 v3.4 "Simple Bypass
+   -- Mode"): write the qid to BYP_QID, then read the tag back from BYP_TAG.
+   -- Mandatory before any C2H traffic on a simple-bypass queue.
+   constant QDMA_C2H_PFCH_BYP_QID_C : slv(31 downto 0) := x"00001408";
+   constant QDMA_C2H_PFCH_BYP_TAG_C : slv(31 downto 0) := x"0000140C";
+
    -- Indirect command opcodes (QDMA_IND_CTXT_CMD bits [6:5]).
    constant CTXT_OP_CLR_C : slv(1 downto 0) := "00";
    constant CTXT_OP_WR_C  : slv(1 downto 0) := "01";
@@ -233,7 +239,7 @@ package QdmaCtxtPkg is
       trigMode   : slv(2 downto 0);  -- [4:2]
       enInt      : sl;               -- [1] enable completion interrupts
       enStatDesc : sl;               -- [0] enable completion status writes
-      valid      : sl;               -- [120] context valid
+      valid      : sl;               -- [124] context valid (PG347 v3.4 Table 130)
    end record QdmaCmptCtxtType;
 
    constant QDMA_CMPT_CTXT_INIT_C : QdmaCmptCtxtType := (
@@ -318,7 +324,7 @@ package body QdmaCtxtPkg is
       v(31 downto 28)   := ctxt.qsizeIdx;
       v(27)             := ctxt.color;
       v(24 downto 21)   := ctxt.timerIdx;
-      v(120)            := ctxt.valid;
+      v(124)            := ctxt.valid;  -- PG347 v3.4 Table 130: valid is [124], NOT [120]
       v(12 downto 5)    := ctxt.fncId;
       v(4 downto 2)     := ctxt.trigMode;
       v(1)              := ctxt.enInt;

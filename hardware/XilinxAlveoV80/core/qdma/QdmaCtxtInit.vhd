@@ -76,6 +76,14 @@ entity QdmaCtxtInit is
       start           : in  sl;
       -- Status
       ctxtDone        : out sl;         -- all contexts programmed, engines enabled
+      -- Debug: packed FSM status word (host-readable via AxisG2RegShim 0xB4).
+      -- [6:0]=curOpIndex [11:8]=curState [15:12]=hangState [22:16]=hangOpIndex
+      -- [23]=sawMgmtAck [31:24]=watchdogAbortCount. Same clock as the shim.
+      dbgStatus       : out slv(31 downto 0) := (others => '0');
+      -- Reserved C2H simple-bypass prefetch tag (PG347 0x1408/0x140C handshake).
+      -- Drive this on every C2H bypass-in descriptor; valid once ctxtDone='1'.
+      pfchTag         : out slv(6 downto 0) := (others => '0');
+      pfchTagValid    : out sl := '0';
       -- QDMA Management interface (drives the CIPS dma1_mgmt req/cpl handshake)
       mgmtMaster      : out QdmaMgmtReqMasterType;
       mgmtSlave       : in  QdmaMgmtReqSlaveType);
@@ -267,7 +275,29 @@ architecture rtl of QdmaCtxtInit is
       POLL_REQ_S,
       POLL_WAIT_S,
       NEXT_S,
-      DONE_S);
+      DONE_S,
+      TAG_WR_REQ_S,
+      TAG_WR_WAIT_S,
+      TAG_RD_REQ_S,
+      TAG_RD_WAIT_S);
+
+   -- 4-bit encoding of StateType for the debug status word.
+   function stateCode (s : StateType) return slv is
+   begin
+      case s is
+         when IDLE_S        => return "0000";
+         when WRITE_REQ_S   => return "0001";
+         when WRITE_WAIT_S  => return "0010";
+         when POLL_REQ_S    => return "0011";
+         when POLL_WAIT_S   => return "0100";
+         when NEXT_S        => return "0101";
+         when DONE_S        => return "0110";
+         when TAG_WR_REQ_S  => return "0111";
+         when TAG_WR_WAIT_S => return "1000";
+         when TAG_RD_REQ_S  => return "1001";
+         when TAG_RD_WAIT_S => return "1010";
+      end case;
+   end function stateCode;
 
    type RegType is record
       req      : QdmaMgmtReqType;
@@ -276,6 +306,14 @@ architecture rtl of QdmaCtxtInit is
       timer    : slv(31 downto 0);
       startDly : sl;
       state    : StateType;
+      -- debug/observability
+      hangIndex : natural range 0 to PROG_LEN_C;  -- opIndex at last watchdog abort
+      hangState : slv(3 downto 0);                -- state at last watchdog abort
+      wdogCnt   : slv(7 downto 0);                -- watchdog aborts (saturating)
+      sawAck    : sl;                             -- mgmt returned >=1 ack.done
+      -- reserved C2H simple-bypass prefetch tag (PG347 0x1408/0x140C)
+      pfchTag      : slv(6 downto 0);
+      pfchTagValid : sl;
    end record RegType;
 
    constant REG_INIT_C : RegType := (
@@ -284,7 +322,13 @@ architecture rtl of QdmaCtxtInit is
       opIndex  => 0,
       timer    => (others => '0'),
       startDly => '0',
-      state    => IDLE_S);
+      state    => IDLE_S,
+      hangIndex => 0,
+      hangState => (others => '0'),
+      wdogCnt   => (others => '0'),
+      sawAck    => '0',
+      pfchTag      => (others => '0'),
+      pfchTagValid => '0');
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -305,11 +349,17 @@ begin
          mgmtSlave  => mgmtSlave);
 
    comb : process (ack, r, rstL, start) is
-      variable v : RegType;
+      variable v    : RegType;
+      variable vDbg : slv(31 downto 0);
    begin
       v := r;
 
       v.startDly := start;
+
+      -- mgmt liveness: remember if the dma1_mgmt handshake ever completed.
+      if (ack.done = '1') then
+         v.sawAck := '1';
+      end if;
 
       case r.state is
          ----------------------------------------------------------------------
@@ -361,10 +411,44 @@ begin
          ----------------------------------------------------------------------
          when NEXT_S =>
             if (r.opIndex = PROG_LEN_C-1) then
-               v.state := DONE_S;
+               v.state := TAG_WR_REQ_S;   -- contexts done -> reserve prefetch tag
             else
                v.opIndex := r.opIndex + 1;
                v.state   := WRITE_REQ_S;
+            end if;
+         ----------------------------------------------------------------------
+         -- Simple-bypass prefetch-tag reservation (PG347 v3.4 "Simple Bypass
+         -- Mode"): write the qid to MDMA_C2H_PFCH_BYP_QID (0x1408), then read
+         -- MDMA_C2H_PFCH_BYP_TAG (0x140C). The adapter must drive that tag on
+         -- every C2H bypass-in descriptor or the prefetch engine cannot pair
+         -- descriptors with data and C2H never delivers.
+         when TAG_WR_REQ_S =>
+            v.req.request                 := '1';
+            v.req.rnw                     := '0';
+            v.req.address                 := QDMA_C2H_PFCH_BYP_QID_C;
+            v.req.wrData                  := (others => '0');
+            v.req.wrData(C2H_QID_G'range) := C2H_QID_G;
+            v.req.func                    := FUNC_ID_G;
+            v.timer                       := (others => '0');
+            v.state                       := TAG_WR_WAIT_S;
+         when TAG_WR_WAIT_S =>
+            if (ack.done = '1') then
+               v.req.request := '0';
+               v.state       := TAG_RD_REQ_S;
+            end if;
+         when TAG_RD_REQ_S =>
+            v.req.request := '1';
+            v.req.rnw     := '1';
+            v.req.address := QDMA_C2H_PFCH_BYP_TAG_C;
+            v.req.func    := FUNC_ID_G;
+            v.timer       := (others => '0');
+            v.state       := TAG_RD_WAIT_S;
+         when TAG_RD_WAIT_S =>
+            if (ack.done = '1') then
+               v.req.request  := '0';
+               v.pfchTag      := ack.rdData(6 downto 0);
+               v.pfchTagValid := '1';
+               v.state        := DONE_S;
             end if;
          ----------------------------------------------------------------------
          when DONE_S =>
@@ -374,12 +458,22 @@ begin
       end case;
 
       -- Watchdog: if any wait state hangs, abort back to IDLE (do not latch
-      -- done) so a retrigger can retry.
-      if (r.state = WRITE_WAIT_S or r.state = POLL_WAIT_S) then
+      -- done). Latch where/how it hung for host-side diagnosis, then re-arm the
+      -- rising-edge detect (start is held high) so the program AUTO-RETRIES.
+      -- This both self-heals a transient mgmt hang and makes the abort count a
+      -- usable signal. Auto-retry stops once ctxtDone latches (IDLE guard).
+      if (r.state = WRITE_WAIT_S or r.state = POLL_WAIT_S or
+          r.state = TAG_WR_WAIT_S or r.state = TAG_RD_WAIT_S) then
          v.timer := r.timer + 1;
          if (r.timer = toSlv(WATCHDOG_G, 32)) then
             v.req.request := '0';
             v.state       := IDLE_S;
+            v.hangIndex   := r.opIndex;
+            v.hangState   := stateCode(r.state);
+            if (r.wdogCnt /= x"FF") then
+               v.wdogCnt := r.wdogCnt + 1;
+            end if;
+            v.startDly    := '0';   -- re-arm so IDLE sees a fresh rising edge
          end if;
       end if;
 
@@ -387,8 +481,20 @@ begin
          v := REG_INIT_C;
       end if;
 
-      rin      <= v;
-      ctxtDone <= r.ctxtDone;
+      -- Pack the debug status word (registered values -> stable to read).
+      vDbg               := (others => '0');
+      vDbg(6 downto 0)   := toSlv(r.opIndex, 7);
+      vDbg(11 downto 8)  := stateCode(r.state);
+      vDbg(15 downto 12) := r.hangState;
+      vDbg(22 downto 16) := toSlv(r.hangIndex, 7);
+      vDbg(23)           := r.sawAck;
+      vDbg(31 downto 24) := r.wdogCnt;
+
+      rin          <= v;
+      ctxtDone     <= r.ctxtDone;
+      dbgStatus    <= vDbg;
+      pfchTag      <= r.pfchTag;
+      pfchTagValid <= r.pfchTagValid;
 
    end process comb;
 

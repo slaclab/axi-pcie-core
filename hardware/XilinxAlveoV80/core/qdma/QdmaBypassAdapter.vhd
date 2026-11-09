@@ -74,6 +74,9 @@ entity QdmaBypassAdapter is
       -- Clock and Reset (QDMA dma1_intrfc_clk domain)
       clk                   : in  sl;
       rstL                  : in  sl;   -- active LOW reset
+      -- Reserved C2H simple-bypass prefetch tag (from QdmaCtxtInit's 0x1408/
+      -- 0x140C handshake); driven on every C2H bypass-in descriptor (PG347).
+      pfchTag               : in  slv(6 downto 0) := (others => '0');
       -------------------------------------------------------------------------
       -- Descriptor submissions from AxisG2RegShim
       -------------------------------------------------------------------------
@@ -202,7 +205,7 @@ begin
 
    comb : process (addrRdData, c2hBypReady, h2cBypReady, r, rstL, rxFree,
                    tmDscStsDir, tmDscStsIrqArm, tmDscStsQid, tmDscStsValid,
-                   txSub) is
+                   txSub, pfchTag) is
       variable v : RegType;
    begin
       v := r;
@@ -302,7 +305,7 @@ begin
       c2hBypAddr    <= r.c2hAddr;
       c2hBypQid     <= C2H_QID_G;
       c2hBypFunc    <= FUNC_ID_G;
-      c2hBypPfchTag <= PFCH_TAG_G;
+      c2hBypPfchTag <= pfchTag;  -- reserved via QdmaCtxtInit (PG347 simple bypass); supersedes PFCH_TAG_G
       c2hBypPortId  <= PORT_ID_G;
       c2hBypError   <= '0';
       c2hBypValid   <= r.c2hValid;

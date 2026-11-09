@@ -831,13 +831,15 @@ begin
    -- PL MSI generator: on each shim interrupt, CpmManager writes int_set to the
    -- CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) over S_AXI_LPD, raising the PCIe MSI.
    -- This is the datadev-required interrupt (driver pushes descriptors only
-   -- from its IRQ handler). SKIP_BDF_G=true: QDMA addressing is descriptor-based
-   -- so the bridge-mode BDF table is skipped; this is a pure MSI generator.
+   -- from its IRQ handler). SKIP_BDF_G=false: QDMA addressing is descriptor-based
+   -- so the bridge-mode BDF table looks like it shoudl be skipped. By direct
+   -- testing, though, this does not seem to be the case as they are needed
+   -- for interrupt generation.
    -------------------------------------------------------------------------
    U_CpmManager : entity axi_pcie_core.XilinxAlveoV80CpmManager
       generic map (
          TPD_G      => TPD_G,
-         SKIP_BDF_G => true)
+         SKIP_BDF_G => false)
       port map (
          clk             => clk,
          rstL            => rstL,

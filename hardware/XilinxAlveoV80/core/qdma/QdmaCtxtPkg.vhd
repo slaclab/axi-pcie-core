@@ -13,12 +13,12 @@
 --
 -- Indirect context programming (PG347 v3.4 "Context Programming", worked
 -- example Fig 59/60 and the ST flow):
---   1) Program QDMA_IND_CTXT_MASK_0..7 (0x814..0x820) = all 1s (write-enable
+--   1) Program QDMA_IND_CTXT_MASK_0..7 (0x824..0x840) = all 1s (write-enable
 --      every bit).
---   2) Program the context payload into QDMA_IND_CTXT_DATA_0..7 (0x804..0x810)
+--   2) Program the context payload into QDMA_IND_CTXT_DATA_0..7 (0x804..0x820)
 --      -- 8 x 32-bit = 256 bits, matching the CPM5 context width (Tables 120,
 --      128, 130; note CPM5 contexts are 256-bit, WIDER than CPM4's 128-bit).
---   3) Write QDMA_IND_CTXT_CMD (0x824): Qid[17:7], Op[6:5], Sel[4:1], busy[0].
+--   3) Write QDMA_IND_CTXT_CMD (0x844): Qid[17:7], Op[6:5], Sel[4:1], busy[0].
 --      Op: 0=CLR 1=WR 2=RD 3=INV.  Sel: 0=SW_C2H 1=SW_H2C 2=HW_C2H 3=HW_H2C
 --      4=CR_C2H 5=CR_H2C 6=CMPT/WRB 7=PFCH 8=INT_COAL.
 --   4) Poll QDMA_IND_CTXT_CMD[0] (busy) clear between operations.
@@ -54,13 +54,16 @@ package QdmaCtxtPkg is
 
    ----------------------------------------------------------------------------
    -- QDMA indirect-context register offsets (relative to the QDMA config BAR
-   -- window; PG347 v3.4 "Context Programming"). There are 8 x 32-bit DATA
-   -- words (0x804..0x810), 8 x 32-bit MASK words (0x814..0x820), then the
-   -- command register (0x824). DATA_n = 0x804 + 4*n, MASK_n = 0x814 + 4*n.
+   -- window; PG347 v3.4 CPM5, p248). There are 8 x 32-bit DATA words
+   -- (0x804..0x820), 8 x 32-bit MASK words (0x824..0x840), then the command
+   -- register (0x844). DATA_n = 0x804 + 4*n, MASK_n = 0x824 + 4*n.
    ----------------------------------------------------------------------------
-   constant QDMA_IND_CTXT_DATA_BASE_C : slv(31 downto 0) := x"00000804";  -- DATA_0
-   constant QDMA_IND_CTXT_MASK_BASE_C : slv(31 downto 0) := x"00000814";  -- MASK_0
-   constant QDMA_IND_CTXT_CMD_ADDR_C  : slv(31 downto 0) := x"00000824";
+   -- PG347 v3.4 CPM5 (p248): DATA_0..7 = 0x804..0x820, MASK_0..7 = 0x824..0x840,
+   -- CMD = 0x844. (The earlier MASK=0x814/CMD=0x824 overlapped DATA and each
+   -- other -> MASK_4 collided with the old CMD addr and wedged the init poll.)
+   constant QDMA_IND_CTXT_DATA_BASE_C : slv(31 downto 0) := x"00000804";  -- DATA_0 (0x804..0x820)
+   constant QDMA_IND_CTXT_MASK_BASE_C : slv(31 downto 0) := x"00000824";  -- MASK_0 (0x824..0x840)
+   constant QDMA_IND_CTXT_CMD_ADDR_C  : slv(31 downto 0) := x"00000844";  -- CMD
    constant QDMA_IND_CTXT_NUM_WORDS_C : positive         := 8;
 
    -- Global QDMA registers used during queue setup (PG347 worked example).

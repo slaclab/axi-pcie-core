@@ -231,6 +231,7 @@ package QdmaCtxtPkg is
    type QdmaCmptCtxtType is record
       portId     : slv(2 downto 0);  -- [182:180]
       dirC2h     : sl;               -- [146] 1=C2H
+      ovfChkDis  : sl;               -- [130] completion-ring overflow check disable
       intAggr    : sl;               -- [143] interrupt aggregation
       vec        : slv(10 downto 0); -- [142:132] interrupt vector
       baddr      : slv(57 downto 0); -- [89:32] completion ring base [63:6]
@@ -248,6 +249,7 @@ package QdmaCtxtPkg is
    constant QDMA_CMPT_CTXT_INIT_C : QdmaCmptCtxtType := (
       portId     => (others => '0'),
       dirC2h     => '1',
+      ovfChkDis  => '1',             -- datadev never writes CIDX -> free-run the ring
       intAggr    => '0',
       vec        => (others => '0'),
       baddr      => (others => '0'),
@@ -318,6 +320,7 @@ package body QdmaCtxtPkg is
       v := (others => '0');
       v(182 downto 180) := ctxt.portId;
       v(146)            := ctxt.dirC2h;
+      v(130)            := ctxt.ovfChkDis;  -- PG347 Table 130: overflow check disable
       v(143)            := ctxt.intAggr;
       v(142 downto 132) := ctxt.vec;
       v(123 downto 108) := (others => '0');  -- cidx (HW, init 0)

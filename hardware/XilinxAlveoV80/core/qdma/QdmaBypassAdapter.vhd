@@ -77,6 +77,10 @@ entity QdmaBypassAdapter is
       -- Reserved C2H simple-bypass prefetch tag (from QdmaCtxtInit's 0x1408/
       -- 0x140C handshake); driven on every C2H bypass-in descriptor (PG347).
       pfchTag               : in  slv(6 downto 0) := (others => '0');
+      -- C2H packet chunking controls (driver-written shim regs): maxSize bounds a
+      -- buffer; contEn allows a frame to span buffers (sets the `continue` bit).
+      maxSize               : in  slv(31 downto 0) := (others => '0');
+      contEn                : in  sl := '0';
       -------------------------------------------------------------------------
       -- Descriptor submissions from AxisG2RegShim
       -------------------------------------------------------------------------
@@ -150,6 +154,10 @@ entity QdmaBypassAdapter is
       cmptData              : out slv(511 downto 0);
       cmptSize              : out slv(1 downto 0);
       cmptQid               : out slv(12 downto 0);
+      cmptType              : out slv(1 downto 0);   -- 2'b11 = HAS_PLD (regular C2H)
+      cmptWaitPldPktId      : out slv(15 downto 0);  -- payload pkt id this CMPT waits on
+      cmptColIdx            : out slv(2 downto 0);   -- 7 = no color insert (verbatim)
+      cmptErrIdx            : out slv(2 downto 0);   -- 7 = no error insert (verbatim)
       cmptValid             : out sl;
       cmptReady             : in  sl;
       -------------------------------------------------------------------------
@@ -178,6 +186,7 @@ architecture rtl of QdmaBypassAdapter is
       rxFreeReady: sl;
       c2hAddr    : slv(63 downto 0);
       c2hValid   : sl;
+      rxBuffId   : slv(AXISG2_INDEX_BITS_C-1 downto 0);  -- buffId for the pushed desc
       -- shared dmaAddr lookup arbitration (TX has priority)
       addrIndex  : slv(AXISG2_INDEX_BITS_C-1 downto 0);
       -- irq_arm observation latch for H2C queue
@@ -195,11 +204,81 @@ architecture rtl of QdmaBypassAdapter is
       rxFreeReady=> '0',
       c2hAddr    => (others => '0'),
       c2hValid   => '0',
+      rxBuffId   => (others => '0'),
       addrIndex  => (others => '0'),
       h2cArmed   => '0');
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
+
+   ---------------------------------------------------------------------------
+   -- C2H completion datapath (R2): re-frame the SSI stream into maxSize-bounded
+   -- chunks, store-and-forward each chunk so ctrl_len is valid at SOP, then emit
+   -- a HAS_PLD CMPT whose user data IS datadev's 16B AxisG2 ring entry.
+   ---------------------------------------------------------------------------
+   constant DATA_BYTES_C : positive := DMA_AXIS_CONFIG_G.TDATA_BYTES_C;  -- 64
+   constant INFO_WIDTH_C : positive := 16 + 8 + 8 + 8 + 1 + 3;  -- len,first,last,dest,cont,result
+
+   type EgStateType is (EG_IDLE_S, EG_DRIVE_S, EG_CMPT_S);
+
+   type C2hRegType is record
+      -- ingress re-framer accumulators
+      byteCnt   : slv(15 downto 0);   -- bytes in the current chunk
+      firstUser : slv(7 downto 0);    -- captured on the chunk's first beat
+      inChunk   : sl;                 -- a chunk is in progress
+      -- egress
+      egState   : EgStateType;
+      egLen     : slv(15 downto 0);
+      egFirst   : slv(7 downto 0);
+      egLast    : slv(7 downto 0);
+      egDest    : slv(7 downto 0);
+      egCont    : sl;
+      egResult  : slv(2 downto 0);
+      egBeat    : slv(15 downto 0);   -- beats sent in the current chunk
+      egNBeats  : slv(15 downto 0);
+      pldPktId  : slv(15 downto 0);   -- QDMA data-packet id (from 1)
+   end record C2hRegType;
+
+   constant C2H_REG_INIT_C : C2hRegType := (
+      byteCnt   => (others => '0'),
+      firstUser => (others => '0'),
+      inChunk   => '0',
+      egState   => EG_IDLE_S,
+      egLen     => (others => '0'),
+      egFirst   => (others => '0'),
+      egLast    => (others => '0'),
+      egDest    => (others => '0'),
+      egCont    => '0',
+      egResult  => (others => '0'),
+      egBeat    => (others => '0'),
+      egNBeats  => (others => '0'),
+      pldPktId  => x"0001");
+
+   signal c   : C2hRegType := C2H_REG_INIT_C;
+   signal cin : C2hRegType;
+
+   -- Data FIFO (holds chunk payload beats; tData only, contiguous SSI assumed)
+   signal datFifoDin   : slv(8*DATA_BYTES_C-1 downto 0);
+   signal datFifoWr    : sl;
+   signal datFifoFull  : sl;
+   signal datFifoDout  : slv(8*DATA_BYTES_C-1 downto 0);
+   signal datFifoRd    : sl;
+   signal datFifoValid : sl;
+
+   -- Info FIFO (one entry per chunk: len/first/last/dest/continue/result)
+   signal infFifoDin   : slv(INFO_WIDTH_C-1 downto 0);
+   signal infFifoWr    : sl;
+   signal infFifoFull  : sl;
+   signal infFifoDout  : slv(INFO_WIDTH_C-1 downto 0);
+   signal infFifoRd    : sl;
+   signal infFifoValid : sl;
+
+   -- buffId FIFO (one entry per issued C2H free-buffer descriptor)
+   signal bufFifoWr    : sl;
+   signal bufFifoFull  : sl;
+   signal bufFifoDout  : slv(AXISG2_INDEX_BITS_C-1 downto 0);
+   signal bufFifoRd    : sl;
+   signal bufFifoValid : sl;
 
 begin
 
@@ -259,6 +338,7 @@ begin
             if (rxFree.valid = '1' and r.txState = IDLE_S and txSub.valid = '0') then
                -- Borrow the dmaAddr read port when TX is idle (TX has priority).
                v.addrIndex := rxFree.index;
+               v.rxBuffId  := rxFree.index;   -- remember buffId for the CMPT entry
                v.rxState   := LOOKUP_S;
             end if;
          when LOOKUP_S =>

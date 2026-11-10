@@ -137,20 +137,24 @@ architecture rtl of QdmaCtxtInit is
       bufSizeIdx => (others => '0'),
       bypass     => '1');              -- simple bypass (Table 129)
 
+   -- R2: the CMPT ring IS datadev's RX ring; QDMA writes the 16B AxisG2 entry
+   -- directly (col/err idx=7 at the interface -> entry = cmpt_tdata verbatim).
+   -- baddr is overlaid at runtime from the driver's wrBase (see comb/WRITE_REQ_S).
    constant CMPT_C : QdmaCmptCtxtType := (
       portId     => (others => '0'),
       dirC2h     => '1',
+      ovfChkDis  => '1',               -- datadev never writes CIDX -> free-run
       intAggr    => '0',
       vec        => MSIX_VEC_G,
-      baddr      => (others => '0'),
-      descSize   => "00",              -- 8B completion
+      baddr      => (others => '0'),   -- overlaid at runtime with wrBase[63:6]
+      descSize   => "01",              -- 16B completion (= AxisG2 entry size)
       qsizeIdx   => RING_SZ_VAL_G(3 downto 0),
       color      => '0',
       timerIdx   => (others => '0'),
       fncId      => FUNC_ID_G(7 downto 0),
-      trigMode   => "001",             -- Every
-      enInt      => '1',
-      enStatDesc => '1',
+      trigMode   => "000",             -- disabled: no interrupt/status moderation
+      enInt      => '0',               -- bring-up = polling; no native MSI-X
+      enStatDesc => '0',               -- no end-of-ring status write
       valid      => '1');
 
    constant SW_H2C_IMG_C : slv(255 downto 0) := toSlv256(SW_H2C_C);

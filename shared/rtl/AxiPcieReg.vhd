@@ -85,6 +85,12 @@ entity AxiPcieReg is
       gpuReadSlave        : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
       gpuWriteMaster      : out AxiLiteWriteMasterType;
       gpuWriteSlave       : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
+      -- Versal AXI-Lite LPD Interfaces [0x01000000:0xFFFFFFFF] (axiClk domain)
+      versalReadMaster    : out AxiLiteReadMasterType;
+      versalReadSlave     : in  AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
+      versalWriteMaster   : out AxiLiteWriteMasterType;
+      versalWriteSlave    : in  AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C;
+
       -- Application Force reset
       cardResetIn         : in  sl;
       cardResetOut        : out sl;
@@ -105,6 +111,14 @@ entity AxiPcieReg is
 end AxiPcieReg;
 
 architecture mapping of AxiPcieReg is
+
+   constant VERSAL_XBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(1 downto 0) := (
+      0 => (baseAddr     => x"0000_0000",   -- 0x0000_0000 - 0x00FF_FFFF (16 MB)
+            addrBits     => 24,
+            connectivity => x"FFFF"),
+      1 => (baseAddr     => x"8000_0000",   -- 0x8000_0000 - 0xFFFF_FFFF (2 GB), or e.g.
+            addrBits     => 31,             -- x"0100_0000"/24 for the next 16 MB
+            connectivity => x"FFFF"));
 
    constant DMA_INDEX_C      : natural := 0;
    constant PHY_INDEX_C      : natural := 1;
@@ -204,6 +218,11 @@ architecture mapping of AxiPcieReg is
 
    signal muxWriteMaster : AxiWriteMasterType;
    signal muxWriteSlave  : AxiWriteSlaveType;
+
+   signal convReadMaster  : AxiLiteReadMasterType;
+   signal convReadSlave   : AxiLiteReadSlaveType;
+   signal convWriteMaster : AxiLiteWriteMasterType;
+   signal convWriteSlave  : AxiLiteWriteSlaveType;
 
    signal axilReadMaster  : AxiLiteReadMasterType;
    signal axilReadSlave   : AxiLiteReadSlaveType;
@@ -338,7 +357,9 @@ begin
    end process;
 
    ----------------------------------------
-   -- Mask off upper address for 16 MB BAR0
+   -- Mask off upper address for 4 GB BAR0
+   -- masking of 16 MB is handled later
+   -- Versal needs 4 GB
    ----------------------------------------
    MASK_ADDR : process (regReadMaster, regWriteMaster) is
       variable tmpWr : AxiWriteMasterType;
@@ -347,8 +368,8 @@ begin
       tmpWr := regWriteMaster;
       tmpRd := regReadMaster;
 
-      tmpWr.awaddr(63 downto 24) := (others => '0');
-      tmpRd.araddr(63 downto 24) := (others => '0');
+      tmpWr.awaddr(63 downto 32) := (others => '0');
+      tmpRd.araddr(63 downto 32) := (others => '0');
 
       maskWriteMaster <= tmpWr;
       maskReadMaster  <= tmpRd;
@@ -389,10 +410,44 @@ begin
             axiReadSlave    => maskReadSlave,
             axiWriteMaster  => muxWriteMaster,
             axiWriteSlave   => muxWriteSlave,
-            axilReadMaster  => axilReadMaster,
-            axilReadSlave   => axilReadSlave,
-            axilWriteMaster => axilWriteMaster,
-            axilWriteSlave  => axilWriteSlave);
+            axilReadMaster  => convReadMaster,
+            axilReadSlave   => convReadSlave,
+            axilWriteMaster => convWriteMaster,
+            axilWriteSlave  => convWriteSlave);
+
+         NOT_VERSAL_AXI_LITE : if (XIL_DEVICE_G /= "VERSAL") generate
+            axilReadMaster  <= convReadMaster;
+            axilWriteMaster <= convWriteMaster;
+            convReadSlave   <= axilReadSlave;
+            convWriteSlave  <= axilWriteSlave;
+         end generate;
+         VERSAL_AXI_LITE : if (XIL_DEVICE_G = "VERSAL") generate
+            ---------------------------------------------------
+            -- Separate 16 MB BAR0 from higher Versal registers 
+            ---------------------------------------------------
+            U_VERSAL_XBAR : entity surf.AxiLiteCrossbar
+               generic map (
+                  TPD_G              => TPD_G,
+                  DEC_ERROR_RESP_G   => ite(ROGUE_SIM_EN_G, AXI_RESP_DECERR_C, AXI_RESP_OK_C),
+                  NUM_SLAVE_SLOTS_G  => 1,
+                  NUM_MASTER_SLOTS_G => 2,
+                  MASTERS_CONFIG_G   => VERSAL_XBAR_CONFIG_C)
+               port map (
+                  axiClk              => axiClk,
+                  axiClkRst           => axiRst,
+                  sAxiWriteMasters(0) => convWriteMaster,
+                  sAxiWriteSlaves(0)  => convWriteSlave,
+                  sAxiReadMasters(0)  => convReadMaster,
+                  sAxiReadSlaves(0)   => convReadSlave,
+                  mAxiWriteMasters(0) => axilWriteMaster,
+                  mAxiWriteMasters(1) => versalWriteMaster,
+                  mAxiWriteSlaves(0)  => axilWriteSlave,
+                  mAxiWriteSlaves(1)  => versalWriteSlave,
+                  mAxiReadMasters(0)  => axilReadMaster,
+                  mAxiReadMasters(1)  => versalReadMaster,
+                  mAxiReadSlaves(0)   => axilReadSlave,
+                  mAxiReadSlaves(1)   => versalReadSlave);
+         end generate;
 
    end generate;
 

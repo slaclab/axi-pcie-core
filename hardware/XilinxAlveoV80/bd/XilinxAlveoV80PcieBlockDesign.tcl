@@ -317,8 +317,8 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_5 {0x000000817FFFFFFFF} \
       CPM_PCIE1_PF0_BAR0_64BIT {1} \
       CPM_PCIE1_PF0_BAR0_BRIDGE_64BIT {1} \
-      CPM_PCIE1_PF0_BAR0_BRIDGE_SCALE {Megabytes} \
-      CPM_PCIE1_PF0_BAR0_BRIDGE_SIZE {16} \
+      CPM_PCIE1_PF0_BAR0_BRIDGE_SCALE {Gigabytes} \
+      CPM_PCIE1_PF0_BAR0_BRIDGE_SIZE {4} \
       CPM_PCIE1_PF0_BAR0_BRIDGE_STEERING {CPM_PL_AXI1} \
       CPM_PCIE1_PF0_BAR0_PREFETCHABLE {0} \
       CPM_PCIE1_PF0_BAR0_QDMA_64BIT {0} \
@@ -643,7 +643,7 @@ proc create_root_design { parentCell } {
   [get_bd_pins cips/dma1_intrfc_resetn]
 
   # Create address segments
-  assign_bd_address -offset 0x00000000 -range 0x01000000 -target_address_space [get_bd_addr_spaces cips/CPM_PL_AXI1] [get_bd_addr_segs mAxi/Reg] -force
+  assign_bd_address -offset 0x00000000 -range 0x100000000 -target_address_space [get_bd_addr_spaces cips/CPM_PL_AXI1] [get_bd_addr_segs mAxi/Reg] -force
   assign_bd_address -offset 0x050000000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/LPD_AXI_NOC_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S01_AXI/C1_DDR_CH1] -force
   assign_bd_address -offset 0x00000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/LPD_AXI_NOC_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S01_AXI/C1_DDR_LOW0] -force
   assign_bd_address -offset 0x050000000000 -range 0x80000000 -target_address_space [get_bd_addr_spaces cips/PMC_NOC_AXI_0] [get_bd_addr_segs axi_noc_mc_ddr4_0/S00_AXI/C0_DDR_CH1] -force
@@ -657,7 +657,7 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x0 -range 0x002000000000 -target_address_space [get_bd_addr_spaces sAxi] [get_bd_addr_segs cips/NOC_CPM_PCIE_0/pspmc_0_psv_noc_pcie_2] -force
 
   # ---------------------------------------------------------------------------
-  # sAxiLpd -> CPM5 register space (TX_IRQ_CSR @ 0x00FCEA0E7C) address mapping
+  # sAxiLpd -> maps CPM5 and register space needed for OSPI programming
   #
   # The PL MSI-IRQ FSM drives sAxiLpd (CIPS S_AXI_LPD) to write the CPM5_DMA1
   # TX_IRQ_CSR at global address 0x00FCEA0E7C. PG347 v3.4 Table 215: the CPM5
@@ -669,18 +669,33 @@ proc create_root_design { parentCell } {
   # map identical to the global map, so the FSM can use the raw 0xFCEA0E7C
   # address) and exclude every other S_AXI_LPD slave segment we do not use.
   # ---------------------------------------------------------------------------
-  assign_bd_address -offset 0xFC000000 -range 0x01000000 \
-     -target_address_space [get_bd_addr_spaces sAxiLpd] \
-     [get_bd_addr_segs cips/S_AXI_LPD/pspmc_0_psv_cpm] -force
+  set lpd_space [get_bd_addr_spaces sAxiLpd]
+
+  # offset        range        slave segment (leaf name under cips/S_AXI_LPD)
+  set lpd_map {
+     0xFC000000  0x01000000  pspmc_0_psv_cpm
+     0xF1010000  0x00001000  pspmc_0_psv_pmc_ospi_0
+     0xC0000000  0x20000000  pspmc_0_psv_pmc_qspi_ospi_flash_0
+     0xF1020000  0x00001000  pspmc_0_psv_pmc_gpio_0
+     0xF1260000  0x00001000  pspmc_0_psv_crp_0
+  }
+
+  set assigned_segs {}
+  foreach {offset range seg_name} $lpd_map {
+     assign_bd_address -offset $offset -range $range \
+        -target_address_space $lpd_space \
+        [get_bd_addr_segs cips/S_AXI_LPD/$seg_name] -force
+     lappend assigned_segs $seg_name
+  }
+  set assigned_segs [lsort -unique $assigned_segs]
 
   # Exclude all remaining (unused) S_AXI_LPD slave segments so the design has no
-  # unassigned-segment critical warnings. The CPM segment assigned above is
-  # already mapped, so it is skipped by the guard.
+  # unassigned-segment critical warnings. Segments mapped above are skipped.
   foreach seg [get_bd_addr_segs cips/S_AXI_LPD/*] {
-     if { [string match "*pspmc_0_psv_cpm" $seg] } {
+     if { [lsearch -exact $assigned_segs [file tail $seg]] >= 0 } {
         continue
      }
-     catch { exclude_bd_addr_seg -target_address_space [get_bd_addr_spaces sAxiLpd] $seg }
+     catch { exclude_bd_addr_seg -target_address_space $lpd_space $seg }
   }
 
   # Restore current instance

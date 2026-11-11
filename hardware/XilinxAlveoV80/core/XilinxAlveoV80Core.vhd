@@ -121,11 +121,6 @@ architecture mapping of XilinxAlveoV80Core is
    signal regWriteMaster : AxiWriteMasterType;
    signal regWriteSlave  : AxiWriteSlaveType;
 
-   signal versalReadMaster  : AxiLiteReadMasterType;
-   signal versalReadSlave   : AxiLiteReadSlaveType;
-   signal versalWriteMaster : AxiLiteWriteMasterType;
-   signal versalWriteSlave  : AxiLiteWriteSlaveType;
-
    signal dmaCtrlReadMasters  : AxiLiteReadMasterArray(2 downto 0);
    signal dmaCtrlReadSlaves   : AxiLiteReadSlaveArray(2 downto 0)  := (others => AXI_LITE_READ_SLAVE_EMPTY_OK_C);
    signal dmaCtrlWriteMasters : AxiLiteWriteMasterArray(2 downto 0);
@@ -203,52 +198,48 @@ begin
          generic map (
             TPD_G => TPD_G)
          port map (
-            userClk           => userClock,
+            userClk        => userClock,
             -- AXI4 Interfaces
-            axiClk            => sysClock,
-            axiRst            => sysReset,
-            dmaReadMaster     => dmaReadMaster,
-            dmaReadSlave      => dmaReadSlave,
-            dmaWriteMaster    => dmaWriteMaster,
-            dmaWriteSlave     => dmaWriteSlave,
-            regReadMaster     => regReadMaster,
-            regReadSlave      => regReadSlave,
-            regWriteMaster    => regWriteMaster,
-            regWriteSlave     => regWriteSlave,
-            phyReadMaster     => phyReadMaster,
-            phyReadSlave      => phyReadSlave,
-            phyWriteMaster    => phyWriteMaster,
-            phyWriteSlave     => phyWriteSlave,
-            versalReadMaster  => versalReadMaster,
-            versalReadSlave   => versalReadSlave,
-            versalWriteMaster => versalWriteMaster,
-            versalWriteSlave  => versalWriteSlave,
+            axiClk         => sysClock,
+            axiRst         => sysReset,
+            dmaReadMaster  => dmaReadMaster,
+            dmaReadSlave   => dmaReadSlave,
+            dmaWriteMaster => dmaWriteMaster,
+            dmaWriteSlave  => dmaWriteSlave,
+            regReadMaster  => regReadMaster,
+            regReadSlave   => regReadSlave,
+            regWriteMaster => regWriteMaster,
+            regWriteSlave  => regWriteSlave,
+            phyReadMaster  => phyReadMaster,
+            phyReadSlave   => phyReadSlave,
+            phyWriteMaster => phyWriteMaster,
+            phyWriteSlave  => phyWriteSlave,
             -- Interrupt Interface
-            dmaIrq            => dmaIrq,
+            dmaIrq         => dmaIrq,
             -- PS DDR Ports
-            psDdrDq           => psDdrDq,
-            psDdrDqsT         => psDdrDqsT,
-            psDdrDqsC         => psDdrDqsC,
-            psDdrAdr          => psDdrAdr,
-            psDdrBa           => psDdrBa,
-            psDdrBg           => psDdrBg,
-            psDdrActN         => psDdrActN,
-            psDdrResetN       => psDdrResetN,
-            psDdrCkT          => psDdrCkT,
-            psDdrCkC          => psDdrCkC,
-            psDdrCke          => psDdrCke,
-            psDdrCsN          => psDdrCsN,
-            psDdrDmN          => psDdrDmN,
-            psDdrOdt          => psDdrOdt,
-            psDdrClkP         => psDdrClkP,
-            psDdrClkN         => psDdrClkN,
+            psDdrDq        => psDdrDq,
+            psDdrDqsT      => psDdrDqsT,
+            psDdrDqsC      => psDdrDqsC,
+            psDdrAdr       => psDdrAdr,
+            psDdrBa        => psDdrBa,
+            psDdrBg        => psDdrBg,
+            psDdrActN      => psDdrActN,
+            psDdrResetN    => psDdrResetN,
+            psDdrCkT       => psDdrCkT,
+            psDdrCkC       => psDdrCkC,
+            psDdrCke       => psDdrCke,
+            psDdrCsN       => psDdrCsN,
+            psDdrDmN       => psDdrDmN,
+            psDdrOdt       => psDdrOdt,
+            psDdrClkP      => psDdrClkP,
+            psDdrClkN      => psDdrClkN,
             -- PCIe Ports
-            pciRefClkP        => pciRefClkP,
-            pciRefClkN        => pciRefClkN,
-            pciRxP            => pciRxP,
-            pciRxN            => pciRxN,
-            pciTxP            => pciTxP,
-            pciTxN            => pciTxN);
+            pciRefClkP     => pciRefClkP,
+            pciRefClkN     => pciRefClkN,
+            pciRxP         => pciRxP,
+            pciRxN         => pciRxN,
+            pciTxP         => pciTxP,
+            pciTxN         => pciTxN);
 
       intPipObMaster <= pipObMaster;
       pipObSlave     <= intPipObSlave;
@@ -332,11 +323,6 @@ begin
          gpuReadSlave        => gpuReadSlave,
          gpuWriteMaster      => gpuWriteMaster,
          gpuWriteSlave       => gpuWriteSlave,
-         -- Versal AXI-Lite LPD Interfaces
-         versalReadMaster    => versalReadMaster,
-         versalReadSlave     => versalReadSlave,
-         versalWriteMaster   => versalWriteMaster,
-         versalWriteSlave    => versalWriteSlave,
          -- Application Force reset
          cardResetOut        => cardReset,
          cardResetIn         => systemReset);

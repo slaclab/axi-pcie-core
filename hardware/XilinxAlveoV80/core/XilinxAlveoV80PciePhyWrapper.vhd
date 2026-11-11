@@ -32,52 +32,48 @@ entity XilinxAlveoV80PciePhyWrapper is
    generic (
       TPD_G : time := 1 ns);
    port (
-      userClk           : in    sl;
+      userClk        : in    sl;
       -- AXI4 Interfaces
-      axiClk            : out   sl;
-      axiRst            : out   sl;
-      dmaReadMaster     : in    AxiReadMasterType;
-      dmaReadSlave      : out   AxiReadSlaveType;
-      dmaWriteMaster    : in    AxiWriteMasterType;
-      dmaWriteSlave     : out   AxiWriteSlaveType;
-      regReadMaster     : out   AxiReadMasterType;
-      regReadSlave      : in    AxiReadSlaveType;
-      regWriteMaster    : out   AxiWriteMasterType;
-      regWriteSlave     : in    AxiWriteSlaveType;
-      phyReadMaster     : in    AxiLiteReadMasterType;
-      phyReadSlave      : out   AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
-      phyWriteMaster    : in    AxiLiteWriteMasterType;
-      phyWriteSlave     : out   AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
-      versalReadMaster  : in    AxiLiteReadMasterType;
-      versalReadSlave   : out   AxiLiteReadSlaveType;
-      versalWriteMaster : in    AxiLiteWriteMasterType;
-      versalWriteSlave  : out   AxiLiteWriteSlaveType;
+      axiClk         : out   sl;
+      axiRst         : out   sl;
+      dmaReadMaster  : in    AxiReadMasterType;
+      dmaReadSlave   : out   AxiReadSlaveType;
+      dmaWriteMaster : in    AxiWriteMasterType;
+      dmaWriteSlave  : out   AxiWriteSlaveType;
+      regReadMaster  : out   AxiReadMasterType;
+      regReadSlave   : in    AxiReadSlaveType;
+      regWriteMaster : out   AxiWriteMasterType;
+      regWriteSlave  : in    AxiWriteSlaveType;
+      phyReadMaster  : in    AxiLiteReadMasterType;
+      phyReadSlave   : out   AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_OK_C;
+      phyWriteMaster : in    AxiLiteWriteMasterType;
+      phyWriteSlave  : out   AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_EMPTY_OK_C;
       -- Interrupt Interface
-      dmaIrq            : in    sl;
+      dmaIrq         : in    sl;
       -- PS DDR Ports
-      psDdrDq           : inout slv(71 downto 0);
-      psDdrDqsT         : inout slv(8 downto 0);
-      psDdrDqsC         : inout slv(8 downto 0);
-      psDdrAdr          : out   slv(16 downto 0);
-      psDdrBa           : out   slv(1 downto 0);
-      psDdrBg           : out   slv(0 to 0);
-      psDdrActN         : out   slv(0 to 0);
-      psDdrResetN       : out   slv(0 to 0);
-      psDdrCkT          : out   slv(0 to 0);
-      psDdrCkC          : out   slv(0 to 0);
-      psDdrCke          : out   slv(0 to 0);
-      psDdrCsN          : out   slv(0 to 0);
-      psDdrDmN          : inout slv(8 downto 0);
-      psDdrOdt          : out   slv(0 to 0);
-      psDdrClkP         : in    slv(0 to 0);
-      psDdrClkN         : in    slv(0 to 0);
+      psDdrDq        : inout slv(71 downto 0);
+      psDdrDqsT      : inout slv(8 downto 0);
+      psDdrDqsC      : inout slv(8 downto 0);
+      psDdrAdr       : out   slv(16 downto 0);
+      psDdrBa        : out   slv(1 downto 0);
+      psDdrBg        : out   slv(0 to 0);
+      psDdrActN      : out   slv(0 to 0);
+      psDdrResetN    : out   slv(0 to 0);
+      psDdrCkT       : out   slv(0 to 0);
+      psDdrCkC       : out   slv(0 to 0);
+      psDdrCke       : out   slv(0 to 0);
+      psDdrCsN       : out   slv(0 to 0);
+      psDdrDmN       : inout slv(8 downto 0);
+      psDdrOdt       : out   slv(0 to 0);
+      psDdrClkP      : in    slv(0 to 0);
+      psDdrClkN      : in    slv(0 to 0);
       -- PCIe Ports
-      pciRefClkP        : in    sl;
-      pciRefClkN        : in    sl;
-      pciRxP            : in    slv(7 downto 0);
-      pciRxN            : in    slv(7 downto 0);
-      pciTxP            : out   slv(7 downto 0);
-      pciTxN            : out   slv(7 downto 0));
+      pciRefClkP     : in    sl;
+      pciRefClkN     : in    sl;
+      pciRxP         : in    slv(7 downto 0);
+      pciRxN         : in    slv(7 downto 0);
+      pciTxP         : out   slv(7 downto 0);
+      pciTxN         : out   slv(7 downto 0));
 end XilinxAlveoV80PciePhyWrapper;
 
 architecture mapping of XilinxAlveoV80PciePhyWrapper is
@@ -247,17 +243,6 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal msiReadMaster  : AxiLiteReadMasterType;
    signal msiReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
 
-   signal lpdWriteMaster : AxiLiteWriteMasterType;
-   signal lpdWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
-   signal lpdReadMaster  : AxiLiteReadMasterType;
-   signal lpdReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
-
-   constant LPD_CROSSBAR_CONFIG_C : AxiLiteCrossbarMasterConfigArray(0 downto 0) := (
-      0               => (
-         baseAddr     => x"00000000",
-         addrBits     => 32,
-         connectivity => x"FFFF"));
-
 begin
 
    axiClk <= clk;
@@ -293,31 +278,6 @@ begin
          axilReadMaster  => msiReadMaster,
          axilReadSlave   => msiReadSlave);
 
-   --------------------------------------
-   -- Combine LPD AXI-Lite buses together
-   --------------------------------------
-   U_AxiLpdXbar : entity surf.AxiLiteCrossbar
-      generic map (
-         TPD_G              => TPD_G,
-         NUM_SLAVE_SLOTS_G  => 2,
-         NUM_MASTER_SLOTS_G => 1,
-         MASTERS_CONFIG_G   => LPD_CROSSBAR_CONFIG_C)
-      port map (
-         axiClk              => clk,
-         axiClkRst           => rstL,
-         sAxiWriteMasters(0) => msiWriteMaster,
-         sAxiWriteMasters(1) => versalWriteMaster,
-         sAxiWriteSlaves(0)  => msiWriteSlave,
-         sAxiWriteSlaves(1)  => versalWriteSlave,
-         sAxiReadMasters(0)  => msiReadMaster,
-         sAxiReadMasters(1)  => versalReadMaster,
-         sAxiReadSlaves(0)   => msiReadSlave,
-         sAxiReadSlaves(1)   => versalReadSlave,
-         mAxiWriteMasters(0) => lpdWriteMaster,
-         mAxiWriteSlaves(0)  => lpdWriteSlave,
-         mAxiReadMasters(0)  => lpdReadMaster,
-         mAxiReadSlaves(0)   => lpdReadSlave);
-
    U_PwrUpRst : entity surf.PwrUpRst
       generic map(
          TPD_G          => TPD_G,
@@ -349,20 +309,20 @@ begin
          sAxiLpd_awburst    => "01",             -- INCR
          sAxiLpd_awlock     => '0',
          sAxiLpd_awcache    => "0011",           -- normal non-cacheable bufferable
-         sAxiLpd_awprot     => lpdWriteMaster.awprot,
+         sAxiLpd_awprot     => msiWriteMaster.awprot,
          sAxiLpd_awqos      => (others => '0'),
          sAxiLpd_awuser     => (others => '0'),
-         sAxiLpd_awvalid    => lpdWriteMaster.awvalid,
-         sAxiLpd_awready    => lpdWriteSlave.awready,
-         sAxiLpd_wdata      => lpdWriteMaster.wdata(31 downto 0),
-         sAxiLpd_wstrb      => lpdWriteMaster.wstrb(3 downto 0),
+         sAxiLpd_awvalid    => msiWriteMaster.awvalid,
+         sAxiLpd_awready    => msiWriteSlave.awready,
+         sAxiLpd_wdata      => msiWriteMaster.wdata(31 downto 0),
+         sAxiLpd_wstrb      => msiWriteMaster.wstrb(3 downto 0),
          sAxiLpd_wlast      => '1',              -- single beat
-         sAxiLpd_wvalid     => lpdWriteMaster.wvalid,
-         sAxiLpd_wready     => lpdWriteSlave.wready,
+         sAxiLpd_wvalid     => msiWriteMaster.wvalid,
+         sAxiLpd_wready     => msiWriteSlave.wready,
          sAxiLpd_bid        => open,
-         sAxiLpd_bresp      => lpdWriteSlave.bresp,
-         sAxiLpd_bvalid     => lpdWriteSlave.bvalid,
-         sAxiLpd_bready     => lpdWriteMaster.bready,
+         sAxiLpd_bresp      => msiWriteSlave.bresp,
+         sAxiLpd_bvalid     => msiWriteSlave.bvalid,
+         sAxiLpd_bready     => msiWriteMaster.bready,
          sAxiLpd_arid       => (others => '0'),
          sAxiLpd_araddr(31 downto 0)  => msiReadMaster.araddr(31 downto 0),
          sAxiLpd_araddr(48 downto 32) => (others => '0'),
@@ -371,17 +331,17 @@ begin
          sAxiLpd_arburst    => "01",
          sAxiLpd_arlock     => '0',
          sAxiLpd_arcache    => "0011",
-         sAxiLpd_arprot     => lpdReadMaster.arprot,
+         sAxiLpd_arprot     => msiReadMaster.arprot,
          sAxiLpd_arqos      => (others => '0'),
          sAxiLpd_aruser     => (others => '0'),
-         sAxiLpd_arvalid    => lpdReadMaster.arvalid,
-         sAxiLpd_arready    => lpdReadSlave.arready,
+         sAxiLpd_arvalid    => msiReadMaster.arvalid,
+         sAxiLpd_arready    => msiReadSlave.arready,
          sAxiLpd_rid        => open,
-         sAxiLpd_rdata      => lpdReadSlave.rdata(31 downto 0),
-         sAxiLpd_rresp      => lpdReadSlave.rresp,
+         sAxiLpd_rdata      => msiReadSlave.rdata(31 downto 0),
+         sAxiLpd_rresp      => msiReadSlave.rresp,
          sAxiLpd_rlast      => open,
-         sAxiLpd_rvalid     => lpdReadSlave.rvalid,
-         sAxiLpd_rready     => lpdReadMaster.rready,
+         sAxiLpd_rvalid     => msiReadSlave.rvalid,
+         sAxiLpd_rready     => msiReadMaster.rready,
          -- PCIe PHY Interface
          gtPcieRefClk_clk_p => pciRefClkP,
          gtPcieRefClk_clk_n => pciRefClkN,

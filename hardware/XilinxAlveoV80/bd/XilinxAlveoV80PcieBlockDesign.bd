@@ -1448,7 +1448,7 @@
               "CPM_PCIE1_PF0_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR2_QDMA_SCALE Kilobytes CPM_PCIE1_PF0_BAR2_QDMA_SIZE 4 CPM_PCIE1_PF0_BAR2_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF0_BASE_CLASS_VALUE 11",
               "CPM_PCIE1_PF0_CFG_DEV_ID 2030 CPM_PCIE1_PF0_CFG_SUBSYS_ID 2030 CPM_PCIE1_PF0_CFG_SUBSYS_VEND_ID 1A4A CPM_PCIE1_PF0_DEV_CAP_EXT_TAG_EN 1 CPM_PCIE1_PF0_DEV_CAP_FUNCTION_LEVEL_RESET_CAPABLE 0",
               "CPM_PCIE1_PF0_INTERRUPT_PIN NONE CPM_PCIE1_PF0_MSIX_CAP_TABLE_OFFSET 40 CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE 1 CPM_PCIE1_PF0_MSIX_ENABLED 0 CPM_PCIE1_PF0_MSI_ENABLED 1",
-              "CPM_PCIE1_PF0_PCIEBAR2AXIBAR_BRIDGE_2 0x0000000080000000 CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0 0x0000020100000000 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D0 0 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D1 0",
+              "CPM_PCIE1_PF0_PCIEBAR2AXIBAR_BRIDGE_2 0x0000000000000000 CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0 0x0000020100000000 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D0 0 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D1 0",
               "CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D3HOT 0 CPM_PCIE1_PF0_PM_CAP_SUPP_D1_STATE 0 CPM_PCIE1_PF0_SUB_CLASS_VALUE 80 CPM_PCIE1_PF1_BAR0_QDMA_64BIT 0 CPM_PCIE1_PF1_BAR0_QDMA_ENABLED 0",
               "CPM_PCIE1_PF1_BAR0_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF1_BAR0_QDMA_SCALE Kilobytes CPM_PCIE1_PF1_BAR0_QDMA_SIZE 4 CPM_PCIE1_PF1_BAR0_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF1_BAR2_QDMA_64BIT 0",
               "CPM_PCIE1_PF1_BAR2_QDMA_ENABLED 0 CPM_PCIE1_PF1_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF1_BAR2_QDMA_SCALE Kilobytes CPM_PCIE1_PF1_BAR2_QDMA_SIZE 4 CPM_PCIE1_PF1_BAR2_QDMA_TYPE AXI_Bridge_Master",
@@ -6013,14 +6013,17 @@
               },
               "DEST_IDS": {
                 "value": "M00_AXI:0x1"
+              },
+              "REMAPS": {
+                "value": "M00_AXI {{0xF101_0000 0x1_0101_0000 64K} {0xF102_0000 0x1_0102_0000 64k} {0xF126_0000 0x1_0126_0000 64k} {0xF106_0000 0xF106_0000 64k}}"
               }
             },
             "bridges": [
-              "M00_AXI"
+              "M00_AXI {{0xF101_0000 0x1_0101_0000 64K} {0xF102_0000 0x1_0102_0000 64K} {0xF106_0000 64K} {0xF126_0000 0x1_0126_0000 64K}}"
             ],
             "bd_attributes": {
               "BRIDGES": {
-                "value": "M00_AXI",
+                "value": "M00_AXI {{0xF101_0000 0x1_0101_0000 64K} {0xF102_0000 0x1_0102_0000 64K} {0xF106_0000 64K} {0xF126_0000 0x1_0126_0000 64K}}",
                 "value_src": "auto"
               },
               "TYPE": {
@@ -7299,7 +7302,7 @@
               },
               "SEG_cips_pspmc_0_psv_crp_0": {
                 "address_block": "/cips/NOC_PMC_AXI_0/pspmc_0_psv_crp_0",
-                "offset": "0x0000000101260000",
+                "offset": "0x00000000F1260000",
                 "range": "64K"
               },
               "SEG_cips_pspmc_0_psv_fpd_afi_0": {
@@ -7628,7 +7631,7 @@
               },
               "SEG_cips_pspmc_0_psv_pmc_gpio_0": {
                 "address_block": "/cips/NOC_PMC_AXI_0/pspmc_0_psv_pmc_gpio_0",
-                "offset": "0x0000000101020000",
+                "offset": "0x00000000F1020000",
                 "range": "64K"
               },
               "SEG_cips_pspmc_0_psv_pmc_iomodule_0": {
@@ -7639,13 +7642,12 @@
               },
               "SEG_cips_pspmc_0_psv_pmc_iou_slcr_0": {
                 "address_block": "/cips/NOC_PMC_AXI_0/pspmc_0_psv_pmc_iou_slcr_0",
-                "offset": "0x0000000000000000",
-                "range": "1",
-                "is_excluded": "TRUE"
+                "offset": "0x00000000F1060000",
+                "range": "64K"
               },
               "SEG_cips_pspmc_0_psv_pmc_ospi_0": {
                 "address_block": "/cips/NOC_PMC_AXI_0/pspmc_0_psv_pmc_ospi_0",
-                "offset": "0x0000000101010000",
+                "offset": "0x00000000F1010000",
                 "range": "64K"
               },
               "SEG_cips_pspmc_0_psv_pmc_ppu1_mdm_0": {

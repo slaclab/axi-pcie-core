@@ -352,7 +352,7 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE {1} \
       CPM_PCIE1_PF0_MSIX_ENABLED {0} \
       CPM_PCIE1_PF0_MSI_ENABLED {1} \
-      CPM_PCIE1_PF0_PCIEBAR2AXIBAR_BRIDGE_2 {0x0000000080000000} \
+      CPM_PCIE1_PF0_PCIEBAR2AXIBAR_BRIDGE_2 {0x0000000000000000} \
       CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0 {0x0000020100000000} \
       CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D0 {0} \
       CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D1 {0} \
@@ -641,6 +641,7 @@ proc create_root_design { parentCell } {
    CONFIG.CONNECTIONS {M00_AXI {read_bw {1720} write_bw {1720} read_avg_burst {4} write_avg_burst {4} initial_boot {true}}} \
    CONFIG.NOC_PARAMS {} \
    CONFIG.CATEGORY {ps_pcie} \
+   CONFIG.REMAPS {M00_AXI {{0xF101_0000 0x1_0101_0000 64K} {0xF102_0000 0x1_0102_0000 64k} {0xF126_0000 0x1_0126_0000 64k} {0xF106_0000 0xF106_0000 64k}}} \
  ] [get_bd_intf_pins $axi_noc_0/S00_AXI]
 
   set_property -dict [ list \
@@ -751,20 +752,17 @@ proc create_root_design { parentCell } {
   #
   # PCIe BAR2 traffic is steered (CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING =
   # CPM_PCIE_NOC_0) out of the CPM onto axi_noc_0, which bridges to the CIPS
-  # NOC_PMC_AXI_0 slave and so into the PMC register/flash space. With
-  # PCIEBAR2AXIBAR_BRIDGE_2 = 0x0000000080000000 the host-visible offsets in the
-  # CPM_PCIE_NOC_0 address space are: OSPI/QSPI flash DAC @ 0xC0000000 (512 MB),
-  # OSPI controller @ 0x1_0101_0000, PMC GPIO @ 0x1_0102_0000, CRP @ 0x1_0126_0000
-  # (each 64 KB). Assign those and exclude every other NOC_PMC_AXI_0 segment.
+  # NOC_PMC_AXI_0 slave and so into the PMC register/flash space. 
   # ---------------------------------------------------------------------------
   set pcie_noc_space [get_bd_addr_spaces cips/CPM_PCIE_NOC_0]
 
   # offset               range        slave segment (leaf under cips/NOC_PMC_AXI_0)
   set pcie_noc_map {
      0x00000000C0000000  0x20000000  pspmc_0_psv_pmc_qspi_ospi_flash_0
-     0x0000000101010000  0x00010000  pspmc_0_psv_pmc_ospi_0
-     0x0000000101020000  0x00010000  pspmc_0_psv_pmc_gpio_0
-     0x0000000101260000  0x00010000  pspmc_0_psv_crp_0
+     0x00000000F1010000  0x00010000  pspmc_0_psv_pmc_ospi_0
+     0x00000000F1020000  0x00010000  pspmc_0_psv_pmc_gpio_0
+     0x00000000F1260000  0x00010000  pspmc_0_psv_crp_0
+     0x00000000F1060000  0x00010000  pspmc_0_psv_pmc_iou_slcr_0
   }
 
   set pcie_noc_segs {}

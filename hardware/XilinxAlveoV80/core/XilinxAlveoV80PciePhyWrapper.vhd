@@ -186,7 +186,6 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          mAxi_ruser         : in    std_logic_vector (127 downto 0);
          mAxi_wid           : out   std_logic_vector (15 downto 0);
          mAxi_wuser         : out   std_logic_vector (127 downto 0);
-         sAxiLpd_awid       : in    std_logic_vector (5 downto 0);
          sAxiLpd_awaddr     : in    std_logic_vector (48 downto 0);
          sAxiLpd_awlen      : in    std_logic_vector (7 downto 0);
          sAxiLpd_awsize     : in    std_logic_vector (2 downto 0);
@@ -195,7 +194,6 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          sAxiLpd_awcache    : in    std_logic_vector (3 downto 0);
          sAxiLpd_awprot     : in    std_logic_vector (2 downto 0);
          sAxiLpd_awqos      : in    std_logic_vector (3 downto 0);
-         sAxiLpd_awuser     : in    std_logic_vector (9 downto 0);
          sAxiLpd_awvalid    : in    std_logic;
          sAxiLpd_awready    : out   std_logic;
          sAxiLpd_wdata      : in    std_logic_vector (31 downto 0);
@@ -203,11 +201,9 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          sAxiLpd_wlast      : in    std_logic;
          sAxiLpd_wvalid     : in    std_logic;
          sAxiLpd_wready     : out   std_logic;
-         sAxiLpd_bid        : out   std_logic_vector (5 downto 0);
          sAxiLpd_bresp      : out   std_logic_vector (1 downto 0);
          sAxiLpd_bvalid     : out   std_logic;
          sAxiLpd_bready     : in    std_logic;
-         sAxiLpd_arid       : in    std_logic_vector (5 downto 0);
          sAxiLpd_araddr     : in    std_logic_vector (48 downto 0);
          sAxiLpd_arlen      : in    std_logic_vector (7 downto 0);
          sAxiLpd_arsize     : in    std_logic_vector (2 downto 0);
@@ -216,10 +212,8 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          sAxiLpd_arcache    : in    std_logic_vector (3 downto 0);
          sAxiLpd_arprot     : in    std_logic_vector (2 downto 0);
          sAxiLpd_arqos      : in    std_logic_vector (3 downto 0);
-         sAxiLpd_aruser     : in    std_logic_vector (9 downto 0);
          sAxiLpd_arvalid    : in    std_logic;
          sAxiLpd_arready    : out   std_logic;
-         sAxiLpd_rid        : out   std_logic_vector (5 downto 0);
          sAxiLpd_rdata      : out   std_logic_vector (31 downto 0);
          sAxiLpd_rresp      : out   std_logic_vector (1 downto 0);
          sAxiLpd_rlast      : out   std_logic;
@@ -301,7 +295,6 @@ begin
          plRstN             => plRstN,
          -- LPD AXI4 Slave Interface (PL MSI generator -> CPM5 TX_IRQ_CSR)
          -- AXI-Lite master mapped onto the AXI4 slave (single-beat 32-bit).
-         sAxiLpd_awid       => (others => '0'),
          sAxiLpd_awaddr(31 downto 0)  => msiWriteMaster.awaddr(31 downto 0),
          sAxiLpd_awaddr(48 downto 32) => (others => '0'),
          sAxiLpd_awlen      => (others => '0'),  -- single beat
@@ -311,7 +304,6 @@ begin
          sAxiLpd_awcache    => "0011",           -- normal non-cacheable bufferable
          sAxiLpd_awprot     => msiWriteMaster.awprot,
          sAxiLpd_awqos      => (others => '0'),
-         sAxiLpd_awuser     => (others => '0'),
          sAxiLpd_awvalid    => msiWriteMaster.awvalid,
          sAxiLpd_awready    => msiWriteSlave.awready,
          sAxiLpd_wdata      => msiWriteMaster.wdata(31 downto 0),
@@ -319,11 +311,9 @@ begin
          sAxiLpd_wlast      => '1',              -- single beat
          sAxiLpd_wvalid     => msiWriteMaster.wvalid,
          sAxiLpd_wready     => msiWriteSlave.wready,
-         sAxiLpd_bid        => open,
          sAxiLpd_bresp      => msiWriteSlave.bresp,
          sAxiLpd_bvalid     => msiWriteSlave.bvalid,
          sAxiLpd_bready     => msiWriteMaster.bready,
-         sAxiLpd_arid       => (others => '0'),
          sAxiLpd_araddr(31 downto 0)  => msiReadMaster.araddr(31 downto 0),
          sAxiLpd_araddr(48 downto 32) => (others => '0'),
          sAxiLpd_arlen      => (others => '0'),
@@ -333,10 +323,8 @@ begin
          sAxiLpd_arcache    => "0011",
          sAxiLpd_arprot     => msiReadMaster.arprot,
          sAxiLpd_arqos      => (others => '0'),
-         sAxiLpd_aruser     => (others => '0'),
          sAxiLpd_arvalid    => msiReadMaster.arvalid,
          sAxiLpd_arready    => msiReadSlave.arready,
-         sAxiLpd_rid        => open,
          sAxiLpd_rdata      => msiReadSlave.rdata(31 downto 0),
          sAxiLpd_rresp      => msiReadSlave.rresp,
          sAxiLpd_rlast      => open,

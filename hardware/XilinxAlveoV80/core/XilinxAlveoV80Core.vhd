@@ -277,7 +277,7 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          BUILD_INFO_G         => BUILD_INFO_G,
          XIL_DEVICE_G         => "VERSAL",
-         BOOT_PROM_G          => "NONE",
+         BOOT_PROM_G          => "PS",  -- OSPI flash programmed via PS/PMC (DAC window)
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
          PCIE_HW_TYPE_G       => HW_TYPE_XILINX_V80_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,

@@ -296,7 +296,7 @@ begin
    regWriteMaster   <= regIntWriteMaster;
    regIntWriteSlave <= regWriteSlave;
 
-   hostAccess <= regWriteMaster.awvalid or regReadMaster.arvalid;
+   hostAccess <= regIntWriteMaster.awvalid or regIntReadMaster.arvalid;
 
    -------------------
    -- AXI PCIe IP Core

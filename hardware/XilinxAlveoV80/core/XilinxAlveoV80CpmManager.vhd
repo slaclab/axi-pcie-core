@@ -132,7 +132,7 @@ begin
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave);
 
-   comb : process (ack, dmaIrq, r, rstL) is
+   comb : process (ack, dmaIrq, r, rstL, hostAccess) is
       variable v : RegType;
    begin
       -- Latch the current value

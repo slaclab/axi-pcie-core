@@ -5126,223 +5126,267 @@
             "segments": {
               "SEG_cips_pspmc_0_psv_adma_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_0",
-                "offset": "0x00000000FFA80000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_adma_1": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_1",
-                "offset": "0x00000000FFA90000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_adma_2": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_2",
-                "offset": "0x00000000FFAA0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_adma_3": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_3",
-                "offset": "0x00000000FFAB0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_adma_4": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_4",
-                "offset": "0x00000000FFAC0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_adma_5": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_5",
-                "offset": "0x00000000FFAD0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_adma_6": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_6",
-                "offset": "0x00000000FFAE0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_adma_7": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_7",
-                "offset": "0x00000000FFAF0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_apu_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_apu_0",
-                "offset": "0x00000000FD5C0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_0",
-                "offset": "0x00000000F0800000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_a720_cti": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_cti",
-                "offset": "0x00000000F0D10000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_a720_dbg": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_dbg",
-                "offset": "0x00000000F0D00000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_a720_etm": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_etm",
-                "offset": "0x00000000F0D30000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_a720_pmu": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_pmu",
-                "offset": "0x00000000F0D20000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_a721_cti": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_cti",
-                "offset": "0x00000000F0D50000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_a721_dbg": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_dbg",
-                "offset": "0x00000000F0D40000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_a721_etm": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_etm",
-                "offset": "0x00000000F0D70000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_a721_pmu": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_pmu",
-                "offset": "0x00000000F0D60000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_apu_cti": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_cti",
-                "offset": "0x00000000F0CA0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_apu_ela": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_ela",
-                "offset": "0x00000000F0C60000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_apu_etf": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_etf",
-                "offset": "0x00000000F0C30000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_apu_fun": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_fun",
-                "offset": "0x00000000F0C20000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_cpm_atm": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_atm",
-                "offset": "0x00000000F0F80000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_cpm_cti2a": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_cti2a",
-                "offset": "0x00000000F0FA0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_cpm_cti2d": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_cti2d",
-                "offset": "0x00000000F0FD0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_cpm_ela2a": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2a",
-                "offset": "0x00000000F0F40000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_cpm_ela2b": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2b",
-                "offset": "0x00000000F0F50000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_cpm_ela2c": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2c",
-                "offset": "0x00000000F0F60000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_cpm_ela2d": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2d",
-                "offset": "0x00000000F0F70000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_cpm_fun": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_fun",
-                "offset": "0x00000000F0F20000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_cpm_rom": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_rom",
-                "offset": "0x00000000F0F00000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_fpd_atm": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_atm",
-                "offset": "0x00000000F0B80000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_fpd_cti1b": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_cti1b",
-                "offset": "0x00000000F0BB0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_fpd_cti1c": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_cti1c",
-                "offset": "0x00000000F0BC0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_fpd_cti1d": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_cti1d",
-                "offset": "0x00000000F0BD0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_fpd_stm": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_stm",
-                "offset": "0x00000000F0B70000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_lpd_atm": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_lpd_atm",
-                "offset": "0x00000000F0980000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_lpd_cti": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_lpd_cti",
-                "offset": "0x00000000F09D0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_pmc_cti": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_pmc_cti",
-                "offset": "0x00000000F08D0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_r50_cti": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_r50_cti",
-                "offset": "0x00000000F0A10000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_coresight_r51_cti": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_r51_cti",
-                "offset": "0x00000000F0A50000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_cpm": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_cpm",
-                "offset": "0x00000000FC000000",
-                "range": "16M"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_crf_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_crf_0",
-                "offset": "0x00000000FD1A0000",
-                "range": "128K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_crl_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_crl_0",
-                "offset": "0x00000000FF5E0000",
-                "range": "128K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_crp_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_crp_0",
@@ -5351,278 +5395,333 @@
               },
               "SEG_cips_pspmc_0_psv_fpd_afi_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_afi_0",
-                "offset": "0x00000000FD360000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_fpd_afi_2": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_afi_2",
-                "offset": "0x00000000FD380000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_fpd_cci_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_cci_0",
-                "offset": "0x00000000FD5E0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_fpd_gpv_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_gpv_0",
-                "offset": "0x00000000FD700000",
-                "range": "1M"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_fpd_maincci_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_maincci_0",
-                "offset": "0x00000000FD000000",
-                "range": "1M"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_fpd_slave_xmpu_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_slave_xmpu_0",
-                "offset": "0x00000000FD390000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_fpd_slcr_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_slcr_0",
-                "offset": "0x00000000FD610000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_fpd_slcr_secure_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_slcr_secure_0",
-                "offset": "0x00000000FD690000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_fpd_smmu_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_smmu_0",
-                "offset": "0x00000000FD5F0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_fpd_smmutcu_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_smmutcu_0",
-                "offset": "0x00000000FD800000",
-                "range": "8M"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_gpio_2": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_gpio_2",
-                "offset": "0x00000000FF0B0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_i2c_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_i2c_0",
-                "offset": "0x00000000FF020000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_i2c_1": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_i2c_1",
-                "offset": "0x00000000FF030000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ipi_3": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_3",
-                "offset": "0x00000000FF360000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ipi_4": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_4",
-                "offset": "0x00000000FF370000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ipi_5": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_5",
-                "offset": "0x00000000FF380000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ipi_6": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_6",
-                "offset": "0x00000000FF3A0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ipi_buffer": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_buffer",
-                "offset": "0x00000000FF3F0000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ipi_pmc": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_pmc",
-                "offset": "0x00000000FF320000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ipi_pmc_nobuf": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_pmc_nobuf",
-                "offset": "0x00000000FF390000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ipi_psm": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_psm",
-                "offset": "0x00000000FF310000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_lpd_afi_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_afi_0",
-                "offset": "0x00000000FF9B0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_lpd_iou_secure_slcr_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_iou_secure_slcr_0",
-                "offset": "0x00000000FF0A0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_lpd_iou_slcr_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_iou_slcr_0",
-                "offset": "0x00000000FF080000",
-                "range": "128K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_lpd_slcr_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_slcr_0",
-                "offset": "0x00000000FF410000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_lpd_slcr_secure_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_slcr_secure_0",
-                "offset": "0x00000000FF510000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_lpd_xppu_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_xppu_0",
-                "offset": "0x00000000FF990000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ocm_ctrl": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ocm_ctrl",
-                "offset": "0x00000000FF960000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ocm_ram_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ocm_ram_0",
-                "offset": "0x00000000FFFC0000",
-                "range": "256K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ocm_xmpu_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ocm_xmpu_0",
-                "offset": "0x00000000FF980000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_aes": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_aes",
-                "offset": "0x00000000F11E0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_analog_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_analog_0",
-                "offset": "0x00000000F1160000",
-                "range": "128K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_bbram_ctrl": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_bbram_ctrl",
-                "offset": "0x00000000F11F0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_0",
-                "offset": "0x00000000F12D0000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_1": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_1",
-                "offset": "0x00000000F12D2000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_2": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_2",
-                "offset": "0x00000000F12D4000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_3": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_3",
-                "offset": "0x00000000F12D6000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_4": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_4",
-                "offset": "0x00000000F12D8000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_5": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_5",
-                "offset": "0x00000000F12DA000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_6": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_6",
-                "offset": "0x00000000F12DC000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_7": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_7",
-                "offset": "0x00000000F12DE000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_8": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_8",
-                "offset": "0x00000000F12E0000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_9": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_9",
-                "offset": "0x00000000F12E2000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_10": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_10",
-                "offset": "0x00000000F12E4000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_11": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_11",
-                "offset": "0x00000000F12E6000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_12": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_12",
-                "offset": "0x00000000F12E8000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_13": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_13",
-                "offset": "0x00000000F12EA000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_14": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_14",
-                "offset": "0x00000000F12EC000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_bcast": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_bcast",
-                "offset": "0x00000000F12EE000",
-                "range": "4K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_cfu_apb_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfu_apb_0",
-                "offset": "0x00000000F12B0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_dma_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_dma_0",
-                "offset": "0x00000000F11C0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_dma_1": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_dma_1",
-                "offset": "0x00000000F11D0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_efuse_cache": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_efuse_cache",
-                "offset": "0x00000000F1250000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_efuse_ctrl": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_efuse_ctrl",
-                "offset": "0x00000000F1240000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_global_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_global_0",
-                "offset": "0x00000000F1110000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_gpio_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_gpio_0",
@@ -5641,8 +5740,9 @@
               },
               "SEG_cips_pspmc_0_psv_pmc_ppu1_mdm_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ppu1_mdm_0",
-                "offset": "0x00000000F0310000",
-                "range": "32K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_qspi_ospi_flash_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_qspi_ospi_flash_0",
@@ -5651,143 +5751,171 @@
               },
               "SEG_cips_pspmc_0_psv_pmc_ram": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ram",
-                "offset": "0x00000000F2000000",
-                "range": "128K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_ram_npi": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ram_npi",
-                "offset": "0x00000000F6000000",
-                "range": "32M"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_rsa": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_rsa",
-                "offset": "0x00000000F1200000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_rtc_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_rtc_0",
-                "offset": "0x00000000F12A0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_sd_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_sd_0",
-                "offset": "0x00000000F1040000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_sha": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_sha",
-                "offset": "0x00000000F1210000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_slave_boot": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_slave_boot",
-                "offset": "0x00000000F1220000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_slave_boot_stream": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_slave_boot_stream",
-                "offset": "0x00000000F2100000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_sysmon_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_sysmon_0",
-                "offset": "0x00000000F1270000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_tap": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_tap",
-                "offset": "0x00000000F11A0000",
-                "range": "128K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_trng": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_trng",
-                "offset": "0x00000000F1230000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_xmpu_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_xmpu_0",
-                "offset": "0x00000000F12F0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_xppu_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_xppu_0",
-                "offset": "0x00000000F1310000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_pmc_xppu_npi_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_xppu_npi_0",
-                "offset": "0x00000000F1300000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_psm_global_reg": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_psm_global_reg",
-                "offset": "0x00000000FFC90000",
-                "range": "60K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_r5_1_atcm_global": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_r5_1_atcm_global",
-                "offset": "0x00000000FFE90000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_r5_1_btcm_global": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_r5_1_btcm_global",
-                "offset": "0x00000000FFEB0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_r5_tcm_ram_global": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_r5_tcm_ram_global",
-                "offset": "0x00000000FFE00000",
-                "range": "256K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_rpu_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_rpu_0",
-                "offset": "0x00000000FF9A0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_sbsauart_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_sbsauart_0",
-                "offset": "0x00000000FF000000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_sbsauart_1": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_sbsauart_1",
-                "offset": "0x00000000FF010000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_scntr_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_scntr_0",
-                "offset": "0x00000000FF130000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_scntrs_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_scntrs_0",
-                "offset": "0x00000000FF140000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_spi_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_spi_0",
-                "offset": "0x00000000FF040000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ttc_0": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_0",
-                "offset": "0x00000000FF0E0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ttc_1": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_1",
-                "offset": "0x00000000FF0F0000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ttc_2": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_2",
-                "offset": "0x00000000FF100000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               },
               "SEG_cips_pspmc_0_psv_ttc_3": {
                 "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_3",
-                "offset": "0x00000000FF110000",
-                "range": "64K"
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               }
             }
           },

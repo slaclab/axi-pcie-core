@@ -237,6 +237,13 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal msiReadMaster  : AxiLiteReadMasterType;
    signal msiReadSlave   : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_INIT_C;
 
+   signal hostAccess : sl := '0';
+
+   signal regIntReadMaster  : AxiReadMasterType;
+   signal regIntReadSlave   : AxiReadSlaveType;
+   signal regIntWriteMaster : AxiWriteMasterType;
+   signal regIntWriteSlave  : AxiWriteSlaveType;
+
 begin
 
    axiClk <= clk;
@@ -266,6 +273,7 @@ begin
          dmaIrq          => dmaIrq,
          -- Status
          bdfDone         => open,
+         hostAccess      => hostAccess,
          -- AXI-Lite Master (drives the CIPS S_AXI_LPD slave)
          axilWriteMaster => msiWriteMaster,
          axilWriteSlave  => msiWriteSlave,
@@ -282,6 +290,14 @@ begin
          clk    => clk,
          arst   => plRstN,
          rstOut => rstL);
+
+   -- Route signals to get an internal copy
+   regReadMaster    <= regIntReadMaster;
+   regIntReadSlave  <= regReadSlave;
+   regWriteMaster   <= regIntWriteMaster;
+   regIntWriteSlave <= regWriteSlave;
+
+   hostAccess <= regWriteMaster.awvalid or regReadMaster.arvalid;
 
    -------------------
    -- AXI PCIe IP Core
@@ -338,47 +354,47 @@ begin
          gtPcie_gtx_p       => pciTxP,
          gtPcie_gtx_n       => pciTxN,
          -- Master AXI4 Interface
-         mAxi_awid          => regWriteMaster.awid(15 downto 0),
-         mAxi_awaddr        => regWriteMaster.awaddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
-         mAxi_awlen         => regWriteMaster.awlen(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0),
-         mAxi_awsize        => regWriteMaster.awsize(2 downto 0),
-         mAxi_awburst       => regWriteMaster.awburst(1 downto 0),
-         mAxi_awlock(0)     => regWriteMaster.awlock(0),
-         mAxi_awcache       => regWriteMaster.awcache,
-         mAxi_awprot        => regWriteMaster.awprot,
-         mAxi_awregion      => regWriteMaster.awregion(3 downto 0),
-         mAxi_awqos         => regWriteMaster.awqos(3 downto 0),
+         mAxi_awid          => regIntWriteMaster.awid(15 downto 0),
+         mAxi_awaddr        => regIntWriteMaster.awaddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
+         mAxi_awlen         => regIntWriteMaster.awlen(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0),
+         mAxi_awsize        => regIntWriteMaster.awsize(2 downto 0),
+         mAxi_awburst       => regIntWriteMaster.awburst(1 downto 0),
+         mAxi_awlock(0)     => regIntWriteMaster.awlock(0),
+         mAxi_awcache       => regIntWriteMaster.awcache,
+         mAxi_awprot        => regIntWriteMaster.awprot,
+         mAxi_awregion      => regIntWriteMaster.awregion(3 downto 0),
+         mAxi_awqos         => regIntWriteMaster.awqos(3 downto 0),
          mAxi_awuser        => open,
-         mAxi_awvalid(0)    => regWriteMaster.awvalid,
-         mAxi_awready(0)    => regWriteSlave.awready,
-         mAxi_wdata         => regWriteMaster.wdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
-         mAxi_wstrb         => regWriteMaster.wstrb(AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
-         mAxi_wlast(0)      => regWriteMaster.wlast,
-         mAxi_wvalid(0)     => regWriteMaster.wvalid,
-         mAxi_wready(0)     => regWriteSlave.wready,
-         mAxi_bid           => regWriteSlave.bid(15 downto 0),
+         mAxi_awvalid(0)    => regIntWriteMaster.awvalid,
+         mAxi_awready(0)    => regIntWriteSlave.awready,
+         mAxi_wdata         => regIntWriteMaster.wdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
+         mAxi_wstrb         => regIntWriteMaster.wstrb(AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
+         mAxi_wlast(0)      => regIntWriteMaster.wlast,
+         mAxi_wvalid(0)     => regIntWriteMaster.wvalid,
+         mAxi_wready(0)     => regIntWriteSlave.wready,
+         mAxi_bid           => regIntWriteSlave.bid(15 downto 0),
          mAxi_bresp         => AXI_RESP_OK_C,  -- Always respond OK
-         mAxi_bvalid(0)     => regWriteSlave.bvalid,
-         mAxi_bready(0)     => regWriteMaster.bready,
-         mAxi_arid          => regReadMaster.arid(15 downto 0),
-         mAxi_araddr        => regReadMaster.araddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
-         mAxi_arlen         => regReadMaster.arlen(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0),
-         mAxi_arsize        => regReadMaster.arsize(2 downto 0),
-         mAxi_arburst       => regReadMaster.arburst(1 downto 0),
-         mAxi_arlock(0)     => regReadMaster.arlock(0),
-         mAxi_arcache       => regReadMaster.arcache,
-         mAxi_arprot        => regReadMaster.arprot,
-         mAxi_arregion      => regReadMaster.arregion(3 downto 0),
-         mAxi_arqos         => regReadMaster.arqos(3 downto 0),
+         mAxi_bvalid(0)     => regIntWriteSlave.bvalid,
+         mAxi_bready(0)     => regIntWriteMaster.bready,
+         mAxi_arid          => regIntReadMaster.arid(15 downto 0),
+         mAxi_araddr        => regIntReadMaster.araddr(AXI_PCIE_CONFIG_C.ADDR_WIDTH_C-1 downto 0),
+         mAxi_arlen         => regIntReadMaster.arlen(AXI_PCIE_CONFIG_C.LEN_BITS_C-1 downto 0),
+         mAxi_arsize        => regIntReadMaster.arsize(2 downto 0),
+         mAxi_arburst       => regIntReadMaster.arburst(1 downto 0),
+         mAxi_arlock(0)     => regIntReadMaster.arlock(0),
+         mAxi_arcache       => regIntReadMaster.arcache,
+         mAxi_arprot        => regIntReadMaster.arprot,
+         mAxi_arregion      => regIntReadMaster.arregion(3 downto 0),
+         mAxi_arqos         => regIntReadMaster.arqos(3 downto 0),
          mAxi_aruser        => open,
-         mAxi_arvalid(0)    => regReadMaster.arvalid,
-         mAxi_arready(0)    => regReadSlave.arready,
-         mAxi_rid           => regReadSlave.rid(15 downto 0),
-         mAxi_rdata         => regReadSlave.rdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
+         mAxi_arvalid(0)    => regIntReadMaster.arvalid,
+         mAxi_arready(0)    => regIntReadSlave.arready,
+         mAxi_rid           => regIntReadSlave.rid(15 downto 0),
+         mAxi_rdata         => regIntReadSlave.rdata(8*AXI_PCIE_CONFIG_C.DATA_BYTES_C-1 downto 0),
          mAxi_rresp         => AXI_RESP_OK_C,  -- Always respond OK
-         mAxi_rlast(0)      => regReadSlave.rlast,
-         mAxi_rvalid(0)     => regReadSlave.rvalid,
-         mAxi_rready(0)     => regReadMaster.rready,
+         mAxi_rlast(0)      => regIntReadSlave.rlast,
+         mAxi_rvalid(0)     => regIntReadSlave.rvalid,
+         mAxi_rready(0)     => regIntReadMaster.rready,
          maxi_buser         => '0',
          maxi_ruser         => (others => '0'),
          mAxi_wid           => open,

@@ -168,12 +168,129 @@ class VersalPmc(pr.Device):
             mode         = 'RW',
         ))
 
+        # ---- STIG command control (FLASH_CMD_CTRL @ 0xF101_0090) ----
+        # Split into fields so a write verifies ONLY the RW bits.  The WO
+        # cmd_exec (bit0) and the RO cmd_exec_status (bit1) / reserved (6:3)
+        # bits do NOT read back the written value and would otherwise trip a
+        # Block verify error.  _stigRun() stages the fields then flushes the
+        # whole 32-bit block (with CmdExec=1) in one write, which launches the
+        # command; verify then checks only the readable RW bits.
         self.add(pr.RemoteVariable(
-            name         = 'OSPI_CMD_CTRL',
-            description  = 'STIG command control (bit1 = busy)',
+            name         = 'CmdOpcode',
+            description  = 'Command opcode [31:24] (write of block w/ CmdExec=1 launches it)',
             offset       = 0xF101_0090,
-            bitSize      = 32,
+            bitOffset    = 24,
+            bitSize      = 8,
             mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'EnbReadData',
+            description  = 'Read Data Enable [23]: command returns read data bytes',
+            offset       = 0xF101_0090,
+            bitOffset    = 23,
+            bitSize      = 1,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'NumRdDataBytes',
+            description  = 'Number of read data bytes - 1 [22:20] (0=1 byte .. 7=8 bytes)',
+            offset       = 0xF101_0090,
+            bitOffset    = 20,
+            bitSize      = 3,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'EnbCmdAddr',
+            description  = 'Command Address Enable [19]: command requires an address',
+            offset       = 0xF101_0090,
+            bitOffset    = 19,
+            bitSize      = 1,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'EnbModeBit',
+            description  = 'Mode Bit Enable [18]',
+            offset       = 0xF101_0090,
+            bitOffset    = 18,
+            bitSize      = 1,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'NumAddrBytes',
+            description  = 'Number of address bytes - 1 [17:16] (00=1 .. 11=4)',
+            offset       = 0xF101_0090,
+            bitOffset    = 16,
+            bitSize      = 2,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'EnbWriteData',
+            description  = 'Write Data Enable [15]: command sends write data bytes',
+            offset       = 0xF101_0090,
+            bitOffset    = 15,
+            bitSize      = 1,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'NumWrDataBytes',
+            description  = 'Number of write data bytes - 1 [14:12] (0=1 byte .. 7=8 bytes)',
+            offset       = 0xF101_0090,
+            bitOffset    = 12,
+            bitSize      = 3,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'NumDummyCycles',
+            description  = 'Number of dummy cycles [11:7]',
+            offset       = 0xF101_0090,
+            bitOffset    = 7,
+            bitSize      = 5,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'FlashCmdCtrlResv1',
+            description  = 'Reserved [6:3]',
+            offset       = 0xF101_0090,
+            bitOffset    = 3,
+            bitSize      = 4,
+            mode         = 'RO',
+            hidden       = True,
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'StigMemBankEn',
+            description  = 'STIG Memory Bank enable [2]',
+            offset       = 0xF101_0090,
+            bitOffset    = 2,
+            bitSize      = 1,
+            mode         = 'RW',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'CmdExecStatus',
+            description  = 'Command execution in progress [1] (read-only busy flag)',
+            offset       = 0xF101_0090,
+            bitOffset    = 1,
+            bitSize      = 1,
+            mode         = 'RO',
+        ))
+
+        self.add(pr.RemoteVariable(
+            name         = 'CmdExec',
+            description  = 'Execute the command [0] (write-only strobe)',
+            offset       = 0xF101_0090,
+            bitOffset    = 0,
+            bitSize      = 1,
+            mode         = 'WO',
         ))
 
         self.add(pr.RemoteVariable(
@@ -276,23 +393,38 @@ class VersalPmc(pr.Device):
     # =====================================================================
     # STIG primitives (control-register path; never touch 0xC0000000)
     # =====================================================================
-    def _stigRun(self, cmd):
-        # The command strobe self-clears (cmd_exec bit), so writing it must NOT
-        # verify; poll OSPI_CMD_CTRL bit1 (busy) with fresh reads.
-        self.OSPI_CMD_CTRL.set(cmd, verify=False)
+    def _stigRun(self, opcode, enbRead=0, numRd=0, enbAddr=0, numAddr=0):
+        # Stage every writable field (write=False -> no hardware access), then
+        # flush the whole FLASH_CMD_CTRL block with ONE verified write via a RW
+        # field (CmdOpcode).  The flushed 32-bit word carries CmdExec=1, which
+        # launches the STIG command.  Verify checks only the readable RW bits;
+        # the WO cmd_exec and RO status/reserved bits are excluded from the
+        # verify mask, so there are no false read-back errors.  All writable
+        # fields are set explicitly so no stale bits leak from a prior command.
+        self.EnbReadData.set(enbRead,  write=False)
+        self.NumRdDataBytes.set(numRd, write=False)
+        self.EnbCmdAddr.set(enbAddr,   write=False)
+        self.EnbModeBit.set(0,         write=False)
+        self.NumAddrBytes.set(numAddr, write=False)
+        self.EnbWriteData.set(0,       write=False)
+        self.NumWrDataBytes.set(0,     write=False)
+        self.NumDummyCycles.set(0,     write=False)
+        self.StigMemBankEn.set(0,      write=False)
+        self.CmdExec.set(1,            write=False)   # trigger bit (WO), staged
+        self.CmdOpcode.set(opcode)                    # flush block + verify RW + launch
         for _ in range(5000):
-            if (self.OSPI_CMD_CTRL.get() & 0x2) == 0:
+            if self.CmdExecStatus.get() == 0:         # cmd_exec_status (busy) cleared
                 return
 
     def _rdid(self):
-        self._stigRun(0x9FA00001)
+        self._stigRun(0x9F, enbRead=1, numRd=2)       # RDID: read 3 bytes
         return self.OSPI_RD_DATA_LOWER.get() & 0xFFFFFF
 
     def _wren(self):
-        self._stigRun((self.OP_WREN << 24) | 1)
+        self._stigRun(self.OP_WREN)
 
     def _rdFsr(self):
-        self._stigRun((self.OP_RDFSR << 24) | (1 << 23) | 1)
+        self._stigRun(self.OP_RDFSR, enbRead=1)       # read 1 byte (numRd=0)
         return self.OSPI_RD_DATA_LOWER.get() & 0xFF
 
     def _waitReady(self):
@@ -375,17 +507,17 @@ class VersalPmc(pr.Device):
         # PCIe->AXI path (the .tcl's mwr never verifies either).
         ref = self.CRP_OSPI_REF_CTRL.get()
         if not ((ref >> 24) & 1):
-            self.CRP_OSPI_REF_CTRL.set(ref | 0x0100_0000, verify=False)
+            self.CRP_OSPI_REF_CTRL.set(ref | 0x0100_0000)
         if self.RST_OSPI.get() & 1:
-            self.RST_OSPI.set(0, verify=False)
+            self.RST_OSPI.set(0)
 
         # ---------- confirm the part (HW-reset recovery if stuck) -------------
         fid = self._rdid()
         if fid in (0xFFFFFF, 0):
             d = self.PMC_GPIO_DATA0.get()
-            self.PMC_GPIO_DATA0.set(d & ~0x1000, verify=False)
+            self.PMC_GPIO_DATA0.set(d & ~0x1000)
             time.sleep(0.05)
-            self.PMC_GPIO_DATA0.set(d | 0x1000, verify=False)
+            self.PMC_GPIO_DATA0.set(d | 0x1000)
             time.sleep(0.2)
             fid = self._rdid()
         print(f'JEDEC ID = 0x{fid:06X}')
@@ -414,21 +546,21 @@ class VersalPmc(pr.Device):
         for s in range(sfirst, slast + 1, self.SECTOR):
             print(f'erase sector 0x{s:08X}')
             self._wren()
-            self.OSPI_CMD_ADDR.set(s, verify=False)
-            self._stigRun((self.OP_SE4B << 24) | (1 << 19) | (3 << 16) | 1)
+            self.OSPI_CMD_ADDR.set(s)
+            self._stigRun(self.OP_SE4B, enbAddr=1, numAddr=3)   # SE4B: 4-byte address
             if not self._waitReady():
                 raise RuntimeError(f'erase failed @ 0x{s:08X}')
 
         # ---------- configure DAC write path, then enable Linear mode ---------
         axi_prev = self.OSPI_AXI_SEL.get()
-        self.OSPI_WR_PROT.set(0, verify=False)               # no flash-region write protect
-        self.OSPI_WR_INSTR.set(self.OP_PP4B, verify=False)   # PP4B, wel_dis=0 (auto-WREN)
-        self.OSPI_RD_INSTR.set(self.OP_RD4B, verify=False)   # READ 4B (DAC read-back)
+        self.OSPI_WR_PROT.set(0)               # no flash-region write protect
+        self.OSPI_WR_INSTR.set(self.OP_PP4B)   # PP4B, wel_dis=0 (auto-WREN)
+        self.OSPI_RD_INSTR.set(self.OP_RD4B)   # READ 4B (DAC read-back)
         dz = (self.OSPI_DEV_SIZE.get() & ~0xF) | 0x3         # num_addr_bytes=4
-        self.OSPI_DEV_SIZE.set(dz, verify=False)
+        self.OSPI_DEV_SIZE.set(dz)
         if not self._waitIdle():
             print('WARN: controller not idle before DAC enable')
-        self.OSPI_AXI_SEL.set(0x3, verify=False)             # Linear mode: interconnect -> DAC
+        self.OSPI_AXI_SEL.set(0x3)             # Linear mode: interconnect -> DAC
         print(f'DAC enabled: OSPI_AXI_Sel 0x{axi_prev:X} -> 0x3, '
               f'Write_Instr=0x{self.OP_PP4B:02X}, Device_Size=0x{dz:08X}')
 
@@ -472,6 +604,6 @@ class VersalPmc(pr.Device):
         finally:
             # ---------- restore AXI mux to as-found ---------------------------
             self._waitIdle()
-            self.OSPI_AXI_SEL.set(axi_prev, verify=False)
+            self.OSPI_AXI_SEL.set(axi_prev)
             print(f'restored OSPI_AXI_Sel -> 0x{axi_prev:X}')
         print('=== done ===')

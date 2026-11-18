@@ -256,9 +256,6 @@ if __name__ == "__main__":
         # Check if not the primary PCIe endpoint on the PCIe card
         if AxiVersion.BOOT_PROM_G.get() != 0xFFFFFFFF:
             promType   = AxiVersion.BOOT_PROM_G.getDisp()
-        # Fallback for Versal firmware built before BOOT_PROM_G='PS' existed
-        elif AxiVersion.XIL_DEVICE_G.getDisp() == 'VERSAL':
-            promType   = 'PS'
         else:
             print("\n\nNo PROM type detected!!!")
             print("This is likely due to this PCIe interface not being the primary one on the PCIe card")

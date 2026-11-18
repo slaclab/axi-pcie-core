@@ -139,7 +139,6 @@ architecture mapping of XilinxAlveoV80Core is
    signal sysClock     : sl;
    signal sysReset     : sl;
    signal systemReset  : sl;
-   signal systemResetL : sl;
    signal cardReset    : sl;
    signal dmaIrq       : sl;
 
@@ -159,7 +158,6 @@ begin
          rstOut => dmaRst);
 
    systemReset  <= sysReset or cardReset;
-   systemResetL <= not(systemReset);
 
    -- https://docs.amd.com/r/en-US/am002-versal-gty-transceivers/Input-Mode
    U_IBUFDS : IBUFDS_GTE5

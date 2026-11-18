@@ -227,7 +227,6 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    end component;
 
    signal clk    : sl;
-   signal rst    : sl;
    signal rstL   : sl;
    signal plRstN : sl;
 
@@ -257,7 +256,7 @@ begin
          rstOut => axiRst);
 
    -------------------------------------------------------------------------
-   -- PL CPM5 manager: after reset it programs the CPM5_DMA1 BDF
+   -- PL CPM5 manager: after a register access it programs the CPM5_DMA1 BDF
    -- address-translation table, then services DMA interrupts by writing
    -- TX_IRQ_CSR (0xFCEA0E7C) via S_AXI_LPD to raise the PCIe TX MSI directly,
    -- replacing the defective CPM5 bridge1 usr_irq_req / usr_irq_ack handshake.

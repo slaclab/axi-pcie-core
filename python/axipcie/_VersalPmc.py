@@ -31,6 +31,8 @@ import time
 
 import click
 
+import gzip
+
 import pyrogue                     as pr
 import rogue.interfaces.memory     as rim
 
@@ -414,9 +416,12 @@ class VersalPmc(pr.Device):
         self.StigMemBankEn.set(0,      write=False)
         self.CmdExec.set(1,            write=False)   # trigger bit (WO), staged
         self.CmdOpcode.set(opcode)                    # flush block + verify RW + launch
-        for _ in range(5000):
+        
+        deadline = time.monotonic() + 1.0
+        while time.monotonic() < deadline:
             if self.CmdExecStatus.get() == 0:         # cmd_exec_status (busy) cleared
                 return
+        raise RuntimeError(f'OSPI STIG command 0x{opcode:02X} timed out')
 
     def _rdid(self):
         self._stigRun(0x9F, enbRead=1, numRd=2)       # RDID: read 3 bytes
@@ -489,7 +494,8 @@ class VersalPmc(pr.Device):
         if (start % self.PAGE) != 0:
             raise ValueError(f'start 0x{start:X} must be 256 B page-aligned')
 
-        with open(binFile, 'rb') as fh:
+        opener = gzip.open if binFile.endswith('.gz') else open
+        with opener(binFile, 'rb') as fh:
             blob = fh.read()
         length = len(blob)
         if length == 0:
@@ -504,9 +510,6 @@ class VersalPmc(pr.Device):
         self.enable.set(True)
 
         # ---------- bring-up: OSPI ref clock on, controller out of reset -------
-        # Control-register writes use verify=False: these OSPI/CRP command and
-        # config registers do not reliably read back the written value over the
-        # PCIe->AXI path (the .tcl's mwr never verifies either).
         ref = self.CRP_OSPI_REF_CTRL.get()
         if not ((ref >> 24) & 1):
             self.CRP_OSPI_REF_CTRL.set(ref | 0x0100_0000)
@@ -546,8 +549,8 @@ class VersalPmc(pr.Device):
                 self._wren()
                 self.OSPI_CMD_ADDR.set(s)
                 self._stigRun(self.OP_SE4B, enbAddr=1, numAddr=3)   # SE4B: 4-byte address
-                if not self._waitReady():
-                    raise RuntimeError(f'erase failed @ 0x{s:08X}')
+                if not self._waitIdle():
+                    raise RuntimeError('OSPI controller not idle before DAC enable')
                 bar.update(1)
 
         # ---------- configure DAC write path, then enable Linear mode ---------

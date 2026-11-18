@@ -50,6 +50,7 @@ class AxiPcieCore(pr.Device):
                  useBpi       = False,
                  useGpu       = False,
                  useSpi       = False,
+                 useOspi      = False,
                  transceiverClass = [None],
                  numDmaLanes  = 1,
                  boardType    = None,
@@ -149,6 +150,17 @@ class AxiPcieCore(pr.Device):
                         addrMode     =  True, # True = 32-bit Address Mode
                         hidden       =  True,
                     ))
+
+            # Check if using the Versal PMC OSPI flash (Alveo V80).  Its control
+            # registers and DAC window live in BAR2, which the driver maps at
+            # rogue address 0x2_0000_0000 (covers the Versal AXI space 1:1, so
+            # phys P -> 0x2_0000_0000 + P).  Added disabled so it is never
+            # read/polled on cards without that aperture; enable before use.
+            if (useOspi):
+                self.add(pcie.VersalPmc(
+                    offset  = 0x2_0000_0000,
+                    enabled = False,
+                ))
 
             # I2C access is slow.  So using a AXI-Lite proxy to prevent holding up CPU during a BAR0 memory map transaction
             if not (extended):

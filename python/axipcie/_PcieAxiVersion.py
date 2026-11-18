@@ -75,6 +75,7 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x0: 'BPI',
                 0x1: 'SPIx8',
                 0x2: 'SPIx4',
+                0x3: 'PS',   # Versal: boot PROM (OSPI) programmed via the PS/PMC
                 0xFFFF_FFFF: 'UNDEFINED',
             },
         ))

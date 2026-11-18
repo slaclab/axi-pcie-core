@@ -16,3 +16,4 @@ from axipcie._AxiPcieRoot     import *
 from axipcie._AxiPipCore      import *
 from axipcie._PcieAxiVersion  import *
 from axipcie._TerminateQsfp   import *
+from axipcie._VersalPmc       import *

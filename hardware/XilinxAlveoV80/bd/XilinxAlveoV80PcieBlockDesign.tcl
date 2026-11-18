@@ -746,17 +746,29 @@ proc create_root_design { parentCell } {
   #
   # PCIe BAR2 traffic is steered (CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING =
   # CPM_PL_AXI0) out of the CPM onto the CPM_PL_AXI0 PL master, through
-  # smartconnect_0 and into the CIPS S_AXI_LPD slave. This replaces the old
-  # CPM_PCIE_NOC_0 -> axi_noc_0 -> NOC_PMC_AXI_0 NoC bridge, giving the PCIe host
+  # smartconnect_0 and into the CIPS S_AXI_LPD slave. This gives the PCIe host
   # a direct path to every LPD/PMC peripheral (OSPI controller, OSPI/QSPI flash
   # DAC window, PMC GPIO, CRP, CPM5 TX_IRQ_CSR, ...) at its native register
-  # address. Every S_AXI_LPD slave segment is a fixed-address PS/PMC peripheral,
-  # so assign the full default set to the CPM_PL_AXI0 master space (nothing
-  # excluded); each lands at its hardware address.
+  # address. Only the S_AXI_LPD slave segments that are required are mapped;
+  # each lands at its hardware address.
   # ---------------------------------------------------------------------------
   set pl_axi0_space [get_bd_addr_spaces cips/CPM_PL_AXI0]
+
+  # Only what OSPI reprogramming and the POR reset need
+  set pl_axi0_segs {
+     pspmc_0_psv_pmc_qspi_ospi_flash_0
+     pspmc_0_psv_pmc_ospi_0
+     pspmc_0_psv_pmc_gpio_0
+     pspmc_0_psv_pmc_iou_slcr_0
+     pspmc_0_psv_crp_0
+  }
+
   foreach seg [get_bd_addr_segs cips/S_AXI_LPD/*] {
-     assign_bd_address -target_address_space $pl_axi0_space $seg -force
+     if { [lsearch -exact $pl_axi0_segs [file tail $seg]] >= 0 } {
+        assign_bd_address -target_address_space $pl_axi0_space $seg -force
+     } else {
+        catch { exclude_bd_addr_seg -target_address_space $pl_axi0_space $seg }
+     }
   }
 
   # Restore current instance

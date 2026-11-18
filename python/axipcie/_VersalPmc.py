@@ -29,6 +29,8 @@
 
 import time
 
+import click
+
 import pyrogue                     as pr
 import rogue.interfaces.memory     as rim
 
@@ -530,26 +532,23 @@ class VersalPmc(pr.Device):
         slast  = (end - 1) - ((end - 1) % self.SECTOR)
         nsec   = ((slast - sfirst) // self.SECTOR) + 1
         nwords = (length + 3) // 4
-        print('-------------------------------------------------------------')
-        print(f'PLAN: write {length} (0x{length:X}) bytes "{binFile}" at flash 0x{start:08X}')
-        print(f'  ERASE   {nsec} x 128KB sector(s): 0x{sfirst:08X} .. '
-              f'0x{slast + self.SECTOR - 1:08X}  (STIG)')
-        print(f'  PROGRAM {nwords} x 32-bit word(s) via DAC window 0xC0000000+off')
         if dryRun:
-            print('  DRY RUN - nothing written.')
-            print('-------------------------------------------------------------')
+            print(f'DRY RUN: would erase {nsec} x 128KB sector(s) and program '
+                  f'{length} bytes at flash 0x{start:08X} (nothing written)')
             return
-        print('  ERASING (STIG) + PROGRAMMING (DAC @ 0xC0000000) NOW')
-        print('-------------------------------------------------------------')
 
         # ---------- ERASE sectors (STIG SE4B) ---------------------------------
-        for s in range(sfirst, slast + 1, self.SECTOR):
-            print(f'erase sector 0x{s:08X}')
-            self._wren()
-            self.OSPI_CMD_ADDR.set(s)
-            self._stigRun(self.OP_SE4B, enbAddr=1, numAddr=3)   # SE4B: 4-byte address
-            if not self._waitReady():
-                raise RuntimeError(f'erase failed @ 0x{s:08X}')
+        with click.progressbar(
+            length = nsec,
+            label  = click.style('Erasing OSPI:   ', fg='green'),
+        ) as bar:
+            for s in range(sfirst, slast + 1, self.SECTOR):
+                self._wren()
+                self.OSPI_CMD_ADDR.set(s)
+                self._stigRun(self.OP_SE4B, enbAddr=1, numAddr=3)   # SE4B: 4-byte address
+                if not self._waitReady():
+                    raise RuntimeError(f'erase failed @ 0x{s:08X}')
+                bar.update(1)
 
         # ---------- configure DAC write path, then enable Linear mode ---------
         axi_prev = self.OSPI_AXI_SEL.get()
@@ -561,8 +560,6 @@ class VersalPmc(pr.Device):
         if not self._waitIdle():
             print('WARN: controller not idle before DAC enable')
         self.OSPI_AXI_SEL.set(0x3)             # Linear mode: interconnect -> DAC
-        print(f'DAC enabled: OSPI_AXI_Sel 0x{axi_prev:X} -> 0x3, '
-              f'Write_Instr=0x{self.OP_PP4B:02X}, Device_Size=0x{dz:08X}')
 
         try:
             # ---------- PROGRAM via DAC: one 32-bit word at a time ------------
@@ -570,40 +567,42 @@ class VersalPmc(pr.Device):
             # controller auto-WRENs + PP4B + auto-polls WIP; consecutive writes
             # self-pace via AXI back-pressure.  A final partial word is padded
             # with 0xFF (leaves erased flash unchanged).
-            for w in range(nwords):
-                chunk = blob[w * 4:w * 4 + 4]
-                word  = int.from_bytes(chunk + b'\xFF' * (4 - len(chunk)), 'little')
-                self._wr32(self.DAC_BASE + start + w * 4, word)
-                if (w & 0x3FFF) == 0x3FFF:
-                    print(f'  wrote {w + 1}/{nwords} words')
-            print(f'program complete: {nwords} words streamed')
+            with click.progressbar(
+                length = length,
+                label  = click.style('Writing OSPI:   ', fg='green'),
+            ) as bar:
+                for w in range(nwords):
+                    chunk = blob[w * 4:w * 4 + 4]
+                    word  = int.from_bytes(chunk + b'\xFF' * (4 - len(chunk)), 'little')
+                    self._wr32(self.DAC_BASE + start + w * 4, word)
+                    if (w & 0xFFF) == 0xFFF:
+                        bar.update(0x4000)     # 0x1000 words * 4 bytes
+                bar.update(length)
 
             # ---------- let the last write finish, then verify via DAC reads --
             if not self._waitIdle():
                 print('WARN: controller not idle before verify')
 
             if verify:
-                print('verifying (direct 0xC0000000 reads, no STIG)...')
-                bad = 0
-                for w in range(nwords):
-                    got = self._rd32(self.DAC_BASE + start + w * 4)
-                    for b in range(4):
-                        idx = w * 4 + b
-                        if idx >= length:
-                            break
-                        fv = (got >> (8 * b)) & 0xFF   # DAC word is little-endian
-                        if fv != blob[idx]:
-                            print(f'  MISMATCH @0x{start + idx:08X} '
-                                  f'flash=0x{fv:02X} file=0x{blob[idx]:02X}')
-                            bad += 1
-                    if bad >= 16:
-                        break
-                if bad:
-                    raise RuntimeError(f'VERIFY FAILED ({bad}+ mismatches)')
-                print('VERIFY PASS (DAC read-back)')
+                with click.progressbar(
+                    length = length,
+                    label  = click.style('Verifying OSPI: ', fg='green'),
+                ) as bar:
+                    for w in range(nwords):
+                        got = self._rd32(self.DAC_BASE + start + w * 4)
+                        for b in range(4):
+                            idx = w * 4 + b
+                            if idx >= length:
+                                break
+                            fv = (got >> (8 * b)) & 0xFF   # DAC word is little-endian
+                            if fv != blob[idx]:
+                                raise RuntimeError(
+                                    f'verify failed @ flash 0x{start + idx:08X}: '
+                                    f'flash=0x{fv:02X} file=0x{blob[idx]:02X}')
+                        if (w & 0xFFF) == 0xFFF:
+                            bar.update(0x4000)
+                    bar.update(length)
         finally:
             # ---------- restore AXI mux to as-found ---------------------------
             self._waitIdle()
             self.OSPI_AXI_SEL.set(axi_prev)
-            print(f'restored OSPI_AXI_Sel -> 0x{axi_prev:X}')
-        print('=== done ===')

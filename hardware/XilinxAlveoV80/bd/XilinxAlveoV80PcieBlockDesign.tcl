@@ -636,11 +636,11 @@ proc create_root_design { parentCell } {
     CONFIG.NUM_SI {2} \
   ] $smartconnect_0
 
-  set awcache_const [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 awcache_const]
+  set axcache_const [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 axcache_const]
   set_property -dict [list \
     CONFIG.CONST_VAL {0} \
     CONFIG.CONST_WIDTH {4} \
-  ] $awcache_const
+  ] $axcache_const
 
   # Create interface connections
   connect_bd_intf_net -intf_net axi_noc_0_M00_AXI [get_bd_intf_pins cips/NOC_CPM_PCIE_0] [get_bd_intf_pins axi_noc_dma_0/M00_AXI]
@@ -678,7 +678,8 @@ proc create_root_design { parentCell } {
   [get_bd_pins cips/dma1_intrfc_resetn] \
   [get_bd_pins smartconnect_0/aresetn]
 
-  connect_bd_net [get_bd_pins awcache_const/dout] [get_bd_pins cips/S_AXI_LPD_awcache]
+  connect_bd_net [get_bd_pins axcache_const/dout] [get_bd_pins cips/S_AXI_LPD_awcache]
+  connect_bd_net [get_bd_pins axcache_const/dout] [get_bd_pins cips/S_AXI_LPD_arcache]
 
   # Create address segments
   assign_bd_address -offset 0x00000000 -range 0x200000000 -target_address_space [get_bd_addr_spaces cips/CPM_PL_AXI1] [get_bd_addr_segs mAxi/Reg] -force

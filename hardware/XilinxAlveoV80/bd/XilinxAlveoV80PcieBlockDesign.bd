@@ -15,7 +15,7 @@
       "axi_noc_mc_ddr4_0": "",
       "axi_noc_dma_0": "",
       "smartconnect_0": "",
-      "awcache_const": ""
+      "axcache_const": ""
     },
     "interface_ports": {
       "psDDR": {
@@ -4129,12 +4129,12 @@
           }
         }
       },
-      "awcache_const": {
+      "axcache_const": {
         "vlnv": "xilinx.com:ip:xlconstant:1.1",
         "ip_revision": "10",
-        "xci_name": "XilinxAlveoV80PcieBlockDesign_awcache_const_0",
-        "xci_path": "ip/XilinxAlveoV80PcieBlockDesign_awcache_const_0/XilinxAlveoV80PcieBlockDesign_awcache_const_0.xci",
-        "inst_hier_path": "awcache_const",
+        "xci_name": "XilinxAlveoV80PcieBlockDesign_axcache_const_0",
+        "xci_path": "ip/XilinxAlveoV80PcieBlockDesign_axcache_const_0/XilinxAlveoV80PcieBlockDesign_axcache_const_0.xci",
+        "inst_hier_path": "axcache_const",
         "has_run_ip_tcl": "true",
         "parameters": {
           "CONST_VAL": {
@@ -4232,10 +4232,11 @@
           "smartconnect_0/aclk"
         ]
       },
-      "awcache_const_dout": {
+      "axcache_const_dout": {
         "ports": [
-          "awcache_const/dout",
-          "cips/S_AXI_LPD_awcache"
+          "axcache_const/dout",
+          "cips/S_AXI_LPD_awcache",
+          "cips/S_AXI_LPD_arcache"
         ]
       },
       "cips_lpd_axi_noc_clk": {

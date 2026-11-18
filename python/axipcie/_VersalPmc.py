@@ -230,26 +230,34 @@ class VersalPmc(pr.Device):
     # The DAC linear window has no RemoteVariable (it is a 256 MB flash
     # aperture), so it is driven with raw 32-bit transactions.  Every other
     # register goes through its RemoteVariable's .set()/.get() instead.
+    #
+    # NOTE: a self-initiated _reqTransaction does NOT apply this Device's own
+    # hub offset (unlike a RemoteVariable's Block, whose address is the full
+    # accumulated offset).  So the DEVICE-RELATIVE `addr` must be turned into an
+    # absolute memory-map address by adding self.address (the device's
+    # accumulated base, e.g. 0x2_0000_0000 for the BAR2-mapped VersalPmc).
     # =====================================================================
     def _wr32(self, addr, value):
-        """Raw 32-bit write (DAC window only)."""
+        """Raw 32-bit write (DAC window only); addr is device-relative."""
+        abs_addr = self.address + addr
         data = bytearray(int(value & 0xFFFFFFFF).to_bytes(4, 'little'))
-        tid = self._reqTransaction(addr, data, 4, 0, rim.Write)
+        tid = self._reqTransaction(abs_addr, data, 4, 0, rim.Write)
         self._waitTransaction(tid)
         err = self._getError()
         if err != '':
             self._clearError()
-            raise pr.MemoryError(name=self.path, address=addr, msg=err, size=4)
+            raise pr.MemoryError(name=self.path, address=abs_addr, msg=err, size=4)
 
     def _rd32(self, addr):
-        """Raw 32-bit read (DAC window only)."""
+        """Raw 32-bit read (DAC window only); addr is device-relative."""
+        abs_addr = self.address + addr
         data = bytearray(4)
-        tid = self._reqTransaction(addr, data, 4, 0, rim.Read)
+        tid = self._reqTransaction(abs_addr, data, 4, 0, rim.Read)
         self._waitTransaction(tid)
         err = self._getError()
         if err != '':
             self._clearError()
-            raise pr.MemoryError(name=self.path, address=addr, msg=err, size=4)
+            raise pr.MemoryError(name=self.path, address=abs_addr, msg=err, size=4)
         return int.from_bytes(data, 'little')
 
     def porReset(self):
@@ -259,11 +267,11 @@ class VersalPmc(pr.Device):
         boot image.  The PCIe link drops as a side effect, so the write is
         POSTed (fire-and-forget) and not waited on - the device is gone before
         any response could come back."""
-        addr = self.CRP_RST_PS.offset
+        rel = self.CRP_RST_PS.offset
         print('POR_B reset: writing 0x8 to CRP 0x%08X (device will reboot from OSPI)'
-              % addr)
+              % rel)
         data = bytearray((0x8).to_bytes(4, 'little'))
-        self._reqTransaction(addr, data, 4, 0, rim.Post)
+        self._reqTransaction(self.address + rel, data, 4, 0, rim.Post)
 
     # =====================================================================
     # STIG primitives (control-register path; never touch 0xC0000000)
@@ -362,19 +370,22 @@ class VersalPmc(pr.Device):
         self.enable.set(True)
 
         # ---------- bring-up: OSPI ref clock on, controller out of reset -------
+        # Control-register writes use verify=False: these OSPI/CRP command and
+        # config registers do not reliably read back the written value over the
+        # PCIe->AXI path (the .tcl's mwr never verifies either).
         ref = self.CRP_OSPI_REF_CTRL.get()
         if not ((ref >> 24) & 1):
-            self.CRP_OSPI_REF_CTRL.set(ref | 0x0100_0000)
+            self.CRP_OSPI_REF_CTRL.set(ref | 0x0100_0000, verify=False)
         if self.RST_OSPI.get() & 1:
-            self.RST_OSPI.set(0)
+            self.RST_OSPI.set(0, verify=False)
 
         # ---------- confirm the part (HW-reset recovery if stuck) -------------
         fid = self._rdid()
         if fid in (0xFFFFFF, 0):
             d = self.PMC_GPIO_DATA0.get()
-            self.PMC_GPIO_DATA0.set(d & ~0x1000)
+            self.PMC_GPIO_DATA0.set(d & ~0x1000, verify=False)
             time.sleep(0.05)
-            self.PMC_GPIO_DATA0.set(d | 0x1000)
+            self.PMC_GPIO_DATA0.set(d | 0x1000, verify=False)
             time.sleep(0.2)
             fid = self._rdid()
         print(f'JEDEC ID = 0x{fid:06X}')
@@ -403,21 +414,21 @@ class VersalPmc(pr.Device):
         for s in range(sfirst, slast + 1, self.SECTOR):
             print(f'erase sector 0x{s:08X}')
             self._wren()
-            self.OSPI_CMD_ADDR.set(s)
+            self.OSPI_CMD_ADDR.set(s, verify=False)
             self._stigRun((self.OP_SE4B << 24) | (1 << 19) | (3 << 16) | 1)
             if not self._waitReady():
                 raise RuntimeError(f'erase failed @ 0x{s:08X}')
 
         # ---------- configure DAC write path, then enable Linear mode ---------
         axi_prev = self.OSPI_AXI_SEL.get()
-        self.OSPI_WR_PROT.set(0)                 # no flash-region write protect
-        self.OSPI_WR_INSTR.set(self.OP_PP4B)     # PP4B, wel_dis=0 (auto-WREN)
-        self.OSPI_RD_INSTR.set(self.OP_RD4B)     # READ 4B (DAC read-back)
-        dz = (self.OSPI_DEV_SIZE.get() & ~0xF) | 0x3   # num_addr_bytes=4
-        self.OSPI_DEV_SIZE.set(dz)
+        self.OSPI_WR_PROT.set(0, verify=False)               # no flash-region write protect
+        self.OSPI_WR_INSTR.set(self.OP_PP4B, verify=False)   # PP4B, wel_dis=0 (auto-WREN)
+        self.OSPI_RD_INSTR.set(self.OP_RD4B, verify=False)   # READ 4B (DAC read-back)
+        dz = (self.OSPI_DEV_SIZE.get() & ~0xF) | 0x3         # num_addr_bytes=4
+        self.OSPI_DEV_SIZE.set(dz, verify=False)
         if not self._waitIdle():
             print('WARN: controller not idle before DAC enable')
-        self.OSPI_AXI_SEL.set(0x3)               # Linear mode: interconnect -> DAC
+        self.OSPI_AXI_SEL.set(0x3, verify=False)             # Linear mode: interconnect -> DAC
         print(f'DAC enabled: OSPI_AXI_Sel 0x{axi_prev:X} -> 0x3, '
               f'Write_Instr=0x{self.OP_PP4B:02X}, Device_Size=0x{dz:08X}')
 
@@ -461,6 +472,6 @@ class VersalPmc(pr.Device):
         finally:
             # ---------- restore AXI mux to as-found ---------------------------
             self._waitIdle()
-            self.OSPI_AXI_SEL.set(axi_prev)
+            self.OSPI_AXI_SEL.set(axi_prev, verify=False)
             print(f'restored OSPI_AXI_Sel -> 0x{axi_prev:X}')
         print('=== done ===')

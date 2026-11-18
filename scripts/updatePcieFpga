@@ -158,13 +158,13 @@ class Root(pr.Root):
         self.memMap = rogue.hardware.axi.AxiMemMap(dev)
         self.addInterface(self.memMap)
 
-        # Add Base Device.  useOspi adds the Versal (Alveo V80) PMC/OSPI flash
+        # Add Base Device.  usePmc adds the Versal (Alveo V80) PMC/OSPI flash
         # access (disabled by default, so it is never read on non-Versal cards).
         self.add(pcie.AxiPcieCore(
             memBase = self.memMap,
             useBpi  = True,
             useSpi  = True,
-            useOspi = True,
+            usePmc  = True,
         ))
 
 #################################################################
@@ -256,6 +256,9 @@ if __name__ == "__main__":
         # Check if not the primary PCIe endpoint on the PCIe card
         if AxiVersion.BOOT_PROM_G.get() != 0xFFFFFFFF:
             promType   = AxiVersion.BOOT_PROM_G.getDisp()
+        # Fallback for Versal firmware built before BOOT_PROM_G='PS' existed
+        elif AxiVersion.XIL_DEVICE_G.getDisp() == 'VERSAL':
+            promType   = 'PS'
         else:
             print("\n\nNo PROM type detected!!!")
             print("This is likely due to this PCIe interface not being the primary one on the PCIe card")
@@ -275,7 +278,7 @@ if __name__ == "__main__":
                 PROM_SEC = root.AxiPcieCore.AxiMicronN25Q[1]
         elif (promType == 'PS'):
             # Versal (Alveo V80): OSPI flash programmed via the PMC DAC window.
-            # VersalPmc is added disabled (see AxiPcieCore useOspi); enable it.
+            # VersalPmc is added disabled (see AxiPcieCore usePmc); enable it.
             root.AxiPcieCore.VersalPmc.enable.set(True)
             PROM_PRI = root.AxiPcieCore.VersalPmc
             promExt  = 'pdi'

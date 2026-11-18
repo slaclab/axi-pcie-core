@@ -50,7 +50,7 @@ class AxiPcieCore(pr.Device):
                  useBpi       = False,
                  useGpu       = False,
                  useSpi       = False,
-                 useOspi      = False,
+                 usePmc       = False,
                  transceiverClass = [None],
                  numDmaLanes  = 1,
                  boardType    = None,
@@ -156,7 +156,7 @@ class AxiPcieCore(pr.Device):
             # rogue address 0x2_0000_0000 (covers the Versal AXI space 1:1, so
             # phys P -> 0x2_0000_0000 + P).  Added disabled so it is never
             # read/polled on cards without that aperture; enable before use.
-            if (useOspi):
+            if (usePmc):
                 self.add(pcie.VersalPmc(
                     offset  = 0x2_0000_0000,
                     enabled = False,

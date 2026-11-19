@@ -549,7 +549,7 @@ class VersalPmc(pr.Device):
                 self._wren()
                 self.OSPI_CMD_ADDR.set(s)
                 self._stigRun(self.OP_SE4B, enbAddr=1, numAddr=3)   # SE4B: 4-byte address
-                if not self._waitIdle():
+                if not self._waitReady():
                     raise RuntimeError('OSPI controller not idle before DAC enable')
                 bar.update(1)
 

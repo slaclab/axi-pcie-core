@@ -644,10 +644,10 @@ proc create_root_design { parentCell } {
     CONFIG.CONST_WIDTH {4} \
   ] $axcache_const
 
-  set link_status_logic [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilreduced_logic:1.0 link_status_logic ]
+  set link_status_logic [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilvector_logic:1.0 link_status_logic ]
   set_property -dict [ list \
-    CONFIG.C_SIZE {2} \
-    CONFIG.C_OPERATION {and} \
+    CONFIG.C_SIZE {1} \
+    CONFIG.C_OPERATION {not} \
   ] $link_status_logic
 
   # Create interface connections
@@ -685,7 +685,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net dma1_intrfc_resetn_0_1  [get_bd_ports dmaRstN] \
   [get_bd_pins cips/dma1_intrfc_resetn] \
   [get_bd_pins smartconnect_0/aresetn]
-  connect_bd_net -net link_status_logic_to_in   [get_bd_pins cips/pcie1_cfg_status_phy_link_status] \
+  connect_bd_net -net link_status_logic_to_in   [get_bd_pins cips/pcie1_cfg_status_phy_link_down] \
   [get_bd_pins link_status_logic/Op1]
   connect_bd_net -net link_status_logic_to_out  [get_bd_pins link_status_logic/Res] \
   [get_bd_ports pciRstN]

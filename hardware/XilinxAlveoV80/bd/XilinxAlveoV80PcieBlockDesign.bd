@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x654BF937CAE08993",
+      "boundary_crc": "0x358E967421DD9A36",
       "device": "xcv80-lsva4737-2MHP-e-S",
       "gen_directory": "../../../../XilinxAlveoV80PrbsTester_project.gen/sources_1/bd/XilinxAlveoV80PcieBlockDesign",
       "name": "XilinxAlveoV80PcieBlockDesign",
@@ -1351,6 +1351,8 @@
       "pciRstN": {
         "type": "rst",
         "direction": "O",
+        "left": "0",
+        "right": "0",
         "parameters": {
           "INSERT_VIP": {
             "value": "0",
@@ -4161,13 +4163,13 @@
         }
       },
       "link_status_logic": {
-        "vlnv": "xilinx.com:inline_hdl:ilreduced_logic:1.0",
+        "vlnv": "xilinx.com:inline_hdl:ilvector_logic:1.0",
         "parameters": {
           "C_OPERATION": {
-            "value": "and"
+            "value": "not"
           },
           "C_SIZE": {
-            "value": "2"
+            "value": "1"
           }
         }
       }
@@ -4304,7 +4306,7 @@
       },
       "link_status_logic_to_in": {
         "ports": [
-          "cips/pcie1_cfg_status_phy_link_status",
+          "cips/pcie1_cfg_status_phy_link_down",
           "link_status_logic/Op1"
         ]
       },

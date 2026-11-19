@@ -4144,12 +4144,7 @@
         }
       },
       "axcache_const": {
-        "vlnv": "xilinx.com:ip:xlconstant:1.1",
-        "ip_revision": "10",
-        "xci_name": "XilinxAlveoV80PcieBlockDesign_axcache_const_0",
-        "xci_path": "ip/XilinxAlveoV80PcieBlockDesign_axcache_const_0/XilinxAlveoV80PcieBlockDesign_axcache_const_0.xci",
-        "inst_hier_path": "axcache_const",
-        "has_run_ip_tcl": "true",
+        "vlnv": "xilinx.com:inline_hdl:ilconstant:1.0",
         "parameters": {
           "CONST_VAL": {
             "value": "0"

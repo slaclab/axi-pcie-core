@@ -637,7 +637,7 @@ proc create_root_design { parentCell } {
     CONFIG.NUM_SI {2} \
   ] $smartconnect_0
 
-  set axcache_const [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 axcache_const]
+  set axcache_const [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconstant:1.0 axcache_const]
   set_property -dict [list \
     CONFIG.CONST_VAL {0} \
     CONFIG.CONST_WIDTH {4} \

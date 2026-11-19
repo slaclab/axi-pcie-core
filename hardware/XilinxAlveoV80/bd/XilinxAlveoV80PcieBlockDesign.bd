@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x65E733B5810ED176",
+      "boundary_crc": "0x654BF937CAE08993",
       "device": "xcv80-lsva4737-2MHP-e-S",
       "gen_directory": "../../../../XilinxAlveoV80PrbsTester_project.gen/sources_1/bd/XilinxAlveoV80PcieBlockDesign",
       "name": "XilinxAlveoV80PcieBlockDesign",
@@ -1344,6 +1344,20 @@
           "POLARITY": {
             "value": "ACTIVE_LOW",
             "value_src": "default"
+          }
+        }
+      },
+      "pciRstN": {
+        "type": "rst",
+        "direction": "O",
+        "parameters": {
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "POLARITY": {
+            "value": "ACTIVE_LOW",
+            "value_src": "user_prop"
           }
         }
       },
@@ -4237,6 +4251,12 @@
           "axcache_const/dout",
           "cips/S_AXI_LPD_awcache",
           "cips/S_AXI_LPD_arcache"
+        ]
+      },
+      "cips_dma1_axi_resetn": {
+        "ports": [
+          "cips/dma1_axi_aresetn",
+          "pciRstN"
         ]
       },
       "cips_lpd_axi_noc_clk": {

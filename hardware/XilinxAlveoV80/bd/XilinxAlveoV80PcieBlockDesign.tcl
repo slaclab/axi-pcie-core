@@ -273,6 +273,7 @@ proc create_root_design { parentCell } {
    CONFIG.ASSOCIATED_RESET {dmaRstN} \
  ] $dmaClk
   set plRstN [ create_bd_port -dir O -type rst plRstN ]
+  set pciRstN [ create_bd_port -dir O -type rst pciRstN ]
   set plRefClk [ create_bd_port -dir O -type clk plRefClk ]
   set dmaRstN [ create_bd_port -dir I -type rst dmaRstN ]
 
@@ -677,6 +678,8 @@ proc create_root_design { parentCell } {
   connect_bd_net -net dma1_intrfc_resetn_0_1  [get_bd_ports dmaRstN] \
   [get_bd_pins cips/dma1_intrfc_resetn] \
   [get_bd_pins smartconnect_0/aresetn]
+  connect_bd_net -net cips_dma1_axi_resetn  [get_bd_pins cips/dma1_axi_aresetn] \
+  [get_bd_ports pciRstN]
 
   connect_bd_net [get_bd_pins axcache_const/dout] [get_bd_pins cips/S_AXI_LPD_awcache]
   connect_bd_net [get_bd_pins axcache_const/dout] [get_bd_pins cips/S_AXI_LPD_arcache]

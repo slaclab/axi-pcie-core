@@ -222,13 +222,16 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
          dmaClk             : in    std_logic;
          plRstN             : out   std_logic;
          plRefClk           : out   std_logic;
-         dmaRstN            : in    std_logic
+         dmaRstN            : in    std_logic;
+         pciRstN            : out   std_logic
          );
    end component;
 
-   signal clk    : sl;
-   signal rstL   : sl;
-   signal plRstN : sl;
+   signal clk     : sl;
+   signal rstL    : sl;
+   signal plRstN  : sl;
+   signal pciRstN : sl;
+   signal cmbRstN : sl;
 
    -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR to generate the MSI
    signal msiWriteMaster : AxiLiteWriteMasterType;
@@ -287,7 +290,7 @@ begin
          DURATION_G     => getTimeRatio(250.0E+6, 100.0))  -- 10 ms reset (250e6/100 = 2.5e6 cycles)
       port map(
          clk    => clk,
-         arst   => plRstN,
+         arst   => cmbRstN,
          rstOut => rstL);
 
    -- Route signals to get an internal copy
@@ -297,6 +300,9 @@ begin
    regIntWriteSlave <= regWriteSlave;
 
    hostAccess <= regIntWriteMaster.awvalid or regIntReadMaster.arvalid;
+
+   -- Combine PL and PCIe resets
+   cmbRstN <= pciRstN and plRstN;
 
    -------------------
    -- AXI PCIe IP Core
@@ -308,6 +314,7 @@ begin
          dmaRstN            => plRstN,
          plRefClk           => clk,
          plRstN             => plRstN,
+         pciRstN            => pciRstN,
          -- LPD AXI4 Slave Interface (PL MSI generator -> CPM5 TX_IRQ_CSR)
          -- AXI-Lite master mapped onto the AXI4 slave (single-beat 32-bit).
          sAxiLpd_awaddr(31 downto 0)  => msiWriteMaster.awaddr(31 downto 0),

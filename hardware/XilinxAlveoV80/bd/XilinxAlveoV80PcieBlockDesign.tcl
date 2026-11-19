@@ -291,6 +291,7 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_AXIBAR2PCIE_BASEADDR_2_H {0x000000A0} \
       CPM_PCIE1_BRIDGE_AXI_SLAVE_IF {1} \
       CPM_PCIE1_CFG_EXT_IF {0} \
+      CPM_PCIE1_CFG_STS_IF {1} \
       CPM_PCIE1_CFG_VEND_ID {1A4A} \
       CPM_PCIE1_COPY_PF0_QDMA_ENABLED {0} \
       CPM_PCIE1_EXT_PCIE_CFG_SPACE_ENABLED {None} \
@@ -643,6 +644,12 @@ proc create_root_design { parentCell } {
     CONFIG.CONST_WIDTH {4} \
   ] $axcache_const
 
+  set link_status_logic [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilreduced_logic:1.0 link_status_logic ]
+  set_property -dict [ list \
+    CONFIG.C_SIZE {2} \
+    CONFIG.C_OPERATION {and} \
+  ] $link_status_logic
+
   # Create interface connections
   connect_bd_intf_net -intf_net axi_noc_0_M00_AXI [get_bd_intf_pins cips/NOC_CPM_PCIE_0] [get_bd_intf_pins axi_noc_dma_0/M00_AXI]
   connect_bd_intf_net -intf_net cips_CPM_PL_AXI0 [get_bd_intf_pins cips/CPM_PL_AXI0] [get_bd_intf_pins smartconnect_0/S01_AXI]
@@ -678,7 +685,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net dma1_intrfc_resetn_0_1  [get_bd_ports dmaRstN] \
   [get_bd_pins cips/dma1_intrfc_resetn] \
   [get_bd_pins smartconnect_0/aresetn]
-  connect_bd_net -net cips_dma1_axi_resetn  [get_bd_pins cips/dma1_axi_aresetn] \
+  connect_bd_net -net link_status_logic_to_in   [get_bd_pins cips/pcie1_cfg_status_phy_link_status] \
+  [get_bd_pins link_status_logic/Op1]
+  connect_bd_net -net link_status_logic_to_out  [get_bd_pins link_status_logic/Res] \
   [get_bd_ports pciRstN]
 
   connect_bd_net [get_bd_pins axcache_const/dout] [get_bd_pins cips/S_AXI_LPD_awcache]

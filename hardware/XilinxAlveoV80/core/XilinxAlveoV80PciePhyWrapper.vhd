@@ -284,7 +284,7 @@ begin
          TPD_G          => TPD_G,
          IN_POLARITY_G  => '0',                          -- Active LOW reset
          OUT_POLARITY_G => '0',                          -- Active LOW reset
-         DURATION_G     => getTimeRatio(250.0E+6, 10.0E-3))  -- 10 ms reset
+         DURATION_G     => getTimeRatio(250.0E+6, 100.0))  -- 10 ms reset (250e6/100 = 2.5e6 cycles)
       port map(
          clk    => clk,
          arst   => plRstN,

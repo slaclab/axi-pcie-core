@@ -435,24 +435,25 @@ class VersalPmc(pr.Device):
         return self.OSPI_RD_DATA_LOWER.get() & 0xFF
 
     def _waitReady(self):
-        for _ in range(20000):
+        deadline = time.monotonic() + 1.0
+        while time.monotonic() < deadline:
             f = self._rdFsr()
             if (f >> 7) & 1:
                 if (f >> 5) & 1:
-                    print('  !!FSR erase err')
+                    raise RuntimeError('  !!FSR erase err')
                     return False
                 if (f >> 4) & 1:
-                    print('  !!FSR prog err')
+                    raise RuntimeError('  !!FSR prog err')
                     return False
                 return True
-        print('  !!FSR ready timeout')
-        return False
+        raise RuntimeError('  !!FSR ready timeout')
 
     def _waitIdle(self):
-        for _ in range(200000):
+        deadline = time.monotonic() + 1.0
+        while time.monotonic() < deadline:
             if (self.OSPI_CONFIG.get() >> 31) & 1:
                 return True
-        return False
+        raise RuntimeError('  !!FSR ready timeout')
 
     # =====================================================================
     # Public API

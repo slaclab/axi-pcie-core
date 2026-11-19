@@ -416,7 +416,7 @@ class VersalPmc(pr.Device):
         self.StigMemBankEn.set(0,      write=False)
         self.CmdExec.set(1,            write=False)   # trigger bit (WO), staged
         self.CmdOpcode.set(opcode)                    # flush block + verify RW + launch
-        
+
         deadline = time.monotonic() + 1.0
         while time.monotonic() < deadline:
             if self.CmdExecStatus.get() == 0:         # cmd_exec_status (busy) cleared

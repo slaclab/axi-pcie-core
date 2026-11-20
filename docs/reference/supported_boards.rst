@@ -1,10 +1,10 @@
 Supported Boards
 ================
 
-This page is the lookup table for all 14 supported boards under ``hardware/``. The
+This page is the lookup table for all 15 supported boards under ``hardware/``. The
 table has one row per **variant**. Boards with multiple FPGA variants (BittWare
 XUP-VV8 with VU9P/VU13P, Abaco PC821 with KU085/KU115) each get two rows, so the
-total row count is 16 for 14 boards. See :doc:`/explanation/board_support` for an
+total row count is 17 for 15 boards. See :doc:`/explanation/board_support` for an
 explanation of the per-board directory layout and the ``ruckus.tcl`` chain used by
 downstream firmware projects.
 
@@ -121,7 +121,7 @@ Board Reference Table
      - PCIe 5, x8
      - none
      - Gen5x8
-     - ``XilinxAlveoV80``
+     - ``XilinxAlveoV80Core``
      - ``hardware/XilinxAlveoV80/core/XilinxAlveoV80Core.vhd``
 
 Notes
@@ -135,10 +135,10 @@ Notes
 
 * Vivado version requirements: Vivado 2020.1 or later is required for all boards except
   ``XilinxAlveoU55c`` and ``XilinxVariumC1100``, which require Vivado 2024.2 or later
-  due to their CMS block-design and HBM IP dependencies.  These are the *minimum*
-  versions enforced by ``shared/ruckus.tcl`` via ``VersionCheck``; at SLAC the current
-  tested production toolchain is Vivado 2025.2 (see
-  :doc:`/tutorial/first_build`).
+  due to their CMS block-design and HBM IP dependencies. Similarly ``XilinxAlveo80``
+  requires Vivado 2025.2 or later These are the *minimum* versions enforced by 
+  ``shared/ruckus.tcl`` via ``VersionCheck``; at SLAC the current tested production 
+  toolchain is Vivado 2025.2 (see doc:`/tutorial/first_build`).
 
 * See :doc:`/explanation/board_support` for the per-board directory layout
   (``hardware/<Board>/ruckus.tcl`` chain, PCIe variant subdirectories, DDR/HBM optional

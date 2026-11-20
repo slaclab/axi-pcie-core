@@ -55,12 +55,3 @@ a test needs a VHDL stand-in that is loaded by the top-level `ruckus.tcl`:
 | `HbmDmaBufferV2IpCore` (Xilinx HBM IP) | `hardware/XilinxVariumC1100/tb/HbmDmaBufferV2IpCore.vhd` | Same entity name and ports as the component declaration (default binding) |
 | `surf.ClockManagerUltraScale` (MMCM) | `hardware/XilinxVariumC1100/tb/ClockManagerUltraScaleSim.vhd` | Compiled into the `surf` library; the surf GHDL import does not provide this entity |
 | XPM FIFOs | surf inferred FIFOs | `SYNTH_MODE_G => "inferred"` on the DUT |
-
-## Known-Bug Scenarios
-
-A cocotb scenario that reproduces an open issue is marked `@cocotb.xfail` with the
-issue link. cocotb then expects it to fail on an assertion: the simulator log
-reports it as `passed: failed as expected` together with the assertion message, so
-CI stays green while the bug is open. As soon as the scenario passes, cocotb
-reports `failed: passed but we expected a failure` and the pytest test fails. The
-change that fixes the bug removes the marker.

@@ -35,9 +35,10 @@
 #   drains every frame it sent on both lanes before it asserts anything, so a
 #   failing scenario leaves the DUT idle for the next one. Each frame gets a
 #   buffer that no earlier frame used (the free list is a 4096 deep queue).
-# - Known bugs: A scenario that reproduces an open issue is marked with
-#   cocotb.xfail. cocotb then requires it to fail on an assertion: it turns into
-#   a failure as soon as it passes, so the fix has to remove the marker.
+# - Issue 245: stall_mid_burst, steady_rate_slow and tdest_interleave restart a
+#   write burst off a 1kB boundary. They read back corrupted frames unless
+#   HbmDmaBufferV2AxiSplit maps the DMA byte address onto the 32B wide HBM ports
+#   correctly (https://github.com/slaclab/axi-pcie-core/issues/245).
 # - Not covered: back-pressure from the HBM ports (the model always accepts),
 #   the AXI-Lite registers, and anything inside the Xilinx HBM IP.
 
@@ -50,10 +51,6 @@ from cocotb.triggers import ClockCycles, RisingEdge, Timer, with_timeout
 from cocotbext.axi import AxiStreamBus, AxiStreamSink
 
 from tests.common.regression_utils import run_vhdl_test
-
-# Scenarios that restart a write burst off a 1kB boundary read back corrupted
-# frames until the HbmDmaBufferV2AxiSplit address mapping is fixed
-ISSUE_245 = "https://github.com/slaclab/axi-pcie-core/issues/245"
 
 NUM_LANES    = 2
 WORD_BYTES   = 64   # Stream word and DMA AXI beat
@@ -230,7 +227,6 @@ async def back_to_back(dut):
     await _run(dut, stimulus)
 
 
-@cocotb.xfail(reason=ISSUE_245)
 @cocotb.test(timeout_time=300, timeout_unit="us")
 async def stall_mid_burst(dut):
     """Source pauses after 16 words: the IbFifo holds back 8, so the DMA stalls after word 7 and pads."""
@@ -249,7 +245,6 @@ async def stall_on_burst_boundary(dut):
     await _run(dut, stimulus)
 
 
-@cocotb.xfail(reason=ISSUE_245)
 @cocotb.test(timeout_time=300, timeout_unit="us")
 async def steady_rate_slow(dut):
     """No gap at the source, 64B every 13 cycles (9.8 Gb/s): too slow to fill a burst before the DMA pads."""
@@ -268,7 +263,6 @@ async def steady_rate_fast(dut):
     await _run(dut, stimulus)
 
 
-@cocotb.xfail(reason=ISSUE_245)
 @cocotb.test(timeout_time=300, timeout_unit="us")
 async def tdest_interleave(dut):
     """Two TDEST interleaved in 5 word chunks with no gaps: every TDEST change pads the open burst."""

@@ -93,7 +93,8 @@ begin
 
             v.hbmWriteMasters(i).awvalid := '1';
 
-            v.hbmWriteMasters(i).awaddr(30 downto 0)  := axiWriteMaster.awaddr(30 downto 0);
+            -- Each port stores 32B of every 64B DMA beat: DMA byte address X is port byte address X/2
+            v.hbmWriteMasters(i).awaddr(30 downto 0)  := '0' & axiWriteMaster.awaddr(30 downto 1);
             v.hbmWriteMasters(i).awaddr(32 downto 31) := toSlv(2*CH_INDEX_G+i, 2);
 
             v.hbmWriteMasters(i).awlen := axiWriteMaster.awlen;
@@ -124,7 +125,9 @@ begin
 
             v.hbmWriteMasters(i).wdata(255 downto 0) := axiWriteMaster.wdata(256*i+255 downto 256*i);
 
-            v.hbmWriteMasters(i).wstrb := (others => '1');  -- Always write every byte and DMA read will correct for size
+            -- Forward the byte strobes: the DMA's pad beats (wstrb = 0) must not write the memory
+            v.hbmWriteMasters(i).wstrb               := (others => '0');
+            v.hbmWriteMasters(i).wstrb(31 downto 0) := axiWriteMaster.wstrb(32*i+31 downto 32*i);
 
          end loop;
 
@@ -201,7 +204,8 @@ begin
 
             v.hbmReadMasters(i).arvalid := '1';
 
-            v.hbmReadMasters(i).araddr(30 downto 0)  := axiReadMaster.araddr(30 downto 0);
+            -- Same address map as the write side: DMA byte address X is port byte address X/2
+            v.hbmReadMasters(i).araddr(30 downto 0)  := '0' & axiReadMaster.araddr(30 downto 1);
             v.hbmReadMasters(i).araddr(32 downto 31) := toSlv(2*CH_INDEX_G+i, 2);
 
             v.hbmReadMasters(i).arlen := axiReadMaster.arlen;

@@ -72,7 +72,8 @@ jobs:
         run: |
           # The cocotb runner reads build/SRC_VHDL
           make MODULES=$PWD import
-          python -m pytest -v -n auto --dist=worksteal tests/
+          # -rA prints the simulator log with the per-scenario cocotb summary
+          python -m pytest -v -rA -n auto --dist=worksteal tests/
 
 # ----------------------------------------------------------------------------
 

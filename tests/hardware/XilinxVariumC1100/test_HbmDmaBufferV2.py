@@ -29,18 +29,31 @@
 #     * a TDEST change in the middle of a burst pads it as well.
 # - Check: Every frame must come out once, byte-for-byte identical, with its
 #   TDEST. Every frame ends in a partial 64B word to cover the byte count.
+# - One simulation: After reset the DMA FIFO takes 13.7 us to load its free
+#   list, which is most of a scenario's run time, so all scenarios share one
+#   simulation and only the first one resets the DUT. A scenario therefore
+#   drains every frame it sent on both lanes before it asserts anything, so a
+#   failing scenario leaves the DUT idle for the next one. Each frame gets a
+#   buffer that no earlier frame used (the free list is a 4096 deep queue).
+# - Known bugs: A scenario that reproduces an open issue is marked with
+#   cocotb.xfail. cocotb then requires it to fail on an assertion: it turns into
+#   a failure as soon as it passes, so the fix has to remove the marker.
 # - Not covered: back-pressure from the HBM ports (the model always accepts),
 #   the AXI-Lite registers, and anything inside the Xilinx HBM IP.
 
+import logging
 import random
 
 import cocotb
-import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer, with_timeout
 from cocotbext.axi import AxiStreamBus, AxiStreamSink
 
 from tests.common.regression_utils import run_vhdl_test
+
+# Scenarios that restart a write burst off a 1kB boundary read back corrupted
+# frames until the HbmDmaBufferV2AxiSplit address mapping is fixed
+ISSUE_245 = "https://github.com/slaclab/axi-pcie-core/issues/245"
 
 NUM_LANES    = 2
 WORD_BYTES   = 64   # Stream word and DMA AXI beat
@@ -51,6 +64,9 @@ STALL_CYCLES = 150  # axisClk cycles (600 ns), longer than 100 hbmClk cycles (33
 # hbmClk cycle (13.7 us). Traffic sent before that only waits, but then the
 # gaps in the stimulus would not land where a scenario wants them.
 INIT_TIME_US = 16
+
+# Set by the first scenario of a simulation, which is the only one that resets the DUT
+_dut_is_initialized = False
 
 RX_TIMEOUT_US = 100
 
@@ -97,34 +113,53 @@ class TB:
     def __init__(self, dut):
         self.dut = dut
         Clock(dut.userClk, 10, unit="ns").start()  # 100 MHz MMCM and HBM reference
-        Clock(dut.axisClk, 4, unit="ns").start()   # 250 MHz x 64B = 128 Gb/s back-to-back
+        self.axis_clock = Clock(dut.axisClk, 4, unit="ns")  # 250 MHz x 64B = 128 Gb/s back-to-back
+        self.axis_clock.start()
         self.drivers = [StreamDriver(dut, lane) for lane in range(NUM_LANES)]
         self.sinks   = [
             AxiStreamSink(AxiStreamBus.from_prefix(dut, f"M_AXIS{lane}"), dut.axisClk, dut.axisRst)
             for lane in range(NUM_LANES)
         ]
+        for sink in self.sinks:
+            sink.log.setLevel(logging.WARNING)  # Do not log the payload of every frame
 
-    async def reset(self):
-        self.dut.axisRst.value = 1
-        await ClockCycles(self.dut.axisClk, 32)
-        self.dut.axisRst.value = 0
-        await Timer(INIT_TIME_US, unit="us")
-        await RisingEdge(self.dut.axisClk)
+    async def start(self):
+        """Reset the DUT and wait for its initialization, the first time in a simulation only."""
+        global _dut_is_initialized
+        if not _dut_is_initialized:
+            self.dut.axisRst.value = 1
+            await ClockCycles(self.dut.axisClk, 32)
+            self.dut.axisRst.value = 0
+            # Let the resets propagate, then pause the stream clock while the
+            # free list loads: nothing in that clock domain has work to do, and
+            # simulating it idle costs more than the HBM clock domain itself.
+            await ClockCycles(self.dut.axisClk, 64)
+            self.axis_clock.stop()
+            await Timer(INIT_TIME_US, unit="us")
+            self.axis_clock.start()
+            _dut_is_initialized = True
+        await ClockCycles(self.dut.axisClk, 4)
 
-    async def check(self, lane, expected):
-        """Receive and compare the frames of one lane. `expected` is {tdest: [frame, ...]}."""
-        received = {dest: [] for dest in expected}
-        for _ in range(sum(len(frames) for frames in expected.values())):
+    async def receive(self, lane, count):
+        """Receive `count` frames of one lane as {tdest: [frame, ...]} without checking them."""
+        received = {}
+        for _ in range(count):
             frame = await with_timeout(self.sinks[lane].recv(), RX_TIMEOUT_US, "us")
-            assert frame.tdest in expected, f"lane {lane}: unexpected TDEST {frame.tdest}"
-            received[frame.tdest].append(bytes(frame.tdata))
+            received.setdefault(frame.tdest, []).append(bytes(frame.tdata))
+        return received
 
-        for dest, frames in expected.items():
-            assert len(received[dest]) == len(frames), (
-                f"lane {lane} TDEST {dest}: received {len(received[dest])} frames, expected {len(frames)}"
-            )
-            for index, (got, exp) in enumerate(zip(received[dest], frames)):
-                assert got == exp, _describe_mismatch(lane, dest, index, got, exp)
+
+def _compare(lane, received, expected):
+    """Compare the frames of one lane. Both arguments are {tdest: [frame, ...]}."""
+    assert set(received) == set(expected), (
+        f"lane {lane}: received TDEST {sorted(received)}, expected {sorted(expected)}"
+    )
+    for dest, frames in expected.items():
+        assert len(received[dest]) == len(frames), (
+            f"lane {lane} TDEST {dest}: received {len(received[dest])} frames, expected {len(frames)}"
+        )
+        for index, (got, exp) in enumerate(zip(received[dest], frames)):
+            assert got == exp, _describe_mismatch(lane, dest, index, got, exp)
 
 
 def _describe_mismatch(lane, dest, index, got, exp):
@@ -150,13 +185,20 @@ async def _run(dut, stimulus):
     The stimulus coroutine returns the frames it sent as {tdest: [frame, ...]}.
     """
     tb = TB(dut)
-    await tb.reset()
+    await tb.start()
     senders = [
         cocotb.start_soon(stimulus(tb.drivers[lane], random.Random(f"{stimulus.__name__}-{lane}")))
         for lane in range(NUM_LANES)
     ]
-    for lane, sender in enumerate(senders):
-        await tb.check(lane, await sender)
+    expected = [await sender for sender in senders]
+
+    # Drain both lanes before the first assertion: the next scenario reuses the DUT
+    received = [
+        await tb.receive(lane, sum(len(frames) for frames in expected[lane].values()))
+        for lane in range(NUM_LANES)
+    ]
+    for lane in range(NUM_LANES):
+        _compare(lane, received[lane], expected[lane])
 
 
 async def _stall(drv, rng, words_before_stall):
@@ -170,11 +212,10 @@ async def _stall(drv, rng, words_before_stall):
 
 
 async def _steady_rate(drv, rng, idle):
-    """Two 4kB frames at a constant rate of one 64B word every `idle + 1` clock cycles."""
-    frames = [_frame(rng, 64) for _ in range(2)]
-    for data in frames:
-        await drv.send(0, data, last=True, idle=idle)
-    return {0: frames}
+    """One 4kB frame at a constant rate of one 64B word every `idle + 1` clock cycles."""
+    data = _frame(rng, 64)
+    await drv.send(0, data, last=True, idle=idle)
+    return {0: [data]}
 
 
 @cocotb.test(timeout_time=300, timeout_unit="us")
@@ -189,6 +230,7 @@ async def back_to_back(dut):
     await _run(dut, stimulus)
 
 
+@cocotb.xfail(reason=ISSUE_245)
 @cocotb.test(timeout_time=300, timeout_unit="us")
 async def stall_mid_burst(dut):
     """Source pauses after 16 words: the IbFifo holds back 8, so the DMA stalls after word 7 and pads."""
@@ -207,6 +249,7 @@ async def stall_on_burst_boundary(dut):
     await _run(dut, stimulus)
 
 
+@cocotb.xfail(reason=ISSUE_245)
 @cocotb.test(timeout_time=300, timeout_unit="us")
 async def steady_rate_slow(dut):
     """No gap at the source, 64B every 13 cycles (9.8 Gb/s): too slow to fill a burst before the DMA pads."""
@@ -225,6 +268,7 @@ async def steady_rate_fast(dut):
     await _run(dut, stimulus)
 
 
+@cocotb.xfail(reason=ISSUE_245)
 @cocotb.test(timeout_time=300, timeout_unit="us")
 async def tdest_interleave(dut):
     """Two TDEST interleaved in 5 word chunks with no gaps: every TDEST change pads the open burst."""
@@ -243,31 +287,13 @@ async def tdest_interleave(dut):
     await _run(dut, stimulus)
 
 
-# Scenarios that restart a write burst off a 1kB boundary. They fail until the
-# HbmDmaBufferV2AxiSplit address mapping is fixed; strict so that the fix has to
-# remove this marker.
-ISSUE_245 = pytest.mark.xfail(
-    strict=True,
-    reason="https://github.com/slaclab/axi-pcie-core/issues/245",
-)
-
-
-@pytest.mark.parametrize(
-    "scenario",
-    [
-        pytest.param("back_to_back"),
-        pytest.param("stall_mid_burst", marks=ISSUE_245),
-        pytest.param("stall_on_burst_boundary"),
-        pytest.param("steady_rate_slow", marks=ISSUE_245),
-        pytest.param("steady_rate_fast"),
-        pytest.param("tdest_interleave", marks=ISSUE_245),
-    ],
-)
-def test_HbmDmaBufferV2(scenario):
+def test_HbmDmaBufferV2():
+    # One simulation runs every cocotb scenario above, in the order they are defined
     run_vhdl_test(
         test_file=__file__,
         toplevel="axi_pcie_core.hbmdmabufferv2tb",
-        # One simulation per scenario. cocotb treats the filter as a regular
-        # expression search, so no entrypoint name may contain another one.
-        extra_env={"COCOTB_TEST_FILTER": scenario},
+        # Until the first word arrives, the DMA converts the undefined output of
+        # the empty IbFifo to an integer on every clock: tens of thousands of
+        # std_logic_arith metavalue warnings that say nothing about the DUT
+        sim_args=["--ieee-asserts=disable"],
     )

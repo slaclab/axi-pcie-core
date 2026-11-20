@@ -17,12 +17,19 @@ parent directory.
 # Import the HDL sources into build/SRC_VHDL (rerun after a source-list change)
 make MODULES=<dir with ruckus and surf> import
 
-# Whole regression, one simulation per test case, in parallel
-python -m pytest -v -n auto --dist=worksteal tests/
+# Whole regression, test modules in parallel, simulator log printed at the end
+python -m pytest -v -rA -n auto --dist=worksteal tests/
 
-# One test case, serial, with the simulator log
-python -m pytest -n 0 -s "tests/hardware/XilinxVariumC1100/test_HbmDmaBufferV2.py::test_HbmDmaBufferV2[back_to_back]"
+# One test module, serial, with the live simulator log
+python -m pytest -n 0 --log-cli-level=INFO tests/hardware/XilinxVariumC1100/test_HbmDmaBufferV2.py
+
+# One cocotb scenario of that module
+COCOTB_TEST_FILTER=stall_mid_burst python -m pytest -n 0 --log-cli-level=INFO tests/hardware/XilinxVariumC1100/test_HbmDmaBufferV2.py
 ```
+
+Each test module is one simulation that runs its cocotb scenarios one after the
+other. The pytest result is the result of the whole simulation; the cocotb summary
+table in the simulator log has the result of each scenario.
 
 Simulation build directories are written to `tests/sim_build/`.
 
@@ -49,13 +56,11 @@ a test needs a VHDL stand-in that is loaded by the top-level `ruckus.tcl`:
 | `surf.ClockManagerUltraScale` (MMCM) | `hardware/XilinxVariumC1100/tb/ClockManagerUltraScaleSim.vhd` | Compiled into the `surf` library; the surf GHDL import does not provide this entity |
 | XPM FIFOs | surf inferred FIFOs | `SYNTH_MODE_G => "inferred"` on the DUT |
 
-## Known-Bug Test Cases
+## Known-Bug Scenarios
 
-A test case that reproduces an open issue is marked
-`pytest.mark.xfail(strict=True)` with the issue link, so CI stays green while the
-bug is open and turns red as soon as the case starts passing. The change that
-fixes the bug removes the marker. To see the failure itself:
-
-```bash
-python -m pytest -n auto --runxfail tests/
-```
+A cocotb scenario that reproduces an open issue is marked `@cocotb.xfail` with the
+issue link. cocotb then expects it to fail on an assertion: the simulator log
+reports it as `passed: failed as expected` together with the assertion message, so
+CI stays green while the bug is open. As soon as the scenario passes, cocotb
+reports `failed: passed but we expected a failure` and the pytest test fails. The
+change that fixes the bug removes the marker.

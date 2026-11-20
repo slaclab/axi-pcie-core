@@ -101,11 +101,13 @@ def run_vhdl_test(
     toplevel: str,
     parameters: dict[str, object] | None = None,
     extra_env: dict[str, object] | None = None,
+    sim_args: list[str] | None = None,
 ) -> None:
     """Launch one GHDL simulation of `toplevel` running the cocotb tests in `test_file`.
 
     `parameters` are VHDL generics. `extra_env` is Python-side case metadata
-    passed to the cocotb module through the environment.
+    passed to the cocotb module through the environment. `sim_args` are extra
+    GHDL run-time options.
     """
     test_file = Path(test_file)
     simulator_env = {key: str(value) for key, value in (extra_env or {}).items()}
@@ -126,4 +128,5 @@ def run_vhdl_test(
         extra_env=simulator_env,
         simulator="ghdl",
         vhdl_compile_args=_vhdl_compile_args(),
+        sim_args=sim_args,
     )

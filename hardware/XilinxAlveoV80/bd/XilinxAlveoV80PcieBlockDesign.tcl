@@ -644,12 +644,6 @@ proc create_root_design { parentCell } {
     CONFIG.CONST_WIDTH {4} \
   ] $axcache_const
 
-  set link_status_logic [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilvector_logic:1.0 link_status_logic ]
-  set_property -dict [ list \
-    CONFIG.C_SIZE {1} \
-    CONFIG.C_OPERATION {not} \
-  ] $link_status_logic
-
   # Create interface connections
   connect_bd_intf_net -intf_net axi_noc_0_M00_AXI [get_bd_intf_pins cips/NOC_CPM_PCIE_0] [get_bd_intf_pins axi_noc_dma_0/M00_AXI]
   connect_bd_intf_net -intf_net cips_CPM_PL_AXI0 [get_bd_intf_pins cips/CPM_PL_AXI0] [get_bd_intf_pins smartconnect_0/S01_AXI]
@@ -685,9 +679,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net dma1_intrfc_resetn_0_1  [get_bd_ports dmaRstN] \
   [get_bd_pins cips/dma1_intrfc_resetn] \
   [get_bd_pins smartconnect_0/aresetn]
-  connect_bd_net -net link_status_logic_to_in   [get_bd_pins cips/pcie1_cfg_status_phy_link_down] \
-  [get_bd_pins link_status_logic/Op1]
-  connect_bd_net -net link_status_logic_to_out  [get_bd_pins link_status_logic/Res] \
+  connect_bd_net -net pcie_rst_out  [get_bd_pins cips/dma1_axi_aresetn] \
   [get_bd_ports pciRstN]
 
   connect_bd_net [get_bd_pins axcache_const/dout] [get_bd_pins cips/S_AXI_LPD_awcache]

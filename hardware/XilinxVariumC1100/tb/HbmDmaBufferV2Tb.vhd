@@ -1,21 +1,25 @@
 -------------------------------------------------------------------------------
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description: Simulation Testbed for testing the HbmDmaBufferV2 module
+-- Description: cocotb/GHDL simulation top-level for the HbmDmaBufferV2 module
+--
+-- Wraps the unmodified HbmDmaBufferV2 (both DMA lanes) and flattens its
+-- AXI stream records into ports for the cocotb regression in
+-- tests/hardware/XilinxVariumC1100/test_HbmDmaBufferV2.py. The Xilinx HBM IP
+-- and the MMCM wrapper are replaced by the simulation models in this
+-- directory (HbmDmaBufferV2IpCore.vhd and ClockManagerUltraScaleSim.vhd).
 -------------------------------------------------------------------------------
--- This file is part of 'epixuhr-3x2-readout-testing'.
+-- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
 -- top-level directory of this distribution and at:
 --    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
--- No part of 'epixuhr-3x2-readout-testing', including this file,
+-- No part of 'axi-pcie-core', including this file,
 -- may be copied, modified, propagated, or distributed except according to
 -- the terms contained in the LICENSE.txt file.
 -------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
-use ieee.std_logic_arith.all;
 
 library surf;
 use surf.StdRtlPkg.all;
@@ -25,95 +29,156 @@ use surf.HtspPkg.all;
 
 library axi_pcie_core;
 
-entity HbmDmaBufferV2Tb is end HbmDmaBufferV2Tb;
+entity HbmDmaBufferV2Tb is
+   generic (
+      TPD_G : time := 1 ns);
+   port (
+      -- Clocks and Reset
+      userClk        : in  sl;          -- 100 MHz (also used as hbmRefClk)
+      axisClk        : in  sl;          -- Stream, event and AXI-Lite clock
+      axisRst        : in  sl;
+      -- Status
+      pause          : out slv(1 downto 0);
+      -- DMA Lane 0: Inbound and Outbound AXI Streams (axisClk domain)
+      S_AXIS0_TVALID : in  sl;
+      S_AXIS0_TDATA  : in  slv(511 downto 0);
+      S_AXIS0_TKEEP  : in  slv(63 downto 0);
+      S_AXIS0_TLAST  : in  sl;
+      S_AXIS0_TDEST  : in  slv(3 downto 0);
+      S_AXIS0_TREADY : out sl;
+      M_AXIS0_TVALID : out sl;
+      M_AXIS0_TDATA  : out slv(511 downto 0);
+      M_AXIS0_TKEEP  : out slv(63 downto 0);
+      M_AXIS0_TLAST  : out sl;
+      M_AXIS0_TDEST  : out slv(3 downto 0);
+      M_AXIS0_TREADY : in  sl;
+      -- DMA Lane 1: Inbound and Outbound AXI Streams (axisClk domain)
+      S_AXIS1_TVALID : in  sl;
+      S_AXIS1_TDATA  : in  slv(511 downto 0);
+      S_AXIS1_TKEEP  : in  slv(63 downto 0);
+      S_AXIS1_TLAST  : in  sl;
+      S_AXIS1_TDEST  : in  slv(3 downto 0);
+      S_AXIS1_TREADY : out sl;
+      M_AXIS1_TVALID : out sl;
+      M_AXIS1_TDATA  : out slv(511 downto 0);
+      M_AXIS1_TKEEP  : out slv(63 downto 0);
+      M_AXIS1_TLAST  : out sl;
+      M_AXIS1_TDEST  : out slv(3 downto 0);
+      M_AXIS1_TREADY : in  sl);
+end entity HbmDmaBufferV2Tb;
 
 architecture testbed of HbmDmaBufferV2Tb is
 
-   constant CLK_PERIOD_C : time := 4 ns;
-   constant TPD_C        : time := 1 ns;
+   signal axisRstL : sl := '1';
 
-   signal dmaClk : sl := '0';
-   signal dmaRst : sl := '0';
+   signal eventTrigMsgCtrl : AxiStreamCtrlArray(1 downto 0) := (others => AXI_STREAM_CTRL_INIT_C);
 
-   signal hbmRefClk  : sl := '0';
-   signal axisMemRdy : sl := '0';
-   signal trig       : sl := '0';
-
-   signal axilWriteMaster : AxiLiteWriteMasterType := AXI_LITE_WRITE_MASTER_INIT_C;
-   signal axilWriteSlave  : AxiLiteWriteSlaveType  := AXI_LITE_WRITE_SLAVE_INIT_C;
-   signal axilReadMaster  : AxiLiteReadMasterType  := AXI_LITE_READ_MASTER_INIT_C;
-   signal axilReadSlave   : AxiLiteReadSlaveType   := AXI_LITE_READ_SLAVE_INIT_C;
-
-   signal ibAxisMaster : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
-   signal ibAxisSlave  : AxiStreamSlaveType  := AXI_STREAM_SLAVE_FORCE_C;
-
-   signal obAxisMaster : AxiStreamMasterType := AXI_STREAM_MASTER_INIT_C;
-   signal obAxisSlave  : AxiStreamSlaveType  := AXI_STREAM_SLAVE_FORCE_C;
-
-   signal updated         : sl := '0';
-   signal errMissedPacket : sl := '0';
-   signal errLength       : sl := '0';
-   signal errDataBus      : sl := '0';
-   signal errEofe         : sl := '0';
-
-   signal errWordCnt : slv(31 downto 0) := (others => '0');
-
-   signal passed : sl := '0';
-   signal failed : sl := '0';
+   signal sAxisMasters : AxiStreamMasterArray(1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
+   signal sAxisSlaves  : AxiStreamSlaveArray(1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
+   signal mAxisMasters : AxiStreamMasterArray(1 downto 0) := (others => AXI_STREAM_MASTER_INIT_C);
+   signal mAxisSlaves  : AxiStreamSlaveArray(1 downto 0)  := (others => AXI_STREAM_SLAVE_FORCE_C);
 
 begin
 
-   -- Generate DMA clock/reset
-   U_ClkRst : entity surf.ClkRst
-      generic map (
-         CLK_PERIOD_G      => CLK_PERIOD_C,
-         RST_START_DELAY_G => 0 ns,  -- Wait this long into simulation before asserting reset
-         RST_HOLD_TIME_G   => 1 us)     -- Hold reset for this long
-      port map (
-         clkP => dmaClk,
-         rst  => dmaRst);
+   axisRstL <= not axisRst;
 
-   -- Generate HBM reference clock
-   U_userClk : entity surf.ClkRst
-      generic map (
-         CLK_PERIOD_G      => 10 ns,
-         RST_START_DELAY_G => 0 ns,  -- Wait this long into simulation before asserting reset
-         RST_HOLD_TIME_G   => 70 us)    -- Hold reset for this long
-      port map (
-         clkP => hbmRefClk,
-         rstL => trig);
+   pause(0) <= eventTrigMsgCtrl(0).pause;
+   pause(1) <= eventTrigMsgCtrl(1).pause;
 
-   -- Data Generator
-   U_SsiPrbsTx : entity surf.SsiPrbsTx
+   ---------------------------------------------------------------------------
+   -- AXI Stream shims
+   ---------------------------------------------------------------------------
+   U_S_AXIS0 : entity surf.SlaveAxiStreamIpIntegrator
       generic map (
-         -- General Configurations
-         TPD_G                      => TPD_C,
-         AXI_EN_G                   => '0',
-         PRBS_SEED_SIZE_G           => 8*HTSP_AXIS_CONFIG_C.TDATA_BYTES_C,
-         -- AXI Stream Configurations
-         MASTER_AXI_STREAM_CONFIG_G => HTSP_AXIS_CONFIG_C)
+         INTERFACENAME   => "S_AXIS0",
+         TDEST_WIDTH     => HTSP_AXIS_CONFIG_C.TDEST_BITS_C,
+         TDATA_NUM_BYTES => HTSP_AXIS_CONFIG_C.TDATA_BYTES_C)
       port map (
-         -- Master Port (mAxisClk)
-         mAxisClk     => dmaClk,
-         mAxisRst     => dmaRst,
-         mAxisMaster  => ibAxisMaster,
-         mAxisSlave   => ibAxisSlave,
-         -- Trigger Signal (locClk domain)
-         locClk       => dmaClk,
-         locRst       => dmaRst,
-         trig         => trig,
-         packetLength => toSlv((64512/HTSP_AXIS_CONFIG_C.TDATA_BYTES_C)-1, 32),  -- 64B x 2^12 = 262,144B > 64,512B/frame
-         forceEofe    => '0',
-         busy         => open,
-         tDest        => (others => '0'),
-         tId          => (others => '0'));
+         S_AXIS_ACLK    => axisClk,
+         S_AXIS_ARESETN => axisRstL,
+         S_AXIS_TVALID  => S_AXIS0_TVALID,
+         S_AXIS_TDATA   => S_AXIS0_TDATA,
+         S_AXIS_TKEEP   => S_AXIS0_TKEEP,
+         S_AXIS_TLAST   => S_AXIS0_TLAST,
+         S_AXIS_TDEST   => S_AXIS0_TDEST,
+         S_AXIS_TREADY  => S_AXIS0_TREADY,
+         axisClk        => open,
+         axisRst        => open,
+         axisMaster     => sAxisMasters(0),
+         axisSlave      => sAxisSlaves(0));
 
+   U_M_AXIS0 : entity surf.MasterAxiStreamIpIntegrator
+      generic map (
+         INTERFACENAME   => "M_AXIS0",
+         TDEST_WIDTH     => HTSP_AXIS_CONFIG_C.TDEST_BITS_C,
+         TDATA_NUM_BYTES => HTSP_AXIS_CONFIG_C.TDATA_BYTES_C)
+      port map (
+         M_AXIS_ACLK    => axisClk,
+         M_AXIS_ARESETN => axisRstL,
+         M_AXIS_TVALID  => M_AXIS0_TVALID,
+         M_AXIS_TDATA   => M_AXIS0_TDATA,
+         M_AXIS_TSTRB   => open,
+         M_AXIS_TKEEP   => M_AXIS0_TKEEP,
+         M_AXIS_TLAST   => M_AXIS0_TLAST,
+         M_AXIS_TDEST   => M_AXIS0_TDEST,
+         M_AXIS_TID     => open,
+         M_AXIS_TUSER   => open,
+         M_AXIS_TREADY  => M_AXIS0_TREADY,
+         axisClk        => open,
+         axisRst        => open,
+         axisMaster     => mAxisMasters(0),
+         axisSlave      => mAxisSlaves(0));
+
+   U_S_AXIS1 : entity surf.SlaveAxiStreamIpIntegrator
+      generic map (
+         INTERFACENAME   => "S_AXIS1",
+         TDEST_WIDTH     => HTSP_AXIS_CONFIG_C.TDEST_BITS_C,
+         TDATA_NUM_BYTES => HTSP_AXIS_CONFIG_C.TDATA_BYTES_C)
+      port map (
+         S_AXIS_ACLK    => axisClk,
+         S_AXIS_ARESETN => axisRstL,
+         S_AXIS_TVALID  => S_AXIS1_TVALID,
+         S_AXIS_TDATA   => S_AXIS1_TDATA,
+         S_AXIS_TKEEP   => S_AXIS1_TKEEP,
+         S_AXIS_TLAST   => S_AXIS1_TLAST,
+         S_AXIS_TDEST   => S_AXIS1_TDEST,
+         S_AXIS_TREADY  => S_AXIS1_TREADY,
+         axisClk        => open,
+         axisRst        => open,
+         axisMaster     => sAxisMasters(1),
+         axisSlave      => sAxisSlaves(1));
+
+   U_M_AXIS1 : entity surf.MasterAxiStreamIpIntegrator
+      generic map (
+         INTERFACENAME   => "M_AXIS1",
+         TDEST_WIDTH     => HTSP_AXIS_CONFIG_C.TDEST_BITS_C,
+         TDATA_NUM_BYTES => HTSP_AXIS_CONFIG_C.TDATA_BYTES_C)
+      port map (
+         M_AXIS_ACLK    => axisClk,
+         M_AXIS_ARESETN => axisRstL,
+         M_AXIS_TVALID  => M_AXIS1_TVALID,
+         M_AXIS_TDATA   => M_AXIS1_TDATA,
+         M_AXIS_TSTRB   => open,
+         M_AXIS_TKEEP   => M_AXIS1_TKEEP,
+         M_AXIS_TLAST   => M_AXIS1_TLAST,
+         M_AXIS_TDEST   => M_AXIS1_TDEST,
+         M_AXIS_TID     => open,
+         M_AXIS_TUSER   => open,
+         M_AXIS_TREADY  => M_AXIS1_TREADY,
+         axisClk        => open,
+         axisRst        => open,
+         axisMaster     => mAxisMasters(1),
+         axisSlave      => mAxisSlaves(1));
+
+   ---------------------------------------------------------------------------
    -- Design Under Test (DUT)
+   ---------------------------------------------------------------------------
    U_DUT : entity axi_pcie_core.HbmDmaBufferV2
       generic map (
-         TPD_G             => TPD_C,
-         SIMULATION_G      => true,
-         DMA_SIZE_G        => 1,
+         TPD_G             => TPD_G,
+         SYNTH_MODE_G      => "inferred",  -- XPM is not supported in GHDL
+         MEMORY_TYPE_G     => "block",
+         DMA_SIZE_G        => 2,
          DMA_AXIS_CONFIG_G => HTSP_AXIS_CONFIG_C,
          AXIL_BASE_ADDR_G  => x"0000_0000")
       port map (
@@ -121,118 +186,33 @@ begin
          cmsHbmCatTrip    => open,
          cmsHbmTemp       => open,
          -- HBM Interface
-         userClk          => hbmRefClk,  -- 100 MHz
-         hbmRefClk        => hbmRefClk,  -- 100 MHz
+         userClk          => userClk,
+         hbmRefClk        => userClk,
          hbmCatTrip       => open,
          -- AXI-Lite Interface (axilClk domain)
-         axilClk          => dmaClk,
-         axilRst          => dmaRst,
+         axilClk          => axisClk,
+         axilRst          => axisRst,
          axilReadMaster   => AXI_LITE_READ_MASTER_INIT_C,
          axilReadSlave    => open,
          axilWriteMaster  => AXI_LITE_WRITE_MASTER_INIT_C,
          axilWriteSlave   => open,
          -- Trigger Event streams (eventClk domain)
-         eventClk(0)      => dmaClk,
-         eventTrigMsgCtrl => open,
-         -- AXI Stream Interface (axisClk domain)
-         axisClk(0)       => dmaClk,
-         axisRst(0)       => dmaRst,
-         axisMemRdy(0)    => axisMemRdy,
-         sAxisMasters(0)  => ibAxisMaster,
-         sAxisSlaves(0)   => ibAxisSlave,
-         mAxisMasters(0)  => obAxisMaster,
-         mAxisSlaves(0)   => obAxisSlave);
+         eventClk(0)      => axisClk,
+         eventClk(1)      => axisClk,
+         eventTrigMsgCtrl => eventTrigMsgCtrl,
+         -- Inbound AXIS Interface (sAxisClk domain)
+         sAxisClk(0)      => axisClk,
+         sAxisClk(1)      => axisClk,
+         sAxisRst(0)      => axisRst,
+         sAxisRst(1)      => axisRst,
+         sAxisMasters     => sAxisMasters,
+         sAxisSlaves      => sAxisSlaves,
+         -- Outbound AXIS Interface (mAxisClk domain)
+         mAxisClk(0)      => axisClk,
+         mAxisClk(1)      => axisClk,
+         mAxisRst(0)      => axisRst,
+         mAxisRst(1)      => axisRst,
+         mAxisMasters     => mAxisMasters,
+         mAxisSlaves      => mAxisSlaves);
 
-   -- Monitor the AXIS bandwidth
-   U_AxiStreamMonAxiL : entity surf.AxiStreamMonAxiL
-      generic map(
-         TPD_G            => TPD_C,
-         COMMON_CLK_G     => true,
-         AXIS_CLK_FREQ_G  => 250.0E+6,
-         AXIS_NUM_SLOTS_G => 1,
-         AXIS_CONFIG_G    => HTSP_AXIS_CONFIG_C)
-      port map(
-         -- AXIS Stream Interface
-         axisClk          => dmaClk,
-         axisRst          => dmaRst,
-         axisMasters(0)   => obAxisMaster,
-         axisSlaves(0)    => obAxisSlave,
-         -- AXI lite slave port for register access
-         axilClk          => dmaClk,
-         axilRst          => dmaRst,
-         sAxilWriteMaster => AXI_LITE_WRITE_MASTER_INIT_C,
-         sAxilWriteSlave  => open,
-         sAxilReadMaster  => AXI_LITE_READ_MASTER_INIT_C,
-         sAxilReadSlave   => open);
-
-   -- Data Sink
-   U_SsiPrbsRx : entity surf.SsiPrbsRx
-      generic map (
-         TPD_G                     => TPD_C,
-         PRBS_SEED_SIZE_G          => 8*HTSP_AXIS_CONFIG_C.TDATA_BYTES_C,
-         SLAVE_AXI_STREAM_CONFIG_G => HTSP_AXIS_CONFIG_C)
-      port map (
-         -- Streaming RX Data Interface (sAxisClk domain)
-         sAxisClk        => dmaClk,
-         sAxisRst        => dmaRst,
-         sAxisMaster     => obAxisMaster,
-         sAxisSlave      => obAxisSlave,
-         -- Optional: AXI-Lite Register Interface (axiClk domain)
-         axiClk          => dmaClk,
-         axiRst          => dmaRst,
-         axiReadMaster   => AXI_LITE_READ_MASTER_INIT_C,
-         axiReadSlave    => open,
-         axiWriteMaster  => AXI_LITE_WRITE_MASTER_INIT_C,
-         -- Error Detection Signals (sAxisClk domain)
-         updatedResults  => updated,
-         busy            => open,
-         errMissedPacket => errMissedPacket,
-         errLength       => errLength,
-         errDataBus      => errDataBus,
-         errEofe         => errEofe,
-         errWordCnt      => errWordCnt);
-
-   process(dmaClk)
-   begin
-      if rising_edge(dmaClk) then
-         if dmaRst = '1' then
-            passed <= '0' after TPD_C;
-            failed <= '0' after TPD_C;
-         elsif updated = '1' then
-            -- Check for missed packet error
-            if errMissedPacket = '1' then
-               failed <= '1' after TPD_C;
-            end if;
-            -- Check for packet length error
-            if errLength = '1' then
-               failed <= '1' after TPD_C;
-            end if;
-            -- Check for packet data bus error
-            if errDataBus = '1' then
-               failed <= '1' after TPD_C;
-            end if;
-            -- Check for EOFE error
-            if errEofe = '1' then
-               failed <= '1' after TPD_C;
-            end if;
-            -- Check for word error
-            if errWordCnt /= 0 then
-               failed <= '1' after TPD_C;
-            end if;
-         end if;
-      end if;
-   end process;
-
-   process(failed, passed)
-   begin
-      if failed = '1' then
-         assert false
-            report "Simulation Failed!" severity failure;
-      end if;
-      if passed = '1' then
-         assert false
-            report "Simulation Passed!" severity note;
-      end if;
-   end process;
-
-end testbed;
+end architecture testbed;

@@ -135,10 +135,10 @@ Notes
 
 * Vivado version requirements: Vivado 2020.1 or later is required for all boards except
   ``XilinxAlveoU55c`` and ``XilinxVariumC1100``, which require Vivado 2024.2 or later
-  due to their CMS block-design and HBM IP dependencies. Similarly ``XilinxAlveo80``
-  requires Vivado 2025.2 or later These are the *minimum* versions enforced by 
-  ``shared/ruckus.tcl`` via ``VersionCheck``; at SLAC the current tested production 
-  toolchain is Vivado 2025.2 (see doc:`/tutorial/first_build`).
+  due to their CMS block-design and HBM IP dependencies. Similarly, ``XilinxAlveoV80``
+  requires Vivado 2025.2 or later. These are the *minimum* versions enforced by
+  ``shared/ruckus.tcl`` via ``VersionCheck``; at SLAC the current tested production
+  toolchain is Vivado 2025.2 (see :doc:`/tutorial/first_build`).
 
 * See :doc:`/explanation/board_support` for the per-board directory layout
   (``hardware/<Board>/ruckus.tcl`` chain, PCIe variant subdirectories, DDR/HBM optional

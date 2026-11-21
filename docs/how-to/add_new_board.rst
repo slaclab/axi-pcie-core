@@ -246,13 +246,14 @@ Add a new board-identity constant to
 .. code-block:: vhdl
 
     -- existing entries (excerpt from AxiPcieSharedPkg.vhd)
-    constant HW_TYPE_XILINX_KCU1500_C      : slv(31 downto 0) := x"00_00_00_0D";
-    constant HW_TYPE_XILINX_U55C_C         : slv(31 downto 0) := x"00_00_00_0F";
-    constant HW_TYPE_XILINX_C1100_C        : slv(31 downto 0) := x"00_00_00_10";
-    constant HW_TYPE_BITTWARE_XUP_VV8_VU9P_C : slv(31 downto 0) := x"00_00_00_13";
+    constant HW_TYPE_XILINX_KCU1500_C         : slv(31 downto 0) := x"00_00_00_0D";
+    constant HW_TYPE_XILINX_U55C_C            : slv(31 downto 0) := x"00_00_00_0F";
+    constant HW_TYPE_XILINX_C1100_C           : slv(31 downto 0) := x"00_00_00_10";
+    constant HW_TYPE_BITTWARE_XUP_VV8_VU9P_C  : slv(31 downto 0) := x"00_00_00_13";
+    constant HW_TYPE_XILINX_V80_C             : slv(31 downto 0) := x"00_00_00_14";
 
     -- add your new board at the next available value
-    constant HW_TYPE_MY_NEW_BOARD_C        : slv(31 downto 0) := x"00_00_00_14";
+    constant HW_TYPE_MY_NEW_BOARD_C        : slv(31 downto 0) := x"00_00_00_15";
 
 Then pass the new constant to ``AxiPcieReg`` as ``PCIE_HW_TYPE_G`` in
 ``<NewBoard>Core.vhd``:
@@ -355,7 +356,7 @@ See Also
 
 * :doc:`/reference/rtl_entities`: full port and generic list for shared RTL
   entities (``AxiPcieDma``, ``AxiPcieReg``, ``AxiPcieCrossbar``).
-* :doc:`/reference/supported_boards`: table of all 14 supported boards with
+* :doc:`/reference/supported_boards`: table of all 15 supported boards with
   PCIe generation, memory type, and entity paths.
 * :doc:`/explanation/board_support`: conceptual overview of the
   ``hardware/<board>/`` directory layout and the ruckus.tcl chain.

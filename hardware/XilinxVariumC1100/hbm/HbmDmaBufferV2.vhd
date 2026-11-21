@@ -26,6 +26,8 @@ library axi_pcie_core;
 entity HbmDmaBufferV2 is
    generic (
       TPD_G             : time                  := 1 ns;
+      SYNTH_MODE_G      : string                := "xpm";  -- "inferred" for GHDL simulation
+      MEMORY_TYPE_G     : string                := "ultra";
       DMA_SIZE_G        : positive range 1 to 2 := 2;
       DMA_AXIS_CONFIG_G : AxiStreamConfigType;
       AXIL_BASE_ADDR_G  : slv(31 downto 0));
@@ -414,8 +416,8 @@ begin
             -- FIFO Configuration
             BUFF_FRAME_WIDTH_G => AXI_BUFFER_WIDTH_C-12,  -- Optimized to fix into 1 URAM (12-bit address) for free list
             AXI_BUFFER_WIDTH_G => AXI_BUFFER_WIDTH_C,
-            SYNTH_MODE_G       => "xpm",
-            MEMORY_TYPE_G      => "ultra",
+            SYNTH_MODE_G       => SYNTH_MODE_G,
+            MEMORY_TYPE_G      => MEMORY_TYPE_G,
             -- AXI Stream Configurations
             AXIS_CONFIG_G      => AXIS_CONFIG_C,
             -- AXI4 Configurations

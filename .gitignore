@@ -32,6 +32,12 @@ build*
 .Xil*
 hd_visual*
 
+# GHDL regression (see tests/README.md)
+sim_build*
+.pytest_cache/
+/ruckus
+/surf
+
 # Only .bit.gz and .mcs.gz should be committed to git
 *.bit
 *.mcs

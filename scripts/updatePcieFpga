@@ -140,6 +140,16 @@ def promptForImageNumber(imgLst):
 
 #################################################################
 
+def reloadFpga(root, promType):
+    # Reload the newly programmed image.  Versal ('PS') reboots via a
+    # POR_B-equivalent reset; the other PROMs reload through the AxiVersion
+    # ICAP/boot trigger.
+    if (promType == 'PS'):
+        root.AxiPcieCore.VersalPmc.porReset()
+    else:
+        root.AxiPcieCore.AxiVersion.FpgaReload()
+
+
 class Root(pr.Root):
     def __init__(self, dev='', **kwargs):
         super().__init__(pollEn=False, initRead=True, **kwargs)
@@ -148,11 +158,13 @@ class Root(pr.Root):
         self.memMap = rogue.hardware.axi.AxiMemMap(dev)
         self.addInterface(self.memMap)
 
-        # Add Base Device
+        # Add Base Device.  usePmc adds the Versal (Alveo V80) PMC/OSPI flash
+        # access (disabled by default, so it is never read on non-Versal cards).
         self.add(pcie.AxiPcieCore(
             memBase = self.memMap,
             useBpi  = True,
             useSpi  = True,
+            usePmc  = True,
         ))
 
 #################################################################
@@ -250,13 +262,23 @@ if __name__ == "__main__":
             print("Please use the primary interface with has the PROM type defined for reprogramming the card\n\n")
             exit()
 
-        # Case on PROM type
+        # Case on PROM type.  Each case picks the primary PROM "memory" (any
+        # device exposing the _LoadMcsFile/_progDone interface) and the image
+        # file extension to look for.
         if (promType == 'BPI'):
             PROM_PRI = root.AxiPcieCore.AxiMicronMt28ew
+            promExt  = 'mcs'
         elif (promType == 'SPIx8') or (promType == 'SPIx4'):
             PROM_PRI = root.AxiPcieCore.AxiMicronN25Q[0]
+            promExt  = 'mcs'
             if (promType == 'SPIx8'):
                 PROM_SEC = root.AxiPcieCore.AxiMicronN25Q[1]
+        elif (promType == 'PS'):
+            # Versal (Alveo V80): OSPI flash programmed via the PMC DAC window.
+            # VersalPmc is added disabled (see AxiPcieCore usePmc); enable it.
+            root.AxiPcieCore.VersalPmc.enable.set(True)
+            PROM_PRI = root.AxiPcieCore.VersalPmc
+            promExt  = 'pdi'
         else:
             raise ValueError('Invalid promType')
 
@@ -268,8 +290,8 @@ if __name__ == "__main__":
         print('#########################################')
 
         if args.bypass_reprogramming:
-            print('\nReloading FPGA firmware from PROM ....')
-            AxiVersion.FpgaReload()
+            print('\nReloading FPGA firmware ....')
+            reloadFpga(root, promType)
 
         else:
 
@@ -292,12 +314,13 @@ if __name__ == "__main__":
                 print(f"\n[ERROR]: {args.path} is NOT a directory\n")
                 sys.exit(1)
 
-            # Get a list of images, using .mcs first
+            # Get a list of images (.mcs for BPI/SPI PROMs, .pdi for Versal PS),
+            # using files whose name matches the current image first
             imgLst = odict()
 
             curImageName = AxiVersion.ImageName.get()
-            prefLst = glob.glob('{}/{}*.mcs*'.format(args.path, curImageName))
-            raw_files = glob.glob(f"{args.path}/*.mcs*")
+            prefLst = glob.glob('{}/{}*.{}*'.format(args.path, curImageName, promExt))
+            raw_files = glob.glob(f"{args.path}/*.{promExt}*")
 
             # Combine and deduplicate while preserving order (preferred files first)
             all_files = prefLst + [f for f in raw_files if f not in prefLst]
@@ -305,24 +328,23 @@ if __name__ == "__main__":
             for filename in all_files:
 
                 # Determine suffix
-                if filename.endswith(".mcs.gz"):
-                    suffix = "mcs.gz"
+                if filename.endswith(f".{promExt}.gz"):
+                    suffix = f"{promExt}.gz"
                 else:
-                    suffix = "mcs"
+                    suffix = promExt
 
-                # Get basename
-                base = filename.replace("_primary.mcs.gz", "")
-                base = base.replace("_secondary.mcs.gz", "")
-                base = base.replace("_primary.mcs", "")
-                base = base.replace("_secondary.mcs", "")
-                base = base.replace(".mcs.gz", "")
-                base = base.replace(".mcs", "")
+                # Get basename (strip primary/secondary + extension variants)
+                base = filename
+                for strip in (f"_primary.{promExt}.gz", f"_secondary.{promExt}.gz",
+                              f"_primary.{promExt}",    f"_secondary.{promExt}",
+                              f".{promExt}.gz",         f".{promExt}"):
+                    base = base.replace(strip, "")
 
                 # Store entry
                 imgLst[base] = suffix
 
             if not imgLst:
-                print(f"\nProgramming (.mcs, .mcs.gz) files NOT detected in the --path arg directory!")
+                print(f"\nProgramming (.{promExt}) files NOT detected in the --path arg directory!")
                 print(f"Please double check the path for necessary programming files")
                 if args.rescan:
                     print("\nNote: Running as root (sudo) may cause permission issues.")
@@ -348,7 +370,7 @@ if __name__ == "__main__":
                 else:
                     pri = ent[0] + '.' + ent[1]
 
-                # Load the primary MCS file
+                # Load the primary image
                 try:
                     PROM_PRI._LoadMcsFile(pri, iprogPrint=False)
                 except TypeError:
@@ -374,8 +396,8 @@ if __name__ == "__main__":
 
                 # Check if programming was successful
                 if (progDone):
-                    print('\nReloading FPGA firmware from PROM ....')
-                    AxiVersion.FpgaReload()
+                    print('\nReloading FPGA firmware ....')
+                    reloadFpga(root, promType)
                 else:
                     raise ValueError('Failed to program FPGA')
 

@@ -32,7 +32,6 @@ entity XilinxAlveoV80PciePhyWrapper is
    generic (
       TPD_G : time := 1 ns);
    port (
-      userClk        : in    sl;
       -- AXI4 Interfaces
       axiClk         : out   sl;
       axiRst         : out   sl;

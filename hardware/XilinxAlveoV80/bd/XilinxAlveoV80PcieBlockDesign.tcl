@@ -628,9 +628,8 @@ proc create_root_design { parentCell } {
   #   S01_AXI <- cips/CPM_PL_AXI0  (PCIe BAR2 traffic, steered here by
   #                                 CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING = CPM_PL_AXI0)
   #   M00_AXI -> cips/S_AXI_LPD
-  # This replaces the old axi_noc_0 NoC bridge (CPM_PCIE_NOC_0 -> NOC_PMC_AXI_0).
-  # The PCIe host now reaches the whole LPD/PMC register and flash space (OSPI
-  # controller, OSPI/QSPI flash DAC window, PMC GPIO, CRP, CPM5 TX_IRQ_CSR, ...)
+  # The PCIe host now reaches the LPD/PMC register and flash space (OSPI
+  # controller, OSPI/QSPI flash DAC window, PMC GPIO, CRP apertures)
   # over PCIe BAR2 through CPM_PL_AXI0 and this SmartConnect into S_AXI_LPD.
   set smartconnect_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_0 ]
   set_property -dict [list \
@@ -713,8 +712,8 @@ proc create_root_design { parentCell } {
   # address) and exclude every other S_AXI_LPD slave segment we do not use.
   #
   # NOTE: sAxiLpd is only one of two masters on S_AXI_LPD. The PCIe host reaches
-  # the full LPD/PMC register and flash space (OSPI controller, OSPI/QSPI flash
-  # DAC window, PMC GPIO, CRP, ...) over PCIe BAR2 through the cips/CPM_PL_AXI0
+  # the some LPD/PMC register and flash space (OSPI controller, OSPI/QSPI flash
+  # DAC window, PMC GPIO, CRP apertures) over PCIe BAR2 through the cips/CPM_PL_AXI0
   # master (steered by CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING) and smartconnect_0
   # into this same S_AXI_LPD slave; that master's map is assigned further below.
   # The sAxiLpd (PL FSM) view below is deliberately restricted to just the CPM
@@ -751,8 +750,8 @@ proc create_root_design { parentCell } {
   # PCIe BAR2 traffic is steered (CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING =
   # CPM_PL_AXI0) out of the CPM onto the CPM_PL_AXI0 PL master, through
   # smartconnect_0 and into the CIPS S_AXI_LPD slave. This gives the PCIe host
-  # a direct path to every LPD/PMC peripheral (OSPI controller, OSPI/QSPI flash
-  # DAC window, PMC GPIO, CRP, CPM5 TX_IRQ_CSR, ...) at its native register
+  # a direct path to some LPD/PMC peripherals (OSPI controller, OSPI/QSPI flash
+  # DAC window, PMC GPIO, CRP) at its native register
   # address. Only the S_AXI_LPD slave segments that are required are mapped;
   # each lands at its hardware address.
   # ---------------------------------------------------------------------------

@@ -20,8 +20,8 @@
 --     int_set (bit 24) to the CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C), generating the
 --     PCIe TX MSI directly. This replaces the defective CPM5 bridge1
 --     usr_irq_req / usr_irq_ack hardware handshake (confirmed broken on
---     hardware: the CPM never acks and no MSI TLP is emitted). The first
---     interrupt therefore programs the table and then sends its MSI.
+--     hardware: the CPM never acks and no MSI TLP is emitted). dmaIrq is not
+--     serviced until the BDF table has been programmed.
 --
 -- PG347 v3.4 Table 215: the CPM5 register block is reachable from PL only
 -- through the LPD AXI slave interface, so this master drives cips/S_AXI_LPD

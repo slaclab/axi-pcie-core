@@ -435,25 +435,23 @@ class VersalPmc(pr.Device):
         return self.OSPI_RD_DATA_LOWER.get() & 0xFF
 
     def _waitReady(self):
-        deadline = time.monotonic() + 1.0
+        deadline = time.monotonic() + 3.0             # tSE max is 1 s per sector
         while time.monotonic() < deadline:
             f = self._rdFsr()
             if (f >> 7) & 1:
                 if (f >> 5) & 1:
                     raise RuntimeError('  !!FSR erase err')
-                    return False
                 if (f >> 4) & 1:
                     raise RuntimeError('  !!FSR prog err')
-                    return False
-                return True
+                return
         raise RuntimeError('  !!FSR ready timeout')
 
     def _waitIdle(self):
         deadline = time.monotonic() + 1.0
         while time.monotonic() < deadline:
             if (self.OSPI_CONFIG.get() >> 31) & 1:
-                return True
-        raise RuntimeError('  !!FSR ready timeout')
+                return
+        raise RuntimeError('OSPI controller idle timeout')
 
     # =====================================================================
     # Public API
@@ -550,8 +548,7 @@ class VersalPmc(pr.Device):
                 self._wren()
                 self.OSPI_CMD_ADDR.set(s)
                 self._stigRun(self.OP_SE4B, enbAddr=1, numAddr=3)   # SE4B: 4-byte address
-                if not self._waitReady():
-                    raise RuntimeError('OSPI controller not idle before DAC enable')
+                self._waitReady()
                 bar.update(1)
 
         # ---------- configure DAC write path, then enable Linear mode ---------
@@ -561,8 +558,7 @@ class VersalPmc(pr.Device):
         self.OSPI_RD_INSTR.set(self.OP_RD4B)   # READ 4B (DAC read-back)
         dz = (self.OSPI_DEV_SIZE.get() & ~0xF) | 0x3         # num_addr_bytes=4
         self.OSPI_DEV_SIZE.set(dz)
-        if not self._waitIdle():
-            print('WARN: controller not idle before DAC enable')
+        self._waitIdle()
         self.OSPI_AXI_SEL.set(0x3)             # Linear mode: interconnect -> DAC
 
         try:
@@ -584,8 +580,7 @@ class VersalPmc(pr.Device):
                 bar.update(length)
 
             # ---------- let the last write finish, then verify via DAC reads --
-            if not self._waitIdle():
-                print('WARN: controller not idle before verify')
+            self._waitIdle()
 
             if verify:
                 with click.progressbar(
@@ -608,5 +603,7 @@ class VersalPmc(pr.Device):
                     bar.update(length)
         finally:
             # ---------- restore AXI mux to as-found ---------------------------
-            self._waitIdle()
-            self.OSPI_AXI_SEL.set(axi_prev)
+            try:
+                self._waitIdle()
+            finally:
+                self.OSPI_AXI_SEL.set(axi_prev)

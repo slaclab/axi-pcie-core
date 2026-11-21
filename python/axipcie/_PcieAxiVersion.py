@@ -240,7 +240,6 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x00_00_00_12: 'AbacoPc821Ku115',
                 0x00_00_00_13: 'BittWareXupVv8Vu9p',
                 0x00_00_00_14: 'XilinxAlveoV80',
-                0xFF_FF_FF_FF: 'ERROR',
             },
         ))
 

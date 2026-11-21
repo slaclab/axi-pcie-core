@@ -29,7 +29,7 @@ Shared vs. Board-Specific Layering
 This includes ``AxiPcieDma``, ``AxiPcieReg``, ``AxiPcieCrossbar``, ``AxiPcieRegWriteDeMux``,
 and ``AxiPcieSharedPkg`` (which defines the ``HW_TYPE_*`` board identifiers).  Every
 ``<Board>Core`` entity instantiates these same shared modules, so a bug fix or enhancement
-in shared logic benefits all fourteen supported boards simultaneously.
+in shared logic benefits all fifteen supported boards simultaneously.
 
 ``hardware/<board>/`` holds the board-specific RTL: ``<Board>Core.vhd`` (the top-level
 integration entity that downstream projects instantiate), ``AxiPciePkg.vhd`` (per-board

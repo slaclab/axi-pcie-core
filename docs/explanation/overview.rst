@@ -7,7 +7,7 @@ What axi-pcie-core Is
 ``axi-pcie-core`` is a SLAC FPGA firmware submodule library providing AXI-Lite/AXI-Stream
 interconnect and DMA infrastructure for PCIe carrier boards.  Downstream firmware projects
 consume it as a ``git submodule``, integrating support for boards such as ``XilinxKcu1500``,
-``XilinxAlveoU200``, and ``XilinxAlveoU55c`` among the fourteen supported PCIe carriers.
+``XilinxAlveoU200``, and ``XilinxAlveoU55c`` among the fifteen supported PCIe carriers.
 
 Audience
 --------

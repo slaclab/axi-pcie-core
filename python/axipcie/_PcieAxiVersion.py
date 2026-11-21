@@ -51,6 +51,9 @@ class PcieAxiVersion(axi.AxiVersion):
             enum        = {
                 0x0: 'ULTRASCALE',
                 0x1: '7SERIES',
+                0x2: 'ULTRASCALE_PLUS',
+                0x3: 'VERSAL',
+                0xFF_FF_FF_FF: 'ERROR',
             },
         ))
 
@@ -72,6 +75,7 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x0: 'BPI',
                 0x1: 'SPIx8',
                 0x2: 'SPIx4',
+                0x3: 'PS',   # Versal: boot PROM (OSPI) programmed via the PS/PMC
                 0xFFFF_FFFF: 'UNDEFINED',
             },
         ))
@@ -235,6 +239,7 @@ class PcieAxiVersion(axi.AxiVersion):
                 0x00_00_00_11: 'AbacoPc821Ku085',
                 0x00_00_00_12: 'AbacoPc821Ku115',
                 0x00_00_00_13: 'BittWareXupVv8Vu9p',
+                0x00_00_00_14: 'XilinxAlveoV80',
             },
         ))
 

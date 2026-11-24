@@ -1,0 +1,6 @@
+flake8
+cocotb>=2.1
+cocotbext-axi
+cocotb-test
+pytest
+pytest-xdist

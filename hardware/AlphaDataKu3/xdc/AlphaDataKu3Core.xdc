@@ -112,6 +112,7 @@ create_clock -period 16.000 -name iprogClk   [get_pins  {U_Core/U_REG/U_Version/
 set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks {pciRefClkP}] -group [get_clocks {dnaClk}] -group [get_clocks {iprogClk}]
 
 set_false_path -from [get_ports {pciRstL}]
+set_false_path -through [get_nets {U_Core/REAL_PCIE.U_AxiPciePhy/sysRstL}]
 set_false_path -through [get_nets {U_Core/REAL_PCIE.U_AxiPciePhy/U_AxiPcie/inst/inst/cfg_max*}]
 
 ######################################

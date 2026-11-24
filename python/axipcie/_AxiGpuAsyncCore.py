@@ -325,7 +325,7 @@ class AxiGpuAsyncCore(pr.Device):
             # Min value
             self.add(pr.RemoteVariable(
                 name         = f'{name}Min',
-                description  = f'Minimum {name} measured after counter reset, counter reset clear this register to zero bits',
+                description  = f'Minimum {name} measured after counter reset, counter reset sets this register to all ones (0xFFFFFFFF)',
                 offset       = base_offset + 0x8,
                 bitSize      = 32,
                 disp         = '{}',

@@ -289,6 +289,7 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
       mAxi_wvalid                          : out   std_logic_vector (0 downto 0);
       plRefClk                             : out   std_logic;
       plRstN                               : out   std_logic;
+      pciRstN                              : out   std_logic;
       psDDR_act_n                          : out   std_logic_vector (0 downto 0);
       psDDR_adr                            : out   std_logic_vector (16 downto 0);
       psDDR_ba                             : out   std_logic_vector (1 downto 0);
@@ -308,33 +309,27 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
       sAxiLpd_araddr                       : in    std_logic_vector (48 downto 0);
       sAxiLpd_arburst                      : in    std_logic_vector (1 downto 0);
       sAxiLpd_arcache                      : in    std_logic_vector (3 downto 0);
-      sAxiLpd_arid                         : in    std_logic_vector (5 downto 0);
       sAxiLpd_arlen                        : in    std_logic_vector (7 downto 0);
       sAxiLpd_arlock                       : in    std_logic;
       sAxiLpd_arprot                       : in    std_logic_vector (2 downto 0);
       sAxiLpd_arqos                        : in    std_logic_vector (3 downto 0);
       sAxiLpd_arready                      : out   std_logic;
       sAxiLpd_arsize                       : in    std_logic_vector (2 downto 0);
-      sAxiLpd_aruser                       : in    std_logic_vector (9 downto 0);
       sAxiLpd_arvalid                      : in    std_logic;
       sAxiLpd_awaddr                       : in    std_logic_vector (48 downto 0);
       sAxiLpd_awburst                      : in    std_logic_vector (1 downto 0);
       sAxiLpd_awcache                      : in    std_logic_vector (3 downto 0);
-      sAxiLpd_awid                         : in    std_logic_vector (5 downto 0);
       sAxiLpd_awlen                        : in    std_logic_vector (7 downto 0);
       sAxiLpd_awlock                       : in    std_logic;
       sAxiLpd_awprot                       : in    std_logic_vector (2 downto 0);
       sAxiLpd_awqos                        : in    std_logic_vector (3 downto 0);
       sAxiLpd_awready                      : out   std_logic;
       sAxiLpd_awsize                       : in    std_logic_vector (2 downto 0);
-      sAxiLpd_awuser                       : in    std_logic_vector (9 downto 0);
       sAxiLpd_awvalid                      : in    std_logic;
-      sAxiLpd_bid                          : out   std_logic_vector (5 downto 0);
       sAxiLpd_bready                       : in    std_logic;
       sAxiLpd_bresp                        : out   std_logic_vector (1 downto 0);
       sAxiLpd_bvalid                       : out   std_logic;
       sAxiLpd_rdata                        : out   std_logic_vector (31 downto 0);
-      sAxiLpd_rid                          : out   std_logic_vector (5 downto 0);
       sAxiLpd_rlast                        : out   std_logic;
       sAxiLpd_rready                       : in    std_logic;
       sAxiLpd_rresp                        : out   std_logic_vector (1 downto 0);
@@ -349,6 +344,9 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal clk    : sl;
    signal rstL   : sl;
    signal plRstN : sl;
+   signal pciRstN : sl;               -- CPM5 PCIe reset (cips/dma1_axi_aresetn)
+   signal cmbRstN : sl;               -- plRstN and pciRstN (PCIe link-down gated)
+   signal hostAccess : sl;            -- first host BAR0 access (gates BDF programming)
 
    -- QDMA mgmt (QdmaCtxtInit <-> dma1_mgmt)
    signal mgmtMaster : QdmaMgmtReqMasterType;
@@ -581,15 +579,20 @@ begin
          rstIn  => rstL,
          rstOut => axiRst);
 
+   -- PCIe link-down -> PL reset: hold the PL in reset whenever either the PS PL
+   -- reset (plRstN) or the CPM5 PCIe reset (pciRstN = cips/dma1_axi_aresetn,
+   -- which deasserts on a PCIe link-down) is asserted.
+   cmbRstN <= pciRstN and plRstN;
+
    U_PwrUpRst : entity surf.PwrUpRst
       generic map(
          TPD_G          => TPD_G,
          IN_POLARITY_G  => '0',
          OUT_POLARITY_G => '0',
-         DURATION_G     => getTimeRatio(250.0E+6, 1.0))
+         DURATION_G     => getTimeRatio(250.0E+6, 100.0))  -- 10 ms reset (250e6/100 = 2.5e6 cycles)
       port map(
          clk    => clk,
-         arst   => plRstN,
+         arst   => cmbRstN,
          rstOut => rstL);
 
    -- Deferred one-shot start for QdmaCtxtInit: wait ~some cycles after reset
@@ -695,6 +698,12 @@ begin
    mAxiReadSlave  <= regReadSlave;
    regWriteMaster <= mAxiWriteMaster;
    mAxiWriteSlave <= regWriteSlave;
+
+   -- First host BAR0 register access (PCIe link up + CPM5 enumerated). This
+   -- gates the CpmManager BDF-table programming (see IDLE_S). qdma-test left
+   -- this CpmManager input unconnected; restore the commit da066b5 intent
+   -- ("BDF table set on first BAR0 access") on the QDMA-mode register path.
+   hostAccess <= mAxiWriteMaster.awvalid or mAxiReadMaster.arvalid;
 
    ----------------------------------------------------------------------------
    -- AxisG2 BAR0 register shim (datadev-compatible AGEN2 register map). Its
@@ -860,6 +869,7 @@ begin
          rstL            => rstL,
          dmaIrq          => shimInterrupt,
          bdfDone         => open,
+         hostAccess      => hostAccess,
          axilWriteMaster => msiWriteMaster,
          axilWriteSlave  => msiWriteSlave,
          axilReadMaster  => msiReadMaster,
@@ -1064,6 +1074,7 @@ begin
          -- away, no netlist, no timing. (Matches the original bridge wiring.)
          plRefClk                             => clk,
          plRstN                               => plRstN,
+         pciRstN                              => pciRstN,
          psDDR_act_n                          => psDdrActN,
          psDDR_adr                            => psDdrAdr,
          psDDR_ba                             => psDdrBa,
@@ -1086,34 +1097,28 @@ begin
          sAxiLpd_araddr(48 downto 32)         => (others => '0'),
          sAxiLpd_arburst                      => "01",
          sAxiLpd_arcache                      => "0011",
-         sAxiLpd_arid                         => (others => '0'),
          sAxiLpd_arlen                        => (others => '0'),
          sAxiLpd_arlock                       => '0',
          sAxiLpd_arprot                       => msiReadMaster.arprot,
          sAxiLpd_arqos                        => (others => '0'),
          sAxiLpd_arready                      => msiReadSlave.arready,
          sAxiLpd_arsize                       => "010",
-         sAxiLpd_aruser                       => (others => '0'),
          sAxiLpd_arvalid                      => msiReadMaster.arvalid,
          sAxiLpd_awaddr(31 downto 0)          => msiWriteMaster.awaddr(31 downto 0),
          sAxiLpd_awaddr(48 downto 32)         => (others => '0'),
          sAxiLpd_awburst                      => "01",
          sAxiLpd_awcache                      => "0011",
-         sAxiLpd_awid                         => (others => '0'),
          sAxiLpd_awlen                        => (others => '0'),
          sAxiLpd_awlock                       => '0',
          sAxiLpd_awprot                       => msiWriteMaster.awprot,
          sAxiLpd_awqos                        => (others => '0'),
          sAxiLpd_awready                      => msiWriteSlave.awready,
          sAxiLpd_awsize                       => "010",
-         sAxiLpd_awuser                       => (others => '0'),
          sAxiLpd_awvalid                      => msiWriteMaster.awvalid,
-         sAxiLpd_bid                          => open,
          sAxiLpd_bready                       => msiWriteMaster.bready,
          sAxiLpd_bresp                        => msiWriteSlave.bresp,
          sAxiLpd_bvalid                       => msiWriteSlave.bvalid,
          sAxiLpd_rdata                        => msiReadSlave.rdata(31 downto 0),
-         sAxiLpd_rid                          => open,
          sAxiLpd_rlast                        => open,
          sAxiLpd_rready                       => msiReadMaster.rready,
          sAxiLpd_rresp                        => msiReadSlave.rresp,

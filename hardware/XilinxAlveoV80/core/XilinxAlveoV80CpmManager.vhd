@@ -6,13 +6,13 @@
 -- Drives the CIPS S_AXI_LPD slave to manage the CPM5_DMA1 controller from PL
 -- fabric. It does two jobs over one AXI-Lite master:
 --
---  1) On the FIRST dmaIrq it programs the CPM5 BDF (address-translation) table,
---     writing each entry's six 32-bit words in order (see
+--  1) On the FIRST register transaction it programs the CPM5 BDF (address 
+--     translation) table, writing each entry's six 32-bit words in order (see
 --     XilinxAlveoV80CpmManagerPkg). The default single-entry table is an
 --     identity mapping, function 0, read+write enabled, 128 GiB aperture --
 --     reproducing the reference sequence (0xFCEA2420..0xFCEA2434, word +0x10 =
---     0xC2000000). Programming is deferred to the first interrupt (rather than
---     done at reset) so the CPM5 is guaranteed past its own boot/CDO
+--     0xC2000000). Programming is deferred to the first register transaction 
+--     (rather than done at reset) so the CPM5 is guaranteed past its own boot/CDO
 --     initialization and PCIe is up before the BDF entry is written -- a reset-
 --     time write was observed to read back as 0 (clobbered by / racing the CDO).
 --
@@ -20,8 +20,8 @@
 --     int_set (bit 24) to the CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C), generating the
 --     PCIe TX MSI directly. This replaces the defective CPM5 bridge1
 --     usr_irq_req / usr_irq_ack hardware handshake (confirmed broken on
---     hardware: the CPM never acks and no MSI TLP is emitted). The first
---     interrupt therefore programs the table and then sends its MSI.
+--     hardware: the CPM never acks and no MSI TLP is emitted). dmaIrq is not
+--     serviced until the BDF table has been programmed.
 --
 -- PG347 v3.4 Table 215: the CPM5 register block is reachable from PL only
 -- through the LPD AXI slave interface, so this master drives cips/S_AXI_LPD
@@ -76,6 +76,8 @@ entity XilinxAlveoV80CpmManager is
       dmaIrq          : in  sl;
       -- Status
       bdfDone         : out sl;         -- BDF table programming complete
+      -- Host BAR0 request seen on the bridge master (link up, CPM5 configured)
+      hostAccess      : in  sl;
       -- AXI-Lite Master (drives the CIPS S_AXI_LPD slave)
       axilWriteMaster : out AxiLiteWriteMasterType;
       axilWriteSlave  : in  AxiLiteWriteSlaveType;
@@ -138,7 +140,7 @@ begin
          axilReadMaster  => axilReadMaster,
          axilReadSlave   => axilReadSlave);
 
-   comb : process (ack, dmaIrq, r, rstL) is
+   comb : process (ack, dmaIrq, r, rstL, hostAccess) is
       variable v : RegType;
    begin
       -- Latch the current value
@@ -157,19 +159,14 @@ begin
          ----------------------------------------------------------------------
          when IDLE_S =>
             v.irqTimer := (others => '0');
-            -- Wait for the DMA interrupt request. On the FIRST interrupt, program
-            -- the CPM5 BDF address-translation table before sending the MSI; on
-            -- later interrupts the table is already programmed so go straight to
-            -- the TX_IRQ_CSR write. Programming on the first IRQ (rather than at
-            -- reset) ensures the CPM5 is past its boot/CDO init and PCIe is up
-            -- before the BDF entry is written.
-            if (dmaIrq = '1') then
-               if (r.bdfDone = '0') then
+            if (r.bdfDone = '0') then
+               -- Program the BDF table on the first host BAR0 access
+               if (hostAccess = '1') then
                   v.bdfIndex := 0;
                   v.state    := BDF_REQ_S;
-               else
-                  v.state := REQ_S;
                end if;
+            elsif (dmaIrq = '1') then
+               v.state := REQ_S;
             end if;
          ----------------------------------------------------------------------
          when REQ_S =>
@@ -187,10 +184,12 @@ begin
                -- Deassert the request (AxiLiteMaster clears ack when request=0)
                v.req.request := '0';
                if (r.bdfDone = '0') then
-                  -- Still programming the BDF table.
-                  if (r.bdfIndex = BDF_LEN_C-1) then
+                  if (ack.resp /= AXI_RESP_OK_C) then
+                     -- Write rejected: start over on the next host access
+                     v.state := IDLE_S;
+                  elsif (r.bdfIndex = BDF_LEN_C-1) then
                      v.bdfDone := '1';
-                     v.state   := REQ_S;  -- table done; now send this IRQ's MSI
+                     v.state   := IDLE_S;  -- no IRQ pending yet
                   else
                      v.bdfIndex := r.bdfIndex + 1;
                      v.state    := BDF_REQ_S;

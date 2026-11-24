@@ -4,9 +4,13 @@
 -- Description: AXI PCIe Core for Xilinx Alveo V80 board (PCIe GEN5 x 8 lanes)
 -- https://www.amd.com/en/products/accelerators/alveo/v80.html
 --
--- Known limitation: DMA host accesses are routed through a single 128 GB CPM
--- aperture (NoC remap 0x0 -> 0xA0_0000_0000). Host physical addresses at or
--- above 128 GB have no NoC route until BDF table translation is programmed.
+-- Known limitations:
+-- 1) DMA host accesses are routed through a single 128 GB CPM aperture (NoC
+--    remap 0x0 -> 0xA0_0000_0000). Host physical addresses at or above 128 GB
+--    have no NoC route until BDF table translation is programmed.
+-- 2) A host warm reboot or PCIe link loss while DMA data is in flight stalls
+--    the NoC interfaces. The card then needs a cold power cycle or a JTAG
+--    reset to recover (issue #248). Stop all DMA traffic before rebooting.
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -139,7 +143,6 @@ architecture mapping of XilinxAlveoV80Core is
    signal sysClock     : sl;
    signal sysReset     : sl;
    signal systemReset  : sl;
-   signal systemResetL : sl;
    signal cardReset    : sl;
    signal dmaIrq       : sl;
 
@@ -159,7 +162,6 @@ begin
          rstOut => dmaRst);
 
    systemReset  <= sysReset or cardReset;
-   systemResetL <= not(systemReset);
 
    -- https://docs.amd.com/r/en-US/am002-versal-gty-transceivers/Input-Mode
    U_IBUFDS : IBUFDS_GTE5
@@ -283,7 +285,7 @@ begin
          ROGUE_SIM_PORT_NUM_G => ROGUE_SIM_PORT_NUM_G,
          BUILD_INFO_G         => BUILD_INFO_G,
          XIL_DEVICE_G         => "VERSAL",
-         BOOT_PROM_G          => "NONE",
+         BOOT_PROM_G          => "PS",  -- OSPI flash programmed via PS/PMC (DAC window)
          DRIVER_TYPE_ID_G     => DRIVER_TYPE_ID_G,
          PCIE_HW_TYPE_G       => HW_TYPE_XILINX_V80_C,
          DMA_AXIS_CONFIG_G    => DMA_AXIS_CONFIG_G,

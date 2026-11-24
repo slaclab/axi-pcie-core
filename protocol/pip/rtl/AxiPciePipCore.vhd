@@ -137,6 +137,10 @@ begin
          axilReadSlave     => axilReadSlave,
          axilWriteMaster   => axilWriteMaster,
          axilWriteSlave    => axilWriteSlave,
+         -- AXI Stream Interface (axisClk domain)
+         axisClk           => axisClk,
+         axisRst           => axisRst,
+         depackDebug       => depackDebug,
          -- AXI4 Interfaces (axiClk domain)
          axiClk            => axiClk,
          axiRst            => axiRst,
@@ -145,7 +149,6 @@ begin
          rxFrame           => rxFrame,
          txFrame           => txFrame,
          txAxiError        => txAxiError,
-         depackDebug       => depackDebug,
          enableTx          => enTx,
          awcache           => awcache,
          remoteBarBaseAddr => remoteBarBaseAddr,

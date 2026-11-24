@@ -1,9 +1,9 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xD9181D32DB9410C2",
+      "boundary_crc": "0xC9306BFBC68AE176",
       "device": "xcv80-lsva4737-2MHP-e-S",
-      "gen_directory": "../../../../regen_prj.gen/sources_1/bd/XilinxAlveoV80PcieBlockDesign",
+      "gen_directory": "../../../../XilinxAlveoV80PrbsTester_project.gen/sources_1/bd/XilinxAlveoV80PcieBlockDesign",
       "name": "XilinxAlveoV80PcieBlockDesign",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
@@ -13,7 +13,9 @@
     "design_tree": {
       "cips": "",
       "axi_noc_mc_ddr4_0": "",
-      "axi_noc_cpm_0": ""
+      "axi_noc_cpm_0": "",
+      "smartconnect_0": "",
+      "axcache_const": ""
     },
     "interface_ports": {
       "psDDR": {
@@ -771,86 +773,10 @@
           }
         },
         "port_maps": {
-          "ARADDR": {
-            "physical_name": "sAxiLpd_araddr",
-            "direction": "I",
-            "left": "48",
-            "right": "0"
-          },
-          "ARBURST": {
-            "physical_name": "sAxiLpd_arburst",
-            "direction": "I",
-            "left": "1",
-            "right": "0"
-          },
-          "ARCACHE": {
-            "physical_name": "sAxiLpd_arcache",
-            "direction": "I",
-            "left": "3",
-            "right": "0"
-          },
-          "ARID": {
-            "physical_name": "sAxiLpd_arid",
-            "direction": "I",
-            "left": "5",
-            "right": "0"
-          },
-          "ARLEN": {
-            "physical_name": "sAxiLpd_arlen",
-            "direction": "I",
-            "left": "7",
-            "right": "0"
-          },
-          "ARLOCK": {
-            "physical_name": "sAxiLpd_arlock",
-            "direction": "I"
-          },
-          "ARPROT": {
-            "physical_name": "sAxiLpd_arprot",
-            "direction": "I",
-            "left": "2",
-            "right": "0"
-          },
-          "ARQOS": {
-            "physical_name": "sAxiLpd_arqos",
-            "direction": "I",
-            "left": "3",
-            "right": "0"
-          },
-          "ARSIZE": {
-            "physical_name": "sAxiLpd_arsize",
-            "direction": "I",
-            "left": "2",
-            "right": "0"
-          },
-          "ARUSER": {
-            "physical_name": "sAxiLpd_aruser",
-            "direction": "I",
-            "left": "9",
-            "right": "0"
-          },
           "AWADDR": {
             "physical_name": "sAxiLpd_awaddr",
             "direction": "I",
-            "left": "48",
-            "right": "0"
-          },
-          "AWBURST": {
-            "physical_name": "sAxiLpd_awburst",
-            "direction": "I",
-            "left": "1",
-            "right": "0"
-          },
-          "AWCACHE": {
-            "physical_name": "sAxiLpd_awcache",
-            "direction": "I",
-            "left": "3",
-            "right": "0"
-          },
-          "AWID": {
-            "physical_name": "sAxiLpd_awid",
-            "direction": "I",
-            "left": "5",
+            "left": "31",
             "right": "0"
           },
           "AWLEN": {
@@ -859,9 +785,29 @@
             "left": "7",
             "right": "0"
           },
+          "AWSIZE": {
+            "physical_name": "sAxiLpd_awsize",
+            "direction": "I",
+            "left": "2",
+            "right": "0"
+          },
+          "AWBURST": {
+            "physical_name": "sAxiLpd_awburst",
+            "direction": "I",
+            "left": "1",
+            "right": "0"
+          },
           "AWLOCK": {
             "physical_name": "sAxiLpd_awlock",
-            "direction": "I"
+            "direction": "I",
+            "left": "0",
+            "right": "0"
+          },
+          "AWCACHE": {
+            "physical_name": "sAxiLpd_awcache",
+            "direction": "I",
+            "left": "3",
+            "right": "0"
           },
           "AWPROT": {
             "physical_name": "sAxiLpd_awprot",
@@ -875,88 +821,12 @@
             "left": "3",
             "right": "0"
           },
-          "AWSIZE": {
-            "physical_name": "sAxiLpd_awsize",
-            "direction": "I",
-            "left": "2",
-            "right": "0"
-          },
-          "AWUSER": {
-            "physical_name": "sAxiLpd_awuser",
-            "direction": "I",
-            "left": "9",
-            "right": "0"
-          },
           "AWVALID": {
             "physical_name": "sAxiLpd_awvalid",
             "direction": "I"
           },
-          "BREADY": {
-            "physical_name": "sAxiLpd_bready",
-            "direction": "I"
-          },
-          "RREADY": {
-            "physical_name": "sAxiLpd_rready",
-            "direction": "I"
-          },
-          "WLAST": {
-            "physical_name": "sAxiLpd_wlast",
-            "direction": "I"
-          },
-          "WVALID": {
-            "physical_name": "sAxiLpd_wvalid",
-            "direction": "I"
-          },
-          "ARREADY": {
-            "physical_name": "sAxiLpd_arready",
-            "direction": "O"
-          },
-          "ARVALID": {
-            "physical_name": "sAxiLpd_arvalid",
-            "direction": "I"
-          },
           "AWREADY": {
             "physical_name": "sAxiLpd_awready",
-            "direction": "O"
-          },
-          "BID": {
-            "physical_name": "sAxiLpd_bid",
-            "direction": "O",
-            "left": "5",
-            "right": "0"
-          },
-          "BRESP": {
-            "physical_name": "sAxiLpd_bresp",
-            "direction": "O",
-            "left": "1",
-            "right": "0"
-          },
-          "BVALID": {
-            "physical_name": "sAxiLpd_bvalid",
-            "direction": "O"
-          },
-          "RID": {
-            "physical_name": "sAxiLpd_rid",
-            "direction": "O",
-            "left": "5",
-            "right": "0"
-          },
-          "RLAST": {
-            "physical_name": "sAxiLpd_rlast",
-            "direction": "O"
-          },
-          "RRESP": {
-            "physical_name": "sAxiLpd_rresp",
-            "direction": "O",
-            "left": "1",
-            "right": "0"
-          },
-          "RVALID": {
-            "physical_name": "sAxiLpd_rvalid",
-            "direction": "O"
-          },
-          "WREADY": {
-            "physical_name": "sAxiLpd_wready",
             "direction": "O"
           },
           "WDATA": {
@@ -971,11 +841,111 @@
             "left": "3",
             "right": "0"
           },
+          "WLAST": {
+            "physical_name": "sAxiLpd_wlast",
+            "direction": "I"
+          },
+          "WVALID": {
+            "physical_name": "sAxiLpd_wvalid",
+            "direction": "I"
+          },
+          "WREADY": {
+            "physical_name": "sAxiLpd_wready",
+            "direction": "O"
+          },
+          "BRESP": {
+            "physical_name": "sAxiLpd_bresp",
+            "direction": "O",
+            "left": "1",
+            "right": "0"
+          },
+          "BVALID": {
+            "physical_name": "sAxiLpd_bvalid",
+            "direction": "O"
+          },
+          "BREADY": {
+            "physical_name": "sAxiLpd_bready",
+            "direction": "I"
+          },
+          "ARADDR": {
+            "physical_name": "sAxiLpd_araddr",
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "ARLEN": {
+            "physical_name": "sAxiLpd_arlen",
+            "direction": "I",
+            "left": "7",
+            "right": "0"
+          },
+          "ARSIZE": {
+            "physical_name": "sAxiLpd_arsize",
+            "direction": "I",
+            "left": "2",
+            "right": "0"
+          },
+          "ARBURST": {
+            "physical_name": "sAxiLpd_arburst",
+            "direction": "I",
+            "left": "1",
+            "right": "0"
+          },
+          "ARLOCK": {
+            "physical_name": "sAxiLpd_arlock",
+            "direction": "I",
+            "left": "0",
+            "right": "0"
+          },
+          "ARCACHE": {
+            "physical_name": "sAxiLpd_arcache",
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "ARPROT": {
+            "physical_name": "sAxiLpd_arprot",
+            "direction": "I",
+            "left": "2",
+            "right": "0"
+          },
+          "ARQOS": {
+            "physical_name": "sAxiLpd_arqos",
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "ARVALID": {
+            "physical_name": "sAxiLpd_arvalid",
+            "direction": "I"
+          },
+          "ARREADY": {
+            "physical_name": "sAxiLpd_arready",
+            "direction": "O"
+          },
           "RDATA": {
             "physical_name": "sAxiLpd_rdata",
             "direction": "O",
             "left": "31",
             "right": "0"
+          },
+          "RRESP": {
+            "physical_name": "sAxiLpd_rresp",
+            "direction": "O",
+            "left": "1",
+            "right": "0"
+          },
+          "RLAST": {
+            "physical_name": "sAxiLpd_rlast",
+            "direction": "O"
+          },
+          "RVALID": {
+            "physical_name": "sAxiLpd_rvalid",
+            "direction": "O"
+          },
+          "RREADY": {
+            "physical_name": "sAxiLpd_rready",
+            "direction": "I"
           }
         }
       },
@@ -1966,6 +1936,20 @@
           }
         }
       },
+      "pciRstN": {
+        "type": "rst",
+        "direction": "O",
+        "parameters": {
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "POLARITY": {
+            "value": "ACTIVE_LOW",
+            "value_src": "user_prop"
+          }
+        }
+      },
       "plRefClk": {
         "type": "clk",
         "direction": "O",
@@ -2022,26 +2006,28 @@
           "CPM_CONFIG": {
             "value": [
               "CPM_AXI_SLV_BRIDGE0_BASE_ADDRR_H 0x00000000 CPM_AXI_SLV_BRIDGE1_BASE_ADDRR_H 0x00000000 CPM_PCIE0_FUNCTIONAL_MODE None CPM_PCIE0_MODES None CPM_PCIE1_ACS_CAP_ON 0 CPM_PCIE1_ARI_CAP_ENABLED 0",
-              "CPM_PCIE1_AXIBAR2PCIE_BASEADDR_2_H 0x000000A0 CPM_PCIE1_BRIDGE_AXI_SLAVE_IF 0 CPM_PCIE1_CFG_EXT_IF 0 CPM_PCIE1_CFG_VEND_ID 1A4A CPM_PCIE1_COPY_PF0_QDMA_ENABLED 0 CPM_PCIE1_DMA_INTF AXI4S",
-              "CPM_PCIE1_DSC_BYPASS_RD 1 CPM_PCIE1_DSC_BYPASS_WR 1 CPM_PCIE1_EXT_PCIE_CFG_SPACE_ENABLED None CPM_PCIE1_FUNCTIONAL_MODE QDMA CPM_PCIE1_MAX_LINK_SPEED 32.0_GT/s CPM_PCIE1_MODES DMA",
-              "CPM_PCIE1_MODE_SELECTION Advanced CPM_PCIE1_MSI_X_OPTIONS MSI-X_Internal CPM_PCIE1_NUM_USR_IRQ 0 CPM_PCIE1_PCIE_REGION_0_EN 0 CPM_PCIE1_PCIE_REGION_1_EN 0 CPM_PCIE1_PCIE_REGION_2_EN 1",
-              "CPM_PCIE1_PCIE_REGION_2_SCALE Gigabytes CPM_PCIE1_PCIE_REGION_2_SIZE 128 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_0 0x0000008000000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_1 0x0000008040000000",
-              "CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_2 0x0000008080000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_3 0x00000080C0000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_4 0x0000008100000000",
+              "CPM_PCIE1_AXIBAR2PCIE_BASEADDR_2_H 0x000000A0 CPM_PCIE1_BRIDGE_AXI_SLAVE_IF 0 CPM_PCIE1_CFG_EXT_IF 0 CPM_PCIE1_CFG_STS_IF 1 CPM_PCIE1_CFG_VEND_ID 1A4A CPM_PCIE1_COPY_PF0_QDMA_ENABLED 0",
+              "CPM_PCIE1_DMA_INTF AXI_MM_and_AXI_Stream CPM_PCIE1_DSC_BYPASS_RD 1 CPM_PCIE1_DSC_BYPASS_WR 1 CPM_PCIE1_EXT_PCIE_CFG_SPACE_ENABLED None CPM_PCIE1_FUNCTIONAL_MODE QDMA CPM_PCIE1_MAX_LINK_SPEED 32.0_GT/s",
+              "CPM_PCIE1_MODES DMA CPM_PCIE1_MODE_SELECTION Advanced CPM_PCIE1_MSI_X_OPTIONS MSI-X_Internal CPM_PCIE1_NUM_USR_IRQ 0 CPM_PCIE1_PCIE_REGION_0_EN 0 CPM_PCIE1_PCIE_REGION_1_EN 0",
+              "CPM_PCIE1_PCIE_REGION_2_EN 1 CPM_PCIE1_PCIE_REGION_2_SCALE Gigabytes CPM_PCIE1_PCIE_REGION_2_SIZE 128 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_0 0x0000008000000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_1",
+              "0x0000008040000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_2 0x0000008080000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_3 0x00000080C0000000 CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_4 0x0000008100000000",
               "CPM_PCIE1_PF0_AXIBAR2PCIE_BASEADDR_5 0x0000008140000000 CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_0 0x000000803FFFFFFFF CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_1 0x000000807FFFFFFFF",
               "CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_2 0x00000080BFFFFFFFF CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_3 0x00000080FFFFFFFFF CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_4 0x000000813FFFFFFFF",
               "CPM_PCIE1_PF0_AXIBAR2PCIE_HIGHADDR_5 0x000000817FFFFFFFF CPM_PCIE1_PF0_BAR0_64BIT 1 CPM_PCIE1_PF0_BAR0_BRIDGE_64BIT 0 CPM_PCIE1_PF0_BAR0_BRIDGE_SCALE Kilobytes CPM_PCIE1_PF0_BAR0_BRIDGE_SIZE 4",
               "CPM_PCIE1_PF0_BAR0_BRIDGE_STEERING CPM_PCIE_NOC_0 CPM_PCIE1_PF0_BAR0_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR0_QDMA_64BIT 1 CPM_PCIE1_PF0_BAR0_QDMA_ENABLED 1 CPM_PCIE1_PF0_BAR0_QDMA_PREFETCHABLE 0",
               "CPM_PCIE1_PF0_BAR0_QDMA_SCALE Megabytes CPM_PCIE1_PF0_BAR0_QDMA_SIZE 16 CPM_PCIE1_PF0_BAR0_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF0_BAR0_SIZE 16 CPM_PCIE1_PF0_BAR1_BRIDGE_ENABLED 0",
-              "CPM_PCIE1_PF0_BAR2_QDMA_64BIT 0 CPM_PCIE1_PF0_BAR2_QDMA_ENABLED 0 CPM_PCIE1_PF0_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR2_QDMA_SCALE Kilobytes CPM_PCIE1_PF0_BAR2_QDMA_SIZE 4",
-              "CPM_PCIE1_PF0_BAR2_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF0_BASE_CLASS_VALUE 11 CPM_PCIE1_PF0_CFG_DEV_ID 2030 CPM_PCIE1_PF0_CFG_SUBSYS_ID 2030 CPM_PCIE1_PF0_CFG_SUBSYS_VEND_ID 1A4A",
-              "CPM_PCIE1_PF0_DEV_CAP_EXT_TAG_EN 1 CPM_PCIE1_PF0_DEV_CAP_FUNCTION_LEVEL_RESET_CAPABLE 0 CPM_PCIE1_PF0_INTERRUPT_PIN NONE CPM_PCIE1_PF0_MSIX_CAP_TABLE_OFFSET 8000 CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE 8",
-              "CPM_PCIE1_PF0_MSIX_ENABLED 1 CPM_PCIE1_PF0_MSI_ENABLED 0 CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0 0x0000020100000000 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D0 0 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D1 0",
-              "CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D3HOT 0 CPM_PCIE1_PF0_PM_CAP_SUPP_D1_STATE 0 CPM_PCIE1_PF0_SUB_CLASS_VALUE 80 CPM_PCIE1_PF1_BAR0_QDMA_64BIT 0 CPM_PCIE1_PF1_BAR0_QDMA_ENABLED 0",
-              "CPM_PCIE1_PF1_BAR0_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF1_BAR0_QDMA_SCALE Kilobytes CPM_PCIE1_PF1_BAR0_QDMA_SIZE 4 CPM_PCIE1_PF1_BAR0_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF1_BAR2_QDMA_64BIT 0",
-              "CPM_PCIE1_PF1_BAR2_QDMA_ENABLED 0 CPM_PCIE1_PF1_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF1_BAR2_QDMA_SCALE Kilobytes CPM_PCIE1_PF1_BAR2_QDMA_SIZE 4 CPM_PCIE1_PF1_BAR2_QDMA_TYPE AXI_Bridge_Master",
-              "CPM_PCIE1_PF1_BASE_CLASS_VALUE 05 CPM_PCIE1_PF1_CFG_DEV_ID 0 CPM_PCIE1_PF1_CFG_SUBSYS_ID 0 CPM_PCIE1_PF1_CFG_SUBSYS_VEND_ID 0 CPM_PCIE1_PF1_MSIX_CAP_TABLE_OFFSET 50000",
-              "CPM_PCIE1_PF1_MSIX_CAP_TABLE_SIZE 8 CPM_PCIE1_PF1_MSIX_ENABLED 1 CPM_PCIE1_PF1_PCIEBAR2AXIBAR_QDMA_2 0x0000020200000000 CPM_PCIE1_PF1_SUB_CLASS_VALUE 00 CPM_PCIE1_PL_LINK_CAP_MAX_LINK_WIDTH X8",
-              "CPM_PCIE1_PORT_TYPE PCI_Express_Endpoint_device CPM_PCIE1_TL_PF_ENABLE_REG 1 CPM_PL_AXI0_EN 0 CPM_PL_AXI1_EN 0 PS_USE_PS_NOC_PCI_0 1 PS_USE_PS_NOC_PCI_1 0"
+              "CPM_PCIE1_PF0_BAR2_BRIDGE_64BIT 0 CPM_PCIE1_PF0_BAR2_BRIDGE_ENABLED 0 CPM_PCIE1_PF0_BAR2_BRIDGE_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR2_BRIDGE_SCALE Kilobytes CPM_PCIE1_PF0_BAR2_BRIDGE_SIZE 4",
+              "CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING CPM_PCIE_NOC_0 CPM_PCIE1_PF0_BAR2_QDMA_64BIT 0 CPM_PCIE1_PF0_BAR2_QDMA_ENABLED 0 CPM_PCIE1_PF0_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF0_BAR2_QDMA_SCALE Kilobytes",
+              "CPM_PCIE1_PF0_BAR2_QDMA_SIZE 4 CPM_PCIE1_PF0_BAR2_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF0_BASE_CLASS_VALUE 11 CPM_PCIE1_PF0_CFG_DEV_ID 2030 CPM_PCIE1_PF0_CFG_SUBSYS_ID 2030",
+              "CPM_PCIE1_PF0_CFG_SUBSYS_VEND_ID 1A4A CPM_PCIE1_PF0_DEV_CAP_EXT_TAG_EN 1 CPM_PCIE1_PF0_DEV_CAP_FUNCTION_LEVEL_RESET_CAPABLE 0 CPM_PCIE1_PF0_INTERRUPT_PIN NONE CPM_PCIE1_PF0_MSIX_CAP_TABLE_OFFSET 8000",
+              "CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE 8 CPM_PCIE1_PF0_MSIX_ENABLED 1 CPM_PCIE1_PF0_MSI_ENABLED 0 CPM_PCIE1_PF0_PCIEBAR2AXIBAR_BRIDGE_2 0x0000000000000000 CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0",
+              "0x0000020100000000 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D0 0 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D1 0 CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D3HOT 0 CPM_PCIE1_PF0_PM_CAP_SUPP_D1_STATE 0 CPM_PCIE1_PF0_SUB_CLASS_VALUE",
+              "80 CPM_PCIE1_PF1_BAR0_QDMA_64BIT 0 CPM_PCIE1_PF1_BAR0_QDMA_ENABLED 0 CPM_PCIE1_PF1_BAR0_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF1_BAR0_QDMA_SCALE Kilobytes CPM_PCIE1_PF1_BAR0_QDMA_SIZE 4",
+              "CPM_PCIE1_PF1_BAR0_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF1_BAR2_QDMA_64BIT 0 CPM_PCIE1_PF1_BAR2_QDMA_ENABLED 0 CPM_PCIE1_PF1_BAR2_QDMA_PREFETCHABLE 0 CPM_PCIE1_PF1_BAR2_QDMA_SCALE Kilobytes",
+              "CPM_PCIE1_PF1_BAR2_QDMA_SIZE 4 CPM_PCIE1_PF1_BAR2_QDMA_TYPE AXI_Bridge_Master CPM_PCIE1_PF1_BASE_CLASS_VALUE 05 CPM_PCIE1_PF1_CFG_DEV_ID 0 CPM_PCIE1_PF1_CFG_SUBSYS_ID 0",
+              "CPM_PCIE1_PF1_CFG_SUBSYS_VEND_ID 0 CPM_PCIE1_PF1_MSIX_CAP_TABLE_OFFSET 50000 CPM_PCIE1_PF1_MSIX_CAP_TABLE_SIZE 8 CPM_PCIE1_PF1_MSIX_ENABLED 1 CPM_PCIE1_PF1_PCIEBAR2AXIBAR_QDMA_2 0x0000020200000000",
+              "CPM_PCIE1_PF1_SUB_CLASS_VALUE 00 CPM_PCIE1_PL_LINK_CAP_MAX_LINK_WIDTH X8 CPM_PCIE1_PORT_TYPE PCI_Express_Endpoint_device CPM_PCIE1_TL_PF_ENABLE_REG 1 CPM_PL_AXI0_EN 1 CPM_PL_AXI1_EN 0",
+              "PS_USE_PS_NOC_PCI_0 1 PS_USE_PS_NOC_PCI_1 1"
             ]
           },
           "PS_PL_CONNECTIVITY_MODE": {
@@ -2099,6 +2085,7 @@
               "PMC_SD0_DATA_TRANSFER_MODE 8Bit",
               "PMC_SD0_PERIPHERAL {{CLK_100_SDR_OTAP_DLY 0x00} {CLK_200_SDR_OTAP_DLY 0x2} {CLK_50_DDR_ITAP_DLY 0x1E} {CLK_50_DDR_OTAP_DLY 0x5} {CLK_50_SDR_ITAP_DLY 0x2C} {CLK_50_SDR_OTAP_DLY 0x5} {ENABLE 1} {IO {PMC_MIO 13 .. 25}}}",
               "PMC_SD0_SLOT_TYPE eMMC",
+              "PMC_USE_NOC_PMC_AXI0 0",
               "PMC_USE_PMC_NOC_AXI0 1",
               "PS_BANK_2_IO_STANDARD LVCMOS3.3",
               "PS_BOARD_INTERFACE Custom",
@@ -2253,6 +2240,45 @@
               }
             }
           },
+          "CPM_PCIE_NOC_1": {
+            "mode": "Master",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "address_space_ref": "CPM_PCIE_NOC_1",
+            "base_address": {
+              "minimum": "0x00000000",
+              "maximum": "0x0FFFFFFFFFFF",
+              "width": "64"
+            },
+            "bd_attributes": {
+              "TYPE": {
+                "value": "END_POINT",
+                "value_src": "auto"
+              }
+            }
+          },
+          "CPM_PL_AXI0": {
+            "mode": "Master",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "address_space_ref": "CPM_PL_AXI0",
+            "base_address": {
+              "minimum": "0x00000000",
+              "maximum": "0x0003FFFFFFFFFFFF",
+              "width": "64"
+            },
+            "bd_attributes": {
+              "TYPE": {
+                "value": "END_POINT",
+                "value_src": "auto"
+              }
+            }
+          },
+          "pcie1_cfg_status": {
+            "mode": "Master",
+            "vlnv_bus_definition": "xilinx.com:interface:pcie5_cfg_status:1.0",
+            "vlnv": "xilinx.com:interface:pcie5_cfg_status_rtl:1.0"
+          },
           "dma1_mgmt": {
             "mode": "Slave",
             "vlnv_bus_definition": "xilinx.com:interface:cpm_dma_mgmt:1.0",
@@ -2263,6 +2289,16 @@
             "vlnv_bus_definition": "xilinx.com:interface:axis:1.0",
             "vlnv": "xilinx.com:interface:axis_rtl:1.0"
           },
+          "dma1_c2h_byp_in_mm_0": {
+            "mode": "Slave",
+            "vlnv_bus_definition": "xilinx.com:interface:qdma_dsc_byp:1.0",
+            "vlnv": "xilinx.com:interface:qdma_dsc_byp_rtl:1.0"
+          },
+          "dma1_c2h_byp_in_mm_1": {
+            "mode": "Slave",
+            "vlnv_bus_definition": "xilinx.com:interface:qdma_dsc_byp:1.0",
+            "vlnv": "xilinx.com:interface:qdma_dsc_byp_rtl:1.0"
+          },
           "dma1_c2h_byp_in_st_csh": {
             "mode": "Slave",
             "vlnv_bus_definition": "xilinx.com:interface:qdma_dsc_byp:1.0",
@@ -2270,6 +2306,16 @@
           },
           "dma1_c2h_byp_out": {
             "mode": "Master",
+            "vlnv_bus_definition": "xilinx.com:interface:qdma_dsc_byp:1.0",
+            "vlnv": "xilinx.com:interface:qdma_dsc_byp_rtl:1.0"
+          },
+          "dma1_h2c_byp_in_mm_0": {
+            "mode": "Slave",
+            "vlnv_bus_definition": "xilinx.com:interface:qdma_dsc_byp:1.0",
+            "vlnv": "xilinx.com:interface:qdma_dsc_byp_rtl:1.0"
+          },
+          "dma1_h2c_byp_in_mm_1": {
+            "mode": "Slave",
             "vlnv_bus_definition": "xilinx.com:interface:qdma_dsc_byp:1.0",
             "vlnv": "xilinx.com:interface:qdma_dsc_byp_rtl:1.0"
           },
@@ -4227,6 +4273,42 @@
                 }
               }
             },
+            "CPM_PCIE_NOC_1": {
+              "range": "16E",
+              "width": "64",
+              "local_memory_map": {
+                "name": "CPM_PCIE_NOC_1",
+                "description": "Address Space Segments",
+                "address_blocks": {
+                  "CPM_PCIE_NOC_1:APERTURE_0": {
+                    "name": "CPM_PCIE_NOC_1:APERTURE_0",
+                    "display_name": "APERTURE_0",
+                    "base_address": "0x00000000",
+                    "range": "16T",
+                    "width": "44",
+                    "usage": "register"
+                  }
+                }
+              }
+            },
+            "CPM_PL_AXI0": {
+              "range": "16E",
+              "width": "64",
+              "local_memory_map": {
+                "name": "CPM_PL_AXI0",
+                "description": "Address Space Segments",
+                "address_blocks": {
+                  "CPM_PL_AXI0:APERTURE_0": {
+                    "name": "CPM_PL_AXI0:APERTURE_0",
+                    "display_name": "APERTURE_0",
+                    "base_address": "0x00000000",
+                    "range": "1P",
+                    "width": "50",
+                    "usage": "register"
+                  }
+                }
+              }
+            },
             "LPD_AXI_NOC_0": {
               "range": "16E",
               "width": "64",
@@ -4626,6 +4708,124 @@
             }
           }
         }
+      },
+      "smartconnect_0": {
+        "vlnv": "xilinx.com:ip:smartconnect:1.0",
+        "ip_revision": "28",
+        "xci_name": "XilinxAlveoV80PcieBlockDesign_smartconnect_0_0",
+        "xci_path": "ip/XilinxAlveoV80PcieBlockDesign_smartconnect_0_0/XilinxAlveoV80PcieBlockDesign_smartconnect_0_0.xci",
+        "inst_hier_path": "smartconnect_0",
+        "has_run_ip_tcl": "true",
+        "parameters": {
+          "NUM_CLKS": {
+            "value": "1"
+          },
+          "NUM_SI": {
+            "value": "2"
+          }
+        },
+        "interface_ports": {
+          "S00_AXI": {
+            "mode": "Slave",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "parameters": {
+              "NUM_READ_OUTSTANDING": {
+                "value": "1"
+              },
+              "NUM_WRITE_OUTSTANDING": {
+                "value": "1"
+              }
+            },
+            "bridges": [
+              "M00_AXI"
+            ],
+            "bd_attributes": {
+              "BRIDGES": {
+                "value": "M00_AXI",
+                "value_src": "auto"
+              },
+              "TYPE": {
+                "value": "interior",
+                "value_src": "default"
+              }
+            }
+          },
+          "S01_AXI": {
+            "mode": "Slave",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "parameters": {
+              "NUM_READ_OUTSTANDING": {
+                "value": "2"
+              },
+              "NUM_WRITE_OUTSTANDING": {
+                "value": "2"
+              }
+            },
+            "bridges": [
+              "M00_AXI"
+            ],
+            "bd_attributes": {
+              "BRIDGES": {
+                "value": "M00_AXI",
+                "value_src": "auto"
+              },
+              "TYPE": {
+                "value": "interior",
+                "value_src": "default"
+              }
+            }
+          },
+          "M00_AXI": {
+            "mode": "Master",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "parameters": {
+              "MAX_BURST_LENGTH": {
+                "value": "256"
+              },
+              "NUM_READ_OUTSTANDING": {
+                "value": "2"
+              },
+              "NUM_READ_THREADS": {
+                "value": "1"
+              },
+              "NUM_WRITE_OUTSTANDING": {
+                "value": "2"
+              },
+              "NUM_WRITE_THREADS": {
+                "value": "1"
+              },
+              "RUSER_BITS_PER_BYTE": {
+                "value": "0"
+              },
+              "SUPPORTS_NARROW_BURST": {
+                "value": "0"
+              },
+              "WUSER_BITS_PER_BYTE": {
+                "value": "0"
+              }
+            },
+            "bd_attributes": {
+              "TYPE": {
+                "value": "interior",
+                "value_src": "default"
+              }
+            }
+          }
+        }
+      },
+      "axcache_const": {
+        "vlnv": "xilinx.com:inline_hdl:ilconstant:1.0",
+        "parameters": {
+          "CONST_VAL": {
+            "value": "0"
+          },
+          "CONST_WIDTH": {
+            "value": "4"
+          }
+        }
       }
     },
     "interface_nets": {
@@ -4645,6 +4845,12 @@
         "interface_ports": [
           "cips/CPM_PCIE_NOC_0",
           "axi_noc_cpm_0/S00_AXI"
+        ]
+      },
+      "cips_CPM_PL_AXI0": {
+        "interface_ports": [
+          "cips/CPM_PL_AXI0",
+          "smartconnect_0/S01_AXI"
         ]
       },
       "cips_LPD_AXI_NOC_0": {
@@ -4764,6 +4970,12 @@
       "sAxiLpd_1": {
         "interface_ports": [
           "sAxiLpd",
+          "smartconnect_0/S00_AXI"
+        ]
+      },
+      "smartconnect_0_M00_AXI": {
+        "interface_ports": [
+          "smartconnect_0/M00_AXI",
           "cips/S_AXI_LPD"
         ]
       },
@@ -4779,8 +4991,17 @@
         "ports": [
           "dmaClk",
           "cips/dma1_intrfc_clk",
+          "cips/cpm_pl_axi0_clk",
           "cips/s_axi_lpd_aclk",
-          "axi_noc_cpm_0/aclk1"
+          "axi_noc_cpm_0/aclk1",
+          "smartconnect_0/aclk"
+        ]
+      },
+      "axcache_const_dout": {
+        "ports": [
+          "axcache_const/dout",
+          "cips/S_AXI_LPD_awcache",
+          "cips/S_AXI_LPD_arcache"
         ]
       },
       "cips_cpm_pcie_noc_axi0_clk": {
@@ -4816,7 +5037,14 @@
       "dma1_intrfc_resetn_0_1": {
         "ports": [
           "dmaRstN",
-          "cips/dma1_intrfc_resetn"
+          "cips/dma1_intrfc_resetn",
+          "smartconnect_0/aresetn"
+        ]
+      },
+      "pcie_rst_out": {
+        "ports": [
+          "cips/dma1_axi_aresetn",
+          "pciRstN"
         ]
       }
     },
@@ -5648,6 +5876,803 @@
                 "address_block": "/mAxi/Reg",
                 "offset": "0x0000020100000000",
                 "range": "16M"
+              }
+            }
+          },
+          "CPM_PL_AXI0": {
+            "segments": {
+              "SEG_cips_pspmc_0_psv_adma_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_1",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_2",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_3": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_3",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_4": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_4",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_5": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_5",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_6": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_6",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_adma_7": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_adma_7",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_apu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_apu_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a720_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_cti",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a720_dbg": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_dbg",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a720_etm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_etm",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a720_pmu": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a720_pmu",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a721_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_cti",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a721_dbg": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_dbg",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a721_etm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_etm",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_a721_pmu": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_a721_pmu",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_apu_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_cti",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_apu_ela": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_ela",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_apu_etf": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_etf",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_apu_fun": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_apu_fun",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_atm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_atm",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_cti2a": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_cti2a",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_cti2d": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_cti2d",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_ela2a": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2a",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_ela2b": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2b",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_ela2c": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2c",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_ela2d": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_ela2d",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_fun": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_fun",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_cpm_rom": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_cpm_rom",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_atm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_atm",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_cti1b": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_cti1b",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_cti1c": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_cti1c",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_cti1d": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_cti1d",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_fpd_stm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_fpd_stm",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_lpd_atm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_lpd_atm",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_lpd_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_lpd_cti",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_pmc_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_pmc_cti",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_r50_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_r50_cti",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_coresight_r51_cti": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_coresight_r51_cti",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_cpm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_cpm",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_crf_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_crf_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_crl_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_crl_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_crp_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_crp_0",
+                "offset": "0x00000000F1260000",
+                "range": "64K"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_afi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_afi_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_afi_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_afi_2",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_cci_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_cci_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_gpv_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_gpv_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_maincci_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_maincci_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_slave_xmpu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_slave_xmpu_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_slcr_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_slcr_secure_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_slcr_secure_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_smmu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_smmu_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_fpd_smmutcu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_fpd_smmutcu_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_gpio_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_gpio_2",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_i2c_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_i2c_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_i2c_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_i2c_1",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_3": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_3",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_4": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_4",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_5": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_5",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_6": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_6",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_buffer": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_buffer",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_pmc": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_pmc",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_pmc_nobuf": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_pmc_nobuf",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ipi_psm": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ipi_psm",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_afi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_afi_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_iou_secure_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_iou_secure_slcr_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_iou_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_iou_slcr_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_slcr_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_slcr_secure_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_slcr_secure_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_lpd_xppu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_lpd_xppu_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ocm_ctrl": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ocm_ctrl",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ocm_ram_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ocm_ram_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ocm_xmpu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ocm_xmpu_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_aes": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_aes",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_analog_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_analog_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_bbram_ctrl": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_bbram_ctrl",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_1",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_2",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_3": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_3",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_4": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_4",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_5": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_5",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_6": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_6",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_7": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_7",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_8": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_8",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_9": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_9",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_10": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_10",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_11": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_11",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_12": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_12",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_13": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_13",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_14": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_14",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfi_cframe_bcast": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfi_cframe_bcast",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_cfu_apb_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_cfu_apb_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_dma_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_dma_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_dma_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_dma_1",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_efuse_cache": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_efuse_cache",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_efuse_ctrl": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_efuse_ctrl",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_global_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_global_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_gpio_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_gpio_0",
+                "offset": "0x00000000F1020000",
+                "range": "64K"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_iou_slcr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_iou_slcr_0",
+                "offset": "0x00000000F1060000",
+                "range": "64K"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_ospi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ospi_0",
+                "offset": "0x00000000F1010000",
+                "range": "64K"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_ppu1_mdm_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ppu1_mdm_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_qspi_ospi_flash_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_qspi_ospi_flash_0",
+                "offset": "0x00000000C0000000",
+                "range": "512M"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_ram": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ram",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_ram_npi": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_ram_npi",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_rsa": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_rsa",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_rtc_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_rtc_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_sd_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_sd_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_sha": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_sha",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_slave_boot": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_slave_boot",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_slave_boot_stream": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_slave_boot_stream",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_sysmon_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_sysmon_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_tap": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_tap",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_trng": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_trng",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_xmpu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_xmpu_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_xppu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_xppu_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_pmc_xppu_npi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_pmc_xppu_npi_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_psm_global_reg": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_psm_global_reg",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_r5_1_atcm_global": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_r5_1_atcm_global",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_r5_1_btcm_global": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_r5_1_btcm_global",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_r5_tcm_ram_global": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_r5_tcm_ram_global",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_rpu_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_rpu_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_sbsauart_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_sbsauart_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_sbsauart_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_sbsauart_1",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_scntr_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_scntr_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_scntrs_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_scntrs_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_spi_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_spi_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ttc_0": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_0",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ttc_1": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_1",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ttc_2": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_2",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
+              },
+              "SEG_cips_pspmc_0_psv_ttc_3": {
+                "address_block": "/cips/S_AXI_LPD/pspmc_0_psv_ttc_3",
+                "offset": "0x0000000000000000",
+                "range": "1",
+                "is_excluded": "TRUE"
               }
             }
           },

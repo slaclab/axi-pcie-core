@@ -53,6 +53,7 @@ entity XilinxKcu116PciePhyWrapper is
       dmaIrq         : in  sl;
       -- PCIe Ports
       pciRstL        : in  sl;
+      cfgClk         : in  sl;  -- free-running configuration oscillator (STARTUPE3 CFGMCLK, ~50 MHz)
       pciRefClkP     : in  sl;
       pciRefClkN     : in  sl;
       pciRxP         : in  slv(7 downto 0);
@@ -185,6 +186,14 @@ architecture mapping of XilinxKcu116PciePhyWrapper is
    signal usrIrqAck : sl;
    signal msiEnable : sl;
 
+   -- Post-configuration PCIe hard block reset (see U_CfgRst below)
+   signal cfgRstL : sl;
+   signal sysRstL : sl;
+
+   -- Keep the net so the set_false_path -through in the core XDC can find it
+   attribute keep            : string;
+   attribute keep of sysRstL : signal is "TRUE";
+
 begin
 
    axiClk <= clk;
@@ -225,6 +234,28 @@ begin
          ODIV2 => refClk,
          O     => refClkGt);
 
+   -- Hold the PCIe hard block in reset for ~10 ms after every FPGA
+   -- configuration.  When the FPGA is reloaded with PERST# deasserted (IPROG
+   -- from the PROM, or a JTAG program while the host stays up), the hard block
+   -- otherwise starts link training straight out of configuration and some
+   -- root ports (AMD Raphael/Granite Ridge GPP bridges) never recover the link
+   -- until the host is rebooted.  This pulse only follows configuration; it is
+   -- not retriggered by PERST#, so the PERST#-to-Detect timing at a warm
+   -- reset is unchanged.  Requires dedicate_perst=false in the PCIe IP so that
+   -- sys_rst_n can be driven from the fabric.  The counter runs on the
+   -- configuration oscillator because an IBUFDS_GTE4 ODIV2 output may only
+   -- drive the single BUFG_GT inside the PCIe IP.
+   U_CfgRst : entity surf.PwrUpRst
+      generic map (
+         TPD_G          => TPD_G,
+         OUT_POLARITY_G => '0',
+         DURATION_G     => 500000)      -- 10 ms @ 50 MHz nominal CFGMCLK
+      port map (
+         clk    => cfgClk,
+         rstOut => cfgRstL);
+
+   sysRstL <= pciRstL and cfgRstL;
+
    -------------------
    -- AXI PCIe IP Core
    -------------------
@@ -233,7 +264,7 @@ begin
          -- Clocks and Resets
          sys_clk         => refClk,
          sys_clk_gt      => refClkGt,
-         sys_rst_n       => pciRstL,
+         sys_rst_n       => sysRstL,
          axi_aclk        => clk,
          axi_aresetn     => rstL,
          axi_ctl_aresetn => open,

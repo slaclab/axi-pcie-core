@@ -279,6 +279,8 @@ begin
          userValues(5) <= x"00000001";
       elsif (BOOT_PROM_G = "SPIx4") then
          userValues(5) <= x"00000002";
+      elsif (BOOT_PROM_G = "PS") then
+         userValues(5) <= x"00000003";
       else
          userValues(5) <= x"FFFFFFFF";
       end if;

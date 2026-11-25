@@ -101,8 +101,10 @@ package XilinxAlveoV80CpmManagerPkg is
    -- NOC_PMC_AXI_0 path (re-establishing the non-cacheable behavior the removed
    -- SmartConnect-route axcache tie-off used to force). These values track the
    -- BAR2 aperture -- see XilinxAlveoV80PciePhyWrapper.
+   -- These entries should match the ones automatically generated in the Vivado
+   -- project in [project_name].runs/impl_1/gen_files/cpm_win_data.cdo
    constant NOC_CACHE_CONF_C : CpmRegWriteArray := (
-      0 => (addr => x"FCEA0F1C", data => x"00000100"),
+      0 => (addr => x"FCEA0F1C", data => x"00000500"),
       1 => (addr => x"FCEA0F20", data => x"80000040"));
 
 end package XilinxAlveoV80CpmManagerPkg;

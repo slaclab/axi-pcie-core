@@ -206,7 +206,6 @@ architecture rtl of QdmaBypassAdapter is
       inFirstVld : sl;
       -- C2H egress
       c2hState   : C2hStateType;
-      rxFreeReady: sl;
       c2hAddrIdx : slv(AXISG2_INDEX_BITS_C-1 downto 0);
       haveBuf    : sl;
       curBase    : slv(63 downto 0);
@@ -239,7 +238,6 @@ architecture rtl of QdmaBypassAdapter is
       inFirst    => (others => '0'),
       inFirstVld => '0',
       c2hState   => C2H_IDLE_S,
-      rxFreeReady=> '0',
       c2hAddrIdx => (others => '0'),
       haveBuf    => '0',
       curBase    => (others => '0'),
@@ -276,6 +274,16 @@ architecture rtl of QdmaBypassAdapter is
    signal iFifoDout  : slv(IFIFO_W_C-1 downto 0);
    signal iFifoRd    : sl;
    signal iFifoValid : sl;
+
+   -- Free-buffer (buffId) pool FIFO: eagerly drained from the shim's single-entry
+   -- rxFree so the driver's up-front burst of posted buffers is captured (not
+   -- collapsed to one), then popped one buffId per real host buffer by the egress.
+   signal bufFifoWr    : sl;
+   signal bufFifoDin   : slv(AXISG2_INDEX_BITS_C-1 downto 0);
+   signal bufFifoRd    : sl;
+   signal bufFifoDout  : slv(AXISG2_INDEX_BITS_C-1 downto 0);
+   signal bufFifoValid : sl;
+   signal bufFifoFull  : sl;
 
    -- Decoded data-FIFO head
    signal headData : slv(DAT_W_C-1 downto 0);
@@ -340,10 +348,37 @@ begin
          dout        => iFifoDout,
          valid       => iFifoValid);
 
-   comb : process (addrRdData, c2hBypReady, c2hStReady, cmptReady, dFifoAFull,
-                   dFifoValid, h2cBypReady, headData, headLast, headMty,
-                   iFifoAFull, iFifoValid, infByteCnt, infFirst, infFrameEnd,
-                   infLast, maxSize, pfchTag, r, rstL, rxFree, sAxisMaster,
+   U_BufFifo : entity surf.Fifo
+      generic map (
+         TPD_G           => TPD_G,
+         GEN_SYNC_FIFO_G => true,
+         FWFT_EN_G       => true,
+         MEMORY_TYPE_G   => "block",
+         DATA_WIDTH_G    => AXISG2_INDEX_BITS_C,
+         ADDR_WIDTH_G    => 9)            -- up to 512 posted free buffers
+      port map (
+         rst    => rstHigh,
+         wr_clk => clk,
+         wr_en  => bufFifoWr,
+         din    => bufFifoDin,
+         full   => bufFifoFull,
+         rd_clk => clk,
+         rd_en  => bufFifoRd,
+         dout   => bufFifoDout,
+         valid  => bufFifoValid);
+
+   -- Eager drain of the shim's single-entry rxFree into the buffId pool FIFO:
+   -- the driver bursts its whole free-buffer pool up front, so consume each post
+   -- as it appears (ns) rather than once per filled buffer (slow), or posts are lost.
+   rxFreeReady <= rxFree.valid and (not bufFifoFull);
+   bufFifoWr   <= rxFree.valid and (not bufFifoFull);
+   bufFifoDin  <= rxFree.index;
+
+   comb : process (addrRdData, bufFifoDout, bufFifoValid, c2hBypReady, c2hStReady,
+                   cmptReady, dFifoAFull, dFifoValid, h2cBypReady, headData,
+                   headLast, headMty, iFifoAFull, iFifoValid, infByteCnt,
+                   infFirst, infFrameEnd, infLast, maxSize, pfchTag, r, rstL,
+                   sAxisMaster,
                    tmDscStsDir, tmDscStsIrqArm, tmDscStsQid, tmDscStsValid,
                    txSub) is
       variable v        : RegType;
@@ -362,7 +397,6 @@ begin
 
       -- Default single-cycle strobes
       v.txSubReady  := '0';
-      v.rxFreeReady := '0';
       v.cmptDone    := '0';
 
       ----------------------------------------------------------------------
@@ -479,6 +513,7 @@ begin
       cmptWaitPldPktId <= (others => '0');
       dFifoRd          <= '0';
       iFifoRd          <= '0';
+      bufFifoRd        <= '0';
 
       offset64 := x"00000000" & r.chunkIdx & x"000";  -- chunkIdx * 4096
 
@@ -493,11 +528,11 @@ begin
             end if;
 
          when C2H_GETBUF_S =>
-            -- Grab a free host buffer (and the shared dmaAddr port; TX wins).
-            if (rxFree.valid = '1' and r.h2cState = H2C_IDLE_S and txSub.valid = '0') then
-               v.c2hAddrIdx  := rxFree.index;
-               v.rxFreeReady := '1';
-               v.curBuffId   := rxFree.index;
+            -- Pop a free host buffer from the drained pool (TX wins the addr port).
+            if (bufFifoValid = '1' and r.h2cState = H2C_IDLE_S and txSub.valid = '0') then
+               v.c2hAddrIdx := bufFifoDout;
+               v.curBuffId  := bufFifoDout;
+               bufFifoRd    <= '1';
                if (maxSize(31 downto 12) = 0) then
                   v.nChunksM1 := (others => '0');          -- < 1 chunk -> treat as 1
                else
@@ -605,7 +640,6 @@ begin
       -- Static / registered outputs
       ----------------------------------------------------------------------
       txSubReady  <= r.txSubReady;
-      rxFreeReady <= r.rxFreeReady;
       cmptDone    <= r.cmptDone;
 
       -- H2C bypass-in descriptor

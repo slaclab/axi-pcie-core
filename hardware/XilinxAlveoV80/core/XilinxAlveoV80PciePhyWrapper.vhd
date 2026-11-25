@@ -24,6 +24,7 @@ use surf.AxiLitePkg.all;
 
 library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
+use axi_pcie_core.XilinxAlveoV80CpmManagerPkg.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -264,14 +265,26 @@ begin
          rstOut => axiRst);
 
    -------------------------------------------------------------------------
-   -- PL CPM5 manager: after a register access it programs the CPM5_DMA1 BDF
-   -- address-translation table, then services DMA interrupts by writing
-   -- TX_IRQ_CSR (0xFCEA0E7C) via S_AXI_LPD to raise the PCIe TX MSI directly,
-   -- replacing the defective CPM5 bridge1 usr_irq_req / usr_irq_ack handshake.
+   -- PL CPM5 manager: a payload-agnostic engine (XilinxAlveoV80CpmManager) that,
+   -- on the first host register access, replays the STARTUP_WRITES_G list below,
+   -- then services DMA interrupts by writing TX_IRQ_CSR (0xFCEA0E7C) to raise the
+   -- PCIe TX MSI directly (replacing the defective CPM5 bridge1 usr_irq_req /
+   -- usr_irq_ack handshake).
+   --
+   -- STARTUP_WRITES_G is composed here, where the meaning lives:
+   --   1) NOC_CACHE_CONF_C : set the CPM5 NoC AxCACHE behavior on the PCIe BAR2 ->
+   --      NOC_PMC_AXI_0 path.
+   --   2) the flattened default BDF address-translation table (identity mapping).
+   -- They are applied in this order (NoC cache config first, then BDF).
+   --
+   -- NOTE: the NOC_CACHE_CONF_C values are specific to the current PCIe BAR2
+   -- aperture / steering in the block design. If BAR2 changes, those register
+   -- writes must be updated to match (see XilinxAlveoV80CpmManagerPkg).
    -------------------------------------------------------------------------
    U_CpmManager : entity axi_pcie_core.XilinxAlveoV80CpmManager
       generic map (
-         TPD_G => TPD_G)
+         TPD_G            => TPD_G,
+         STARTUP_WRITES_G => NOC_CACHE_CONF_C & genBdfWrites(CPM_BDF_TABLE_BASE_C, CPM_BDF_TABLE_DEFAULT_C))
       port map (
          -- Clock and Reset
          clk             => clk,
@@ -279,9 +292,9 @@ begin
          -- Interrupt Interface
          dmaIrq          => dmaIrq,
          -- Status
-         bdfDone         => open,
+         startupDone     => open,
          hostAccess      => hostAccess,
-         -- AXI-Lite Master (drives the CIPS S_AXI_LPD slave)
+         -- AXI-Lite Master (routed to the CPM5 registers via sAxiLpd -> NoC)
          axilWriteMaster => msiWriteMaster,
          axilWriteSlave  => msiWriteSlave,
          axilReadMaster  => msiReadMaster,

@@ -3,12 +3,20 @@
 -------------------------------------------------------------------------------
 -- Description: Package for XilinxAlveoV80CpmManager (Versal CPM5 management block).
 --
--- Defines the CPM5 BDF (Bus/Device/Function) address-translation table entry
--- type and helpers that flatten a table of entries into the ordered
--- address/data word pairs CpmManager writes over the S_AXI_LPD slave.
+-- XilinxAlveoV80CpmManager is payload-agnostic: it simply replays an ordered
+-- list of 32-bit register writes (CpmRegWriteArray) once at start-up and then
+-- services interrupts. This package holds the CPM5-specific payloads the caller
+-- composes into that list:
 --
--- Each BDF table entry is six 32-bit words, written in this order (offsets from
--- the entry base, e.g. CPM5_DMA1 BDF table base 0xFCEA2420):
+--   * the BDF (Bus/Device/Function) address-translation table and the
+--     genBdfWrites() helper that flattens it into register writes, and
+--   * NOC_CACHE_CONF_C, the CPM5 NoC cache-configuration register writes.
+--
+-- The composition (and its coupling to the PCIe BAR2 aperture) lives in
+-- XilinxAlveoV80PciePhyWrapper, not here and not in the manager.
+--
+-- Each BDF table entry flattens to six 32-bit words, written in this order
+-- (offsets from the entry base, e.g. CPM5_DMA1 BDF table base 0xFCEA2420):
 --   +0x00  address translation low   (32 bit)
 --   +0x04  address translation high  (32 bit)
 --   +0x08  reserved (always 0)
@@ -36,8 +44,26 @@ use surf.StdRtlPkg.all;
 
 package XilinxAlveoV80CpmManagerPkg is
 
+   -----------------------------------------------------------------------------
+   -- Generic register-write list consumed by XilinxAlveoV80CpmManager. One
+   -- entry is a single absolute-address 32-bit write; the manager performs the
+   -- list in order and is agnostic to what each write means.
+   -----------------------------------------------------------------------------
+   type CpmRegWriteType is record
+      addr : slv(31 downto 0);
+      data : slv(31 downto 0);
+   end record CpmRegWriteType;
+
+   type CpmRegWriteArray is array (natural range <>) of CpmRegWriteType;
+
+   -----------------------------------------------------------------------------
+   -- BDF (address-translation) table payload
+   -----------------------------------------------------------------------------
    -- Number of 32-bit words per BDF table entry
    constant CPM_BDF_WORDS_PER_ENTRY_C : positive := 6;
+
+   -- Global base address of the CPM5_DMA1 BDF address-translation table
+   constant CPM_BDF_TABLE_BASE_C : slv(31 downto 0) := x"FCEA2420";
 
    -- One CPM5 BDF address-translation table entry
    type CpmBdfEntryType is record
@@ -62,52 +88,29 @@ package XilinxAlveoV80CpmManagerPkg is
       wrPerm        => '1',
       size          => toSlv(2**25, 26));
 
-   -- Flatten a BDF table into the ordered list of register addresses to write.
-   function genBdfAddr (baseAddr : slv(31 downto 0); table : CpmBdfEntryArray) return Slv32Array;
+   -- Default single-entry BDF table (identity mapping).
+   constant CPM_BDF_TABLE_DEFAULT_C : CpmBdfEntryArray := (0 => CPM_BDF_ENTRY_INIT_C);
 
-   -- Flatten a BDF table into the ordered list of 32-bit data words to write.
-   function genBdfData (table : CpmBdfEntryArray) return Slv32Array;
+   -- Flatten a BDF table into the ordered register writes that program it.
+   function genBdfWrites (baseAddr : slv(31 downto 0); table : CpmBdfEntryArray) return CpmRegWriteArray;
 
-   -- Simple absolute-address register write (address + data word).
-   type CpmRegWriteType is record
-      addr : slv(31 downto 0);
-      data : slv(31 downto 0);
-   end record CpmRegWriteType;
-
-   type CpmRegWriteArray is array (natural range <>) of CpmRegWriteType;
-
-   -- NoC cache-configuration writes. These CPM5 register writes re-establish the
-   -- non-cacheable behavior on the PCIe BAR2 -> NOC_PMC_AXI_0 path that the old
-   -- SmartConnect-route axcache tie-off used to force. CpmManager issues them (in
-   -- this order) as the first words of its one-time programming burst, ahead of
-   -- the BDF address-translation table.
+   -----------------------------------------------------------------------------
+   -- NoC cache-configuration payload
+   -----------------------------------------------------------------------------
+   -- CPM5 register writes that set the NoC AxCACHE behavior on the PCIe BAR2 ->
+   -- NOC_PMC_AXI_0 path (re-establishing the non-cacheable behavior the removed
+   -- SmartConnect-route axcache tie-off used to force). These values track the
+   -- BAR2 aperture -- see XilinxAlveoV80PciePhyWrapper.
    constant NOC_CACHE_CONF_C : CpmRegWriteArray := (
       0 => (addr => x"FCEA0F1C", data => x"00000100"),
       1 => (addr => x"FCEA0F20", data => x"80000040"));
-
-   -- Flatten a register-write list into the ordered address / data word lists.
-   function genRegAddr (regs : CpmRegWriteArray) return Slv32Array;
-   function genRegData (regs : CpmRegWriteArray) return Slv32Array;
 
 end package XilinxAlveoV80CpmManagerPkg;
 
 package body XilinxAlveoV80CpmManagerPkg is
 
-   function genBdfAddr (baseAddr : slv(31 downto 0); table : CpmBdfEntryArray) return Slv32Array is
-      variable retVar : Slv32Array(0 to CPM_BDF_WORDS_PER_ENTRY_C*table'length-1);
-      variable idx    : natural;
-   begin
-      for k in table'range loop
-         idx := CPM_BDF_WORDS_PER_ENTRY_C*(k - table'low);
-         for w in 0 to CPM_BDF_WORDS_PER_ENTRY_C-1 loop
-            retVar(idx+w) := baseAddr + toSlv((k - table'low)*(4*CPM_BDF_WORDS_PER_ENTRY_C) + 4*w, 32);
-         end loop;
-      end loop;
-      return retVar;
-   end function genBdfAddr;
-
-   function genBdfData (table : CpmBdfEntryArray) return Slv32Array is
-      variable retVar : Slv32Array(0 to CPM_BDF_WORDS_PER_ENTRY_C*table'length-1);
+   function genBdfWrites (baseAddr : slv(31 downto 0); table : CpmBdfEntryArray) return CpmRegWriteArray is
+      variable retVar : CpmRegWriteArray(0 to CPM_BDF_WORDS_PER_ENTRY_C*table'length-1);
       variable idx    : natural;
       variable entry  : CpmBdfEntryType;
       variable word3  : slv(31 downto 0);
@@ -118,41 +121,28 @@ package body XilinxAlveoV80CpmManagerPkg is
          entry := table(k);
 
          -- +0x0C function number (lower 12 bits, upper bits reserved 0)
-         word3               := (others => '0');
-         word3(11 downto 0)  := entry.funcNum;
+         word3              := (others => '0');
+         word3(11 downto 0) := entry.funcNum;
 
          -- +0x10 permissions + size
-         word4               := (others => '0');
-         word4(31)           := entry.rdPerm;
-         word4(30)           := entry.wrPerm;
-         word4(25 downto 0)  := entry.size;
+         word4              := (others => '0');
+         word4(31)          := entry.rdPerm;
+         word4(30)          := entry.wrPerm;
+         word4(25 downto 0) := entry.size;
 
-         retVar(idx+0) := entry.addrTransLow;   -- +0x00
-         retVar(idx+1) := entry.addrTransHigh;  -- +0x04
-         retVar(idx+2) := (others => '0');      -- +0x08 reserved
-         retVar(idx+3) := word3;                -- +0x0C
-         retVar(idx+4) := word4;                -- +0x10
-         retVar(idx+5) := (others => '0');      -- +0x14 reserved
+         -- Address of each word = table base + entry offset + word offset
+         for w in 0 to CPM_BDF_WORDS_PER_ENTRY_C-1 loop
+            retVar(idx+w).addr := baseAddr + toSlv((k - table'low)*(4*CPM_BDF_WORDS_PER_ENTRY_C) + 4*w, 32);
+         end loop;
+
+         retVar(idx+0).data := entry.addrTransLow;   -- +0x00
+         retVar(idx+1).data := entry.addrTransHigh;  -- +0x04
+         retVar(idx+2).data := (others => '0');       -- +0x08 reserved
+         retVar(idx+3).data := word3;                 -- +0x0C
+         retVar(idx+4).data := word4;                 -- +0x10
+         retVar(idx+5).data := (others => '0');       -- +0x14 reserved
       end loop;
       return retVar;
-   end function genBdfData;
-
-   function genRegAddr (regs : CpmRegWriteArray) return Slv32Array is
-      variable retVar : Slv32Array(0 to regs'length-1);
-   begin
-      for k in regs'range loop
-         retVar(k - regs'low) := regs(k).addr;
-      end loop;
-      return retVar;
-   end function genRegAddr;
-
-   function genRegData (regs : CpmRegWriteArray) return Slv32Array is
-      variable retVar : Slv32Array(0 to regs'length-1);
-   begin
-      for k in regs'range loop
-         retVar(k - regs'low) := regs(k).data;
-      end loop;
-      return retVar;
-   end function genRegData;
+   end function genBdfWrites;
 
 end package body XilinxAlveoV80CpmManagerPkg;

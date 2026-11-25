@@ -104,10 +104,20 @@ entity AxisG2RegShim is
       contEnable      : out sl;
       dropEnable      : out sl;
       maxSize         : out slv(31 downto 0);
+      -- Captured C2H completion-ring base {wrBaseHi,wrBaseLo} (BAR0 0x14/0x10).
+      -- Routed to QdmaCtxtInit so the CMPT context baddr tracks the driver's ring.
+      wrBase          : out slv(63 downto 0);
       fifoReset       : out sl;
       acknowledge     : out sl;
       forceInt        : out sl;
       irqHoldOff      : out slv(31 downto 0);
+      -------------------------------------------------------------------------
+      -- Hardware interrupt request (one-cycle pulse). The QdmaBypassAdapter
+      -- pulses this when a C2H completion (a finished host buffer) is delivered,
+      -- so a card->host transfer raises the datadev IRQ exactly like a hardware
+      -- DMA-done would -- the forceInt path alone only covers driver self-kicks.
+      -------------------------------------------------------------------------
+      hwIntReq        : in  sl := '0';
       -------------------------------------------------------------------------
       -- Interrupt request to the parent (-> QDMA usr_irq / MSI-X). Level-held
       -- while a request is pending and IRQs are enabled; cleared when software
@@ -310,8 +320,8 @@ begin
 
    comb : process (axilReadMaster, axilWriteMaster, dbgC2hBypReady,
                    dbgC2hBypValid, dbgC2hStReady, dbgC2hStValid, dbgCtxtDone,
-                   dbgCtxtState, dbgTmDscValid, hwRdIndex, hwWrIndex, r, rstL,
-                   rxFreeReady, txSubReady, wrReqMissed) is
+                   dbgCtxtState, dbgTmDscValid, hwIntReq, hwRdIndex, hwWrIndex,
+                   r, rstL, rxFreeReady, txSubReady, wrReqMissed) is
       variable v         : RegType;
       variable axilEp    : AxiLiteEndpointType;
       variable wrFifoA   : sl;
@@ -478,8 +488,13 @@ begin
          else
             v.intReqCount := r.intReqCount - r.intAckCount;
          end if;
-      elsif (v.forceInt = '1') then
-         -- Software posted work and requested an interrupt.
+         -- A new request on the same cycle as an ack is still counted.
+         if (v.forceInt = '1' or hwIntReq = '1') then
+            v.intReqCount := v.intReqCount + 1;
+         end if;
+      elsif (v.forceInt = '1' or hwIntReq = '1') then
+         -- Software forceInt, or a hardware C2H-completion (buffer delivered),
+         -- posts an interrupt request.
          v.intReqCount := r.intReqCount + 1;
       end if;
 
@@ -546,6 +561,7 @@ begin
       contEnable     <= r.contEnable;
       dropEnable     <= r.dropEnable;
       maxSize        <= r.maxSize;
+      wrBase         <= r.wrBaseHi & r.wrBaseLo;
       fifoReset      <= r.fifoReset;
       acknowledge    <= r.acknowledge;
       forceInt       <= r.forceInt;

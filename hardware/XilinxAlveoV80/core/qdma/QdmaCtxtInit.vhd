@@ -71,9 +71,16 @@ entity QdmaCtxtInit is
       clk             : in  sl;
       rstL            : in  sl;         -- active LOW reset
       -- Trigger: assert once the CPM5/PCIe is up (e.g. link-up or first IRQ).
-      -- Rising-edge latched; the program runs exactly once per assertion of
-      -- start while not already done.
+      -- Rising-edge latched; the program runs on the first assertion of start.
       start           : in  sl;
+      -- Driver queue-up signal (AxisG2 online reg, BAR0 0x2C /= 0). A rising
+      -- edge RE-RUNS the program so the CMPT context baddr picks up wrBase,
+      -- which the driver only writes at load (after the boot-time start).
+      online          : in  sl := '0';
+      -- Completion-ring base from the shim ({wrBaseHi,wrBaseLo}); overlaid into
+      -- the CMPT context baddr at program time (see WRITE_REQ_S). Treated as
+      -- stable while the queue is online (driver re-onlines to change it).
+      wrBase          : in  slv(63 downto 0) := (others => '0');
       -- Status
       ctxtDone        : out sl;         -- all contexts programmed, engines enabled
       -- Debug: packed FSM status word (host-readable via AxisG2RegShim 0xB4).
@@ -180,6 +187,16 @@ architecture rtl of QdmaCtxtInit is
    --   ctxts  : SW_H2C, SW_C2H, PFCH, CMPT  (CTXT_OPS_C each)         = 4*CTXT_OPS_C
    --   enables: H2C engine, C2H engine                               = 2
    constant PROG_LEN_C : natural := 3 + 4 + 4*CTXT_OPS_C + 2;
+
+   -- Op-ROM index of the CMPT context's DATA words, for the runtime baddr
+   -- overlay. The CMPT program is the 4th ctxtProg (after globals=3, clears=4,
+   -- SW_H2C, SW_C2H, PFCH); its DATA words follow the 8 MASK words.
+   --   baddr = image[89:32] = wrBase[63:6]
+   --   DATA word1 = image[63:32]  = baddr[31:0]  = wrBase[37:6]   (full word)
+   --   DATA word2 = image[95:64]; its [25:0] = baddr[57:32] = wrBase[63:38]
+   constant CMPT_DATA_BASE_C : natural := 3 + 4 + 3*CTXT_OPS_C + NW_C;  -- word0
+   constant CMPT_DATA_W1_C   : natural := CMPT_DATA_BASE_C + 1;
+   constant CMPT_DATA_W2_C   : natural := CMPT_DATA_BASE_C + 2;
 
    type OpArray is array (natural range <>) of slv(31 downto 0);
 
@@ -309,6 +326,9 @@ architecture rtl of QdmaCtxtInit is
       opIndex  : natural range 0 to PROG_LEN_C;
       timer    : slv(31 downto 0);
       startDly : sl;
+      onlineDly: sl;                              -- online rising-edge detect
+      pending  : sl;                              -- a re-program is requested
+      wrBaseReg: slv(63 downto 0);                -- latched completion-ring base
       state    : StateType;
       -- debug/observability
       hangIndex : natural range 0 to PROG_LEN_C;  -- opIndex at last watchdog abort
@@ -326,6 +346,9 @@ architecture rtl of QdmaCtxtInit is
       opIndex  => 0,
       timer    => (others => '0'),
       startDly => '0',
+      onlineDly=> '0',
+      pending  => '0',
+      wrBaseReg=> (others => '0'),
       state    => IDLE_S,
       hangIndex => 0,
       hangState => (others => '0'),
@@ -352,13 +375,20 @@ begin
          mgmtMaster => mgmtMaster,
          mgmtSlave  => mgmtSlave);
 
-   comb : process (ack, r, rstL, start) is
+   comb : process (ack, online, r, rstL, start, wrBase) is
       variable v    : RegType;
       variable vDbg : slv(31 downto 0);
    begin
       v := r;
 
-      v.startDly := start;
+      v.startDly  := start;
+      v.onlineDly := online;
+
+      -- A rising edge of the driver's online request schedules a re-program so
+      -- the CMPT baddr tracks the just-written wrBase. Honored from IDLE.
+      if (online = '1' and r.onlineDly = '0') then
+         v.pending := '1';
+      end if;
 
       -- mgmt liveness: remember if the dma1_mgmt handshake ever completed.
       if (ack.done = '1') then
@@ -370,9 +400,14 @@ begin
          when IDLE_S =>
             v.timer   := (others => '0');
             v.opIndex := 0;
-            -- Run once on a rising edge of start, while not already done.
-            if (start = '1' and r.startDly = '0' and r.ctxtDone = '0') then
-               v.state := WRITE_REQ_S;
+            -- Run on the first start rising edge, and re-run on each pending
+            -- (online) request. Latch wrBase so the whole program uses one
+            -- stable completion-ring base for the CMPT baddr overlay.
+            if ((start = '1' and r.startDly = '0') or r.pending = '1') then
+               v.pending   := '0';
+               v.wrBaseReg := wrBase;
+               v.ctxtDone  := '0';
+               v.state     := WRITE_REQ_S;
             end if;
          ----------------------------------------------------------------------
          when WRITE_REQ_S =>
@@ -381,6 +416,13 @@ begin
             v.req.rnw     := '0';
             v.req.address := OP_ADDR_C(r.opIndex);
             v.req.wrData  := OP_DATA_C(r.opIndex);
+            -- Runtime overlay: substitute the CMPT context baddr DATA words with
+            -- the driver's completion-ring base (the op-ROM carries baddr=0).
+            if (r.opIndex = CMPT_DATA_W1_C) then
+               v.req.wrData := r.wrBaseReg(37 downto 6);              -- baddr[31:0]
+            elsif (r.opIndex = CMPT_DATA_W2_C) then
+               v.req.wrData(25 downto 0) := r.wrBaseReg(63 downto 38);  -- baddr[57:32]
+            end if;
             v.req.func    := FUNC_ID_G;
             v.timer       := (others => '0');
             v.state       := WRITE_WAIT_S;

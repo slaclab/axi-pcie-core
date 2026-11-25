@@ -516,6 +516,12 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal ctxtDone      : sl;         -- QdmaCtxtInit done (exposed for debug)
    signal ctxtStatus    : slv(31 downto 0);  -- QdmaCtxtInit FSM status (debug)
    signal ctxtPfchTag   : slv(6 downto 0);   -- reserved C2H simple-bypass prefetch tag
+   -- Shim config routed to the adapter / context-init (C2H completion path)
+   signal shimOnline    : slv(31 downto 0);  -- AxisG2 online reg (0x2C)
+   signal shimOnlineSl  : sl;                -- online /= 0 (re-program trigger)
+   signal shimMaxSize   : slv(31 downto 0);  -- AxisG2 maxSize reg (0x28)
+   signal shimWrBase    : slv(63 downto 0);  -- AxisG2 completion-ring base (0x10/0x14)
+   signal cmptDoneInt   : sl;                -- adapter C2H-completion -> shim IRQ engine
 
    -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR over S_AXI_LPD to
    -- raise the PCIe MSI (XilinxAlveoV80CpmManager). This is the proven IRQ path
@@ -616,6 +622,10 @@ begin
    ----------------------------------------------------------------------------
    -- QDMA queue-context auto-init (drives dma1_mgmt req/cpl)
    ----------------------------------------------------------------------------
+   -- Driver online request (AxisG2 0x2C /= 0): rising edge re-programs the CMPT
+   -- context so its baddr tracks the driver's just-written completion-ring base.
+   shimOnlineSl <= '0' when (shimOnline = 0) else '1';
+
    U_QdmaCtxtInit : entity axi_pcie_core.QdmaCtxtInit
       generic map (
          TPD_G => TPD_G)
@@ -623,6 +633,8 @@ begin
          clk        => clk,
          rstL       => rstL,
          start        => ctxtStart,
+         online       => shimOnlineSl,
+         wrBase       => shimWrBase,
          ctxtDone     => ctxtDone,
          dbgStatus    => ctxtStatus,
          pfchTag      => ctxtPfchTag,
@@ -728,11 +740,13 @@ begin
          rxFreeReady     => rxFreeReady,
          addrRdIndex     => addrRdIndex,
          addrRdData      => addrRdData,
-         online          => open,
+         online          => shimOnline,
          intEnable       => open,
          contEnable      => open,
          dropEnable      => open,
-         maxSize         => open,
+         maxSize         => shimMaxSize,
+         wrBase          => shimWrBase,
+         hwIntReq        => cmptDoneInt,
          fifoReset       => open,
          acknowledge     => open,
          forceInt        => open,
@@ -758,6 +772,7 @@ begin
          clk          => clk,
          rstL         => rstL,
          pfchTag      => ctxtPfchTag,
+         maxSize      => shimMaxSize,
          txSub        => txSub,
          txSubReady   => txSubReady,
          rxFree       => rxFree,
@@ -799,19 +814,25 @@ begin
          h2cStValid    => dma1_m_axis_h2c_tvalid,
          h2cStReady    => dma1_m_axis_h2c_tready,
          -- C2H stream data in
-         c2hStData     => dma1_s_axis_c2h_tdata,
-         c2hStCtrlLen  => dma1_s_axis_c2h_ctrl_len,
-         c2hStCtrlQid  => dma1_s_axis_c2h_ctrl_qid,
-         c2hStMty      => dma1_s_axis_c2h_mty,
-         c2hStLast     => dma1_s_axis_c2h_tlast,
-         c2hStValid    => dma1_s_axis_c2h_tvalid,
-         c2hStReady    => dma1_s_axis_c2h_tready,
+         c2hStData        => dma1_s_axis_c2h_tdata,
+         c2hStCtrlLen     => dma1_s_axis_c2h_ctrl_len,
+         c2hStCtrlQid     => dma1_s_axis_c2h_ctrl_qid,
+         c2hStCtrlHasCmpt => dma1_s_axis_c2h_ctrl_has_cmpt,
+         c2hStMty         => dma1_s_axis_c2h_mty,
+         c2hStLast        => dma1_s_axis_c2h_tlast,
+         c2hStValid       => dma1_s_axis_c2h_tvalid,
+         c2hStReady       => dma1_s_axis_c2h_tready,
          -- C2H completion
-         cmptData      => dma1_s_axis_c2h_cmpt_data,
-         cmptSize      => dma1_s_axis_c2h_cmpt_size,
-         cmptQid       => dma1_s_axis_c2h_cmpt_qid,
-         cmptValid     => dma1_s_axis_c2h_cmpt_tvalid,
-         cmptReady     => dma1_s_axis_c2h_cmpt_tready,
+         cmptData         => dma1_s_axis_c2h_cmpt_data,
+         cmptSize         => dma1_s_axis_c2h_cmpt_size,
+         cmptQid          => dma1_s_axis_c2h_cmpt_qid,
+         cmptType         => dma1_s_axis_c2h_cmpt_cmpt_type,
+         cmptWaitPldPktId => dma1_s_axis_c2h_cmpt_wait_pld_pkt_id,
+         cmptColIdx       => dma1_s_axis_c2h_cmpt_col_idx,
+         cmptErrIdx       => dma1_s_axis_c2h_cmpt_err_idx,
+         cmptValid        => dma1_s_axis_c2h_cmpt_tvalid,
+         cmptReady        => dma1_s_axis_c2h_cmpt_tready,
+         cmptDone         => cmptDoneInt,
          -- Traffic manager status
          tmDscStsValid  => dma1_tm_dsc_sts_valid,
          tmDscStsQid    => dma1_tm_dsc_sts_qid,
@@ -823,18 +844,17 @@ begin
    -- *_ready/*_rdy inputs must be tied high; unused valids low):
    dma1_s_axis_c2h_ctrl_marker   <= '0';
    dma1_s_axis_c2h_ctrl_port_id  <= (others => '0');
-   dma1_s_axis_c2h_ctrl_has_cmpt <= '1';
+   -- ctrl_has_cmpt is now driven per-chunk by the adapter (R3 fake-descriptor
+   -- scheme): 0 on intermediate 4 KiB chunks, 1 only on a buffer-closing chunk.
    dma1_s_axis_c2h_ecc           <= (others => '0');
    dma1_s_axis_c2h_tcrc          <= (others => '0');
-   dma1_s_axis_c2h_cmpt_cmpt_type     <= "01";  -- NO_PLD_NO_WAIT / valid cmpt
-   dma1_s_axis_c2h_cmpt_col_idx       <= (others => '0');
-   dma1_s_axis_c2h_cmpt_err_idx       <= (others => '0');
+   -- cmpt_type / col_idx / err_idx / wait_pld_pkt_id are driven by the adapter
+   -- (HAS_PLD, no color/error insert, per-packet pld_pkt_id).
    dma1_s_axis_c2h_cmpt_dpar          <= (others => '0');
    dma1_s_axis_c2h_cmpt_marker        <= '0';
    dma1_s_axis_c2h_cmpt_no_wrb_marker <= '0';
    dma1_s_axis_c2h_cmpt_port_id       <= (others => '0');
    dma1_s_axis_c2h_cmpt_user_trig     <= '0';
-   dma1_s_axis_c2h_cmpt_wait_pld_pkt_id <= (others => '0');
    dma1_tm_dsc_sts_rdy  <= '1';
    dma1_qsts_out_rdy    <= '1';
    dma1_st_rx_msg_tready <= '1';

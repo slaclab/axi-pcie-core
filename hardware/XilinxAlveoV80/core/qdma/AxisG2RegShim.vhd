@@ -145,6 +145,7 @@ entity AxisG2RegShim is
       dbgC2hStValid   : in  sl := '0';   -- C2H payload tvalid (user->QDMA)
       dbgC2hStReady   : in  sl := '0';   -- C2H payload tready (QDMA->user)
       dbgTmDscValid   : in  sl := '0';   -- tm_dsc_sts valid (queue status strobe)
+      dbgStartupDone  : in  sl := '0';   -- CpmManager startup writes done (IRQ service armed)
       dbgCtxtState    : in  slv(31 downto 0) := (others => '0'));  -- QdmaCtxtInit FSM status
 end AxisG2RegShim;
 
@@ -320,8 +321,9 @@ begin
 
    comb : process (axilReadMaster, axilWriteMaster, dbgC2hBypReady,
                    dbgC2hBypValid, dbgC2hStReady, dbgC2hStValid, dbgCtxtDone,
-                   dbgCtxtState, dbgTmDscValid, hwIntReq, hwRdIndex, hwWrIndex,
-                   r, rstL, rxFreeReady, txSubReady, wrReqMissed) is
+                   dbgCtxtState, dbgStartupDone, dbgTmDscValid, hwIntReq,
+                   hwRdIndex, hwWrIndex, r, rstL, rxFreeReady, txSubReady,
+                   wrReqMissed) is
       variable v         : RegType;
       variable axilEp    : AxiLiteEndpointType;
       variable wrFifoA   : sl;
@@ -385,6 +387,7 @@ begin
       axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 5, dbgC2hStValid);
       axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 6, dbgC2hStReady);
       axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 7, dbgTmDscValid);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STATUS_C, 8, dbgStartupDone);
       -- QdmaCtxtInit FSM status word (see QdmaCtxtInit dbgStatus packing):
       --   [6:0]=curOpIndex [10:8]=curState [14:12]=hangState
       --   [22:16]=hangOpIndex [23]=sawMgmtAck [31:24]=watchdogAbortCount

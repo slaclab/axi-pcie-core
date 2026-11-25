@@ -522,6 +522,7 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal shimMaxSize   : slv(31 downto 0);  -- AxisG2 maxSize reg (0x28)
    signal shimWrBase    : slv(63 downto 0);  -- AxisG2 completion-ring base (0x10/0x14)
    signal cmptDoneInt   : sl;                -- adapter C2H-completion -> shim IRQ engine
+   signal cpmStartupDone: sl;                -- CpmManager startup done (IRQ service armed)
 
    -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR over S_AXI_LPD to
    -- raise the PCIe MSI (XilinxAlveoV80CpmManager). This is the proven IRQ path
@@ -759,6 +760,7 @@ begin
          dbgC2hStValid   => dma1_s_axis_c2h_tvalid,
          dbgC2hStReady   => dma1_s_axis_c2h_tready,
          dbgTmDscValid   => dma1_tm_dsc_sts_valid,
+         dbgStartupDone  => cpmStartupDone,
          dbgCtxtState    => ctxtStatus);
 
    ----------------------------------------------------------------------------
@@ -894,12 +896,17 @@ begin
    U_CpmManager : entity axi_pcie_core.XilinxAlveoV80CpmManager
       generic map (
          TPD_G            => TPD_G,
-         STARTUP_WRITES_G => NOC_CACHE_CONF_C & genBdfWrites(CPM_BDF_TABLE_BASE_C, CPM_BDF_TABLE_DEFAULT_C))
+         -- NoC cache-config writes ONLY. The bridge-mode BDF address-translation
+         -- table (0xFCEA2420) is NOT required for MSI (the TX_IRQ_CSR path does not
+         -- use it; a manual CSR poke delivers MSI with the BDF table zeroed), and in
+         -- QDMA functional mode those writes do not ack -> they kept startupDone=0,
+         -- which gates dmaIrq so the shim interrupt was never turned into an MSI.
+         STARTUP_WRITES_G => NOC_CACHE_CONF_C)
       port map (
          clk             => clk,
          rstL            => rstL,
          dmaIrq          => shimInterrupt,
-         startupDone     => open,
+         startupDone     => cpmStartupDone,
          hostAccess      => hostAccess,
          axilWriteMaster => msiWriteMaster,
          axilWriteSlave  => msiWriteSlave,

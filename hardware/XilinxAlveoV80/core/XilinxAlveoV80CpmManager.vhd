@@ -6,7 +6,11 @@
 -- Drives the CIPS S_AXI_LPD slave to manage the CPM5_DMA1 controller from PL
 -- fabric. It does two jobs over one AXI-Lite master:
 --
---  1) On the FIRST register transaction it programs the CPM5 BDF (address 
+--  1) On the FIRST register transaction it runs a one-time programming burst:
+--     first the CPM5 NoC cache-configuration register writes (NOC_CACHE_CONF_G:
+--     0xFCEA0F1C = 0x00000100, 0xFCEA0F20 = 0x80000040 -- re-establishing the
+--     non-cacheable BAR2->NOC_PMC_AXI_0 behavior that the former SmartConnect-
+--     route axcache tie-off used to force), then the CPM5 BDF (address
 --     translation) table, writing each entry's six 32-bit words in order (see
 --     XilinxAlveoV80CpmManagerPkg). The default single-entry table is an
 --     identity mapping, function 0, read+write enabled, 128 GiB aperture --
@@ -59,6 +63,9 @@ entity XilinxAlveoV80CpmManager is
       BDF_TABLE_ADDR_G  : slv(31 downto 0) := x"FCEA2420";
       -- BDF address-translation table to program after reset
       BDF_TABLE_G       : CpmBdfEntryArray := (0 => CPM_BDF_ENTRY_INIT_C);
+      -- CPM5 NoC cache-configuration register writes, issued (in order) ahead of
+      -- the BDF table as the first words of the one-time programming burst.
+      NOC_CACHE_CONF_G  : CpmRegWriteArray := NOC_CACHE_CONF_C;
       -- Re-arm watchdog (clock cycles) if dmaIrq remains asserted; 250e6 ~ 1 s
       -- at the 250 MHz PL clock.
       WATCHDOG_G        : positive := 250000000);
@@ -81,10 +88,16 @@ end XilinxAlveoV80CpmManager;
 
 architecture rtl of XilinxAlveoV80CpmManager is
 
-   -- Flattened BDF table: the ordered register addresses and data words.
-   constant BDF_ADDR_C : Slv32Array := genBdfAddr(BDF_TABLE_ADDR_G, BDF_TABLE_G);
-   constant BDF_DATA_C : Slv32Array := genBdfData(BDF_TABLE_G);
-   constant BDF_LEN_C  : natural    := BDF_DATA_C'length;
+   -- One-time programming burst = NoC cache-config writes first, then the
+   -- flattened BDF address-translation table. genRegAddr/genBdfAddr both return
+   -- ascending (0 to len-1) lists, so the concatenation is indexed 0 .. len-1.
+   constant NCC_ADDR_C  : Slv32Array := genRegAddr(NOC_CACHE_CONF_G);
+   constant NCC_DATA_C  : Slv32Array := genRegData(NOC_CACHE_CONF_G);
+   constant BDF_ADDR_C  : Slv32Array := genBdfAddr(BDF_TABLE_ADDR_G, BDF_TABLE_G);
+   constant BDF_DATA_C  : Slv32Array := genBdfData(BDF_TABLE_G);
+   constant PROG_ADDR_C : Slv32Array := NCC_ADDR_C & BDF_ADDR_C;
+   constant PROG_DATA_C : Slv32Array := NCC_DATA_C & BDF_DATA_C;
+   constant PROG_LEN_C  : natural    := PROG_DATA_C'length;
 
    type StateType is (
       IDLE_S,
@@ -96,7 +109,7 @@ architecture rtl of XilinxAlveoV80CpmManager is
    type RegType is record
       req      : AxiLiteReqType;
       bdfDone  : sl;
-      bdfIndex : natural range 0 to BDF_LEN_C;
+      bdfIndex : natural range 0 to PROG_LEN_C;
       irqTimer : slv(31 downto 0);
       state    : StateType;
    end record RegType;
@@ -142,11 +155,12 @@ begin
       case r.state is
          ----------------------------------------------------------------------
          when BDF_REQ_S =>
-            -- Program the BDF table one 32-bit word at a time, in order.
+            -- Program the burst one 32-bit word at a time, in order: the NoC
+            -- cache-config writes first, then the BDF table.
             v.req.request := '1';
             v.req.rnw     := '0';
-            v.req.address := BDF_ADDR_C(r.bdfIndex);
-            v.req.wrData  := BDF_DATA_C(r.bdfIndex);
+            v.req.address := PROG_ADDR_C(r.bdfIndex);
+            v.req.wrData  := PROG_DATA_C(r.bdfIndex);
             v.state       := WAIT_DONE_S;
          ----------------------------------------------------------------------
          when IDLE_S =>
@@ -179,7 +193,7 @@ begin
                   if (ack.resp /= AXI_RESP_OK_C) then
                      -- Write rejected: start over on the next host access
                      v.state := IDLE_S;
-                  elsif (r.bdfIndex = BDF_LEN_C-1) then
+                  elsif (r.bdfIndex = PROG_LEN_C-1) then
                      v.bdfDone := '1';
                      v.state   := IDLE_S;  -- no IRQ pending yet
                   else

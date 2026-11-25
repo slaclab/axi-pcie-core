@@ -68,6 +68,27 @@ package XilinxAlveoV80CpmManagerPkg is
    -- Flatten a BDF table into the ordered list of 32-bit data words to write.
    function genBdfData (table : CpmBdfEntryArray) return Slv32Array;
 
+   -- Simple absolute-address register write (address + data word).
+   type CpmRegWriteType is record
+      addr : slv(31 downto 0);
+      data : slv(31 downto 0);
+   end record CpmRegWriteType;
+
+   type CpmRegWriteArray is array (natural range <>) of CpmRegWriteType;
+
+   -- NoC cache-configuration writes. These CPM5 register writes re-establish the
+   -- non-cacheable behavior on the PCIe BAR2 -> NOC_PMC_AXI_0 path that the old
+   -- SmartConnect-route axcache tie-off used to force. CpmManager issues them (in
+   -- this order) as the first words of its one-time programming burst, ahead of
+   -- the BDF address-translation table.
+   constant NOC_CACHE_CONF_C : CpmRegWriteArray := (
+      0 => (addr => x"FCEA0F1C", data => x"00000100"),
+      1 => (addr => x"FCEA0F20", data => x"80000040"));
+
+   -- Flatten a register-write list into the ordered address / data word lists.
+   function genRegAddr (regs : CpmRegWriteArray) return Slv32Array;
+   function genRegData (regs : CpmRegWriteArray) return Slv32Array;
+
 end package XilinxAlveoV80CpmManagerPkg;
 
 package body XilinxAlveoV80CpmManagerPkg is
@@ -115,5 +136,23 @@ package body XilinxAlveoV80CpmManagerPkg is
       end loop;
       return retVar;
    end function genBdfData;
+
+   function genRegAddr (regs : CpmRegWriteArray) return Slv32Array is
+      variable retVar : Slv32Array(0 to regs'length-1);
+   begin
+      for k in regs'range loop
+         retVar(k - regs'low) := regs(k).addr;
+      end loop;
+      return retVar;
+   end function genRegAddr;
+
+   function genRegData (regs : CpmRegWriteArray) return Slv32Array is
+      variable retVar : Slv32Array(0 to regs'length-1);
+   begin
+      for k in regs'range loop
+         retVar(k - regs'low) := regs(k).data;
+      end loop;
+      return retVar;
+   end function genRegData;
 
 end package body XilinxAlveoV80CpmManagerPkg;

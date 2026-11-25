@@ -625,7 +625,8 @@ proc create_root_design { parentCell } {
   #   M00_AXI -> cips/NOC_PMC_AXI_0 : PMC register/flash space (OSPI controller,
   #                                   OSPI/QSPI flash DAC window, PMC GPIO, CRP)
   # Both inputs reach the PMC peripherals through the single NoC output. One clock
-  # per interface (NUM_CLKS 3): aclk0=S00, aclk1=M00, aclk2=S01 (sAxiLpd/dmaClk).
+  # per interface (NUM_CLKS 3): aclk0=S00 (cips cpm_pcie_noc_axi0_clk),
+  # aclk1=M00 (cips noc_pmc_axi_axi0_clk), aclk2=S01 (sAxiLpd / dmaClk).
   set axi_noc_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_noc:1.1 axi_noc_0 ]
   set_property -dict [list \
     CONFIG.NUM_CLKS {3} \

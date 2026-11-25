@@ -79,11 +79,13 @@ the host depends on the PCIe PHY family:
   PgpCard G4): ``dmaIrq`` drives the PHY's ``intx_msi_request`` input
   directly, and the PCIe IP sends INTx or MSI according to what the host
   enabled.
-- **Versal boards** (V80) : the board supports only MSI interrupts.
-  ``dmaIrq`` is sent to the CPM5 through the CIPS LPD AXI interface as a 
-  write to the ``TX_IRQ_CSR`` register issued by ``XilinxAlveoV80CpmManager``.
-  This is a fix necessary because the CPM interrupt interface was not delivering
-  the interrupt.
+- **Versal boards** (V80): the board supports only MSI interrupts.
+  ``dmaIrq`` is serviced by ``XilinxAlveoV80CpmManager``, which writes the CPM5
+  ``TX_IRQ_CSR`` register (``0xFCEA0E7C``) over the ``sAxiLpd`` port routed
+  through the CPM NoC to raise the MSI directly.  This is necessary because the
+  CPM interrupt interface was not delivering the interrupt.  (The same manager
+  also performs a one-time set of CPM5 configuration register writes at
+  start-up.)
 
 The host-side ``datadev`` kernel driver (``aes-stream-drivers``) services the
 interrupt: it reads the completion status words from the descriptor ring,

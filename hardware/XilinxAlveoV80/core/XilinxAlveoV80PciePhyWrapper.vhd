@@ -40,6 +40,7 @@ library axi_pcie_core;
 use axi_pcie_core.AxiPciePkg.all;
 use axi_pcie_core.QdmaCtxtPkg.all;
 use axi_pcie_core.AxisG2ShimPkg.all;
+use axi_pcie_core.XilinxAlveoV80CpmManagerPkg.all;
 
 
 entity XilinxAlveoV80PciePhyWrapper is
@@ -518,9 +519,9 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
 
    -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR over S_AXI_LPD to
    -- raise the PCIe MSI (XilinxAlveoV80CpmManager). This is the proven IRQ path
-   -- (the native QDMA usr_irq interface did not deliver on hardware); in QDMA
-   -- mode the CpmManager runs with SKIP_BDF_G=true so it only does the
-   -- TX_IRQ_CSR write (no bridge-mode BDF table).
+   -- (the native QDMA usr_irq interface did not deliver on hardware); the
+   -- CpmManager replays STARTUP_WRITES_G (NoC cache config + BDF table) on the
+   -- first host access, then does the TX_IRQ_CSR write on each interrupt.
    signal msiWriteMaster : AxiLiteWriteMasterType;
    signal msiWriteSlave  : AxiLiteWriteSlaveType := AXI_LITE_WRITE_SLAVE_INIT_C;
    signal msiReadMaster  : AxiLiteReadMasterType;
@@ -852,23 +853,33 @@ begin
    dma1_usr_irq_valid <= '0';
 
    -------------------------------------------------------------------------
-   -- PL MSI generator: on each shim interrupt, CpmManager writes int_set to the
-   -- CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) over S_AXI_LPD, raising the PCIe MSI.
-   -- This is the datadev-required interrupt (driver pushes descriptors only
-   -- from its IRQ handler). SKIP_BDF_G=false: QDMA addressing is descriptor-based
-   -- so the bridge-mode BDF table looks like it shoudl be skipped. By direct
-   -- testing, though, this does not seem to be the case as they are needed
-   -- for interrupt generation.
+   -- PL MSI generator: on each shim interrupt, the payload-agnostic CpmManager
+   -- writes int_set to the CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) over S_AXI_LPD,
+   -- raising the PCIe MSI. This is the datadev-required interrupt (driver pushes
+   -- descriptors only from its IRQ handler).
+   --
+   -- STARTUP_WRITES_G is composed here, where the meaning lives:
+   --   1) NOC_CACHE_CONF_C : set the CPM5 NoC AxCACHE behavior on the PCIe BAR2 ->
+   --      NOC_PMC_AXI_0 path (now routed through the NoC, not the AXI smartconnect).
+   --   2) the flattened default BDF address-translation table (identity mapping).
+   -- They are applied in this order (NoC cache config first, then BDF). Although
+   -- QDMA addressing is descriptor-based and the bridge-mode BDF table looks like
+   -- it should be skippable, direct testing showed the BDF writes are still needed
+   -- for interrupt generation, so they are retained here.
+   --
+   -- NOTE: the NOC_CACHE_CONF_C values are specific to the current PCIe BAR2
+   -- aperture / steering in the block design. If BAR2 changes, those register
+   -- writes must be updated to match (see XilinxAlveoV80CpmManagerPkg).
    -------------------------------------------------------------------------
    U_CpmManager : entity axi_pcie_core.XilinxAlveoV80CpmManager
       generic map (
-         TPD_G      => TPD_G,
-         SKIP_BDF_G => false)
+         TPD_G            => TPD_G,
+         STARTUP_WRITES_G => NOC_CACHE_CONF_C & genBdfWrites(CPM_BDF_TABLE_BASE_C, CPM_BDF_TABLE_DEFAULT_C))
       port map (
          clk             => clk,
          rstL            => rstL,
          dmaIrq          => shimInterrupt,
-         bdfDone         => open,
+         startupDone     => open,
          hostAccess      => hostAccess,
          axilWriteMaster => msiWriteMaster,
          axilWriteSlave  => msiWriteSlave,

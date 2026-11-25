@@ -3,29 +3,29 @@
 -------------------------------------------------------------------------------
 -- Description: Versal CPM5 management block for the Xilinx Alveo V80.
 --
--- Drives the CIPS S_AXI_LPD slave to manage the CPM5_DMA1 controller from PL
--- fabric. It does two jobs over one AXI-Lite master:
+-- Payload-agnostic CPM5 manager. Over one AXI-Lite master it does two jobs and
+-- knows nothing about what the registers it touches mean:
 --
---  1) On the FIRST register transaction it programs the CPM5 BDF (address 
---     translation) table, writing each entry's six 32-bit words in order (see
---     XilinxAlveoV80CpmManagerPkg). The default single-entry table is an
---     identity mapping, function 0, read+write enabled, 128 GiB aperture --
---     reproducing the reference sequence (0xFCEA2420..0xFCEA2434, word +0x10 =
---     0xC2000000). Programming is deferred to the first register transaction 
+--  1) START-UP WRITES: on the FIRST host register access it replays the ordered
+--     list STARTUP_WRITES_G (address/data pairs) one 32-bit write at a time,
+--     then asserts startupDone. The caller composes this list and decides what
+--     it contains -- see XilinxAlveoV80PciePhyWrapper, which builds it from the
+--     CPM5 NoC cache-configuration writes and the BDF address-translation table
+--     (XilinxAlveoV80CpmManagerPkg). Replay is deferred to the first host access
 --     (rather than done at reset) so the CPM5 is guaranteed past its own boot/CDO
---     initialization and PCIe is up before the BDF entry is written -- a reset-
---     time write was observed to read back as 0 (clobbered by / racing the CDO).
+--     initialization and PCIe is up before the writes land -- a reset-time write
+--     was observed to read back as 0 (clobbered by / racing the CDO).
 --
---  2) It then services DMA interrupts: on each dmaIrq assertion it writes
---     int_set (bit 24) to the CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C), generating the
---     PCIe TX MSI directly. This replaces the defective CPM5 bridge1
---     usr_irq_req / usr_irq_ack hardware handshake (confirmed broken on
---     hardware: the CPM never acks and no MSI TLP is emitted). dmaIrq is not
---     serviced until the BDF table has been programmed.
+--  2) IRQ DELIVERY: after start-up it services DMA interrupts -- on each dmaIrq
+--     assertion it writes int_set (bit 24) to the CPM5_DMA1 TX_IRQ_CSR
+--     (TX_IRQ_CSR_ADDR_G), generating the PCIe TX MSI directly. This replaces the
+--     defective CPM5 bridge1 usr_irq_req / usr_irq_ack hardware handshake
+--     (confirmed broken on hardware: the CPM never acks and no MSI TLP is
+--     emitted). dmaIrq is not serviced until the start-up writes have completed.
 --
--- PG347 v3.4 Table 215: the CPM5 register block is reachable from PL only
--- through the LPD AXI slave interface, so this master drives cips/S_AXI_LPD
--- (whose address space maps the CPM aperture at 0xFC00_0000, 16 MB).
+-- The AXI-Lite master is routed to the CPM5 register space by the block design
+-- (on the V80 this currently goes out the external sAxiLpd port into the CPM
+-- NoC); how it gets there is not this block's concern.
 -------------------------------------------------------------------------------
 -- This file is part of 'axi-pcie-core'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -55,16 +55,10 @@ entity XilinxAlveoV80CpmManager is
       TX_IRQ_CSR_ADDR_G : slv(31 downto 0) := x"FCEA0E7C";
       -- int_set = bit 24; int_vector = 0, int_function = 0 (PF0, MSI vector 0)
       INT_SET_VAL_G     : slv(31 downto 0) := x"01000000";
-      -- Global base address of the CPM5_DMA1 BDF address-translation table
-      BDF_TABLE_ADDR_G  : slv(31 downto 0) := x"FCEA2420";
-      -- BDF address-translation table to program after reset
-      BDF_TABLE_G       : CpmBdfEntryArray := (0 => CPM_BDF_ENTRY_INIT_C);
-      -- Skip the BDF (address-translation) table programming entirely and act
-      -- as a pure TX_IRQ_CSR MSI generator. In QDMA mode the CPM5 handles host
-      -- addressing via the descriptors supplied on the bypass interface, so the
-      -- bridge-mode BDF table is neither needed nor valid; set true so the first
-      -- interrupt goes straight to the TX_IRQ_CSR write.
-      SKIP_BDF_G        : boolean  := false;
+      -- Ordered list of 32-bit register writes replayed once, on the first host
+      -- access, before any interrupt is serviced. The manager is agnostic to
+      -- what these mean; the caller composes them (see PciePhyWrapper).
+      STARTUP_WRITES_G  : CpmRegWriteArray;
       -- Re-arm watchdog (clock cycles) if dmaIrq remains asserted; 250e6 ~ 1 s
       -- at the 250 MHz PL clock.
       WATCHDOG_G        : positive := 250000000);
@@ -75,10 +69,10 @@ entity XilinxAlveoV80CpmManager is
       -- Interrupt Interface
       dmaIrq          : in  sl;
       -- Status
-      bdfDone         : out sl;         -- BDF table programming complete
+      startupDone     : out sl;         -- start-up register writes complete
       -- Host BAR0 request seen on the bridge master (link up, CPM5 configured)
       hostAccess      : in  sl;
-      -- AXI-Lite Master (drives the CIPS S_AXI_LPD slave)
+      -- AXI-Lite Master (routed to the CPM5 register space by the block design)
       axilWriteMaster : out AxiLiteWriteMasterType;
       axilWriteSlave  : in  AxiLiteWriteSlaveType;
       axilReadMaster  : out AxiLiteReadMasterType;
@@ -87,34 +81,33 @@ end XilinxAlveoV80CpmManager;
 
 architecture rtl of XilinxAlveoV80CpmManager is
 
-   -- Flattened BDF table: the ordered register addresses and data words.
-   constant BDF_ADDR_C : Slv32Array := genBdfAddr(BDF_TABLE_ADDR_G, BDF_TABLE_G);
-   constant BDF_DATA_C : Slv32Array := genBdfData(BDF_TABLE_G);
-   constant BDF_LEN_C  : natural    := BDF_DATA_C'length;
+   -- Start-up write list, normalized to an ascending 0-based range for indexing.
+   constant WRITES_C     : CpmRegWriteArray(0 to STARTUP_WRITES_G'length-1) := STARTUP_WRITES_G;
+   constant NUM_WRITES_C : natural                                          := WRITES_C'length;
 
    type StateType is (
       IDLE_S,
-      BDF_REQ_S,
+      WRITE_REQ_S,
       REQ_S,
       WAIT_DONE_S,
       HOLD_S);
 
    type RegType is record
-      req      : AxiLiteReqType;
-      bdfDone  : sl;
-      bdfIndex : natural range 0 to BDF_LEN_C;
-      irqTimer : slv(31 downto 0);
-      state    : StateType;
+      req         : AxiLiteReqType;
+      startupDone : sl;
+      wrIndex     : natural range 0 to NUM_WRITES_C;
+      irqTimer    : slv(31 downto 0);
+      state       : StateType;
    end record RegType;
 
-   -- When SKIP_BDF_G, start with bdfDone='1' so the first interrupt bypasses
-   -- BDF programming and goes straight to the TX_IRQ_CSR write (pure MSI gen).
+   -- With an empty STARTUP_WRITES_G, startupDone is forced in IDLE_S so the
+   -- first interrupt goes straight to the TX_IRQ_CSR write (pure MSI gen).
    constant REG_INIT_C : RegType := (
-      req      => AXI_LITE_REQ_INIT_C,
-      bdfDone  => ite(SKIP_BDF_G, '1', '0'),
-      bdfIndex => 0,
-      irqTimer => (others => '0'),
-      state    => IDLE_S);
+      req         => AXI_LITE_REQ_INIT_C,
+      startupDone => '0',
+      wrIndex     => 0,
+      irqTimer    => (others => '0'),
+      state       => IDLE_S);
 
    signal r   : RegType := REG_INIT_C;
    signal rin : RegType;
@@ -149,21 +142,24 @@ begin
       -- State Machine
       case r.state is
          ----------------------------------------------------------------------
-         when BDF_REQ_S =>
-            -- Program the BDF table one 32-bit word at a time, in order.
+         when WRITE_REQ_S =>
+            -- Replay the start-up write list one 32-bit write at a time, in order.
             v.req.request := '1';
             v.req.rnw     := '0';
-            v.req.address := BDF_ADDR_C(r.bdfIndex);
-            v.req.wrData  := BDF_DATA_C(r.bdfIndex);
+            v.req.address := WRITES_C(r.wrIndex).addr;
+            v.req.wrData  := WRITES_C(r.wrIndex).data;
             v.state       := WAIT_DONE_S;
          ----------------------------------------------------------------------
          when IDLE_S =>
             v.irqTimer := (others => '0');
-            if (r.bdfDone = '0') then
-               -- Program the BDF table on the first host BAR0 access
-               if (hostAccess = '1') then
-                  v.bdfIndex := 0;
-                  v.state    := BDF_REQ_S;
+            if (r.startupDone = '0') then
+               -- Replay the start-up writes on the first host BAR0 access.
+               if (NUM_WRITES_C = 0) then
+                  -- Nothing to write; go straight to IRQ service.
+                  v.startupDone := '1';
+               elsif (hostAccess = '1') then
+                  v.wrIndex := 0;
+                  v.state   := WRITE_REQ_S;
                end if;
             elsif (dmaIrq = '1') then
                v.state := REQ_S;
@@ -178,21 +174,21 @@ begin
             v.state       := WAIT_DONE_S;
          ----------------------------------------------------------------------
          when WAIT_DONE_S =>
-            -- Wait for the current AXI-Lite write to complete, then return to
-            -- the state that issued it (BDF programming or IRQ service).
+            -- Wait for the current AXI-Lite write to complete, then return to the
+            -- state that issued it (start-up replay or IRQ service).
             if (ack.done = '1') then
                -- Deassert the request (AxiLiteMaster clears ack when request=0)
                v.req.request := '0';
-               if (r.bdfDone = '0') then
+               if (r.startupDone = '0') then
                   if (ack.resp /= AXI_RESP_OK_C) then
                      -- Write rejected: start over on the next host access
                      v.state := IDLE_S;
-                  elsif (r.bdfIndex = BDF_LEN_C-1) then
-                     v.bdfDone := '1';
-                     v.state   := IDLE_S;  -- no IRQ pending yet
+                  elsif (r.wrIndex = NUM_WRITES_C-1) then
+                     v.startupDone := '1';
+                     v.state       := IDLE_S;  -- no IRQ pending yet
                   else
-                     v.bdfIndex := r.bdfIndex + 1;
-                     v.state    := BDF_REQ_S;
+                     v.wrIndex := r.wrIndex + 1;
+                     v.state   := WRITE_REQ_S;
                   end if;
                else
                   -- IRQ service write completed.
@@ -223,7 +219,7 @@ begin
       rin <= v;
 
       -- Outputs
-      bdfDone <= r.bdfDone;
+      startupDone <= r.startupDone;
 
    end process comb;
 

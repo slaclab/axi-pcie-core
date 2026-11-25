@@ -132,7 +132,6 @@ if { $bCheckIPs == 1 } {
    set list_check_ips "\
 xilinx.com:ip:versal_cips:3.4\
 xilinx.com:ip:axi_noc:1.1\
-xilinx.com:ip:smartconnect:1.0\
 "
 
    set list_ips_missing ""
@@ -225,11 +224,10 @@ proc create_root_design { parentCell } {
    CONFIG.PROTOCOL {AXI4} \
    ] $mAxi
 
-  # PL AXI4 slave driving the CIPS S_AXI_LPD port. Used by the PL MSI-IRQ FSM
-  # (XilinxAlveoV80CpmManager) to write the CPM5_DMA1 TX_IRQ_CSR (0xFCEA0E7C) and
-  # generate the PCIe TX MSI directly, bypassing the broken bridge1_usr_irq
-  # handshake. PG347 v3.4 Table 215: the CPM5 bridge registers are reachable
-  # from PL only through the LPD AXI slave interface.
+  # External PL AXI4 master (the PL CPM5 manager, XilinxAlveoV80CpmManager).
+  # It no longer drives the CIPS S_AXI_LPD slave (removed); instead it enters
+  # axi_noc_0 on S01_AXI and shares the M00_AXI -> cips/NOC_PMC_AXI_0 egress with
+  # the CPM PCIe BAR2 master, reaching the PMC register/flash space over the NoC.
   set sAxiLpd [ create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 sAxiLpd ]
   set_property -dict [ list \
    CONFIG.ADDR_WIDTH {32} \
@@ -242,7 +240,7 @@ proc create_root_design { parentCell } {
   # Create ports
   set dmaClk [ create_bd_port -dir I -type clk -freq_hz 250000000 dmaClk ]
   set_property -dict [ list \
-   CONFIG.ASSOCIATED_BUSIF {sAxi:mAxi} \
+   CONFIG.ASSOCIATED_BUSIF {mAxi} \
    CONFIG.ASSOCIATED_RESET {dmaRstN} \
  ] $dmaClk
   set plRstN [ create_bd_port -dir O -type rst plRstN ]
@@ -301,7 +299,6 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_AXIBAR2PCIE_BASEADDR_2_H {0x000000A0} \
       CPM_PCIE1_BRIDGE_AXI_SLAVE_IF {0} \
       CPM_PCIE1_CFG_EXT_IF {0} \
-      CPM_PCIE1_CFG_STS_IF {1} \
       CPM_PCIE1_CFG_VEND_ID {1A4A} \
       CPM_PCIE1_COPY_PF0_QDMA_ENABLED {0} \
       CPM_PCIE1_EXT_PCIE_CFG_SPACE_ENABLED {None} \
@@ -309,7 +306,7 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_MAX_LINK_SPEED {32.0_GT/s} \
       CPM_PCIE1_MODES {DMA} \
       CPM_PCIE1_MODE_SELECTION {Advanced} \
-      CPM_PCIE1_DMA_INTF {AXI_MM_and_AXI_Stream} \
+      CPM_PCIE1_DMA_INTF {AXI4S} \
       CPM_PCIE1_DSC_BYPASS_RD {1} \
       CPM_PCIE1_DSC_BYPASS_WR {1} \
       CPM_PCIE1_MSI_X_OPTIONS {MSI-X_Internal} \
@@ -350,11 +347,11 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PF0_BAR2_BRIDGE_PREFETCHABLE {1} \
       CPM_PCIE1_PF0_BAR2_BRIDGE_SIZE {4} \
       CPM_PCIE1_PF0_BAR2_BRIDGE_SCALE {Gigabytes} \
-      CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING {CPM_PL_AXI0} \
-      CPM_PCIE1_PF0_BAR2_QDMA_64BIT {0} \
-      CPM_PCIE1_PF0_BAR2_QDMA_ENABLED {0} \
-      CPM_PCIE1_PF0_BAR2_QDMA_PREFETCHABLE {0} \
-      CPM_PCIE1_PF0_BAR2_QDMA_SCALE {Kilobytes} \
+      CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING {CPM_PCIE_NOC_1} \
+      CPM_PCIE1_PF0_BAR2_QDMA_64BIT {1} \
+      CPM_PCIE1_PF0_BAR2_QDMA_ENABLED {1} \
+      CPM_PCIE1_PF0_BAR2_QDMA_PREFETCHABLE {1} \
+      CPM_PCIE1_PF0_BAR2_QDMA_SCALE {Gigabytes} \
       CPM_PCIE1_PF0_BAR2_QDMA_SIZE {4} \
       CPM_PCIE1_PF0_BAR2_QDMA_TYPE {AXI_Bridge_Master} \
       CPM_PCIE1_PF0_BASE_CLASS_VALUE {11} \
@@ -367,9 +364,8 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PF0_MSIX_CAP_TABLE_OFFSET {8000} \
       CPM_PCIE1_PF0_MSIX_CAP_TABLE_SIZE {8} \
       CPM_PCIE1_PF0_MSIX_ENABLED {1} \
-      CPM_PCIE1_PF0_MSI_ENABLED {0} \
-      CPM_PCIE1_PF0_PCIEBAR2AXIBAR_BRIDGE_2 {0x0000000000000000} \
       CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_0 {0x0000020100000000} \
+      CPM_PCIE1_PF0_PCIEBAR2AXIBAR_QDMA_2 {0x0000000600000000} \
       CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D0 {0} \
       CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D1 {0} \
       CPM_PCIE1_PF0_PM_CAP_PMESUPPORT_D3HOT {0} \
@@ -399,10 +395,10 @@ proc create_root_design { parentCell } {
       CPM_PCIE1_PL_LINK_CAP_MAX_LINK_WIDTH {X8} \
       CPM_PCIE1_PORT_TYPE {PCI_Express_Endpoint_device} \
       CPM_PCIE1_TL_PF_ENABLE_REG {1} \
-      CPM_PL_AXI0_EN {1} \
+      CPM_PL_AXI0_EN {0} \
       CPM_PL_AXI1_EN {0} \
-      PS_USE_PS_NOC_PCI_0 {0} \
-      PS_USE_PS_NOC_PCI_1 {0} \
+      PS_USE_PS_NOC_PCI_0 {1} \
+      PS_USE_PS_NOC_PCI_1 {1} \
     } \
     CONFIG.PS_PL_CONNECTIVITY_MODE {Custom} \
     CONFIG.PS_PMC_CONFIG { \
@@ -458,7 +454,7 @@ proc create_root_design { parentCell } {
 {PMC_MIO 13 .. 25}}} \
       PMC_SD0_SLOT_TYPE {eMMC} \
       PMC_USE_PMC_NOC_AXI0 {1} \
-      PMC_USE_NOC_PMC_AXI0 {0} \
+      PMC_USE_NOC_PMC_AXI0 {1} \
       PS_BANK_2_IO_STANDARD {LVCMOS3.3} \
       PS_BOARD_INTERFACE {Custom} \
       PS_CRL_CPM_TOPSW_REF_CTRL_FREQMHZ {1000} \
@@ -521,8 +517,7 @@ proc create_root_design { parentCell } {
       PS_USE_PMCPL_CLK0 {1} \
       PS_USE_PMCPL_CLK1 {0} \
       PS_USE_PMCPL_CLK2 {0} \
-      PS_USE_S_AXI_LPD {1} \
-      PS_S_AXI_LPD_DATA_WIDTH {32} \
+      PS_USE_S_AXI_LPD {0} \
       SMON_ALARMS {Set_Alarms_On} \
       SMON_ENABLE_TEMP_AVERAGING {0} \
       SMON_MEAS100 {{ALARM_ENABLE 1} {ALARM_LOWER 0.00} {ALARM_UPPER 4.00} {AVERAGE_EN 0} {ENABLE 1} {MODE {4 V unipolar}} {NAME VCCO_500} {SUPPLY_NUM 9}} \
@@ -643,38 +638,63 @@ proc create_root_design { parentCell } {
    CONFIG.ASSOCIATED_BUSIF {M00_AXI} \
  ] [get_bd_pins $axi_noc_cpm_0/aclk1]
 
-  # Create instance: smartconnect_0, and set properties
-  # AXI SmartConnect merging two masters onto the CIPS S_AXI_LPD slave:
-  #   S00_AXI <- sAxiLpd           (PL MSI-IRQ FSM, writes the CPM5 TX_IRQ_CSR)
-  #   S01_AXI <- cips/CPM_PL_AXI0  (PCIe BAR2 traffic, steered here by
-  #                                 CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING = CPM_PL_AXI0)
-  #   M00_AXI -> cips/S_AXI_LPD
-  # The PCIe host now reaches the LPD/PMC register and flash space (OSPI
-  # controller, OSPI/QSPI flash DAC window, PMC GPIO, CRP apertures)
-  # over PCIe BAR2 through CPM_PL_AXI0 and this SmartConnect into S_AXI_LPD.
-  set smartconnect_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_0 ]
+  # Create instance: axi_noc_0, and set properties
+  # NoC bridge with two masters feeding one PMC egress (CIPS NOC_PMC_AXI_0 slave):
+  #   S00_AXI <- cips/CPM_PCIE_NOC_0 : PCIe BAR2 traffic out of the CPM
+  #   S01_AXI <- sAxiLpd            : external PL master (the PL CPM5 manager)
+  #   M00_AXI -> cips/NOC_PMC_AXI_0 : PMC register/flash space (OSPI controller,
+  #                                   OSPI/QSPI flash DAC window, PMC GPIO, CRP)
+  # Both inputs reach the PMC peripherals through the single NoC output. One clock
+  # per interface (NUM_CLKS 3): aclk0=S00 (cips cpm_pcie_noc_axi0_clk),
+  # aclk1=M00 (cips noc_pmc_axi_axi0_clk), aclk2=S01 (sAxiLpd / dmaClk).
+  set axi_noc_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_noc:1.1 axi_noc_0 ]
   set_property -dict [list \
-    CONFIG.NUM_CLKS {1} \
+    CONFIG.NUM_CLKS {3} \
+    CONFIG.NUM_MI {1} \
     CONFIG.NUM_SI {2} \
-  ] $smartconnect_0
+  ] $axi_noc_0
 
-  set axcache_const [ create_bd_cell -type inline_hdl -vlnv xilinx.com:inline_hdl:ilconstant:1.0 axcache_const]
-  set_property -dict [list \
-    CONFIG.CONST_VAL {0} \
-    CONFIG.CONST_WIDTH {4} \
-  ] $axcache_const
+
+  set_property -dict [ list \
+   CONFIG.CATEGORY {ps_pmc} \
+ ] [get_bd_intf_pins $axi_noc_0/M00_AXI]
+
+  set_property -dict [ list \
+   CONFIG.CONNECTIONS {M00_AXI {read_bw {1720} write_bw {1720} read_avg_burst {4} write_avg_burst {4} initial_boot {true}}} \
+   CONFIG.NOC_PARAMS {} \
+   CONFIG.CATEGORY {ps_pcie} \
+   CONFIG.REMAPS {M00_AXI {{0x6_F101_0000 0x1_0101_0000 64K} {0x6_F102_0000 0x1_0102_0000 64k} {0x6_F126_0000 0x1_0126_0000 64k} {0x6_F106_0000 0xF106_0000 64k} {0x6_C000_0000 0xC000_0000 512M}}} \
+ ] [get_bd_intf_pins $axi_noc_0/S00_AXI]
+
+  set_property -dict [ list \
+   CONFIG.CONNECTIONS {M00_AXI {read_bw {100} write_bw {100} read_avg_burst {4} write_avg_burst {4}}} \
+   CONFIG.NOC_PARAMS {} \
+   CONFIG.CATEGORY {pl} \
+ ] [get_bd_intf_pins $axi_noc_0/S01_AXI]
+
+  set_property -dict [ list \
+   CONFIG.ASSOCIATED_BUSIF {S00_AXI} \
+ ] [get_bd_pins $axi_noc_0/aclk0]
+
+  set_property -dict [ list \
+   CONFIG.ASSOCIATED_BUSIF {M00_AXI} \
+ ] [get_bd_pins $axi_noc_0/aclk1]
+
+  set_property -dict [ list \
+   CONFIG.ASSOCIATED_BUSIF {S01_AXI} \
+ ] [get_bd_pins $axi_noc_0/aclk2]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net cips_CPM_PL_AXI0 [get_bd_intf_pins cips/CPM_PL_AXI0] [get_bd_intf_pins smartconnect_0/S01_AXI]
+  connect_bd_intf_net -intf_net cips_CPM_PCIE_NOC_0 [get_bd_intf_pins cips/CPM_PCIE_NOC_1] [get_bd_intf_pins axi_noc_0/S00_AXI]
+  connect_bd_intf_net -intf_net axi_noc_0_M00_AXI1 [get_bd_intf_pins axi_noc_0/M00_AXI] [get_bd_intf_pins cips/NOC_PMC_AXI_0]
   connect_bd_intf_net -intf_net axi_noc_mc_ddr4_0_CH0_DDR4_0 [get_bd_intf_pins axi_noc_mc_ddr4_0/CH0_DDR4_0] [get_bd_intf_ports psDDR]
-  connect_bd_intf_net -intf_net cips_CPM_PCIE_NOC_0 [get_bd_intf_pins cips/CPM_PCIE_NOC_0] [get_bd_intf_pins axi_noc_cpm_0/S00_AXI]
+  connect_bd_intf_net -intf_net cips_CPM_PCIE_NOC_1 [get_bd_intf_pins cips/CPM_PCIE_NOC_0] [get_bd_intf_pins axi_noc_cpm_0/S00_AXI]
   connect_bd_intf_net -intf_net axi_noc_cpm_0_M00_AXI [get_bd_intf_pins axi_noc_cpm_0/M00_AXI] [get_bd_intf_ports mAxi]
   connect_bd_intf_net -intf_net cips_LPD_AXI_NOC_0 [get_bd_intf_pins cips/LPD_AXI_NOC_0] [get_bd_intf_pins axi_noc_mc_ddr4_0/S01_AXI]
   connect_bd_intf_net -intf_net cips_PCIE1_GT [get_bd_intf_pins cips/PCIE1_GT] [get_bd_intf_ports gtPcie]
   connect_bd_intf_net -intf_net cips_PMC_NOC_AXI_0 [get_bd_intf_pins cips/PMC_NOC_AXI_0] [get_bd_intf_pins axi_noc_mc_ddr4_0/S00_AXI]
   connect_bd_intf_net -intf_net gt_pcie_refclk_1 [get_bd_intf_ports gtPcieRefClk] [get_bd_intf_pins cips/gt_refclk1]
-  connect_bd_intf_net -intf_net sAxiLpd_1 [get_bd_intf_ports sAxiLpd] [get_bd_intf_pins smartconnect_0/S00_AXI]
-  connect_bd_intf_net -intf_net smartconnect_0_M00_AXI [get_bd_intf_pins smartconnect_0/M00_AXI] [get_bd_intf_pins cips/S_AXI_LPD]
+  connect_bd_intf_net -intf_net sAxiLpd_1 [get_bd_intf_ports sAxiLpd] [get_bd_intf_pins axi_noc_0/S01_AXI]
   connect_bd_intf_net -intf_net sys_clk0_0_1 [get_bd_intf_ports psDdrClk] [get_bd_intf_pins axi_noc_mc_ddr4_0/sys_clk0]
 
   # Create port connections
@@ -682,17 +702,17 @@ proc create_root_design { parentCell } {
   # (M00_AXI) side of the CPM->PL NoC.
   connect_bd_net -net aclk3_0_1  [get_bd_ports dmaClk] \
   [get_bd_pins cips/dma1_intrfc_clk] \
-  [get_bd_pins cips/cpm_pl_axi0_clk] \
-  [get_bd_pins cips/s_axi_lpd_aclk] \
-  [get_bd_pins axi_noc_cpm_0/aclk1] \
-  [get_bd_pins smartconnect_0/aclk]
+  [get_bd_pins axi_noc_0/aclk2] \
+  [get_bd_pins axi_noc_cpm_0/aclk1]
   connect_bd_net -net cips_lpd_axi_noc_clk  [get_bd_pins cips/lpd_axi_noc_clk] \
   [get_bd_pins axi_noc_mc_ddr4_0/aclk1]
-  # CPM_PCIE_NOC_0 master clock drives the S00_AXI (CPM) side of the CPM->PL NoC.
-  # (QDMA-mode pin is cpm_pcie_noc_axi0_clk, distinct from the bridge-mode
-  # noc_cpm_pcie_axi0_clk.)
-  connect_bd_net -net cips_cpm_pcie_noc_axi0_clk  [get_bd_pins cips/cpm_pcie_noc_axi0_clk] \
+  connect_bd_net -net cips_cpm_pcie_noc_axi0_clk  [get_bd_pins cips/cpm_pcie_noc_axi1_clk] \
+  [get_bd_pins axi_noc_0/aclk0]
+  connect_bd_net -net cips_noc_pmc_axi_axi0_clk  [get_bd_pins cips/noc_pmc_axi_axi0_clk] \
+  [get_bd_pins axi_noc_0/aclk1]
+  connect_bd_net -net cips_cpm_pcie_noc_axi1_clk  [get_bd_pins cips/cpm_pcie_noc_axi0_clk] \
   [get_bd_pins axi_noc_cpm_0/aclk0]
+
   connect_bd_net -net cips_pl0_ref_clk  [get_bd_pins cips/pl0_ref_clk] \
   [get_bd_ports plRefClk]
   connect_bd_net -net cips_pl0_resetn  [get_bd_pins cips/pl0_resetn] \
@@ -700,13 +720,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net cips_pmc_axi_noc_axi0_clk  [get_bd_pins cips/pmc_axi_noc_axi0_clk] \
   [get_bd_pins axi_noc_mc_ddr4_0/aclk0]
   connect_bd_net -net dma1_intrfc_resetn_0_1  [get_bd_ports dmaRstN] \
-  [get_bd_pins cips/dma1_intrfc_resetn] \
-  [get_bd_pins smartconnect_0/aresetn]
+  [get_bd_pins cips/dma1_intrfc_resetn]
   connect_bd_net -net pcie_rst_out  [get_bd_pins cips/dma1_axi_aresetn] \
   [get_bd_ports pciRstN]
-
-  connect_bd_net [get_bd_pins axcache_const/dout] [get_bd_pins cips/S_AXI_LPD_awcache]
-  connect_bd_net [get_bd_pins axcache_const/dout] [get_bd_pins cips/S_AXI_LPD_arcache]
 
   # Create address segments
   # Host BAR0 user window (16 MB) egresses CPM_PCIE_NOC_0 and is routed by
@@ -727,29 +743,19 @@ proc create_root_design { parentCell } {
   # descriptors supplied on the bypass interface, not by a PL-side address map.
 
   # ---------------------------------------------------------------------------
-  # sAxiLpd -> maps CPM5 and register space needed for OSPI programming
+  # sAxiLpd -> PMC register/flash space via axi_noc_0 (S01_AXI -> M00_AXI)
   #
-  # The PL MSI-IRQ FSM drives sAxiLpd (CIPS S_AXI_LPD) to write the CPM5_DMA1
-  # TX_IRQ_CSR at global address 0x00FCEA0E7C. PG347 v3.4 Table 215: the CPM5
-  # bridge register block (0xFCEA_0000 - 0xFCEA_7FFF) is reachable from PL only
-  # via the LPD AXI slave interface. On this CIPS 3.4 build the whole CPM
-  # register aperture is exposed to S_AXI_LPD as the fixed segment
-  # pspmc_0_psv_cpm (BASE 0xFC00_0000, RANGE 0x0100_0000 = 16 MB), which
-  # contains 0xFCEA0E7C. Assign that one segment (keeping the PL slave's address
-  # map identical to the global map, so the FSM can use the raw 0xFCEA0E7C
-  # address) and exclude every other S_AXI_LPD slave segment we do not use.
-  #
-  # NOTE: sAxiLpd is only one of two masters on S_AXI_LPD. The PCIe host reaches
-  # the some LPD/PMC register and flash space (OSPI controller, OSPI/QSPI flash
-  # DAC window, PMC GPIO, CRP apertures) over PCIe BAR2 through the cips/CPM_PL_AXI0
-  # master (steered by CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING) and smartconnect_0
-  # into this same S_AXI_LPD slave; that master's map is assigned further below.
-  # The sAxiLpd (PL FSM) view below is deliberately restricted to just the CPM
-  # aperture it needs for the TX_IRQ_CSR MSI poke.
+  # The external PL master now reaches the PMC peripherals through the NoC
+  # instead of the (removed) CIPS S_AXI_LPD slave: sAxiLpd drives axi_noc_0
+  # S01_AXI, which shares the single M00_AXI -> cips/NOC_PMC_AXI_0 egress with
+  # the CPM PCIe BAR2 master. sAxiLpd is a plain 32-bit master, so its space maps
+  # each PMC slave segment at its native global address (identity, no remap).
+  # Only the segments used for OSPI reprogramming / POR reset are mapped; the
+  # rest are excluded to avoid unassigned-segment critical warnings.
   # ---------------------------------------------------------------------------
   set lpd_space [get_bd_addr_spaces sAxiLpd]
 
-  # offset        range        slave segment (leaf name under cips/S_AXI_LPD)
+  # offset        range        slave segment (leaf name under cips/NOC_PMC_AXI_0)
   set lpd_map {
      0xFC000000  0x01000000  pspmc_0_psv_cpm
   }
@@ -758,14 +764,14 @@ proc create_root_design { parentCell } {
   foreach {offset range seg_name} $lpd_map {
      assign_bd_address -offset $offset -range $range \
         -target_address_space $lpd_space \
-        [get_bd_addr_segs cips/S_AXI_LPD/$seg_name] -force
+        [get_bd_addr_segs cips/NOC_PMC_AXI_0/$seg_name] -force
      lappend assigned_segs $seg_name
   }
   set assigned_segs [lsort -unique $assigned_segs]
 
-  # Exclude all remaining (unused) S_AXI_LPD slave segments so the design has no
-  # unassigned-segment critical warnings. Segments mapped above are skipped.
-  foreach seg [get_bd_addr_segs cips/S_AXI_LPD/*] {
+  # Exclude all remaining (unused) NOC_PMC_AXI_0 slave segments from the sAxiLpd
+  # space so the design has no unassigned-segment critical warnings.
+  foreach seg [get_bd_addr_segs cips/NOC_PMC_AXI_0/*] {
      if { [lsearch -exact $assigned_segs [file tail $seg]] >= 0 } {
         continue
      }
@@ -773,33 +779,39 @@ proc create_root_design { parentCell } {
   }
 
   # ---------------------------------------------------------------------------
-  # CPM_PL_AXI0 -> host PCIe BAR2 path to the LPD/PMC register space
+  # CPM_PCIE_NOC_0 -> host PCIe BAR2 path to PMC peripherals via axi_noc_0
   #
   # PCIe BAR2 traffic is steered (CPM_PCIE1_PF0_BAR2_BRIDGE_STEERING =
-  # CPM_PL_AXI0) out of the CPM onto the CPM_PL_AXI0 PL master, through
-  # smartconnect_0 and into the CIPS S_AXI_LPD slave. This gives the PCIe host
-  # a direct path to some LPD/PMC peripherals (OSPI controller, OSPI/QSPI flash
-  # DAC window, PMC GPIO, CRP) at its native register
-  # address. Only the S_AXI_LPD slave segments that are required are mapped;
-  # each lands at its hardware address.
+  # CPM_PCIE_NOC_0) out of the CPM onto axi_noc_0, which bridges to the CIPS
+  # NOC_PMC_AXI_0 slave and so into the PMC register/flash space. 
   # ---------------------------------------------------------------------------
-  set pl_axi0_space [get_bd_addr_spaces cips/CPM_PL_AXI0]
+  set pcie_noc_space [get_bd_addr_spaces cips/CPM_PCIE_NOC_1]
 
-  # Only what OSPI reprogramming and the POR reset need
-  set pl_axi0_segs {
-     pspmc_0_psv_pmc_qspi_ospi_flash_0
-     pspmc_0_psv_pmc_ospi_0
-     pspmc_0_psv_pmc_gpio_0
-     pspmc_0_psv_pmc_iou_slcr_0
-     pspmc_0_psv_crp_0
+  # offset               range        slave segment (leaf under cips/NOC_PMC_AXI_0)
+  set pcie_noc_map {
+     0x00000006C0000000  0x20000000  pspmc_0_psv_pmc_qspi_ospi_flash_0
+     0x00000006F1010000  0x00010000  pspmc_0_psv_pmc_ospi_0
+     0x00000006F1020000  0x00010000  pspmc_0_psv_pmc_gpio_0
+     0x00000006F1260000  0x00010000  pspmc_0_psv_crp_0
+     0x00000006F1060000  0x00010000  pspmc_0_psv_pmc_iou_slcr_0
   }
 
-  foreach seg [get_bd_addr_segs cips/S_AXI_LPD/*] {
-     if { [lsearch -exact $pl_axi0_segs [file tail $seg]] >= 0 } {
-        assign_bd_address -target_address_space $pl_axi0_space $seg -force
-     } else {
-        catch { exclude_bd_addr_seg -target_address_space $pl_axi0_space $seg }
+  set pcie_noc_segs {}
+  foreach {offset range seg_name} $pcie_noc_map {
+     assign_bd_address -offset $offset -range $range \
+        -target_address_space $pcie_noc_space \
+        [get_bd_addr_segs cips/NOC_PMC_AXI_0/$seg_name] -force
+     lappend pcie_noc_segs $seg_name
+  }
+  set pcie_noc_segs [lsort -unique $pcie_noc_segs]
+
+  # Exclude all remaining (unused) NOC_PMC_AXI_0 slave segments so the design has
+  # no unassigned-segment critical warnings.
+  foreach seg [get_bd_addr_segs cips/NOC_PMC_AXI_0/*] {
+     if { [lsearch -exact $pcie_noc_segs [file tail $seg]] >= 0 } {
+        continue
      }
+     catch { exclude_bd_addr_seg -target_address_space $pcie_noc_space $seg }
   }
 
   # ---------------------------------------------------------------------------

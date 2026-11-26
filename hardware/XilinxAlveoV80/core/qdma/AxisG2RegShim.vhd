@@ -247,6 +247,7 @@ architecture rtl of AxisG2RegShim is
       intAckCount : slv(31 downto 0);    -- handled count from 0x4C write
       intSwAckReq : sl;                  -- software ack in progress (0x4C write)
       interrupt   : sl;                  -- level IRQ output
+      intHoldCnt  : slv(15 downto 0);    -- IRQ coalescing: cycles since last ack
       -- descriptor capture
       txSub       : AxisG2TxSubType;
       txSizeDest  : slv(31 downto 0);    -- latched readFifoB (size/dest) word
@@ -292,12 +293,13 @@ architecture rtl of AxisG2RegShim is
       acknowledge => '0',
       cacheConfig => (others => '0'),
       forceInt    => '0',
-      irqHoldOff  => (others => '0'),
+      irqHoldOff  => x"00002710",  -- 10000 cyc (~25 kHz @250M) default; datadev overwrites via 0x84
       timeout     => (others => '0'),
       intReqCount => (others => '0'),
       intAckCount => (others => '0'),
       intSwAckReq => '0',
       interrupt   => '0',
+      intHoldCnt  => (others => '0'),
       txSub       => AXISG2_TX_SUB_INIT_C,
       txSizeDest  => (others => '0'),
       rxFree      => AXISG2_RX_FREE_INIT_C,
@@ -367,6 +369,7 @@ begin
       variable wrFifoB   : sl;
       variable wrWrFifoA : sl;
       variable wrDmaAddr : sl;
+      variable holdoffOk : sl;
       variable dummy     : slv(31 downto 0);
    begin
       v := r;
@@ -577,12 +580,34 @@ begin
          v.intReqCount := r.intReqCount + 1;
       end if;
 
-      -- Drive the level interrupt: pending requests AND enabled, but not while
-      -- an ack is being processed this cycle.
-      if (v.intReqCount /= 0 and v.intEnable = '1' and r.intSwAckReq = '0') then
+      -- IRQ coalescing (irqHoldOff, 0x84) -- matches surf AxiStreamDmaV2Desc. The
+      -- hold-off counter resets on each software ack and counts up otherwise, so a
+      -- new interrupt can assert only once irqHoldOff cycles have elapsed since the
+      -- last ack. Without this the level IRQ re-rises the cycle after every ack
+      -- while requests are still pending -> one MSI per completed buffer (the
+      -- observed ~21M-edge storm). Completions still accumulate in intReqCount
+      -- during the quiet window, so one MSI then covers the whole batch. forceInt
+      -- (driver watchdog / sw kick) BYPASSES the hold-off so it always gets through.
+      if (r.intHoldCnt >= r.irqHoldOff(15 downto 0)) then
+         holdoffOk := '1';
+      else
+         holdoffOk := '0';
+      end if;
+
+      -- Drive the level interrupt: pending-and-past-holdoff (or a forceInt bypass),
+      -- enabled, and not while an ack is being processed this cycle.
+      if (((v.intReqCount /= 0 and holdoffOk = '1') or v.forceInt = '1')
+          and v.intEnable = '1' and r.intSwAckReq = '0') then
          v.interrupt := '1';
       else
          v.interrupt := '0';
+      end if;
+
+      -- Hold-off counter: cleared on ack, saturating count-up otherwise.
+      if (r.intSwAckReq = '1') then
+         v.intHoldCnt := (others => '0');
+      elsif (r.intHoldCnt /= x"FFFF") then
+         v.intHoldCnt := r.intHoldCnt + 1;
       end if;
 
       --------------------------------------------------------------------

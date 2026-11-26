@@ -78,6 +78,13 @@ entity AxisG2RegShim is
       -- AXI address width advertised at 0x034[15:8]; datadev uses it for the DMA
       -- mask (DMA_BIT_MASK(ADDR_WIDTH_G)). surf asserts this must be <= 40.
       ADDR_WIDTH_G   : slv(7 downto 0)  := x"28";  -- addrWidth readback (40)
+      -- Return/completion RING address width advertised at 0x038[7:0] (surf
+      -- DESC_AWIDTH slot). datadev computes its RX ring depth as
+      -- addrCount = 1 << RING_AWIDTH_G and wraps reads modulo that. It MUST equal
+      -- log2 of the QDMA CMPT ring size (QdmaCtxtInit RING_SZ_VAL_G) or the two
+      -- rings desync after one lap. 12 => 4096 entries (SLAC-standard
+      -- DESC_AWIDTH_G=12). NOTE: distinct from ADDR_WIDTH_G -- do not merge them.
+      RING_AWIDTH_G  : slv(7 downto 0)  := x"0C";  -- 12 -> 4096-entry ring
       CHAN_COUNT_G   : slv(7 downto 0)  := x"01");
    port (
       -- Clock and Reset
@@ -402,8 +409,10 @@ begin
       -- 0 makes dma_set_mask(0) fail with -EINVAL and the probe aborts.
       axiSlaveRegisterR(axilEp, ADDR_CHAN_CNT_C,   0, CHAN_COUNT_G);
       axiSlaveRegisterR(axilEp, ADDR_CHAN_CNT_C,   8, ADDR_WIDTH_G);  -- 0x034[15:8] AXI addr width (driver DMA mask)
-      -- 0x038[7:0] = descriptor address width (surf DESC_AWIDTH slot); kept for parity.
-      axiSlaveRegisterR(axilEp, ADDR_ADDR_WIDTH_C, 0, ADDR_WIDTH_G);
+      -- 0x038[7:0] = return/completion RING address width (surf DESC_AWIDTH slot).
+      -- datadev: addrCount = 1 << this. MUST be log2(QDMA CMPT ring size), NOT the
+      -- 40-bit AXI width above, or the C2H return ring desyncs after one lap.
+      axiSlaveRegisterR(axilEp, ADDR_ADDR_WIDTH_C, 0, RING_AWIDTH_G);
       axiSlaveRegisterR(axilEp, ADDR_INT_REQ_CNT_C,0, r.intReqCount);
       axiSlaveRegisterR(axilEp, ADDR_HW_WR_IDX_C,  0, hwWrIndex);
       axiSlaveRegisterR(axilEp, ADDR_HW_RD_IDX_C,  0, hwRdIndex);

@@ -59,9 +59,18 @@ entity QdmaCtxtInit is
       FUNC_ID_G    : slv(12 downto 0)  := (others => '0');
       -- MSI-X vector index to raise on queue status updates
       MSIX_VEC_G   : slv(10 downto 0)  := (others => '0');
-      -- Global ring-size-table index value written to 0x204 (log2-style index
-      -- into the 16-entry ring size register bank)
-      RING_SZ_VAL_G : slv(31 downto 0) := x"00000008";
+      -- Ring size (entry COUNT) written into global ring-size-table entry
+      -- RING_SZ_IDX_G at 0x204+4*idx. PG347: the queue's rng_sz/qsize_idx selects
+      -- one of 16 table entries; the entry holds the ring's entry count. The CMPT
+      -- ring wraps at this count, and datadev's return ring wraps at
+      -- 2**addrWidth(0x38) -- the two MUST match or they desync after one lap.
+      -- 4096 matches the SLAC-standard DESC_AWIDTH_G=12 (AxiPcieDma.vhd) and the
+      -- shim's RING_AWIDTH_G=12, so datadev allocates/reads a 4096-entry ring.
+      RING_SZ_VAL_G : slv(31 downto 0) := x"00001000";  -- 4096 entries
+      -- Table index the queues actually use (rng_sz / qsize_idx). MUST point at
+      -- the entry programmed above; the old code wrote entry 0 but used index 8
+      -- (an unprogrammed entry) -> CMPT ring size was the HW default, not 4096.
+      RING_SZ_IDX_G : slv(3 downto 0)  := x"0";
       -- C2H stream buffer size written to 0xAB0 (bytes)
       C2H_BUF_SZ_G  : slv(31 downto 0) := x"00001000";  -- 4 KiB
       -- Re-arm watchdog (cycles) if a transaction hangs; 250e6 ~ 1 s @ 250 MHz
@@ -114,7 +123,7 @@ architecture rtl of QdmaCtxtInit is
       wbkEn    => '1',
       bypass   => '1',
       dscSz    => "01",                -- 16B required for H2C ST
-      rngSz    => RING_SZ_VAL_G(3 downto 0),
+      rngSz    => RING_SZ_IDX_G,
       fetchMax => (others => '0'),
       fcrdEn   => '0',
       qen      => '1',
@@ -132,7 +141,7 @@ architecture rtl of QdmaCtxtInit is
       wbkEn    => '1',
       bypass   => '1',
       dscSz    => "00",                -- 8B required for C2H ST
-      rngSz    => RING_SZ_VAL_G(3 downto 0),
+      rngSz    => RING_SZ_IDX_G,
       fetchMax => (others => '0'),
       fcrdEn   => '1',                 -- "Set to 1 for C2H ST"
       qen      => '1',
@@ -158,7 +167,7 @@ architecture rtl of QdmaCtxtInit is
       vec        => MSIX_VEC_G,
       baddr      => (others => '0'),   -- overlaid at runtime with wrBase[63:6]
       descSize   => "01",              -- 16B completion (= AxisG2 entry size)
-      qsizeIdx   => RING_SZ_VAL_G(3 downto 0),
+      qsizeIdx   => RING_SZ_IDX_G,
       color      => '0',
       timerIdx   => (others => '0'),
       fncId      => FUNC_ID_G(7 downto 0),
@@ -219,8 +228,8 @@ architecture rtl of QdmaCtxtInit is
          a(i) := QDMA_IND_CTXT_CMD_ADDR_C; i := i + 1;  -- CMD (poll)
       end procedure;
    begin
-      -- globals
-      a(i) := QDMA_GLBL_RNG_SZ_C; i := i + 1;
+      -- globals: ring-size-table entry RING_SZ_IDX_G (0x204 + 4*idx) gets the count
+      a(i) := QDMA_GLBL_RNG_SZ_C + toSlv(4*conv_integer(RING_SZ_IDX_G), 32); i := i + 1;
       a(i) := QDMA_C2H_BUF_SZ_C;  i := i + 1;
       a(i) := QDMA_TRQ_FMAP_C;    i := i + 1;
       -- clears (CMD writes)

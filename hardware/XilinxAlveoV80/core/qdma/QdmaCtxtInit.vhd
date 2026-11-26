@@ -61,12 +61,23 @@ entity QdmaCtxtInit is
       MSIX_VEC_G   : slv(10 downto 0)  := (others => '0');
       -- Ring size (entry COUNT) written into global ring-size-table entry
       -- RING_SZ_IDX_G at 0x204+4*idx. PG347: the queue's rng_sz/qsize_idx selects
-      -- one of 16 table entries; the entry holds the ring's entry count. The CMPT
-      -- ring wraps at this count, and datadev's return ring wraps at
-      -- 2**addrWidth(0x38) -- the two MUST match or they desync after one lap.
-      -- 4096 matches the SLAC-standard DESC_AWIDTH_G=12 (AxiPcieDma.vhd) and the
-      -- shim's RING_AWIDTH_G=12, so datadev allocates/reads a 4096-entry ring.
-      RING_SZ_VAL_G : slv(31 downto 0) := x"00001000";  -- 4096 entries
+      -- one of 16 table entries; the entry holds the ring's entry count.
+      --
+      -- CRITICAL off-by-one: the QDMA CMPT ring ALWAYS reserves its LAST entry for
+      -- the status descriptor (PG347 "Completion Queue": "the last entry in the
+      -- queue is dedicated for the status descriptor" / full-vs-empty detection),
+      -- so only ring_size-1 entries hold completions -- even with en_stat_desc=0.
+      -- datadev's return ring has NO reserved slot: it reads all 2**addrWidth(0x38)
+      -- entries as completions and wraps modulo that. So to give datadev a full
+      -- 2**12 = 4096 usable completions we must size the CMPT ring ONE LARGER:
+      --   RING_SZ_VAL_G = 2**RING_AWIDTH_G + 1 = 4097.
+      -- QDMA then writes completions to positions 0..4095 (= shim RING_AWIDTH_G=12,
+      -- datadev addrCount=4096) and reserves position 4096; with en_stat_desc=0 that
+      -- slot is never written, so it stays inside datadev's 4096*16 = 64 KiB ring
+      -- (no overrun) and both sides wrap together at 4096. ring_size=4096 (no +1)
+      -- is why C2H stalled at exactly 4095 = ring_size-1 (the reserved slot read as
+      -- an empty entry). See [[v80-cmpt-ring-size-lockstep]].
+      RING_SZ_VAL_G : slv(31 downto 0) := x"00001001";  -- 4097 = 4096 usable + 1 reserved
       -- Table index the queues actually use (rng_sz / qsize_idx). MUST point at
       -- the entry programmed above; the old code wrote entry 0 but used index 8
       -- (an unprogrammed entry) -> CMPT ring size was the HW default, not 4096.

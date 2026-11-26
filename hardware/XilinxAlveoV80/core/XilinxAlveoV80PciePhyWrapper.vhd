@@ -523,6 +523,7 @@ architecture mapping of XilinxAlveoV80PciePhyWrapper is
    signal shimWrBase    : slv(63 downto 0);  -- AxisG2 completion-ring base (0x10/0x14)
    signal cmptDoneInt   : sl;                -- adapter C2H-completion -> shim IRQ engine
    signal cpmStartupDone: sl;                -- CpmManager startup done (IRQ service armed)
+   signal ctxtBaddr     : slv(31 downto 0);  -- latched CMPT baddr[31:0] (debug readback)
 
    -- PL AXI-Lite master that writes the CPM5_DMA1 TX_IRQ_CSR over S_AXI_LPD to
    -- raise the PCIe MSI (XilinxAlveoV80CpmManager). This is the proven IRQ path
@@ -638,6 +639,7 @@ begin
          wrBase       => shimWrBase,
          ctxtDone     => ctxtDone,
          dbgStatus    => ctxtStatus,
+         dbgWrBase    => ctxtBaddr,
          pfchTag      => ctxtPfchTag,
          pfchTagValid => open,
          mgmtMaster   => mgmtMaster,
@@ -761,6 +763,12 @@ begin
          dbgC2hStReady   => dma1_s_axis_c2h_tready,
          dbgTmDscValid   => dma1_tm_dsc_sts_valid,
          dbgStartupDone  => cpmStartupDone,
+         dbgCmptValid    => dma1_s_axis_c2h_cmpt_tvalid,
+         dbgCmptReady    => dma1_s_axis_c2h_cmpt_tready,
+         dbgStsValid     => dma1_axis_c2h_status_valid,
+         dbgStsDrop      => dma1_axis_c2h_status_drop,
+         dbgStsCmp       => dma1_axis_c2h_status_status_cmp,
+         dbgReprogBase   => ctxtBaddr,
          dbgCtxtState    => ctxtStatus);
 
    ----------------------------------------------------------------------------

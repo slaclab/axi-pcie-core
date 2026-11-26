@@ -87,6 +87,9 @@ entity QdmaCtxtInit is
       -- [6:0]=curOpIndex [11:8]=curState [15:12]=hangState [22:16]=hangOpIndex
       -- [23]=sawMgmtAck [31:24]=watchdogAbortCount. Same clock as the shim.
       dbgStatus       : out slv(31 downto 0) := (others => '0');
+      -- Latched completion-ring base currently programmed into the CMPT context
+      -- baddr (low 32 bits). Host-readable (via the shim) to confirm baddr=wrBase.
+      dbgWrBase       : out slv(31 downto 0) := (others => '0');
       -- Reserved C2H simple-bypass prefetch tag (PG347 0x1408/0x140C handshake).
       -- Drive this on every C2H bypass-in descriptor; valid once ctxtDone='1'.
       pfchTag         : out slv(6 downto 0) := (others => '0');
@@ -390,6 +393,14 @@ begin
          v.pending := '1';
       end if;
 
+      -- Belt-and-suspenders: also re-program whenever the driver (re)writes the
+      -- completion-ring base, so the CMPT baddr tracks wrBase even if the
+      -- online (0x2C) write is absent or mistimed. (The driver always writes
+      -- wrBaseLo/Hi; the lo-then-hi pair just causes two re-programs, last wins.)
+      if (wrBase /= r.wrBaseReg and wrBase /= 0) then
+         v.pending := '1';
+      end if;
+
       -- mgmt liveness: remember if the dma1_mgmt handshake ever completed.
       if (ack.done = '1') then
          v.sawAck := '1';
@@ -539,6 +550,7 @@ begin
       rin          <= v;
       ctxtDone     <= r.ctxtDone;
       dbgStatus    <= vDbg;
+      dbgWrBase    <= r.wrBaseReg(31 downto 0);
       pfchTag      <= r.pfchTag;
       pfchTagValid <= r.pfchTagValid;
 

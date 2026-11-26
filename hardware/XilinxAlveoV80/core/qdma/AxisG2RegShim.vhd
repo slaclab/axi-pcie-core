@@ -70,7 +70,7 @@ entity AxisG2RegShim is
       -- negotiates against). 0x05 = 128-bit-capable gen2 v5; here we present a
       -- 64-bit-descriptor engine, so advertise a version the driver treats as
       -- 64-bit (desc128En stays 0). Tunable at bring-up.
-      VERSION_G      : slv(7 downto 0)  := x"02";
+      VERSION_G      : slv(7 downto 0)  := x"05";  -- aes-stream driver cases on this (=5)
       ADDR_WIDTH_G   : slv(7 downto 0)  := x"28";  -- addrWidth readback (40)
       CHAN_COUNT_G   : slv(7 downto 0)  := x"01");
    port (
@@ -146,6 +146,12 @@ entity AxisG2RegShim is
       dbgC2hStReady   : in  sl := '0';   -- C2H payload tready (QDMA->user)
       dbgTmDscValid   : in  sl := '0';   -- tm_dsc_sts valid (queue status strobe)
       dbgStartupDone  : in  sl := '0';   -- CpmManager startup writes done (IRQ service armed)
+      dbgCmptValid    : in  sl := '0';   -- C2H CMPT tvalid (adapter -> QDMA)
+      dbgCmptReady    : in  sl := '0';   -- C2H CMPT tready (QDMA -> adapter)
+      dbgStsValid     : in  sl := '0';   -- dma1_axis_c2h_status_valid
+      dbgStsDrop      : in  sl := '0';   -- dma1_axis_c2h_status_drop (no descriptors)
+      dbgStsCmp       : in  sl := '0';   -- dma1_axis_c2h_status_status_cmp (packet had CMPT)
+      dbgReprogBase   : in  slv(31 downto 0) := (others => '0');  -- latched CMPT baddr[31:0]
       dbgCtxtState    : in  slv(31 downto 0) := (others => '0'));  -- QdmaCtxtInit FSM status
 end AxisG2RegShim;
 
@@ -195,6 +201,11 @@ architecture rtl of AxisG2RegShim is
    constant ADDR_DBG_TMDSC_C   : slv(15 downto 0) := x"00AC";  -- tm_dsc_sts strobes
    constant ADDR_DBG_STATUS_C  : slv(15 downto 0) := x"00B0";  -- live status bits (see comb)
    constant ADDR_DBG_CTXT_C    : slv(15 downto 0) := x"00B4";  -- QdmaCtxtInit FSM status word
+   constant ADDR_DBG_CMPTACC_C : slv(15 downto 0) := x"00B8";  -- CMPT packets QDMA accepted (tvalid&tready)
+   constant ADDR_DBG_STSVLD_C  : slv(15 downto 0) := x"00BC";  -- c2h status strobes (valid)
+   constant ADDR_DBG_STSDROP_C : slv(15 downto 0) := x"00C0";  -- c2h status: packets dropped
+   constant ADDR_DBG_STSCMP_C  : slv(15 downto 0) := x"00C4";  -- c2h status: packets that had a completion
+   constant ADDR_DBG_BADDR_C   : slv(15 downto 0) := x"00C8";  -- latched CMPT ring baddr[31:0] (from ctxtInit)
 
    -- dmaAddr[] table region: 0x4000 .. 0x7FFC (4096 x 32-bit). The driver
    -- writes a 32-bit host handle per index; we assemble the 64-bit address
@@ -240,6 +251,10 @@ architecture rtl of AxisG2RegShim is
       dbgC2hByp   : slv(31 downto 0);
       dbgC2hSt    : slv(31 downto 0);
       dbgTmDsc    : slv(31 downto 0);
+      dbgCmptAcc  : slv(31 downto 0);    -- CMPT packets QDMA accepted
+      dbgStsVldCnt: slv(31 downto 0);    -- c2h status strobes
+      dbgStsDropCnt:slv(31 downto 0);    -- c2h status drops
+      dbgStsCmpCnt: slv(31 downto 0);    -- c2h status completions
       dbgTmPrev   : sl;
       -- AXI-Lite
       axilReadSlave  : AxiLiteReadSlaveType;
@@ -280,6 +295,10 @@ architecture rtl of AxisG2RegShim is
       dbgC2hByp   => (others => '0'),
       dbgC2hSt    => (others => '0'),
       dbgTmDsc    => (others => '0'),
+      dbgCmptAcc  => (others => '0'),
+      dbgStsVldCnt=> (others => '0'),
+      dbgStsDropCnt=>(others => '0'),
+      dbgStsCmpCnt=> (others => '0'),
       dbgTmPrev   => '0',
       axilReadSlave  => AXI_LITE_READ_SLAVE_INIT_C,
       axilWriteSlave => AXI_LITE_WRITE_SLAVE_INIT_C);
@@ -321,9 +340,10 @@ begin
 
    comb : process (axilReadMaster, axilWriteMaster, dbgC2hBypReady,
                    dbgC2hBypValid, dbgC2hStReady, dbgC2hStValid, dbgCtxtDone,
-                   dbgCtxtState, dbgStartupDone, dbgTmDscValid, hwIntReq,
-                   hwRdIndex, hwWrIndex, r, rstL, rxFreeReady, txSubReady,
-                   wrReqMissed) is
+                   dbgCmptReady, dbgCmptValid, dbgCtxtState, dbgReprogBase,
+                   dbgStartupDone, dbgStsCmp, dbgStsDrop, dbgStsValid,
+                   dbgTmDscValid, hwIntReq, hwRdIndex, hwWrIndex, r, rstL,
+                   rxFreeReady, txSubReady, wrReqMissed) is
       variable v         : RegType;
       variable axilEp    : AxiLiteEndpointType;
       variable wrFifoA   : sl;
@@ -358,7 +378,13 @@ begin
       axiSlaveWaitTxn(axilEp, axilWriteMaster, axilReadMaster, v.axilWriteSlave, v.axilReadSlave);
 
       -- Read-only / identity registers
-      axiSlaveRegisterR(axilEp, ADDR_ENABLE_VER_C, 0, VERSION_G);
+      -- 0x000 capability word -- MUST match surf AxiStreamDmaV2Desc so the datadev
+      -- driver picks the 128-bit (16B) descriptor/return-descriptor format our
+      -- completion entries use. [16]=DESC_128_EN=1, [24]=version (driver cases on
+      -- =5). The old packing put version at [0] and left [16]=0, so the driver read
+      -- Desc128En=0, used the 64B path, and misread our 16B entries (cnt=0).
+      axiSlaveRegisterR(axilEp, ADDR_ENABLE_VER_C, 16, '1');        -- DESC_128_EN
+      axiSlaveRegisterR(axilEp, ADDR_ENABLE_VER_C, 24, VERSION_G);  -- version = 5
       axiSlaveRegisterR(axilEp, ADDR_CHAN_CNT_C,   0, CHAN_COUNT_G);
       axiSlaveRegisterR(axilEp, ADDR_ADDR_WIDTH_C, 0, ADDR_WIDTH_G);
       axiSlaveRegisterR(axilEp, ADDR_INT_REQ_CNT_C,0, r.intReqCount);
@@ -392,6 +418,11 @@ begin
       --   [6:0]=curOpIndex [10:8]=curState [14:12]=hangState
       --   [22:16]=hangOpIndex [23]=sawMgmtAck [31:24]=watchdogAbortCount
       axiSlaveRegisterR(axilEp, ADDR_DBG_CTXT_C, 0, dbgCtxtState);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_CMPTACC_C, 0, r.dbgCmptAcc);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STSVLD_C,  0, r.dbgStsVldCnt);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STSDROP_C, 0, r.dbgStsDropCnt);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_STSCMP_C,  0, r.dbgStsCmpCnt);
+      axiSlaveRegisterR(axilEp, ADDR_DBG_BADDR_C,   0, dbgReprogBase);
 
       -- Interrupt acknowledge + enable (0x4C): driver writes 0x30000 +
       -- handleCount, i.e. intAckCount[15:0]=handleCount, bit16=intReqEn (ack),
@@ -541,6 +572,18 @@ begin
       end if;
       if (dbgC2hStValid = '1' and dbgC2hStReady = '1') then
          v.dbgC2hSt := r.dbgC2hSt + 1;
+      end if;
+      if (dbgCmptValid = '1' and dbgCmptReady = '1') then
+         v.dbgCmptAcc := r.dbgCmptAcc + 1;
+      end if;
+      if (dbgStsValid = '1') then
+         v.dbgStsVldCnt := r.dbgStsVldCnt + 1;
+         if (dbgStsDrop = '1') then
+            v.dbgStsDropCnt := r.dbgStsDropCnt + 1;
+         end if;
+         if (dbgStsCmp = '1') then
+            v.dbgStsCmpCnt := r.dbgStsCmpCnt + 1;
+         end if;
       end if;
       v.dbgTmPrev := dbgTmDscValid;
       if (dbgTmDscValid = '1' and r.dbgTmPrev = '0') then

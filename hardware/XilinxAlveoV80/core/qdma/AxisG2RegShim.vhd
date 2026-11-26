@@ -26,8 +26,13 @@
 --           reads from the same FIFO sequence. Here we expose size/dest via the
 --           companion capture of rdData[1] (readFifoB, 0x0044) which WriteTx
 --           writes for the 64-bit path: rdData[1][23:0]=size, [31:24]=dest.
---   * RX free  : host buffer bus-address -> dmaAddr[index], then the buffer
---     index -> writeFifoA (0x0048), low 28 bits = index.
+--   * RX free  : 64-bit mode (desc128En=0) wrote the host address to the 0x4000
+--     dmaAddr[index] table, then the index -> writeFifoA (0x0048)[27:0]. 128-bit
+--     mode (desc128En=1, what this QDMA shim advertises) does NOT use the table:
+--     it posts addr[39:8] -> writeFifoB (0x0070), then addr[7:4] in
+--     writeFifoA[31:28] with the index in writeFifoA[27:0]. The shim reconstructs
+--     the full address from those two words and writes it into dmaAddr[index], so
+--     the adapter's index-based read port is unchanged across both modes.
 --
 -- The shim therefore:
 --   * Presents every AxisG2Reg field as an AXI-Lite register (config regs are
@@ -66,11 +71,12 @@ use axi_pcie_core.AxisG2ShimPkg.all;
 entity AxisG2RegShim is
    generic (
       TPD_G          : time             := 1 ns;
-      -- Value returned in enableVer[7:0] (gen2 descriptor version the driver
-      -- negotiates against). 0x05 = 128-bit-capable gen2 v5; here we present a
-      -- 64-bit-descriptor engine, so advertise a version the driver treats as
-      -- 64-bit (desc128En stays 0). Tunable at bring-up.
+      -- Descriptor-format version the driver cases on, returned in 0x000[31:24].
+      -- 0x05 = 128-bit-capable gen2 v5, paired with desc128En=0x000[16]=1 so datadev
+      -- uses the 16B descriptor/return-descriptor format our completion entries use.
       VERSION_G      : slv(7 downto 0)  := x"05";  -- aes-stream driver cases on this (=5)
+      -- AXI address width advertised at 0x034[15:8]; datadev uses it for the DMA
+      -- mask (DMA_BIT_MASK(ADDR_WIDTH_G)). surf asserts this must be <= 40.
       ADDR_WIDTH_G   : slv(7 downto 0)  := x"28";  -- addrWidth readback (40)
       CHAN_COUNT_G   : slv(7 downto 0)  := x"01");
    port (
@@ -238,10 +244,14 @@ architecture rtl of AxisG2RegShim is
       txSub       : AxisG2TxSubType;
       txSizeDest  : slv(31 downto 0);    -- latched readFifoB (size/dest) word
       rxFree      : AxisG2RxFreeType;
-      -- dmaAddr write capture
+      -- dmaAddr write capture (64-bit: 128-bit-mode host addresses are up to 40 bits)
       addrWrEn    : sl;
       addrWrIdx   : slv(AXISG2_INDEX_BITS_C-1 downto 0);
-      addrWrData  : slv(31 downto 0);
+      addrWrData  : slv(63 downto 0);
+      -- writeFifoB (0x0070) latch: 128-bit free-buffer posting delivers the host
+      -- address high word (addr[39:8]) here, before the writeFifoA write that
+      -- carries addr[7:4] (in [31:28]) and the buffer index (in [27:0]).
+      wrFifoBHold : slv(31 downto 0);
       -- debug observability counters (free-running; cleared only by reset)
       dbgWrFifoA  : slv(31 downto 0);
       dbgRxFree   : slv(31 downto 0);
@@ -287,6 +297,7 @@ architecture rtl of AxisG2RegShim is
       addrWrEn    => '0',
       addrWrIdx   => (others => '0'),
       addrWrData  => (others => '0'),
+      wrFifoBHold => (others => '0'),
       dbgWrFifoA  => (others => '0'),
       dbgRxFree   => (others => '0'),
       dbgTxSub    => (others => '0'),
@@ -329,8 +340,7 @@ begin
          clka              => clk,
          wea               => r.addrWrEn,
          addra             => r.addrWrIdx,
-         dina(63 downto 32) => x"00000000",
-         dina(31 downto 0)  => r.addrWrData,
+         dina              => r.addrWrData,
          -- Port B : adapter read
          clkb              => clk,
          addrb             => addrRdIndex,
@@ -385,7 +395,14 @@ begin
       -- Desc128En=0, used the 64B path, and misread our 16B entries (cnt=0).
       axiSlaveRegisterR(axilEp, ADDR_ENABLE_VER_C, 16, '1');        -- DESC_128_EN
       axiSlaveRegisterR(axilEp, ADDR_ENABLE_VER_C, 24, VERSION_G);  -- version = 5
+      -- 0x034 mirrors surf AxiStreamDmaV2Desc: [7:0]=chan count, [15:8]=AXI
+      -- address width, [23:16]=data bytes. datadev reads [15:8] as axiWidth and
+      -- calls dma_set_mask(DMA_BIT_MASK(axiWidth)) -- ONLY when desc128En(0x000[16])
+      -- is set, which it now is. The width MUST live at 0x034[15:8]; leaving it at
+      -- 0 makes dma_set_mask(0) fail with -EINVAL and the probe aborts.
       axiSlaveRegisterR(axilEp, ADDR_CHAN_CNT_C,   0, CHAN_COUNT_G);
+      axiSlaveRegisterR(axilEp, ADDR_CHAN_CNT_C,   8, ADDR_WIDTH_G);  -- 0x034[15:8] AXI addr width (driver DMA mask)
+      -- 0x038[7:0] = descriptor address width (surf DESC_AWIDTH slot); kept for parity.
       axiSlaveRegisterR(axilEp, ADDR_ADDR_WIDTH_C, 0, ADDR_WIDTH_G);
       axiSlaveRegisterR(axilEp, ADDR_INT_REQ_CNT_C,0, r.intReqCount);
       axiSlaveRegisterR(axilEp, ADDR_HW_WR_IDX_C,  0, hwWrIndex);
@@ -460,6 +477,10 @@ begin
       axiWrDetect(axilEp, ADDR_READ_FIFOB_C, wrFifoB);
       axiSlaveRegister(axilEp, ADDR_WRITE_FIFOA_C, 0, dummy);
       axiWrDetect(axilEp, ADDR_WRITE_FIFOA_C, wrWrFifoA);
+      -- writeFifoB (0x0070): 128-bit RX free-buffer address high word (addr[39:8]).
+      -- Latch-and-hold until the paired writeFifoA write. Claiming it here also
+      -- avoids a DECERR on the driver's writeFifoB write (previously undecoded).
+      axiSlaveRegister(axilEp, ADDR_WRITE_FIFOB_C, 0, v.wrFifoBHold);
 
       axiSlaveDefault(axilEp, v.axilWriteSlave, v.axilReadSlave, AXI_RESP_DECERR_C);
 
@@ -467,11 +488,14 @@ begin
       -- dmaAddr[] region decode (outside the endpoint: large address range).
       -- Any write with address[15:14]="01" (0x4000..0x7FFC) targets the table.
       --------------------------------------------------------------------
+      -- Legacy 64-bit-mode path (desc128En=0): host writes the 32-bit buffer
+      -- handle directly to dmaAddr[index]. Zero-extended to the 64-bit RAM word.
+      -- Unused in 128-bit mode (the driver never writes this region then).
       if (axilWriteMaster.awvalid = '1' and axilWriteMaster.wvalid = '1' and
           axilWriteMaster.awaddr(15 downto 14) = "01") then
          v.addrWrEn   := '1';
          v.addrWrIdx  := axilWriteMaster.awaddr(AXISG2_INDEX_BITS_C+1 downto 2);
-         v.addrWrData := axilWriteMaster.wdata;
+         v.addrWrData := x"00000000" & axilWriteMaster.wdata;
       end if;
 
       --------------------------------------------------------------------
@@ -492,11 +516,23 @@ begin
       end if;
 
       --------------------------------------------------------------------
-      -- RX free submit: on a writeFifoA write, low 28 bits = buffer index.
+      -- RX free submit: on a writeFifoA write, wdata[index-1:0] = buffer index.
+      -- In 128-bit mode (desc128En=1) the free-buffer host address is NOT written
+      -- to the 0x4000 table; it arrives split across writeFifoB (addr[39:8], already
+      -- latched in wrFifoBHold) and writeFifoA[31:28] (addr[7:4]). Reconstruct the
+      -- full address (addr[3:0]=0, 16B aligned) and store it into dmaAddr[index] so
+      -- the adapter's existing table-read path finds it. This mirrors the legacy
+      -- 0x4000 capture but sources the address from the FIFO words.
       --------------------------------------------------------------------
       if (wrWrFifoA = '1') then
          v.rxFree.valid := '1';
          v.rxFree.index := axilWriteMaster.wdata(AXISG2_INDEX_BITS_C-1 downto 0);
+         -- Store reconstructed host address into dmaAddr[index].
+         v.addrWrEn                := '1';
+         v.addrWrIdx               := axilWriteMaster.wdata(AXISG2_INDEX_BITS_C-1 downto 0);
+         v.addrWrData              := (others => '0');
+         v.addrWrData(39 downto 8) := r.wrFifoBHold;                     -- addr[39:8]
+         v.addrWrData(7 downto 4)  := axilWriteMaster.wdata(31 downto 28);  -- addr[7:4]
       end if;
 
       -- Keep the wrFifoB-only case from being lost: txSizeDest already captured
